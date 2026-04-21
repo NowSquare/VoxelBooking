@@ -40,8 +40,8 @@ seed.php
 .ai/**/*.jpg
 .ai/**/*.jpeg
 .ai/**/*.pdf
-CLAUDE.md
 .agent/*
+!.agent/AGENTS.md
 !.agent/workflows/
 .superpowers/
 docs/superpowers/
