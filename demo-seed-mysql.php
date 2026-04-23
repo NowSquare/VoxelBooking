@@ -456,7 +456,7 @@ $trattoriaBookings = [
     ['01JDEMO0003BOOK0000002', $trattoriaCustomers[1][0], '+2 days', '20:00', '22:00', 'confirmed', 2],
     ['01JDEMO0003BOOK0000003', $trattoriaCustomers[2][0], '+4 days', '19:30', '21:30', 'confirmed', 6],
     ['01JDEMO0003BOOK0000004', $trattoriaCustomers[0][0], '-3 days', '20:00', '22:00', 'completed', 3],
-    ['01JDEMO0003BOOK0000005', $trattoriaCustomers[1][0], '-1 day',  '19:00', '21:00', 'no-show', 2],
+    ['01JDEMO0003BOOK0000005', $trattoriaCustomers[1][0], '-1 day',  '19:00', '21:00', 'no_show', 2],
 ];
 $trattBookStmt = $pdo->prepare("
     INSERT INTO `bookings` (`id`, `tenant_id`, `customer_id`,

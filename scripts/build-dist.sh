@@ -119,6 +119,7 @@ echo "📁 Ensuring directory structure..."
 for dir in \
   "storage/logs" \
   "storage/cache" \
+  "storage/demo" \
   "public/uploads"; do
   mkdir -p "$PKG_DIR/$dir"
   touch "$PKG_DIR/$dir/.gitkeep"
@@ -128,6 +129,15 @@ done
 if [[ -f "$ROOT_DIR/public/uploads/.htaccess" ]]; then
   cp "$ROOT_DIR/public/uploads/.htaccess" "$PKG_DIR/public/uploads/.htaccess"
 fi
+
+# ── Step 5b: Generate demo database ──
+# The demo seeder creates storage/demo/demo.db from the migrations.
+# This runs inside the staging directory so the generated file ships
+# in the ZIP. End users activate demo mode with `touch .demo` — no
+# manual seeding required.
+echo "🎲 Generating demo database..."
+(cd "$PKG_DIR" && php demo-seed.php)
+rm -f "$PKG_DIR/storage/demo/.gitkeep"
 
 # ── Step 6: Verify critical files ──
 echo "✅ Verifying package..."
@@ -148,6 +158,7 @@ MISSING=()
 [[ -f "$PKG_DIR/app/Controllers/Admin/UpdateController.php" ]] || MISSING+=("app/Controllers/Admin/UpdateController.php")
 [[ -f "$PKG_DIR/templates/admin/updates.php" ]]          || MISSING+=("templates/admin/updates.php")
 [[ -f "$PKG_DIR/demo-seed.php" ]]                        || MISSING+=("demo-seed.php")
+[[ -f "$PKG_DIR/storage/demo/demo.db" ]]                  || MISSING+=("storage/demo/demo.db")
 
 if [[ ${#MISSING[@]} -gt 0 ]]; then
   echo "❌ ERROR: Missing critical files in package:"

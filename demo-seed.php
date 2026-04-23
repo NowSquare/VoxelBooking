@@ -239,7 +239,7 @@ CREATE TABLE blocked_dates (
 )
 ");
 
-// 023: resources — mirrors 023_create_resources.php
+// 023: resources — mirrors 023_create_resources.php + 027_add_resource_checkin_checkout_days.php
 $pdo->exec("
 CREATE TABLE resources (
     id TEXT PRIMARY KEY,
@@ -252,6 +252,8 @@ CREATE TABLE resources (
     price_per_night REAL DEFAULT NULL,
     min_stay_nights INTEGER NOT NULL DEFAULT 1,
     max_stay_nights INTEGER NOT NULL DEFAULT 30,
+    check_in_days TEXT DEFAULT NULL,
+    check_out_days TEXT DEFAULT NULL,
     sort_order INTEGER NOT NULL DEFAULT 0,
     is_active INTEGER NOT NULL DEFAULT 1,
     created_at TEXT DEFAULT (datetime('now')),
@@ -288,6 +290,24 @@ CREATE TABLE capacity_slots (
     is_active INTEGER NOT NULL DEFAULT 1,
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
+)
+");
+
+// 028: business_applications — mirrors 028_create_business_applications.php
+$pdo->exec("
+CREATE TABLE business_applications (
+    id TEXT PRIMARY KEY,
+    business_name TEXT NOT NULL,
+    contact_name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT DEFAULT NULL,
+    website TEXT DEFAULT NULL,
+    message TEXT DEFAULT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    admin_notes TEXT DEFAULT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    reviewed_at TEXT DEFAULT NULL,
+    reviewed_by TEXT DEFAULT NULL
 )
 ");
 
@@ -455,7 +475,7 @@ CREATE TABLE tenant_email_templates (
 // Settings
 $settings = [
     ['installed_at', date('Y-m-d H:i:s')],
-    ['db_version', '26'],
+    ['db_version', '28'],
     ['app_name', 'VoxelBooking Demo'],
     ['timezone', 'Europe/Amsterdam'],
     ['locale', 'en'],
@@ -810,7 +830,7 @@ $trattoriaBookings = [
     ['01JDEMO0003BOOK0000002', $trattoriaCustomers[1][0], '+2 days', '20:00', '22:00', 'confirmed', 2],
     ['01JDEMO0003BOOK0000003', $trattoriaCustomers[2][0], '+4 days', '19:30', '21:30', 'confirmed', 6],
     ['01JDEMO0003BOOK0000004', $trattoriaCustomers[0][0], '-3 days', '20:00', '22:00', 'completed', 3],
-    ['01JDEMO0003BOOK0000005', $trattoriaCustomers[1][0], '-1 day', '19:00', '21:00', 'no-show', 2],
+    ['01JDEMO0003BOOK0000005', $trattoriaCustomers[1][0], '-1 day', '19:00', '21:00', 'no_show', 2],
 ];
 $stmt = $pdo->prepare("
     INSERT INTO bookings (id, tenant_id, booking_pattern, customer_id, start_datetime, end_datetime,

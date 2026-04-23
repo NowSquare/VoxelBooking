@@ -23,6 +23,22 @@ final class DemoMode
     public const ALLOWED_WRITE_ROUTES = [
         'POST /admin/login',
         'POST /auth/logout',
+        'POST /admin/impersonate/exit',
+    ];
+
+    /**
+     * Route prefixes that are allowed to POST even in demo mode.
+     *
+     * Used for routes with dynamic segments (e.g. tenant ID)
+     * where exact matching is not possible.
+     */
+    private const ALLOWED_WRITE_PREFIXES = [
+        'POST /admin/tenants/',  // Matches .../impersonate
+    ];
+
+    /** Suffixes that qualify a prefix match as allowed. */
+    private const ALLOWED_WRITE_SUFFIXES = [
+        '/impersonate',
     ];
 
     private static ?bool $active = null;
@@ -73,6 +89,9 @@ final class DemoMode
     /**
      * Check if a request method + path combination is allowed in demo mode.
      *
+     * Impersonation (session-only, no DB writes) is allowed so operators
+     * can explore tenant views in the demo.
+     *
      * @param string $method HTTP method (GET, POST, etc.)
      * @param string $path   Request path
      */
@@ -85,7 +104,23 @@ final class DemoMode
 
         $key = strtoupper($method) . ' ' . $path;
 
-        return in_array($key, self::ALLOWED_WRITE_ROUTES, true);
+        // Exact match
+        if (in_array($key, self::ALLOWED_WRITE_ROUTES, true)) {
+            return true;
+        }
+
+        // Prefix + suffix match (for routes with dynamic segments)
+        foreach (self::ALLOWED_WRITE_PREFIXES as $prefix) {
+            if (str_starts_with($key, $prefix)) {
+                foreach (self::ALLOWED_WRITE_SUFFIXES as $suffix) {
+                    if (str_ends_with($path, $suffix)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     /**

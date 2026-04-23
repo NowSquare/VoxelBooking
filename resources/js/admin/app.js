@@ -787,14 +787,23 @@ window.refreshIcons = () => {
 // When VB_DEMO flag is set by layout.php, intercept all POST form submissions
 // and show a non-intrusive toast instead of allowing the write request.
 if (window.VB_DEMO) {
+    /**
+     * Check if a form action URL is allowed to submit in demo mode.
+     * Mirrors DemoMode::ALLOWED_WRITE_ROUTES on the server side.
+     */
+    function isDemoAllowed(action) {
+        if (action.includes('/admin/login') || action.includes('/auth/logout')) return true;
+        if (action.includes('/impersonate')) return true; // session-only, no DB writes
+        return false;
+    }
+
     document.addEventListener('submit', (e) => {
         const form = e.target;
         if (!(form instanceof HTMLFormElement)) return;
         if (form.method.toUpperCase() !== 'POST') return;
 
-        // Allow login and logout
         const action = form.getAttribute('action') || '';
-        if (action.includes('/admin/login') || action.includes('/auth/logout')) return;
+        if (isDemoAllowed(action)) return;
 
         e.preventDefault();
         showDemoToast();
@@ -808,7 +817,7 @@ if (window.VB_DEMO) {
         const form = btn.closest('form');
         if (!form) return;
         const action = form.getAttribute('action') || '';
-        if (action.includes('/admin/login') || action.includes('/auth/logout')) return;
+        if (isDemoAllowed(action)) return;
 
         if (form.method && form.method.toUpperCase() === 'POST') {
             e.preventDefault();
