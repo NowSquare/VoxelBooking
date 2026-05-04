@@ -9,7 +9,6 @@ storage/cache/*
 
 # ── Dependencies ──
 node_modules/
-vendor/
 
 # ── Build output (shipped compiled, rebuilt by developer) ──
 public/assets/css/*.css
