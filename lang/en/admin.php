@@ -1332,6 +1332,7 @@ return [
     // ── Business Applications ──
     'applications' => [
         'title'            => 'Applications',
+        'subtitle'         => 'Review and manage business access requests.',
         'status_pending'   => 'Pending',
         'status_approved'  => 'Approved',
         'status_rejected'  => 'Rejected',
