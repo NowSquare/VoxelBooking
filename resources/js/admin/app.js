@@ -124,6 +124,7 @@ import {
     Languages,
     Inbox,
     XCircle,
+    FlaskConical,
 } from 'lucide';
 
 const ICON_SET = {
@@ -146,6 +147,7 @@ const ICON_SET = {
     NotebookPen, Phone, SearchX, TrendingDown,
     Languages,
     Inbox, XCircle,
+    FlaskConical,
 };
 
 // ── Alpine: CSP-safe component registration ──
@@ -856,6 +858,33 @@ function showDemoToast() {
 // Expose to global scope so inline onclick handlers in templates can call it.
 // Module-scoped functions are not reachable from HTML attributes.
 window.showDemoToast = showDemoToast;
+
+// ── Demo Mode: pill dismiss ──
+// Persists dismissal in localStorage so the pill stays hidden across pages.
+// Re-appears on new session (no expiry — demo resets are manual).
+(function () {
+    const pill = document.getElementById('vb-demo-pill');
+    if (!pill) return;
+
+    // Restore dismissed state
+    if (localStorage.getItem('vb-demo-pill-dismissed') === '1') {
+        pill.style.display = 'none';
+        return;
+    }
+
+    const closeBtn = document.getElementById('vb-demo-pill-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            pill.style.transition = 'opacity 200ms ease, transform 200ms ease';
+            pill.style.opacity = '0';
+            pill.style.transform = 'translateX(8px) scale(0.95)';
+            setTimeout(() => {
+                pill.style.display = 'none';
+            }, 200);
+            localStorage.setItem('vb-demo-pill-dismissed', '1');
+        });
+    }
+})();
 
 // ── Global Confirm Dialog (vanilla JS, CSP-safe) ──
 // Intercepts form submissions on forms with data-confirm="message" attribute.

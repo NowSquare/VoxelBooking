@@ -234,6 +234,11 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
                     <i data-lucide="calendar"></i>
                     <?= __('admin.nav.all_bookings') ?>
                 </a>
+                <?php
+                $appsEnabled = (\App\Engine\Database::query(
+                    "SELECT `value` FROM `settings` WHERE `key` = 'enable_applications' LIMIT 1"
+                )[0]['value'] ?? '0') === '1';
+                if ($appsEnabled): ?>
                 <a href="/admin/applications" class="vb-sidebar-link <?= $activePage === 'applications' ? 'active' : '' ?>">
                     <i data-lucide="inbox"></i>
                     <?= __('admin.nav.applications') ?>
@@ -245,6 +250,7 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
                     <span class="vb-badge vb-badge-warning" style="margin-left: auto;"><?= $pendingAppCount ?></span>
                     <?php endif; ?>
                 </a>
+                <?php endif; ?>
                 <?php endif; ?>
             <?php if (\App\Engine\Auth::isOperator() && !$isImpersonating): ?>
             <div class="vb-sidebar-section">
@@ -283,6 +289,16 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
                 <h1 class="vb-topbar-title"><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></h1>
             </div>
             <div class="vb-topbar-right">
+                <?php if (\App\Engine\DemoMode::isActive()): ?>
+                <div class="vb-demo-pill" id="vb-demo-pill">
+                    <i data-lucide="flask-conical" class="vb-demo-pill-icon"></i>
+                    <span class="vb-demo-pill-text"><?= __('admin.demo.banner_title') ?></span>
+                    <button type="button" class="vb-demo-pill-close" id="vb-demo-pill-close"
+                            title="<?= __('admin.common.dismiss') ?>">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                <?php endif; ?>
                 <?php if ($isImpersonating): ?>
                 <div class="vb-impersonation-pill">
                     <i data-lucide="eye" class="vb-impersonation-pill-icon"></i>
@@ -362,15 +378,7 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
             </div>
         </header>
 
-        <?php if (\App\Engine\DemoMode::isActive()): ?>
-        <div class="vb-demo-banner">
-            <i data-lucide="alert-circle" class="vb-demo-banner-icon"></i>
-            <div>
-                <span class="vb-demo-banner-title"><?= __('admin.demo.banner_title') ?></span>
-                <span class="vb-demo-banner-desc"><?= __('admin.demo.banner_desc') ?></span>
-            </div>
-        </div>
-        <?php endif; ?>
+
 
         <main class="vb-content">
             <?= $content ?? '' ?>

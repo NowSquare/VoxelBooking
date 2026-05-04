@@ -2434,33 +2434,101 @@
     .vb-metrics { grid-template-columns: 1fr; }
 }
 
-/* ── Demo Banner ─────────────────────────────────────────────── */
-.vb-demo-banner {
-    background: var(--vb-warning-bg);
-    border-radius: var(--vb-radius-md);
-    padding: 0.5625rem 1rem;
-    margin: 0.75rem 2.25rem 0;
-    display: flex;
+/* ── Demo Pill (Topbar) ──────────────────────────────────────── */
+/*
+ * Inline topbar pill: sits inside .vb-topbar-right, mirrors impersonation pill.
+ * Cool indigo scheme differentiates from the amber impersonation indicator.
+ * Dismissible via × button (persisted in localStorage).
+ */
+
+.vb-demo-pill {
+    display: inline-flex;
     align-items: center;
-    gap: 0.625rem;
-    font-size: var(--vb-text-xs);
+    gap: 0.375rem;
+    padding: 0.25rem 0.375rem 0.25rem 0.625rem;
+    background: color-mix(in srgb, var(--vb-indigo-50, #EEF2FF) 85%, transparent);
+    border: 1px solid color-mix(in srgb, var(--vb-indigo-300, #A5B4FC) 30%, transparent);
+    border-left: 2px solid var(--vb-indigo-500, #6366F1);
+    border-radius: var(--vb-radius-full);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--vb-indigo-800, #3730A3);
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+    max-width: 320px;
+    animation: vb-pill-slide-in 0.3s var(--vb-ease-spring) both;
 }
 
-.vb-demo-banner-icon {
-    width: 14px;
-    height: 14px;
-    color: var(--vb-warning);
+.vb-demo-pill-icon {
+    width: 12px;
+    height: 12px;
+    color: var(--vb-indigo-500, #6366F1);
     flex-shrink: 0;
+    opacity: 0.75;
 }
 
-.vb-demo-banner-title {
-    font-weight: 600;
-    color: var(--vb-warning);
+.vb-demo-pill-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
-.vb-demo-banner-desc {
-    color: var(--vb-text-secondary);
-    margin-left: 0.25rem;
+.vb-demo-pill-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: var(--vb-radius-full);
+    color: var(--vb-indigo-600, #4F46E5);
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background var(--vb-duration-fast) var(--vb-ease-out),
+                color var(--vb-duration-fast) var(--vb-ease-out),
+                transform var(--vb-duration-fast) var(--vb-ease-out);
+}
+.vb-demo-pill-close svg {
+    width: 12px;
+    height: 12px;
+}
+.vb-demo-pill-close:hover {
+    background: color-mix(in srgb, var(--vb-indigo-500, #6366F1) 15%, transparent);
+    color: var(--vb-indigo-800, #3730A3);
+}
+.vb-demo-pill-close:active {
+    transform: scale(0.9);
+    transition-duration: 60ms;
+}
+
+/* Dark mode */
+[data-theme="dark"] .vb-demo-pill {
+    background: color-mix(in srgb, var(--vb-indigo-500, #6366F1) 8%, transparent);
+    border-color: color-mix(in srgb, var(--vb-indigo-500, #6366F1) 18%, transparent);
+    border-left-color: var(--vb-indigo-500, #6366F1);
+    color: var(--vb-indigo-200, #C7D2FE);
+}
+[data-theme="dark"] .vb-demo-pill-icon {
+    color: var(--vb-indigo-400, #818CF8);
+}
+[data-theme="dark"] .vb-demo-pill-close {
+    color: var(--vb-indigo-400, #818CF8);
+}
+[data-theme="dark"] .vb-demo-pill-close:hover {
+    background: color-mix(in srgb, var(--vb-indigo-500, #6366F1) 12%, transparent);
+    color: var(--vb-indigo-200, #C7D2FE);
+}
+
+/* Responsive: compact on small screens */
+@media (max-width: 640px) {
+    .vb-demo-pill {
+        max-width: 180px;
+        padding-left: 0.5rem;
+    }
+    .vb-demo-pill-text {
+        font-size: 0.625rem;
+    }
 }
 
 /* Demo toast notification */
@@ -2823,6 +2891,17 @@
     gap: 0.375rem;
     align-items: center;
     justify-content: flex-end;
+}
+
+/* Inline button group — horizontal flex for action button pairs (e.g. approve/reject) */
+.vb-btn-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+.vb-btn-group .vb-form-flush {
+    margin: 0;
+    padding: 0;
 }
 
 /* Compact action group for table rows */
