@@ -423,6 +423,12 @@ $pdo->prepare("INSERT INTO `business_users` (`id`, `tenant_id`, `name`, `email`,
 $pdo->prepare("INSERT INTO `auth_emails` (`email`, `user_type`, `user_id`) VALUES (?, 'business_user', ?)")
     ->execute(['owner@hotel-marina.test', $hotelOwnerId]);
 
+// Hotel Marina — availability (open every day, 24h — hotels never close)
+$stmtAvail = $pdo->prepare("INSERT INTO `availability` (`id`, `tenant_id`, `staff_id`, `day_of_week`, `start_time`, `end_time`, `is_available`) VALUES (?, ?, NULL, ?, ?, ?, 1)");
+for ($day = 0; $day <= 6; $day++) {
+    $stmtAvail->execute([sprintf('01JDEMO0002TAVAIL%05d', $day), $hotelId, $day, '00:00', '23:59']);
+}
+
 // ══════════════════════════════════════════════════════════════════════
 // Tenant 3: Trattoria Roma (capacity pattern)
 // ══════════════════════════════════════════════════════════════════════
@@ -534,6 +540,12 @@ $pdo->prepare("INSERT INTO `business_users` (`id`, `tenant_id`, `name`, `email`,
 $pdo->prepare("INSERT INTO `auth_emails` (`email`, `user_type`, `user_id`) VALUES (?, 'business_user', ?)")
     ->execute(['owner@trattoria-roma.test', $trattoriaOwnerId]);
 
+// Trattoria Roma — availability (Tue-Sun 12:00-23:00, closed Monday)
+$stmtAvail = $pdo->prepare("INSERT INTO `availability` (`id`, `tenant_id`, `staff_id`, `day_of_week`, `start_time`, `end_time`, `is_available`) VALUES (?, ?, NULL, ?, ?, ?, 1)");
+for ($day = 1; $day <= 6; $day++) { // 1=Tue .. 6=Sun
+    $stmtAvail->execute([sprintf('01JDEMO0003TAVAIL%05d', $day), $trattoriaId, $day, '12:00', '23:00']);
+}
+
 // ══════════════════════════════════════════════════════════════════════
 // Tenant 4: Workshop Studio (event pattern)
 // ══════════════════════════════════════════════════════════════════════
@@ -631,6 +643,12 @@ $pdo->prepare("INSERT INTO `business_users` (`id`, `tenant_id`, `name`, `email`,
     ->execute([$workshopOwnerId, $workshopId, 'Workshop Admin', 'owner@workshop-studio.test', password_hash('welcome3210', PASSWORD_BCRYPT)]);
 $pdo->prepare("INSERT INTO `auth_emails` (`email`, `user_type`, `user_id`) VALUES (?, 'business_user', ?)")
     ->execute(['owner@workshop-studio.test', $workshopOwnerId]);
+
+// Workshop Studio — availability (Mon-Sat 09:00-18:00, closed Sunday)
+$stmtAvail = $pdo->prepare("INSERT INTO `availability` (`id`, `tenant_id`, `staff_id`, `day_of_week`, `start_time`, `end_time`, `is_available`) VALUES (?, ?, NULL, ?, ?, ?, 1)");
+for ($day = 0; $day <= 5; $day++) { // 0=Mon .. 5=Sat
+    $stmtAvail->execute([sprintf('01JDEMO0004TAVAIL%05d', $day), $workshopId, $day, '09:00', '18:00']);
+}
 
 // ══════════════════════════════════════════════════════════════════════
 // Business Applications — showcase the applications page
