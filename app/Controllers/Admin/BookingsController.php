@@ -1446,7 +1446,7 @@ final class BookingsController
         $output = fopen('php://temp', 'r+');
         // UTF-8 BOM for Excel compatibility
         fwrite($output, "\xEF\xBB\xBF");
-        fputcsv($output, $headers);
+        fputcsv($output, $headers, escape: '\\');
 
         foreach ($bookings as $b) {
             $row = [
@@ -1461,7 +1461,7 @@ final class BookingsController
             if ($includeTenant) {
                 $row[] = $b['tenant_name'] ?? '';
             }
-            fputcsv($output, $row);
+            fputcsv($output, $row, escape: '\\');
         }
 
         rewind($output);

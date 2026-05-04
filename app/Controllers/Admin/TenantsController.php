@@ -571,7 +571,7 @@ final class TenantsController
 
         $output = fopen('php://temp', 'r+');
         fwrite($output, "\xEF\xBB\xBF");
-        fputcsv($output, $headers);
+        fputcsv($output, $headers, escape: '\\');
 
         foreach ($tenants as $t) {
             fputcsv($output, [
@@ -582,7 +582,7 @@ final class TenantsController
                 $t['status'] ?? '',
                 Tenant::bookingCount($t['id']),
                 Tenant::serviceCount($t['id']),
-            ]);
+            ], escape: '\\');
         }
 
         rewind($output);

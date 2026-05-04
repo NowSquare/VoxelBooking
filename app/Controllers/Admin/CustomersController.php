@@ -162,7 +162,7 @@ final class CustomersController
 
         $output = fopen('php://temp', 'r+');
         fwrite($output, "\xEF\xBB\xBF");
-        fputcsv($output, $headers);
+        fputcsv($output, $headers, escape: '\\');
 
         foreach ($customers as $c) {
             fputcsv($output, [
@@ -172,7 +172,7 @@ final class CustomersController
                 $c['booking_count'] ?? 0,
                 substr($c['last_booking_at'] ?? '', 0, 10),
                 substr($c['created_at'] ?? '', 0, 10),
-            ]);
+            ], escape: '\\');
         }
 
         rewind($output);

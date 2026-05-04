@@ -434,7 +434,7 @@ final class SettingsController
 
         $output = fopen('php://temp', 'r+');
         fwrite($output, "\xEF\xBB\xBF");
-        fputcsv($output, $headers);
+        fputcsv($output, $headers, escape: '\\');
 
         foreach ($entries as $e) {
             fputcsv($output, [
@@ -445,7 +445,7 @@ final class SettingsController
                 $e['actor_type'] ?? '',
                 $e['actor_id'] ?? '',
                 $e['ip_address'] ?? '',
-            ]);
+            ], escape: '\\');
         }
 
         rewind($output);
