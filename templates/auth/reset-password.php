@@ -14,6 +14,7 @@ $csrfToken = $csrfToken ?? '';
 <!DOCTYPE html>
 <html lang="<?= \App\Engine\Locale::getLocale() ?>" dir="<?= \App\Engine\Locale::direction() ?>">
 <head>
+    <script src="/js/theme.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -40,8 +41,8 @@ $csrfToken = $csrfToken ?? '';
         </button>
 
         <div class="login-inner">
-            <!-- Hero Logo -->
-            <div class="login-hero">
+            <!-- Hero Logo — links back to homepage -->
+            <a href="/" class="login-hero">
                 <svg class="login-hero-cube" width="56" height="60" viewBox="0 0 48 52" xmlns="http://www.w3.org/2000/svg">
                     <polygon points="24,2 46,14 24,26 2,14" fill="var(--vb-accent)" opacity="1.0"/>
                     <polygon points="2,14 24,26 24,50 2,38" fill="var(--vb-accent)" opacity="0.7"/>
@@ -49,7 +50,7 @@ $csrfToken = $csrfToken ?? '';
                 </svg>
                 <span class="login-hero-name"><?= app_name() ?></span>
                 <span class="login-hero-sub"><?= __('auth.hero_sub') ?></span>
-            </div>
+            </a>
 
             <!-- Reset Password Form -->
             <div class="login-form-card<?= $error ? ' vb-shake' : '' ?>">

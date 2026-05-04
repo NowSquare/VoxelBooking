@@ -1654,7 +1654,6 @@
     flex: 1;
     width: 100%;
     padding: 2.5rem 3rem 4rem; /* increased padding for high-end feel */
-    max-width: 1200px;
     margin-left: 0;
     margin-right: auto;
     animation: vb-fade-in-up var(--vb-duration-normal) var(--vb-ease-out) both;
@@ -3153,6 +3152,7 @@
     display: flex; flex-direction: column; align-items: center;
     gap: 0.75rem; margin-bottom: 2.5rem;
     animation: vb-fade-in var(--vb-duration-normal) var(--vb-ease-out) 100ms both;
+    text-decoration: none; color: inherit;
 }
 .login-hero-cube {
     filter: drop-shadow(0 8px 24px var(--vb-accent-glow));
@@ -3234,8 +3234,8 @@
 .login-demo-credentials {
     margin-top: 1.5rem;
     border: 1px solid var(--vb-border-subtle);
-    border-radius: var(--vb-radius-md);
-    padding: 0.875rem;
+    border-radius: var(--vb-radius-lg);
+    padding: 1rem;
     background: var(--vb-bg-well);
     animation: vb-fade-in-up var(--vb-duration-slow) var(--vb-ease-out) 500ms both;
 }
@@ -3243,14 +3243,17 @@
 .login-demo-title {
     display: flex;
     align-items: center;
-    gap: 0.375rem;
-    font-size: var(--vb-text-xs);
+    gap: 0.5rem;
+    font-size: var(--vb-text-sm);
     font-weight: 600;
     color: var(--vb-warning);
-    margin-bottom: 0.625rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.625rem;
+    border-bottom: 1px solid var(--vb-border-subtle);
 }
 .login-demo-title svg {
     flex-shrink: 0;
+    width: 18px; height: 18px;
 }
 
 .login-demo-accounts {
