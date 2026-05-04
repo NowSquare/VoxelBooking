@@ -472,6 +472,7 @@ CREATE TABLE tenant_email_templates (
 // Seed Data
 // ══════════════════════════════════════════════════════════════════════
 
+$today = new DateTime();
 // Settings
 $settings = [
     ['installed_at', date('Y-m-d H:i:s')],
@@ -480,7 +481,8 @@ $settings = [
     ['timezone', 'Europe/Amsterdam'],
     ['locale', 'en'],
     ['cron_token', bin2hex(random_bytes(32))],
-    ['cron_last_run', date('Y-m-d H:i:s', strtotime('-2 hours'))],
+    ['cron_last_run', date('Y-m-d H:i:s', strtotime('-12 minutes'))],
+    ['enable_applications', '1'],
 ];
 
 $stmt = $pdo->prepare("INSERT INTO settings (`key`, value) VALUES (?, ?)");
@@ -524,17 +526,17 @@ foreach ($services as $i => [$id, $name, $desc, $prep, $dur, $durOpts, $price, $
     $stmt->execute([$id, $tenantId, $name, $desc, $prep, $dur, $durOpts, $price, $color, $i]);
 }
 
-// Staff
+// Staff (rich: email, title, bio)
 $staffMembers = [
-    ['01JDEMO0001STAFF000001', 'Alice Example', 'Senior Consultant'],
-    ['01JDEMO0001STAFF000002', 'Bob Demoson', 'Specialist'],
-    ['01JDEMO0001STAFF000003', 'Charlie Fixture', null],
+    ['01JDEMO0001STAFF000001', 'Alice Example', 'Senior Consultant', 'Over 10 years of experience in strategic consulting and client relationship management.'],
+    ['01JDEMO0001STAFF000002', 'Bob Demoson', 'Specialist', 'Certified specialist with a focus on technical problem-solving and hands-on sessions.'],
+    ['01JDEMO0001STAFF000003', 'Charlie Fixture', null, 'Flexible team member available for all service types and scheduling needs.'],
 ];
 
-$stmt = $pdo->prepare("INSERT INTO staff (id, tenant_id, name, email, title, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)");
-foreach ($staffMembers as $i => [$id, $name, $title]) {
+$stmt = $pdo->prepare("INSERT INTO staff (id, tenant_id, name, email, title, bio, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
+foreach ($staffMembers as $i => [$id, $name, $title, $bio]) {
     $email = strtolower(str_replace(' ', '.', $name)) . '@example.com';
-    $stmt->execute([$id, $tenantId, $name, $email, $title, $i]);
+    $stmt->execute([$id, $tenantId, $name, $email, $title, $bio, $i]);
 }
 
 // Service-staff links (all staff can do all services)
@@ -576,27 +578,42 @@ foreach ($staffMembers as [$staffId]) {
     }
 }
 
-// Customers (fictional — includes booking_count and last_booking_at)
+// Customers (8 for a realistic CRM view)
 $customers = [
-    ['01JDEMO0001CUST0000001', 'Emma Johnson', 'emma.johnson@example.com', '+31 6 0000 0001'],
-    ['01JDEMO0001CUST0000002', 'James Smith', 'james.smith@example.com', '+31 6 0000 0002'],
-    ['01JDEMO0001CUST0000003', 'Sophie Brown', 'sophie.brown@example.com', null],
+    ['01JDEMO0001CUST0000001', 'Emma Johnson', 'emma.johnson@example.com', '+31 6 0000 0001', 4],
+    ['01JDEMO0001CUST0000002', 'James Smith', 'james.smith@example.com', '+31 6 0000 0002', 3],
+    ['01JDEMO0001CUST0000003', 'Sophie Brown', 'sophie.brown@example.com', null, 2],
+    ['01JDEMO0001CUST0000004', 'Noah Williams', 'noah.williams@example.com', '+31 6 0000 0004', 2],
+    ['01JDEMO0001CUST0000005', 'Mia Davis', 'mia.davis@example.com', '+31 6 0000 0005', 1],
+    ['01JDEMO0001CUST0000006', 'Lucas van Berg', 'lucas.vanberg@example.com', '+31 6 0000 0006', 1],
+    ['01JDEMO0001CUST0000007', 'Olivia de Vries', 'olivia.devries@example.com', '+31 6 0000 0007', 1],
+    ['01JDEMO0001CUST0000008', 'Ethan Bakker', 'ethan.bakker@example.com', null, 0],
 ];
 
 $stmt = $pdo->prepare("INSERT INTO customers (id, tenant_id, name, email, phone, booking_count) VALUES (?, ?, ?, ?, ?, ?)");
-foreach ($customers as $i => [$id, $name, $email, $phone]) {
-    $bookingCount = ($i === 0) ? 2 : (($i === 1) ? 2 : 1);
-    $stmt->execute([$id, $tenantId, $name, $email, $phone, $bookingCount]);
+foreach ($customers as [$id, $name, $email, $phone, $bc]) {
+    $stmt->execute([$id, $tenantId, $name, $email, $phone, $bc]);
 }
 
-// Bookings (includes booking_pattern, customer_timezone)
-$today = new DateTime();
+// Bookings (timeslot) — 14 total: 3 today, 5 upcoming, 6 past
 $bookings = [
-    ['01JDEMO0001BOOK0000001', $customers[0][0], $services[0][0], $staffMembers[0][0], '+1 day', '10:00', '11:00', 'confirmed'],
-    ['01JDEMO0001BOOK0000002', $customers[1][0], $services[1][0], $staffMembers[1][0], '+2 days', '14:00', '14:45', 'confirmed'],
-    ['01JDEMO0001BOOK0000003', $customers[2][0], $services[2][0], $staffMembers[2][0], '+3 days', '09:00', '10:30', 'confirmed'],
-    ['01JDEMO0001BOOK0000004', $customers[0][0], $services[0][0], $staffMembers[0][0], '-2 days', '11:00', '12:00', 'completed'],
-    ['01JDEMO0001BOOK0000005', $customers[1][0], $services[1][0], $staffMembers[1][0], '-5 days', '15:00', '15:45', 'completed'],
+    // Today's bookings (fills "Today's Schedule" dashboard)
+    ['01JDEMO0001BOOK0000001', $customers[0][0], $services[0][0], $staffMembers[0][0], '+0 days', '10:00', '11:00', 'confirmed'],
+    ['01JDEMO0001BOOK0000002', $customers[1][0], $services[1][0], $staffMembers[1][0], '+0 days', '11:00', '11:45', 'confirmed'],
+    ['01JDEMO0001BOOK0000003', $customers[3][0], $services[0][0], $staffMembers[2][0], '+0 days', '14:00', '15:00', 'confirmed'],
+    // Upcoming
+    ['01JDEMO0001BOOK0000004', $customers[2][0], $services[2][0], $staffMembers[0][0], '+1 day',  '09:00', '10:30', 'confirmed'],
+    ['01JDEMO0001BOOK0000005', $customers[4][0], $services[0][0], $staffMembers[1][0], '+1 day',  '13:00', '14:00', 'confirmed'],
+    ['01JDEMO0001BOOK0000006', $customers[5][0], $services[1][0], $staffMembers[0][0], '+2 days', '10:00', '10:45', 'confirmed'],
+    ['01JDEMO0001BOOK0000007', $customers[6][0], $services[2][0], $staffMembers[2][0], '+3 days', '15:00', '16:30', 'confirmed'],
+    ['01JDEMO0001BOOK0000008', $customers[0][0], $services[1][0], $staffMembers[1][0], '+5 days', '09:00', '09:45', 'confirmed'],
+    // Past (history)
+    ['01JDEMO0001BOOK0000009', $customers[0][0], $services[0][0], $staffMembers[0][0], '-1 day',  '10:00', '11:00', 'completed'],
+    ['01JDEMO0001BOOK0000010', $customers[1][0], $services[1][0], $staffMembers[1][0], '-2 days', '14:00', '14:45', 'completed'],
+    ['01JDEMO0001BOOK0000011', $customers[0][0], $services[0][0], $staffMembers[2][0], '-3 days', '11:00', '12:00', 'completed'],
+    ['01JDEMO0001BOOK0000012', $customers[3][0], $services[2][0], $staffMembers[0][0], '-5 days', '09:00', '10:30', 'completed'],
+    ['01JDEMO0001BOOK0000013', $customers[1][0], $services[0][0], $staffMembers[1][0], '-7 days', '15:00', '16:00', 'cancelled'],
+    ['01JDEMO0001BOOK0000014', $customers[2][0], $services[1][0], $staffMembers[2][0], '-10 days','10:00', '10:45', 'completed'],
 ];
 
 $stmt = $pdo->prepare("
@@ -610,6 +627,7 @@ foreach ($bookings as [$id, $custId, $svcId, $staffId, $dateOffset, $start, $end
     $date = (clone $today)->modify($dateOffset)->format('Y-m-d');
     $stmt->execute([$id, $tenantId, $custId, $svcId, $staffId, "{$date} {$start}:00", "{$date} {$end}:00", $status]);
 }
+
 
 // Audit log sample entries — diverse actions across tenants
 $stmt = $pdo->prepare("INSERT INTO audit_log (id, tenant_id, actor_type, actor_id, action, entity_type, entity_id, details, ip_address, request_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -702,6 +720,13 @@ $pdo->prepare("INSERT INTO business_users (id, tenant_id, name, email, password_
 $pdo->prepare("INSERT INTO auth_emails (email, user_type, user_id) VALUES (?, 'business_user', ?)")
     ->execute(['owner@demo-studio.test', $demoOwnerId]);
 
+// Demo Studio manager (demonstrates multi-user per tenant)
+$demoManagerId = '01JDEMO0001BUSER000002';
+$pdo->prepare("INSERT INTO business_users (id, tenant_id, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?, 'manager')")
+    ->execute([$demoManagerId, $tenantId, 'Dana Manager', 'manager@demo-studio.test', password_hash('welcome3210', PASSWORD_BCRYPT)]);
+$pdo->prepare("INSERT INTO auth_emails (email, user_type, user_id) VALUES (?, 'business_user', ?)")
+    ->execute(['manager@demo-studio.test', $demoManagerId]);
+
 // ======================================================================
 // Tenant 2: Hotel Marina (resource pattern)
 // ======================================================================
@@ -750,24 +775,36 @@ $pdo->prepare("
 $pdo->prepare("INSERT INTO blocked_dates (id, tenant_id, resource_id, start_date, end_date, reason) VALUES (?, ?, ?, ?, ?, ?)")
     ->execute(['01JDEMO0002BLOCK000001', $hotelId, $hotelResources[1][0], date('Y-m', strtotime('+2 months')) . '-10', date('Y-m', strtotime('+2 months')) . '-15', 'Garden renovation']);
 
-// Hotel Marina — customers
+// Hotel Marina — customers (7 for screenshot-ready CRM)
 $hotelCustomers = [
-    ['01JDEMO0002CUST0000001', 'Laura Rossi', 'laura.rossi@example.com', '+39 333 000 0001'],
-    ['01JDEMO0002CUST0000002', 'Marco Bianchi', 'marco.bianchi@example.com', '+39 333 000 0002'],
-    ['01JDEMO0002CUST0000003', 'Giulia Ferrara', 'giulia.ferrara@example.com', '+39 333 000 0003'],
+    ['01JDEMO0002CUST0000001', 'Laura Rossi', 'laura.rossi@example.com', '+39 333 000 0001', 3],
+    ['01JDEMO0002CUST0000002', 'Marco Bianchi', 'marco.bianchi@example.com', '+39 333 000 0002', 2],
+    ['01JDEMO0002CUST0000003', 'Giulia Ferrara', 'giulia.ferrara@example.com', '+39 333 000 0003', 2],
+    ['01JDEMO0002CUST0000004', 'Stefan Müller', 'stefan.mueller@example.com', '+49 170 000 0004', 1],
+    ['01JDEMO0002CUST0000005', 'Anna Petersen', 'anna.petersen@example.com', '+45 20 00 00 05', 1],
+    ['01JDEMO0002CUST0000006', 'Jean-Pierre Moreau', 'jp.moreau@example.com', '+33 6 00 00 00 06', 1],
+    ['01JDEMO0002CUST0000007', 'Yuki Tanaka', 'yuki.tanaka@example.com', '+81 90 0000 0007', 0],
 ];
 $stmt = $pdo->prepare("INSERT INTO customers (id, tenant_id, name, email, phone, booking_count) VALUES (?, ?, ?, ?, ?, ?)");
-$stmt->execute([$hotelCustomers[0][0], $hotelId, $hotelCustomers[0][1], $hotelCustomers[0][2], $hotelCustomers[0][3], 2]);
-$stmt->execute([$hotelCustomers[1][0], $hotelId, $hotelCustomers[1][1], $hotelCustomers[1][2], $hotelCustomers[1][3], 2]);
-$stmt->execute([$hotelCustomers[2][0], $hotelId, $hotelCustomers[2][1], $hotelCustomers[2][2], $hotelCustomers[2][3], 1]);
+foreach ($hotelCustomers as [$id, $name, $email, $phone, $bc]) {
+    $stmt->execute([$id, $hotelId, $name, $email, $phone, $bc]);
+}
 
-// Hotel Marina — bookings (date-range stays, linked to resources)
+// Hotel Marina — bookings (11 total: 1 today check-in, 1 current stay, 3 upcoming, 5 past, 1 extra)
 $hotelBookings = [
-    ['01JDEMO0002BOOK0000001', $hotelCustomers[0][0], '+3 days', '+5 days', 'confirmed', 2, $hotelResources[0][0]],
-    ['01JDEMO0002BOOK0000002', $hotelCustomers[1][0], '+7 days', '+10 days', 'confirmed', 1, $hotelResources[1][0]],
-    ['01JDEMO0002BOOK0000003', $hotelCustomers[2][0], '+1 day', '+2 days', 'confirmed', 3, $hotelResources[2][0]],
-    ['01JDEMO0002BOOK0000004', $hotelCustomers[0][0], '-10 days', '-7 days', 'completed', 2, $hotelResources[0][0]],
-    ['01JDEMO0002BOOK0000005', $hotelCustomers[1][0], '-3 days', '-1 day', 'cancelled', 1, $hotelResources[1][0]],
+    // Today's check-in (appears in "Bookings Today" dashboard metric)
+    ['01JDEMO0002BOOK0000001', $hotelCustomers[0][0], '+0 days', '+3 days', 'confirmed', 2, $hotelResources[0][0]],
+    // Current stay (checked in before today)
+    ['01JDEMO0002BOOK0000002', $hotelCustomers[3][0], '-2 days', '+1 day',  'confirmed', 4, $hotelResources[2][0]],
+    ['01JDEMO0002BOOK0000003', $hotelCustomers[1][0], '+2 days', '+5 days',  'confirmed', 1, $hotelResources[1][0]],
+    ['01JDEMO0002BOOK0000004', $hotelCustomers[4][0], '+5 days', '+8 days',  'confirmed', 2, $hotelResources[0][0]],
+    ['01JDEMO0002BOOK0000005', $hotelCustomers[5][0], '+7 days', '+10 days', 'confirmed', 3, $hotelResources[2][0]],
+    ['01JDEMO0002BOOK0000006', $hotelCustomers[0][0], '-12 days', '-9 days', 'completed', 2, $hotelResources[0][0]],
+    ['01JDEMO0002BOOK0000007', $hotelCustomers[2][0], '-8 days', '-5 days',  'completed', 2, $hotelResources[1][0]],
+    ['01JDEMO0002BOOK0000008', $hotelCustomers[1][0], '-6 days', '-3 days',  'completed', 3, $hotelResources[2][0]],
+    ['01JDEMO0002BOOK0000009', $hotelCustomers[2][0], '-4 days', '-2 days',  'cancelled', 1, $hotelResources[0][0]],
+    ['01JDEMO0002BOOK0000010', $hotelCustomers[0][0], '-15 days','-12 days', 'completed', 2, $hotelResources[1][0]],
+    ['01JDEMO0002BOOK0000011', $hotelCustomers[6][0], '-1 day',  '+2 days',  'confirmed', 1, $hotelResources[1][0]],
 ];
 $stmt = $pdo->prepare("
     INSERT INTO bookings (id, tenant_id, booking_pattern, customer_id, resource_id, start_datetime, end_datetime,
@@ -813,24 +850,35 @@ $pdo->prepare("
     ['name' => 'occasion', 'type' => 'text', 'label' => 'Special occasion (birthday, anniversary, etc.)', 'required' => false],
 ])]);
 
-// Trattoria Roma — customers
+// Trattoria Roma — customers (7 for rich CRM)
 $trattoriaCustomers = [
-    ['01JDEMO0003CUST0000001', 'Antonio Verdi', 'antonio.verdi@example.com', '+39 06 000 0001'],
-    ['01JDEMO0003CUST0000002', 'Francesca Conti', 'francesca.conti@example.com', '+39 06 000 0002'],
-    ['01JDEMO0003CUST0000003', 'Roberto Moretti', 'roberto.moretti@example.com', '+39 06 000 0003'],
+    ['01JDEMO0003CUST0000001', 'Antonio Verdi', 'antonio.verdi@example.com', '+39 06 000 0001', 3],
+    ['01JDEMO0003CUST0000002', 'Francesca Conti', 'francesca.conti@example.com', '+39 06 000 0002', 3],
+    ['01JDEMO0003CUST0000003', 'Roberto Moretti', 'roberto.moretti@example.com', '+39 06 000 0003', 2],
+    ['01JDEMO0003CUST0000004', 'Elena Ricci', 'elena.ricci@example.com', '+39 06 000 0004', 2],
+    ['01JDEMO0003CUST0000005', 'Luca Romano', 'luca.romano@example.com', '+39 06 000 0005', 1],
+    ['01JDEMO0003CUST0000006', 'Maria Colombo', 'maria.colombo@example.com', '+39 06 000 0006', 1],
+    ['01JDEMO0003CUST0000007', 'Giovanni Russo', 'giovanni.russo@example.com', '+39 06 000 0007', 0],
 ];
 $stmt = $pdo->prepare("INSERT INTO customers (id, tenant_id, name, email, phone, booking_count) VALUES (?, ?, ?, ?, ?, ?)");
-$stmt->execute([$trattoriaCustomers[0][0], $trattoriaId, $trattoriaCustomers[0][1], $trattoriaCustomers[0][2], $trattoriaCustomers[0][3], 2]);
-$stmt->execute([$trattoriaCustomers[1][0], $trattoriaId, $trattoriaCustomers[1][1], $trattoriaCustomers[1][2], $trattoriaCustomers[1][3], 2]);
-$stmt->execute([$trattoriaCustomers[2][0], $trattoriaId, $trattoriaCustomers[2][1], $trattoriaCustomers[2][2], $trattoriaCustomers[2][3], 1]);
+foreach ($trattoriaCustomers as [$id, $name, $email, $phone, $bc]) {
+    $stmt->execute([$id, $trattoriaId, $name, $email, $phone, $bc]);
+}
 
-// Trattoria Roma — bookings (dinner reservations, party sizes)
+// Trattoria Roma — bookings (12 total: 3 tonight, 4 upcoming, 5 past)
 $trattoriaBookings = [
-    ['01JDEMO0003BOOK0000001', $trattoriaCustomers[0][0], '+1 day', '19:00', '21:00', 'confirmed', 4],
-    ['01JDEMO0003BOOK0000002', $trattoriaCustomers[1][0], '+2 days', '20:00', '22:00', 'confirmed', 2],
-    ['01JDEMO0003BOOK0000003', $trattoriaCustomers[2][0], '+4 days', '19:30', '21:30', 'confirmed', 6],
-    ['01JDEMO0003BOOK0000004', $trattoriaCustomers[0][0], '-3 days', '20:00', '22:00', 'completed', 3],
-    ['01JDEMO0003BOOK0000005', $trattoriaCustomers[1][0], '-1 day', '19:00', '21:00', 'no_show', 2],
+    ['01JDEMO0003BOOK0000001', $trattoriaCustomers[0][0], '+0 days', '19:00', '21:00', 'confirmed', 4],
+    ['01JDEMO0003BOOK0000002', $trattoriaCustomers[1][0], '+0 days', '19:30', '21:30', 'confirmed', 2],
+    ['01JDEMO0003BOOK0000003', $trattoriaCustomers[4][0], '+0 days', '21:00', '22:30', 'confirmed', 6],
+    ['01JDEMO0003BOOK0000004', $trattoriaCustomers[2][0], '+1 day',  '19:30', '21:30', 'confirmed', 3],
+    ['01JDEMO0003BOOK0000005', $trattoriaCustomers[3][0], '+2 days', '20:00', '22:00', 'confirmed', 2],
+    ['01JDEMO0003BOOK0000006', $trattoriaCustomers[0][0], '+3 days', '19:00', '21:00', 'confirmed', 8],
+    ['01JDEMO0003BOOK0000007', $trattoriaCustomers[5][0], '+5 days', '19:30', '21:30', 'confirmed', 4],
+    ['01JDEMO0003BOOK0000008', $trattoriaCustomers[0][0], '-1 day',  '19:00', '21:00', 'completed', 2],
+    ['01JDEMO0003BOOK0000009', $trattoriaCustomers[1][0], '-2 days', '20:00', '22:00', 'completed', 4],
+    ['01JDEMO0003BOOK0000010', $trattoriaCustomers[2][0], '-3 days', '19:30', '21:30', 'completed', 6],
+    ['01JDEMO0003BOOK0000011', $trattoriaCustomers[1][0], '-5 days', '19:00', '21:00', 'no_show', 2],
+    ['01JDEMO0003BOOK0000012', $trattoriaCustomers[3][0], '-7 days', '21:00', '22:30', 'completed', 3],
 ];
 $stmt = $pdo->prepare("
     INSERT INTO bookings (id, tenant_id, booking_pattern, customer_id, start_datetime, end_datetime,
@@ -843,6 +891,7 @@ foreach ($trattoriaBookings as [$id, $custId, $dateOffset, $start, $end, $status
     $date = (clone $today)->modify($dateOffset)->format('Y-m-d');
     $stmt->execute([$id, $trattoriaId, $custId, "{$date} {$start}:00", "{$date} {$end}:00", $partySize, $status]);
 }
+
 
 // Trattoria Roma — capacity slots (dinner service windows)
 $pdo->exec("DELETE FROM `capacity_slots` WHERE `tenant_id` = '{$trattoriaId}'");
@@ -901,16 +950,20 @@ $pdo->prepare("
             'You are registered! Check your email for event details and materials list.')
 ")->execute([$workshopId]);
 
-// Workshop Studio — customers
+// Workshop Studio — customers (7 for rich CRM)
 $workshopCustomers = [
-    ['01JDEMO0004CUST0000001', 'Hannah Weber', 'hannah.weber@example.com', null],
-    ['01JDEMO0004CUST0000002', 'Thomas Meier', 'thomas.meier@example.com', null],
-    ['01JDEMO0004CUST0000003', 'Lena Fischer', 'lena.fischer@example.com', '+49 170 000 0003'],
+    ['01JDEMO0004CUST0000001', 'Hannah Weber', 'hannah.weber@example.com', null, 3],
+    ['01JDEMO0004CUST0000002', 'Thomas Meier', 'thomas.meier@example.com', null, 2],
+    ['01JDEMO0004CUST0000003', 'Lena Fischer', 'lena.fischer@example.com', '+49 170 000 0003', 2],
+    ['01JDEMO0004CUST0000004', 'Max Schneider', 'max.schneider@example.com', '+49 170 000 0004', 1],
+    ['01JDEMO0004CUST0000005', 'Sarah Hoffmann', 'sarah.hoffmann@example.com', null, 1],
+    ['01JDEMO0004CUST0000006', 'Jonas Braun', 'jonas.braun@example.com', '+49 170 000 0006', 1],
+    ['01JDEMO0004CUST0000007', 'Clara Vogel', 'clara.vogel@example.com', null, 0],
 ];
 $stmt = $pdo->prepare("INSERT INTO customers (id, tenant_id, name, email, phone, booking_count) VALUES (?, ?, ?, ?, ?, ?)");
-$stmt->execute([$workshopCustomers[0][0], $workshopId, $workshopCustomers[0][1], $workshopCustomers[0][2], $workshopCustomers[0][3], 2]);
-$stmt->execute([$workshopCustomers[1][0], $workshopId, $workshopCustomers[1][1], $workshopCustomers[1][2], $workshopCustomers[1][3], 2]);
-$stmt->execute([$workshopCustomers[2][0], $workshopId, $workshopCustomers[2][1], $workshopCustomers[2][2], $workshopCustomers[2][3], 1]);
+foreach ($workshopCustomers as [$id, $name, $email, $phone, $bc]) {
+    $stmt->execute([$id, $workshopId, $name, $email, $phone, $bc]);
+}
 
 // Workshop Studio — events (with per-booking spot limits)
 // [id, name, desc, location, price, max_participants, min_spot_count, max_spot_count, date_offset, start, end, is_recurring, rrule, exceptions, allow_waitlist, waitlist_max]
@@ -935,13 +988,18 @@ foreach ($workshopEvents as [$eid, $name, $desc, $loc, $price, $maxP, $minSpots,
                          $isRec, $rrule, $exc, $wl, $wlMax]);
 }
 
-// Workshop Studio — bookings linked to events
+// Workshop Studio — bookings (10 total: 2 today yoga, 4 upcoming events, 2 waitlisted, 2 past)
 $workshopBookings = [
-    ['01JDEMO0004BOOK0000001', $workshopCustomers[0][0], '01JDEMO0004EVT00000001', '+5 days', '09:00', '13:00', 'confirmed', 1],
-    ['01JDEMO0004BOOK0000002', $workshopCustomers[1][0], '01JDEMO0004EVT00000001', '+5 days', '09:00', '13:00', 'confirmed', 2],
-    ['01JDEMO0004BOOK0000003', $workshopCustomers[2][0], '01JDEMO0004EVT00000002', '+12 days', '10:00', '17:00', 'confirmed', 1],
-    ['01JDEMO0004BOOK0000004', $workshopCustomers[0][0], '01JDEMO0004EVT00000005', '+15 days', '14:00', '18:00', 'confirmed', 1],
-    ['01JDEMO0004BOOK0000005', $workshopCustomers[1][0], '01JDEMO0004EVT00000005', '+15 days', '14:00', '18:00', 'waitlisted', 1],
+    ['01JDEMO0004BOOK0000001', $workshopCustomers[0][0], '01JDEMO0004EVT00000003', '+0 days', '08:00', '09:00', 'confirmed', 1],
+    ['01JDEMO0004BOOK0000002', $workshopCustomers[4][0], '01JDEMO0004EVT00000003', '+0 days', '08:00', '09:00', 'confirmed', 2],
+    ['01JDEMO0004BOOK0000003', $workshopCustomers[1][0], '01JDEMO0004EVT00000001', '+5 days',  '09:00', '13:00', 'confirmed', 1],
+    ['01JDEMO0004BOOK0000004', $workshopCustomers[2][0], '01JDEMO0004EVT00000002', '+12 days', '10:00', '17:00', 'confirmed', 1],
+    ['01JDEMO0004BOOK0000005', $workshopCustomers[3][0], '01JDEMO0004EVT00000004', '+8 days',  '19:00', '21:30', 'confirmed', 2],
+    ['01JDEMO0004BOOK0000006', $workshopCustomers[0][0], '01JDEMO0004EVT00000005', '+15 days', '14:00', '18:00', 'confirmed', 1],
+    ['01JDEMO0004BOOK0000007', $workshopCustomers[5][0], '01JDEMO0004EVT00000005', '+15 days', '14:00', '18:00', 'waitlisted', 1],
+    ['01JDEMO0004BOOK0000008', $workshopCustomers[1][0], '01JDEMO0004EVT00000004', '+8 days',  '19:00', '21:30', 'waitlisted', 2],
+    ['01JDEMO0004BOOK0000009', $workshopCustomers[0][0], '01JDEMO0004EVT00000003', '-7 days',  '08:00', '09:00', 'completed', 1],
+    ['01JDEMO0004BOOK0000010', $workshopCustomers[2][0], '01JDEMO0004EVT00000003', '-7 days',  '08:00', '09:00', 'completed', 1],
 ];
 $stmt = $pdo->prepare("
     INSERT INTO bookings (id, tenant_id, booking_pattern, event_id, customer_id, start_datetime, end_datetime,
@@ -963,6 +1021,23 @@ $pdo->prepare("INSERT INTO auth_emails (email, user_type, user_id) VALUES (?, 'b
     ->execute(['owner@workshop-studio.test', $workshopOwnerId]);
 
 // ══════════════════════════════════════════════════════════════════════
+// Business Applications — showcase the applications page
+// ══════════════════════════════════════════════════════════════════════
+
+$applications = [
+    ['01JDEMO0005APP00000001', 'Bella Spa & Wellness', 'Isabella Martinez', 'isabella@bellaspa.example', '+34 600 000 001', 'https://bellaspa.example', 'We are a luxury day spa looking for a modern booking system for our 6 treatment rooms and 12 therapists.', 'pending', null, null],
+    ['01JDEMO0005APP00000002', 'Nordic Fitness Club', 'Erik Lindgren', 'erik@nordicfitness.example', '+46 70 000 0002', 'https://nordicfitness.example', 'Fitness studio with group classes and personal training sessions. Currently using paper scheduling.', 'pending', null, null],
+    ['01JDEMO0005APP00000003', 'CloudNine Photography', 'Priya Sharma', 'priya@cloudnine.example', null, 'https://cloudnine.example', 'Portrait and wedding photography studio. Need session booking with deposit handling.', 'approved', date('Y-m-d H:i:s', strtotime('-5 days')), $operatorId],
+];
+
+$appStmt = $pdo->prepare("INSERT INTO business_applications (id, business_name, contact_name, email, phone, website, message, status, reviewed_at, reviewed_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$appDates = ['-2 days', '-4 days', '-8 days'];
+foreach ($applications as $i => [$id, $biz, $name, $email, $phone, $web, $msg, $status, $reviewedAt, $reviewedBy]) {
+    $createdAt = date('Y-m-d H:i:s', strtotime($appDates[$i]));
+    $appStmt->execute([$id, $biz, $name, $email, $phone, $web, $msg, $status, $reviewedAt, $reviewedBy, $createdAt]);
+}
+
+// ══════════════════════════════════════════════════════════════════════
 // Summary
 // ══════════════════════════════════════════════════════════════════════
 
@@ -971,6 +1046,7 @@ $customerCount = (int) $pdo->query("SELECT COUNT(*) FROM customers")->fetchColum
 $bookingCount = (int) $pdo->query("SELECT COUNT(*) FROM bookings")->fetchColumn();
 $eventCount = (int) $pdo->query("SELECT COUNT(*) FROM events")->fetchColumn();
 $businessUserCount = (int) $pdo->query("SELECT COUNT(*) FROM business_users")->fetchColumn();
+$appCount = (int) $pdo->query("SELECT COUNT(*) FROM business_applications")->fetchColumn();
 
 echo "✓ Demo database seeded at: {$demoDb}\n";
 echo "  Operator:       demo@voxelbooking.com / welcome3210\n";
@@ -985,7 +1061,9 @@ echo "  Events:         {$eventCount} (event only)\n";
 echo "  Customers:      {$customerCount}\n";
 echo "  Bookings:       {$bookingCount}\n";
 echo "  Business users: {$businessUserCount}\n";
+echo "  Applications:   {$appCount}\n";
 echo "  Audit entries:  " . count($logEntries) . "\n";
+
 echo "  Email log:      " . count($emailEntries) . "\n";
 echo "  Deletion queue: 1 (Sophie Brown)\n";
 
