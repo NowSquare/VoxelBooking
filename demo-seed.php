@@ -170,6 +170,7 @@ CREATE TABLE services (
     price REAL DEFAULT NULL,
     price_label TEXT DEFAULT NULL,
     category TEXT DEFAULT NULL,
+    cover_image_path TEXT DEFAULT NULL,
     color TEXT DEFAULT NULL,
     max_per_day INTEGER DEFAULT NULL,
     requires_staff INTEGER NOT NULL DEFAULT 1,
@@ -330,6 +331,8 @@ CREATE TABLE events (
     exception_dates TEXT DEFAULT NULL,
     allow_waitlist INTEGER NOT NULL DEFAULT 0,
     waitlist_max INTEGER NOT NULL DEFAULT 0,
+    cover_image_path TEXT DEFAULT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0,
     is_active INTEGER NOT NULL DEFAULT 1,
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
