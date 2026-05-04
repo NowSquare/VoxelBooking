@@ -179,8 +179,8 @@ touch .demo
 When active:
 - The database switches to `storage/demo/demo.db`
 - All write operations (POST, PUT, DELETE) are blocked, except login and logout
-- A persistent "Demo Mode" banner appears in the admin UI
-- The booking page shows a notice that submissions are disabled
+- A dismissible "Demo Mode" indicator pill appears in the admin topbar
+- The booking page shows a toast notice when a submission is attempted
 - The login page shows clickable credential cards for all demo accounts
 
 ### Demo accounts
@@ -190,7 +190,8 @@ All accounts use the password `welcome3210`.
 | Role | Email | Sees |
 |------|-------|------|
 | Operator | `demo@voxelbooking.com` | All 4 businesses and system settings |
-| Demo Studio | `owner@demo-studio.test` | Timeslot pattern — Services, Staff, Availability |
+| Demo Studio (owner) | `owner@demo-studio.test` | Timeslot pattern — Services, Staff, Availability |
+| Demo Studio (manager) | `manager@demo-studio.test` | Timeslot pattern — restricted manager view |
 | Hotel Marina | `owner@hotel-marina.test` | Resource pattern — Resources |
 | Trattoria Roma | `owner@trattoria-roma.test` | Capacity pattern — Capacity Slots |
 | Workshop Studio | `owner@workshop-studio.test` | Event pattern — Events, Waitlist |
