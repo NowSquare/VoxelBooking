@@ -8,6 +8,7 @@ return [
     'hero_sub'         => 'Accept bookings, manage staff availability, and keep customers coming back. One place for your scheduling, fully branded to match your business.',
     'cta_login'        => 'Log in',
     'cta_dashboard'    => 'Dashboard',
+    'toggle_theme'     => 'Toggle theme',
 
     // Features
     'features_heading'  => 'Everything you need',

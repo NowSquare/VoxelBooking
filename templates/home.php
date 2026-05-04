@@ -33,10 +33,29 @@ $isLoggedIn = $isLoggedIn ?? false;
             --lp-muted: var(--vb-text-secondary, #64748B);
             --lp-faint: var(--vb-text-tertiary, #94A3B8);
             --lp-border: rgba(226, 232, 240, 0.6);
+            --lp-bg: #FAFBFC;
+            --lp-nav-bg: rgba(250, 251, 252, 0.85);
+            --lp-card-bg: rgba(255, 255, 255, 0.65);
+            --lp-card-border: rgba(255, 255, 255, 0.6);
+            --lp-card-glow: rgba(255, 255, 255, 0.8);
+            --lp-input-bg: #fff;
+        }
+        [data-theme="dark"] {
+            --lp-accent: var(--vb-accent, #818CF8);
+            --lp-text: var(--vb-text-primary, #ededf0);
+            --lp-muted: var(--vb-text-secondary, #8888a0);
+            --lp-faint: var(--vb-text-tertiary, #5c5c72);
+            --lp-border: rgba(255, 255, 255, 0.08);
+            --lp-bg: #0c0c14;
+            --lp-nav-bg: rgba(12, 12, 20, 0.85);
+            --lp-card-bg: rgba(21, 21, 32, 0.7);
+            --lp-card-border: rgba(255, 255, 255, 0.06);
+            --lp-card-glow: rgba(255, 255, 255, 0.03);
+            --lp-input-bg: rgba(28, 28, 46, 0.8);
         }
         html { overflow: auto !important; }
         body {
-            background: #FAFBFC;
+            background: var(--lp-bg);
             color: var(--lp-text);
             min-height: 100vh;
             display: flex;
@@ -96,7 +115,7 @@ $isLoggedIn = $isLoggedIn ?? false;
             justify-content: space-between;
             padding: 0 max(1.5rem, calc((100% - var(--lp-max)) / 2 + var(--lp-gap)));
             height: 52px;
-            background: rgba(250, 251, 252, 0.85);
+            background: var(--lp-nav-bg);
             backdrop-filter: blur(12px) saturate(180%);
             -webkit-backdrop-filter: blur(12px) saturate(180%);
             border-bottom: 1px solid var(--lp-border);
@@ -110,7 +129,7 @@ $isLoggedIn = $isLoggedIn ?? false;
         }
         .lp-logo-icon { width: 22px; height: 24px; color: var(--lp-accent); }
         .lp-logo-text { font-size: 0.875rem; font-weight: 650; letter-spacing: -0.03em; }
-        .lp-nav-actions { display: flex; align-items: center; gap: 0.25rem; }
+        .lp-nav-actions { display: flex; align-items: center; gap: 0.625rem; }
         .lp-nav-btn {
             font-size: 0.8125rem;
             font-weight: 500;
@@ -120,7 +139,7 @@ $isLoggedIn = $isLoggedIn ?? false;
             border-radius: 6px;
             transition: color 150ms, background 150ms;
         }
-        .lp-nav-btn:hover { color: var(--lp-text); background: rgba(0,0,0,0.03); }
+        .lp-nav-btn:hover { color: var(--lp-text); background: var(--vb-bg-hover, rgba(0,0,0,0.03)); }
         .lp-nav-btn-primary {
             color: #fff;
             background: var(--lp-accent);
@@ -273,14 +292,14 @@ $isLoggedIn = $isLoggedIn ?? false;
 
         /* ─── Form card — glassmorphic ─── */
         .lp-form-card {
-            background: rgba(255, 255, 255, 0.65);
+            background: var(--lp-card-bg);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.6);
+            border: 1px solid var(--lp-card-border);
             border-radius: 20px;
             padding: 1.75rem;
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.8),
+                inset 0 1px 0 var(--lp-card-glow),
                 0 1px 3px rgba(0, 0, 0, 0.04),
                 0 8px 32px rgba(0, 0, 0, 0.06);
         }
@@ -303,7 +322,7 @@ $isLoggedIn = $isLoggedIn ?? false;
             border: 1px solid var(--lp-border);
             border-radius: 7px;
             font-size: 0.8125rem;
-            background: #fff;
+            background: var(--lp-input-bg);
             transition: border-color 200ms, box-shadow 200ms;
             outline: none;
             font-family: inherit;
@@ -434,6 +453,36 @@ $isLoggedIn = $isLoggedIn ?? false;
             .lp-toast { animation: none; }
             .lp-reveal { opacity: 1; transform: none; transition: none; }
         }
+
+        /* ─── Dark mode adjustments ─── */
+        [data-theme="dark"] .lp-orb { opacity: 0.18; }
+        [data-theme="dark"] body::after { opacity: 0.015; }
+        [data-theme="dark"] .lp-simple-cube {
+            filter: drop-shadow(0 12px 32px rgba(129, 140, 248, 0.35));
+        }
+        [data-theme="dark"] .lp-simple-cube-wrap::after {
+            background: radial-gradient(ellipse, rgba(129, 140, 248, 0.25) 0%, transparent 70%);
+        }
+        [data-theme="dark"] .lp-submit {
+            background: linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #4F46E5 100%);
+        }
+
+        /* ─── Theme toggle (nav) ─── */
+        .lp-theme-toggle {
+            width: 36px; height: 36px; border-radius: 9999px;
+            display: flex; align-items: center; justify-content: center;
+            background: transparent; border: 1px solid var(--lp-border);
+            cursor: pointer; position: relative;
+            color: var(--lp-muted);
+            transition: background 150ms, color 150ms;
+        }
+        .lp-theme-toggle:hover { background: var(--vb-bg-hover, rgba(0,0,0,0.03)); color: var(--lp-text); }
+        .lp-theme-toggle .icon-sun,
+        .lp-theme-toggle .icon-moon { position: absolute; transition: opacity 150ms, transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .lp-theme-toggle .icon-sun { opacity: 1; transform: rotate(0deg) scale(1); }
+        .lp-theme-toggle .icon-moon { opacity: 0; transform: rotate(-90deg) scale(0.7); }
+        [data-theme="dark"] .lp-theme-toggle .icon-sun { opacity: 0; transform: rotate(90deg) scale(0.7); }
+        [data-theme="dark"] .lp-theme-toggle .icon-moon { opacity: 1; transform: rotate(0deg) scale(1); }
     </style>
 </head>
 <body>
@@ -456,6 +505,10 @@ $isLoggedIn = $isLoggedIn ?? false;
             <span class="lp-logo-text"><?= htmlspecialchars(app_name(), ENT_QUOTES, 'UTF-8') ?></span>
         </a>
         <div class="lp-nav-actions">
+            <button type="button" class="lp-theme-toggle" id="lp-theme-toggle" aria-label="<?= __('public.toggle_theme') ?>">
+                <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
             <?php if ($isLoggedIn): ?>
             <a href="/admin" class="lp-nav-btn lp-nav-btn-primary"><?= __('public.cta_dashboard') ?></a>
             <?php else: ?>
@@ -600,5 +653,7 @@ $isLoggedIn = $isLoggedIn ?? false;
         <?= __('public.footer_text', ['year' => date('Y'), 'app_name' => app_name()]) ?>
     </footer>
 
+    <script src="/js/theme-toggle.js"></script>
 </body>
 </html>
+
