@@ -33,10 +33,6 @@
     RewriteRule ^resources/ - [F,L]
     RewriteRule ^node_modules/ - [F,L]
 
-    # AI docs and agent configs
-    RewriteRule ^\.ai/ - [F,L]
-    RewriteRule ^\.agents?/ - [F,L]
-
     # Database files (SQLite demo)
     RewriteRule ^.*\.sqlite$ - [F,L]
 
