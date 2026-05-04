@@ -9,7 +9,7 @@ return [
     'page_title'          => 'Login — :app_name',
     'meta_description'    => ':app_name Admin Login',
     'hero_name'           => 'VoxelBooking',
-    'hero_sub'            => 'Self-hosted booking platform',
+    'hero_sub'            => 'Scheduling infrastructure',
     'login_heading'       => 'Sign in to your account',
     'email_label'         => 'Email address',
     'email_placeholder'   => 'operator@example.com',
@@ -21,7 +21,7 @@ return [
     'invalid_credentials' => 'Invalid email or password.',
     'rate_limited'        => 'Too many login attempts. Please try again later.',
     'session_expired'     => 'Your session has expired. Please sign in again.',
-    'footer'              => 'Powered by :app_name · Self-hosted',
+    'footer'              => 'Powered by :app_name',
     'remember_me'         => 'Remember me',
     'toggle_theme'        => 'Toggle theme',
 
