@@ -1,0 +1,34 @@
+{
+  "_lucide-yUzxrzyY.js": {
+    "file": "js/lucide-yUzxrzyY.js",
+    "name": "lucide"
+  },
+  "resources/css/admin.css": {
+    "file": "css/admin-css.css",
+    "src": "resources/css/admin.css",
+    "isEntry": true
+  },
+  "resources/css/booking.css": {
+    "file": "css/booking-css.css",
+    "src": "resources/css/booking.css",
+    "isEntry": true
+  },
+  "resources/js/admin/app.js": {
+    "file": "js/admin.js",
+    "name": "admin",
+    "src": "resources/js/admin/app.js",
+    "isEntry": true,
+    "imports": [
+      "_lucide-yUzxrzyY.js"
+    ]
+  },
+  "resources/js/booking/app.js": {
+    "file": "js/booking.js",
+    "name": "booking",
+    "src": "resources/js/booking/app.js",
+    "isEntry": true,
+    "imports": [
+      "_lucide-yUzxrzyY.js"
+    ]
+  }
+}

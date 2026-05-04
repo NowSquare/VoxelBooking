@@ -10,10 +10,7 @@ storage/cache/*
 # ── Dependencies ──
 node_modules/
 
-# ── Build output (shipped compiled, rebuilt by developer) ──
-public/assets/css/*.css
-public/assets/js/*.js
-public/assets/.vite/
+# ── Build output (local dev artifacts only) ──
 dist/
 
 # ── Uploads (user content) ──
