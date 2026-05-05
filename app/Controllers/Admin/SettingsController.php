@@ -224,9 +224,15 @@ final class SettingsController
         $changes = [];
 
         try {
-            $fields = ['smtp_host', 'smtp_port', 'smtp_username', 'smtp_encryption', 'mail_from_address', 'mail_from_name', 'mail_transport'];
-            foreach ($fields as $field) {
-                $value = trim($request->string($field));
+            $transport = trim($request->string('mail_transport'));
+            if ($transport === '') {
+                $transport = 'smtp';
+            }
+
+            // Always persist transport and sender identity
+            $commonFields = ['mail_transport', 'mail_from_address', 'mail_from_name'];
+            foreach ($commonFields as $field) {
+                $value = $field === 'mail_transport' ? $transport : trim($request->string($field));
                 if ($value !== '') {
                     $this->saveSetting($field, $value);
                     if ($value !== ($oldSettings[$field] ?? '')) {
@@ -235,12 +241,40 @@ final class SettingsController
                 }
             }
 
-            // Save password separately (don't overwrite if blank)
-            $smtpPassword = $request->string('smtp_password');
-            if ($smtpPassword !== '') {
-                $this->saveSetting('smtp_password', $smtpPassword);
-                $changes['smtp_password'] = ['old' => '[REDACTED]', 'new' => '[REDACTED]'];
+            if ($transport === 'resend') {
+                // Resend: persist API key (as smtp_password), clear stale SMTP rows
+                $apiKey = $request->string('smtp_password');
+                if ($apiKey !== '') {
+                    $this->saveSetting('smtp_password', $apiKey);
+                    $changes['smtp_password'] = ['old' => '[REDACTED]', 'new' => '[REDACTED]'];
+                }
+
+                // Clear SMTP-specific settings to avoid confusion
+                foreach (['smtp_host', 'smtp_port', 'smtp_username', 'smtp_encryption'] as $staleKey) {
+                    if (($oldSettings[$staleKey] ?? '') !== '') {
+                        $this->saveSetting($staleKey, '');
+                        $changes[$staleKey] = ['old' => $oldSettings[$staleKey], 'new' => ''];
+                    }
+                }
+            } elseif ($transport === 'smtp') {
+                // SMTP: persist host/port/username/encryption + password
+                $smtpFields = ['smtp_host', 'smtp_port', 'smtp_username', 'smtp_encryption'];
+                foreach ($smtpFields as $field) {
+                    $value = trim($request->string($field));
+                    if ($value !== '') {
+                        $this->saveSetting($field, $value);
+                        if ($value !== ($oldSettings[$field] ?? '')) {
+                            $changes[$field] = ['old' => $oldSettings[$field] ?? '', 'new' => $value];
+                        }
+                    }
+                }
+                $smtpPassword = $request->string('smtp_password');
+                if ($smtpPassword !== '') {
+                    $this->saveSetting('smtp_password', $smtpPassword);
+                    $changes['smtp_password'] = ['old' => '[REDACTED]', 'new' => '[REDACTED]'];
+                }
             }
+            // mailpit and log: no extra credentials needed
         } catch (\Throwable $e) {
             Logger::error('Email settings persistence failed', ['error' => $e->getMessage()]);
             FormState::toast('error', __('admin.flash.email_failed'));

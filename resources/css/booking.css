@@ -130,6 +130,7 @@ body {
 .vb-book-demo-banner {
   max-width: 640px;
   margin: 24px auto 0;
+  margin-inline: 20px; /* Prevent touching viewport edges on mobile */
   padding: 10px 16px;
   font-size: 0.8125rem;
   font-weight: 500;
@@ -139,6 +140,13 @@ body {
   border-radius: var(--vb-radius-md);
   text-align: center;
   line-height: 1.45;
+}
+
+/* Above 680px (640px max-width + 2×20px margin) re-center with auto */
+@media (min-width: 680px) {
+  .vb-book-demo-banner {
+    margin-inline: auto;
+  }
 }
 
 .vb-book-header-inner {

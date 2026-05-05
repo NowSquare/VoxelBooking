@@ -192,6 +192,7 @@ return [
         'resend_api_key_label'    => 'API Key',
         'resend_api_key_hint'     => 'Leave blank to keep current',
         'resend_help'             => 'Resend uses HTTPS (port 443) to deliver email, bypassing SMTP port restrictions common on DigitalOcean and Hetzner.',
+        'resend_domain_hint'      => 'When using Resend, the domain of your From address must be verified in your Resend dashboard.',
         'sender_title'            => 'Sender Identity',
         'sender_desc'             => 'The "From" name and address that recipients will see.',
         'from_name_label'         => 'From name',

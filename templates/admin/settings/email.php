@@ -104,6 +104,9 @@ include dirname(__DIR__, 2) . '/partials/settings-tabs.php';
                 <label for="mail_from_address" class="vb-label"><?= __('admin.email.from_address_label') ?></label>
                 <input type="email" id="mail_from_address" name="mail_from_address" class="vb-input" value="<?= htmlspecialchars($settings['mail_from_address'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="noreply@yourdomain.com">
             </div>
+            <div id="resend-domain-hint" class="vb-form-hint" style="margin-top: -0.25rem; margin-bottom: 0.25rem;">
+                <?= __('admin.email.resend_domain_hint') ?>
+            </div>
         </div>
     </div>
 
@@ -120,10 +123,12 @@ include dirname(__DIR__, 2) . '/partials/settings-tabs.php';
     var sel = document.getElementById('mail_transport');
     var smtpFields = document.getElementById('smtp-config-fields');
     var resendFields = document.getElementById('resend-config-fields');
+    var resendDomainHint = document.getElementById('resend-domain-hint');
     if (!sel || !smtpFields || !resendFields) return;
     function toggle() {
         smtpFields.style.display = sel.value === 'smtp' ? '' : 'none';
         resendFields.style.display = sel.value === 'resend' ? '' : 'none';
+        if (resendDomainHint) resendDomainHint.style.display = sel.value === 'resend' ? '' : 'none';
     }
     sel.addEventListener('change', toggle);
     toggle();
