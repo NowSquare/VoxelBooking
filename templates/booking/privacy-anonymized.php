@@ -18,6 +18,7 @@ $brandColor = $tenant['brand_color'] ?? '#4F46E5';
     <meta name="robots" content="noindex, nofollow">
     <title><?= View::e($pageTitle) ?></title>
     <?php include dirname(__DIR__) . '/partials/admin-head.php'; ?>
+    <link rel="stylesheet" href="/assets/css/admin-css.css?v=<?= filemtime(dirname(__DIR__, 2) . '/public/assets/css/admin-css.css') ?>">
     <style>
         body {
             background: var(--vb-admin-bg-base);
