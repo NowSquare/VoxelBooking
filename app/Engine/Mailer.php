@@ -17,9 +17,15 @@ use PHPMailer\PHPMailer\Exception as PHPMailerException;
  * - Email dispatch must never hold a database lock
  * - If email fails, the triggering action still succeeds; failure is logged
  *
- * Self-hosted posture: the only outbound connection is operator-configured SMTP.
- * No telemetry, no external services, no CDN. If SMTP is unconfigured, no
- * outbound connections are made.
+ * Self-hosted posture: the only outbound connections are operator-configured
+ * SMTP or the Resend HTTP API (if transport=resend). No telemetry, no CDN.
+ * If email is unconfigured, no outbound connections are made.
+ *
+ * Supported transports:
+ *   smtp    — Standard SMTP via PHPMailer (ports 465/587)
+ *   resend  — Resend HTTP API over HTTPS (port 443, bypasses SMTP blocks)
+ *   mailpit — Local dev capture (localhost:1025)
+ *   log     — Write to email_log only, no outbound connection
  */
 final class Mailer
 {
@@ -69,6 +75,17 @@ final class Mailer
             self::logEmail($logId, $tenantId, $bookingId, $type, $to, $subject, 'sent', null);
             Logger::info('Email logged (log transport)', ['type' => $type, 'to' => $to]);
             return ['sent' => true, 'error' => null, 'log_id' => $logId];
+        }
+
+        // ── Resend HTTP API transport ──
+        // Uses HTTPS (port 443) instead of SMTP (465/587).
+        // Required when the hosting provider blocks outbound SMTP ports.
+        // MAIL_PASSWORD is reused as the Resend API key (Bearer token).
+        if ($transport === 'resend') {
+            return self::sendViaResendApi(
+                $config, $logId, $to, $subject, $htmlBody, $plainBody,
+                $type, $tenantId, $bookingId, $fromName, $replyToEmail, $replyToName,
+            );
         }
 
         // Apply transport-specific config overrides (e.g. mailpit → localhost:1025)
@@ -352,6 +369,7 @@ final class Mailer
      *
      * - log: always configured (no outbound connection needed)
      * - mailpit: always configured (hardcoded to localhost:1025)
+     * - resend: configured when API key (smtp_password) is set
      * - smtp: configured only when smtp_host is set
      */
     public static function isConfigured(): bool
@@ -361,6 +379,7 @@ final class Mailer
 
         return match ($transport) {
             'log', 'mailpit' => true,
+            'resend'         => !empty($config['smtp_password']),
             default          => !empty($config['smtp_host']),
         };
     }
@@ -368,16 +387,19 @@ final class Mailer
     /**
      * Whether the active transport delivers email to a real customer inbox.
      *
-     * Only 'smtp' with a configured host qualifies. 'mailpit' is a local dev
-     * capture tool (localhost:1025) and 'log' records without sending.
-     * Neither reaches the customer.
+     * 'smtp' with a configured host and 'resend' with an API key qualify.
+     * 'mailpit' is a local dev capture tool (localhost:1025) and 'log'
+     * records without sending. Neither reaches the customer.
      */
     public static function isProductionSmtp(): bool
     {
         $config = self::loadConfig();
         $transport = strtolower(trim($config['mail_transport'] ?? 'smtp'));
 
-        return $transport === 'smtp' && !empty($config['smtp_host']);
+        return match ($transport) {
+            'resend' => !empty($config['smtp_password']),
+            default  => $transport === 'smtp' && !empty($config['smtp_host']),
+        };
     }
 
     /**
@@ -1400,6 +1422,7 @@ final class Mailer
      *
      * For 'mailpit': overrides SMTP host/port/auth/encryption to localhost:1025.
      * For 'log': no overrides (log transport early-returns before config is used).
+     * For 'resend': no overrides (early-returns via sendViaResendApi).
      * For 'smtp'/default: no overrides (uses operator-configured values).
      *
      * @param array<string, string> $config Raw config from loadConfig()
@@ -1418,6 +1441,106 @@ final class Mailer
         }
 
         return $config;
+    }
+
+    /**
+     * Send an email via the Resend HTTP API.
+     *
+     * Uses HTTPS (port 443) to POST to https://api.resend.com/emails,
+     * bypassing cloud providers that block outbound SMTP ports (465/587).
+     *
+     * The API key is sourced from smtp_password (MAIL_PASSWORD in .env).
+     * From address and name use the same config as SMTP transport.
+     *
+     * @see https://resend.com/docs/api-reference/emails/send-email
+     */
+    private static function sendViaResendApi(
+        array $config,
+        string $logId,
+        string $to,
+        string $subject,
+        string $htmlBody,
+        ?string $plainBody,
+        string $type,
+        ?string $tenantId,
+        ?string $bookingId,
+        ?string $fromName,
+        ?string $replyToEmail,
+        ?string $replyToName,
+    ): array {
+        $apiKey = $config['smtp_password'] ?? '';
+        if ($apiKey === '') {
+            self::logEmail($logId, $tenantId, $bookingId, $type, $to, $subject, 'failed', 'Resend API key not configured');
+            Logger::warning('Email not sent: Resend API key not configured', ['type' => $type]);
+            return ['sent' => false, 'error' => 'Resend API key not configured', 'log_id' => $logId];
+        }
+
+        $fromAddress   = $config['mail_from_address'] ?: 'noreply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+        $effectiveName = self::resolveEffectiveFromName($fromName, $config);
+        $from          = $effectiveName !== '' ? "{$effectiveName} <{$fromAddress}>" : $fromAddress;
+
+        $payload = [
+            'from'    => $from,
+            'to'      => [$to],
+            'subject' => $subject,
+            'html'    => $htmlBody,
+        ];
+
+        if ($plainBody !== null && $plainBody !== '') {
+            $payload['text'] = $plainBody;
+        }
+
+        if ($replyToEmail !== null && $replyToEmail !== '') {
+            $payload['reply_to'] = $replyToName
+                ? "{$replyToName} <{$replyToEmail}>"
+                : $replyToEmail;
+        }
+
+        $ch = curl_init('https://api.resend.com/emails');
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_HTTPHEADER     => [
+                'Authorization: Bearer ' . $apiKey,
+                'Content-Type: application/json',
+            ],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_CONNECTTIMEOUT => 5,
+        ]);
+
+        $response  = curl_exec($ch);
+        $httpCode  = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        // cURL-level failure (DNS, TLS, timeout)
+        if ($curlError !== '') {
+            $error = 'Resend API connection error: ' . $curlError;
+            self::logEmail($logId, $tenantId, $bookingId, $type, $to, $subject, 'failed', $error);
+            Logger::error('Email send failed (Resend API)', ['type' => $type, 'error' => $error]);
+            return ['sent' => false, 'error' => $error, 'log_id' => $logId];
+        }
+
+        // Success (2xx)
+        if ($httpCode >= 200 && $httpCode < 300) {
+            self::logEmail($logId, $tenantId, $bookingId, $type, $to, $subject, 'sent');
+            return ['sent' => true, 'error' => null, 'log_id' => $logId];
+        }
+
+        // API error — parse response for error message
+        $decoded      = json_decode((string) $response, true);
+        $errorMessage = $decoded['message'] ?? "HTTP {$httpCode}";
+        $errorMessage = self::redactCredentials("Resend API: {$errorMessage}", $config);
+
+        self::logEmail($logId, $tenantId, $bookingId, $type, $to, $subject, 'failed', $errorMessage);
+        Logger::error('Email send failed (Resend API)', [
+            'type'      => $type,
+            'error'     => $errorMessage,
+            'http_code' => $httpCode,
+        ]);
+
+        return ['sent' => false, 'error' => $errorMessage, 'log_id' => $logId];
     }
 
     /**
