@@ -97,6 +97,12 @@
   padding: 0;
 }
 
+/* Prevent browser canvas color (from color-scheme: dark) bleeding
+   through on certain Chrome GPU combos — match body exactly. */
+html {
+  background: var(--vb-bg);
+}
+
 /* ── Base ── */
 body {
   font-family: var(--vb-font-sans);
