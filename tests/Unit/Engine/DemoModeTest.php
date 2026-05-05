@@ -285,6 +285,8 @@ final class DemoModeTest extends TestCase
         $this->assertTrue(DemoMode::isEmailSuppressed('bob@example.com'));
         $this->assertTrue(DemoMode::isEmailSuppressed('alice@example.org'));
         $this->assertTrue(DemoMode::isEmailSuppressed('test@example.net'));
+        $this->assertTrue(DemoMode::isEmailSuppressed('hello@demostudio.example'));
+        $this->assertTrue(DemoMode::isEmailSuppressed('info@hotelmarina.example'));
         $this->assertTrue(DemoMode::isEmailSuppressed('foo@invalid'));
         $this->assertTrue(DemoMode::isEmailSuppressed('bar@localhost'));
         $this->assertTrue(DemoMode::isEmailSuppressed('demo@booking.test'));

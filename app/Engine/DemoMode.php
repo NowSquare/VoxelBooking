@@ -92,6 +92,7 @@ final class DemoMode
         'example.com',
         'example.org',
         'example.net',
+        'example',          // catches .example TLD (RFC 2606)
         'test',             // catches .test TLD
         'invalid',          // catches .invalid TLD
         'localhost',
