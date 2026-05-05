@@ -8,6 +8,7 @@
     <?php endif; ?>
     <meta name="description" content="Book an appointment with <?= htmlspecialchars($tenant['name']) ?>">
     <title>Book – <?= htmlspecialchars($tenant['name']) ?></title>
+    <link rel="icon" href="/favicon.ico" type="image/png">
 
 
 
@@ -31,7 +32,7 @@
         }
     </style>
 
-    <link rel="stylesheet" href="/assets/css/booking-css.css">
+    <link rel="stylesheet" href="/assets/css/booking-css.css?v=<?= filemtime(dirname(__DIR__, 2) . '/public/assets/css/booking-css.css') ?>">
 
     <!-- Brand tokens (per-tenant) — must follow compiled CSS to override defaults -->
     <style><?= $brandStyle ?></style>
@@ -54,6 +55,13 @@
     <div class="vb-book-app" x-data="bookingWizard" x-cloak
          x-init="$el.removeAttribute('x-cloak')"
          id="vb-book-app">
+
+        <!-- ── Demo Banner (above header, hidden in embed mode) ── -->
+        <?php if (!($isEmbed ?? false) && \App\Engine\DemoMode::isActive()): ?>
+        <div class="vb-book-demo-banner" role="status">
+            <?= htmlspecialchars(__('admin.demo.booking_notice'), ENT_QUOTES, 'UTF-8') ?>
+        </div>
+        <?php endif; ?>
 
         <!-- ── Header (hidden in embed mode) ── -->
         <?php if (!($isEmbed ?? false)): ?>
@@ -849,12 +857,16 @@
 
                     <!-- Consent -->
                     <template x-if="config.requires_consent">
-                        <div class="vb-book-consent" x-bind:class="{ 'has-error': hasError('consent') }">
-                            <input type="checkbox" class="vb-book-consent-checkbox" id="vb-consent"
-                                   x-bind:checked="consentGiven"
-                                   @change="setConsentGiven($el.checked)"
-                                   aria-required="true">
-                            <label class="vb-book-consent-label" for="vb-consent" x-text="consentLabel()"></label>
+                        <div>
+                            <div class="vb-book-consent" x-bind:class="{ 'has-error': hasError('consent') }">
+                                <input type="checkbox" class="vb-book-consent-checkbox" id="vb-consent"
+                                       x-bind:checked="consentGiven"
+                                       @change="setConsentGiven($el.checked)"
+                                       aria-required="true">
+                                <label class="vb-book-consent-label" for="vb-consent" x-text="consentLabel()"></label>
+                            </div>
+                            <div class="vb-book-consent-error" x-show="hasError('consent')" x-cloak
+                                 x-text="t('errors.required_consent')"></div>
                         </div>
                     </template>
 
@@ -1040,10 +1052,27 @@
                     <!-- Active booking management -->
                     <template x-if="!manageLoading && managedBooking && !manageCancelled">
                         <div class="vb-book-manage-active">
-                            <h2 class="vb-book-step-title" x-text="t('manage.heading')"></h2>
-
-                            <!-- Status badge -->
+                            <!-- Status hero: icon + badge -->
                             <div class="vb-book-manage-status">
+                                <div class="vb-book-manage-status-icon"
+                                     x-bind:class="'is-' + managedBooking.status">
+                                    <template x-if="managedBooking.status === 'confirmed'">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                    </template>
+                                    <template x-if="managedBooking.status === 'cancelled'">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                    </template>
+                                    <template x-if="managedBooking.status === 'completed'">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                                    </template>
+                                    <template x-if="managedBooking.status === 'rescheduled'">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h5"/><path d="M17.5 17.5 16 16.3V14"/><circle cx="16" cy="16" r="6"/></svg>
+                                    </template>
+                                    <template x-if="managedBooking.status === 'pending'">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    </template>
+                                </div>
+                                <h2 class="vb-book-step-title" x-text="t('manage.heading')"></h2>
                                 <span class="vb-book-manage-status-badge"
                                       x-bind:class="'is-' + managedBooking.status"
                                       x-text="manageStatusLabel"></span>
@@ -1059,15 +1088,16 @@
                                         </div>
                                     </template>
                                 </div>
-                            </div>
 
-                            <!-- Customer info -->
-                            <template x-if="managedBooking.customer_name">
-                                <div class="vb-book-manage-customer">
-                                    <span x-text="managedBooking.customer_name"></span>
-                                    <span class="vb-book-manage-customer-email" x-text="managedBooking.customer_email"></span>
-                                </div>
-                            </template>
+                                <!-- Customer info: integrated card footer -->
+                                <template x-if="managedBooking.customer_name">
+                                    <div class="vb-book-manage-customer">
+                                        <span class="vb-book-manage-customer-name" x-text="managedBooking.customer_name"></span>
+                                        <span class="vb-book-manage-customer-sep">·</span>
+                                        <span class="vb-book-manage-customer-email" x-text="managedBooking.customer_email"></span>
+                                    </div>
+                                </template>
+                            </div>
 
                             <!-- Action buttons -->
                             <div class="vb-book-manage-actions">
@@ -1106,35 +1136,38 @@
                         </div>
                     </template>
 
-                    <!-- Cancel confirmation modal -->
-                    <div class="vb-book-modal-overlay" x-show="manageCancelModalOpen" x-transition.opacity>
-                        <div class="vb-book-modal" @click.outside="manageCancelModalOpen = false">
-                            <h3 class="vb-book-modal-title" x-text="t('manage.cancel_heading')"></h3>
-                            <p class="vb-book-modal-body" x-text="t('manage.cancel_confirm')"></p>
+                </div>
+            </div>
 
-                            <div class="vb-book-modal-field">
-                                <label class="vb-book-label" x-text="t('manage.cancel_reason_label')"></label>
-                                <textarea class="vb-book-input vb-book-textarea"
-                                          rows="3"
-                                          x-bind:placeholder="t('manage.cancel_reason_placeholder')"
-                                          @input="setManageCancelReason($event.target.value)"></textarea>
-                            </div>
+            <!-- Cancel confirmation modal — placed outside .vb-book-step to avoid
+                 CSS transform containment (transform creates a new containing block
+                 for position:fixed, breaking full-viewport backdrop coverage). -->
+            <div class="vb-book-modal-overlay" x-show="manageCancelModalOpen" x-transition.opacity x-cloak>
+                <div class="vb-book-modal" @click.outside="manageCancelModalOpen = false">
+                    <h3 class="vb-book-modal-title" x-text="t('manage.cancel_heading')"></h3>
+                    <p class="vb-book-modal-body" x-text="t('manage.cancel_confirm')"></p>
 
-                            <div class="vb-book-modal-actions">
-                                <button type="button"
-                                        class="vb-book-btn vb-book-btn-ghost"
-                                        @click="manageCancelModalOpen = false"
-                                        x-text="t('manage.cancel_nevermind')">
-                                </button>
-                                <button type="button"
-                                        class="vb-book-btn vb-book-btn-danger"
-                                        @click="cancelManagedBooking"
-                                        x-bind:disabled="manageCancelling">
-                                    <span x-show="!manageCancelling" x-text="t('manage.cancel_button')"></span>
-                                    <span x-show="manageCancelling" class="vb-book-spinner-inline"></span>
-                                </button>
-                            </div>
-                        </div>
+                    <div class="vb-book-modal-field">
+                        <label class="vb-book-label" x-text="t('manage.cancel_reason_label')"></label>
+                        <textarea class="vb-book-input vb-book-textarea"
+                                  rows="3"
+                                  x-bind:placeholder="t('manage.cancel_reason_placeholder')"
+                                  @input="setManageCancelReason($event.target.value)"></textarea>
+                    </div>
+
+                    <div class="vb-book-modal-actions">
+                        <button type="button"
+                                class="vb-book-btn vb-book-btn-ghost"
+                                @click="manageCancelModalOpen = false"
+                                x-text="t('manage.cancel_nevermind')">
+                        </button>
+                        <button type="button"
+                                class="vb-book-btn vb-book-btn-danger"
+                                @click="cancelManagedBooking"
+                                x-bind:disabled="manageCancelling">
+                            <span x-show="!manageCancelling" x-text="t('manage.cancel_button')"></span>
+                            <span x-show="manageCancelling" class="vb-book-spinner-inline"></span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1576,6 +1609,6 @@
         window.__VB_DEMO_NOTICE__ = <?= json_encode(__('admin.demo.booking_notice')) ?>;
         <?php endif; ?>
     </script>
-    <script type="module" src="/assets/js/booking.js"></script>
+    <script type="module" src="/assets/js/booking.js?v=<?= filemtime(dirname(__DIR__, 2) . '/public/assets/js/booking.js') ?>"></script>
 </body>
 </html>

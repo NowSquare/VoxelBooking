@@ -861,6 +861,8 @@ Alpine.data('bookingWizard', () => ({
         }
         if (!this.customerEmail.trim()) {
             this.formErrors.email = true;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.customerEmail.trim())) {
+            this.formErrors.email = true;
         }
         if (config.require_phone && !this.customerPhone.trim()) {
             this.formErrors.phone = true;
@@ -961,10 +963,7 @@ Alpine.data('bookingWizard', () => ({
 
     // ── Step 6: Submit ──
     async submitBooking() {
-        if (config.is_demo) {
-            this.showToast(t('demo_notice'), 'error');
-            return;
-        }
+
 
         this.submitting = true;
 
@@ -1306,10 +1305,7 @@ Alpine.data('bookingWizard', () => ({
      * Branches by booking pattern to the appropriate flow.
      */
     async startReschedule() {
-        if (config.is_demo) {
-            this.showToast(t('demo_notice'), 'error');
-            return;
-        }
+
         if (!this.managedBooking || !this.manageCanReschedule) return;
 
         const pattern = this.managedBooking.booking_pattern || 'timeslot';
@@ -2316,10 +2312,25 @@ Alpine.data('bookingWizard', () => ({
     },
 
     get activeReviewRows() {
-        if (config.booking_pattern === 'resource') return this.resourceSummaryRows;
-        if (config.booking_pattern === 'capacity') return this.capacitySummaryRows;
-        if (config.booking_pattern === 'event') return this.eventSummaryRows;
-        return this.summaryRows;
+        let rows;
+        if (config.booking_pattern === 'resource') rows = this.resourceSummaryRows;
+        else if (config.booking_pattern === 'capacity') rows = this.capacitySummaryRows;
+        else if (config.booking_pattern === 'event') rows = this.eventSummaryRows;
+        else rows = this.summaryRows;
+
+        // Append contact details so customer can catch typos before confirming
+        const contact = [];
+        if (this.customerName.trim()) {
+            contact.push({ label: t('summary.contact_name'), value: this.customerName.trim() });
+        }
+        if (this.customerEmail.trim()) {
+            contact.push({ label: t('summary.contact_email'), value: this.customerEmail.trim() });
+        }
+        if (this.customerPhone.trim()) {
+            contact.push({ label: t('summary.contact_phone'), value: this.customerPhone.trim() });
+        }
+
+        return [...rows, ...contact];
     },
 
     // Pattern-aware back target from details step
@@ -2338,10 +2349,7 @@ Alpine.data('bookingWizard', () => ({
     },
 
     async submitResourceBooking() {
-        if (config.is_demo) {
-            this.showToast(t('demo_notice'), 'error');
-            return;
-        }
+
 
         this.submitting = true;
 
@@ -2581,10 +2589,7 @@ Alpine.data('bookingWizard', () => ({
     },
 
     async submitCapacityBooking() {
-        if (config.is_demo) {
-            this.showToast(t('demo_notice'), 'error');
-            return;
-        }
+
         if (this.submitting) return;
         this.submitting = true;
 
@@ -2756,10 +2761,7 @@ Alpine.data('bookingWizard', () => ({
     },
 
     async submitEventBooking() {
-        if (config.is_demo) {
-            this.showToast(t('demo_notice'), 'error');
-            return;
-        }
+
         if (this.submitting) return;
         this.submitting = true;
 

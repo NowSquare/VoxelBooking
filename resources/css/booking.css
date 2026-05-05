@@ -126,6 +126,21 @@ body {
   text-align: center;
 }
 
+/* Demo environment notice — informational style */
+.vb-book-demo-banner {
+  max-width: 640px;
+  margin: 24px auto 0;
+  padding: 10px 16px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #4338CA;
+  background: #EEF2FF;
+  border: 1px solid #C7D2FE;
+  border-radius: var(--vb-radius-md);
+  text-align: center;
+  line-height: 1.45;
+}
+
 .vb-book-header-inner {
   max-width: 640px;
   margin: 0 auto;
@@ -1123,6 +1138,20 @@ body {
   color: var(--vb-brand);
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+.vb-book-consent.has-error {
+  background: var(--vb-error-light);
+  border: 1px solid var(--vb-error);
+  border-radius: var(--vb-radius-md);
+  padding: 10px 12px;
+}
+
+.vb-book-consent-error {
+  font-size: 0.75rem;
+  color: var(--vb-error);
+  margin-top: 4px;
+  padding-left: 30px;
 }
 
 /* ── Buttons ── */
@@ -2343,12 +2372,22 @@ body {
 
 [data-theme="dark"] .vb-book-toast-warn {
   border-color: #F59E0B;
-  background: rgba(245, 158, 11, 0.1);
+  background: #302410;
   color: #FCD34D;
 }
 
 [data-theme="dark"] .vb-book-toast-warn .vb-book-toast-icon {
   color: #F59E0B;
+}
+
+[data-theme="dark"] .vb-book-toast-error {
+  border-color: #F87171;
+  background: #2D1618;
+  color: #FCA5A5;
+}
+
+[data-theme="dark"] .vb-book-toast-error .vb-book-toast-icon {
+  color: #F87171;
 }
 
 [data-theme="dark"] .vb-book-toast {
@@ -2373,53 +2412,148 @@ body {
   accent-color: var(--vb-brand);
 }
 
-/* ── Self-Service Manage Page ── */
+[data-theme="dark"] .vb-book-demo-banner {
+  color: #A5B4FC;
+  background: #1E1B4B;
+  border-color: #3730A3;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   SELF-SERVICE MANAGE PAGE
+   Design: Revolut confirmation clarity × Linear precision
+   Grid: 8px base unit. Every spacing is a multiple.
+   ═══════════════════════════════════════════════════════════ */
 
 .vb-book-manage-container {
   text-align: center;
-  max-width: 480px;
+  max-width: 520px;
   margin: 0 auto;
+  padding: 8px 0 40px;
 }
 
 .vb-book-manage-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  padding: 3rem 0;
+  gap: 16px;
+  padding: 64px 0;
   color: var(--vb-text-muted);
 }
+
+/* ── Cancelled State ── */
 
 .vb-book-manage-cancelled {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 1rem 0;
-  animation: vb-manage-fade-in 300ms ease-out;
+  gap: 8px;
+  padding: 32px 0 16px;
+  animation: vb-manage-rise 400ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes vb-manage-fade-in {
-  from { opacity: 0; transform: translateY(8px); }
+.vb-book-manage-cancelled .vb-book-confirm-check-cancel {
+  margin-bottom: 8px;
+}
+
+.vb-book-manage-cancelled .vb-book-manage-message {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.vb-book-manage-cancelled .vb-book-confirm-actions-secondary {
+  margin-top: 16px;
+  width: 100%;
+  max-width: 280px;
+}
+
+@keyframes vb-manage-rise {
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Active Booking ── */
 
 .vb-book-manage-active {
   display: flex;
   flex-direction: column;
   align-items: center;
+  animation: vb-manage-rise 500ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* ── Status Hero ──
+   Prominent status icon + badge. The first thing you see.
+   Confirmed = checkmark in brand-green glow
+   Cancelled/Completed = same pattern, different color       */
+
 .vb-book-manage-status {
-  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.vb-book-manage-status-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: vb-status-pop 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  opacity: 0;
+}
+
+@keyframes vb-status-pop {
+  from { opacity: 0; transform: scale(0.5); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.vb-book-manage-status-icon svg {
+  width: 28px;
+  height: 28px;
+  stroke-width: 2.5;
+}
+
+.vb-book-manage-status-icon.is-confirmed {
+  background: #ECFDF5;
+  color: #059669;
+  box-shadow: 0 0 0 8px rgba(5, 150, 105, 0.06);
+}
+
+.vb-book-manage-status-icon.is-cancelled {
+  background: #FEF2F2;
+  color: #DC2626;
+  box-shadow: 0 0 0 8px rgba(220, 38, 38, 0.06);
+}
+
+.vb-book-manage-status-icon.is-rescheduled {
+  background: #FFF7ED;
+  color: #EA580C;
+  box-shadow: 0 0 0 8px rgba(234, 88, 12, 0.06);
+}
+
+.vb-book-manage-status-icon.is-completed {
+  background: #ECFDF5;
+  color: #059669;
+  box-shadow: 0 0 0 8px rgba(5, 150, 105, 0.06);
+}
+
+.vb-book-manage-status-icon.is-pending {
+  background: #FFFBEB;
+  color: #D97706;
+  box-shadow: 0 0 0 8px rgba(217, 119, 6, 0.06);
 }
 
 .vb-book-manage-status-badge {
   display: inline-block;
-  padding: 0.25rem 0.75rem;
+  padding: 4px 14px;
   border-radius: 9999px;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .vb-book-manage-status-badge.is-confirmed {
@@ -2442,79 +2576,160 @@ body {
   color: #059669;
 }
 
+.vb-book-manage-status-badge.is-pending {
+  background: #FFFBEB;
+  color: #D97706;
+}
+
+/* ── Detail Card ──
+   iOS grouped-list style: solid card shell, zero internal wrapper
+   padding, alternating row tints, inset separators, seamless
+   customer footer. No visible gap between any section.
+
+   Note: the base .vb-book-summary has its own bg, padding, radius,
+   and margin (for the confirmation page). We reset all of these
+   inside the manage context so the card shell is the only frame.  */
+
+.vb-book-manage-active .vb-book-confirm-summary {
+  width: 100%;
+  margin-top: 0;
+  opacity: 1;
+  animation: none;
+  background: var(--vb-bg);
+  border: 1px solid var(--vb-border);
+  border-radius: var(--vb-radius-xl);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04),
+              0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+/* Reset all inherited base .vb-book-summary styles */
+.vb-book-manage-active .vb-book-summary {
+  padding: 0;
+  margin: 0;
+  background: none;
+  border-radius: 0;
+  animation: none;
+}
+
+.vb-book-manage-active .vb-book-summary-row {
+  padding: 15px 24px;
+  border-top: none;
+}
+
+/* Full-width separator between data rows */
+.vb-book-manage-active .vb-book-summary-row + .vb-book-summary-row {
+  border-top: 1px solid var(--vb-border);
+}
+
+/* ── Customer Footer ──
+   Seamless bottom section. Full-width separator (section boundary,
+   not an intra-row divider). Tinted background.                   */
+
 .vb-book-manage-customer {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
-  margin: 1rem 0;
-  font-size: 0.875rem;
+  gap: 8px;
+  padding: 14px 24px;
+  font-size: 0.8125rem;
+  color: var(--vb-text-secondary);
+  background: var(--vb-bg-secondary);
+  border-top: 1px solid var(--vb-border);
+}
+
+.vb-book-manage-customer-name {
+  font-weight: 500;
   color: var(--vb-text);
+}
+
+.vb-book-manage-customer-sep {
+  color: var(--vb-text-tertiary);
+  font-size: 0.75rem;
 }
 
 .vb-book-manage-customer-email {
   color: var(--vb-text-muted);
 }
 
+/* ── Action Buttons ──
+   Equal-width, stacked. Primary (reschedule) is brand-colored.
+   Danger (cancel) is outlined — not screaming red. Ghost stays
+   at the bottom. Spacing is tight but rhythmic.                  */
+
 .vb-book-manage-actions {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
+  gap: 10px;
+  margin-top: 32px;
+  width: 100%;
+}
+
+.vb-book-manage-actions .vb-book-btn {
   width: 100%;
 }
 
 .vb-book-manage-gate-msg {
   margin: 0;
+  padding: 0 4px;
   font-size: 0.8125rem;
   color: var(--vb-text-muted);
   font-style: italic;
+  line-height: 1.5;
 }
 
 .vb-book-manage-message {
   font-size: 0.9375rem;
   color: var(--vb-text-muted);
-  margin-top: 0.5rem;
+  margin-top: 8px;
+  line-height: 1.5;
 }
 
-/* ── Button: Danger (cancel) ── */
+/* ── Button: Danger ──
+   Outline style by default. Fills on hover. Less aggressive
+   than a solid red — important for a booking manage page where
+   you don't want accidental cancellations.                       */
 
 .vb-book-btn-danger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.9375rem;
+  padding: 12px 24px;
+  border: 1.5px solid rgba(220, 38, 38, 0.25);
+  border-radius: var(--vb-radius-lg, 12px);
+  font-size: 0.875rem;
   font-weight: 600;
+  font-family: var(--vb-font-sans);
   cursor: pointer;
-  transition: background 150ms ease, transform 100ms ease;
-  background: #DC2626;
-  color: #FFFFFF;
-  min-width: 160px;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  background: transparent;
+  color: #DC2626;
 }
 
 .vb-book-btn-danger:hover {
-  background: #B91C1C;
+  background: #DC2626;
+  color: #FFFFFF;
+  border-color: #DC2626;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
+  transform: translateY(-1px);
 }
 
 .vb-book-btn-danger:active {
-  transform: scale(0.98);
+  transform: scale(0.98) translateY(0);
+  box-shadow: none;
+  transition-duration: 80ms;
 }
 
 .vb-book-btn-danger:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+  pointer-events: none;
 }
-
 
 /* ── Cancel Checkmark Animation ── */
 
 .vb-book-confirm-check-cancel {
-  margin-bottom: 0.5rem;
+  margin-bottom: 8px;
   width: 56px;
   height: 56px;
 }
@@ -2552,60 +2767,106 @@ body {
   stroke: #DC2626;
 }
 
-/* ── Modal ── */
+/* ═══════════════════════════════════════════════════════════
+   MODAL — Cancel confirmation
+   Full-viewport backdrop. Centered card. Clear hierarchy.
+   ═══════════════════════════════════════════════════════════ */
 
 .vb-book-modal-overlay {
   position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
+  z-index: 9999;
+  padding: 16px;
 }
 
 .vb-book-modal {
   background: var(--vb-bg);
-  border-radius: 12px;
-  padding: 2rem;
-  max-width: 420px;
+  border-radius: 16px;
+  padding: 28px 28px 24px;
+  max-width: 400px;
   width: 100%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2),
+              0 8px 24px rgba(0, 0, 0, 0.08),
+              0 0 0 1px rgba(0, 0, 0, 0.04);
   text-align: left;
+  animation: vb-modal-enter 250ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes vb-modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .vb-book-modal-title {
-  margin: 0 0 0.5rem;
-  font-size: 1.125rem;
+  margin: 0 0 6px;
+  font-size: 1.0625rem;
   font-weight: 700;
   color: var(--vb-text);
+  letter-spacing: -0.015em;
 }
 
 .vb-book-modal-body {
-  margin: 0 0 1.25rem;
-  font-size: 0.9375rem;
+  margin: 0 0 20px;
+  font-size: 0.875rem;
   color: var(--vb-text-muted);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .vb-book-modal-field {
-  margin-bottom: 1.25rem;
+  margin-bottom: 20px;
 }
 
 .vb-book-modal-field .vb-book-label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 6px;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--vb-text-muted);
+  color: var(--vb-text-secondary);
+}
+
+.vb-book-modal-field .vb-book-textarea {
+  font-size: 0.875rem;
 }
 
 .vb-book-modal-actions {
   display: flex;
-  gap: 0.75rem;
+  gap: 10px;
   justify-content: flex-end;
+}
+
+.vb-book-modal-actions .vb-book-btn-ghost {
+  font-size: 0.875rem;
+  padding: 10px 16px;
+}
+
+.vb-book-modal-actions .vb-book-btn-danger {
+  font-size: 0.875rem;
+  padding: 10px 20px;
+  border-color: #DC2626;
+  background: #DC2626;
+  color: #FFFFFF;
+}
+
+.vb-book-modal-actions .vb-book-btn-danger:hover {
+  background: #B91C1C;
+  border-color: #B91C1C;
 }
 
 /* ── Inline Spinner (for button loading state) ── */
@@ -2624,7 +2885,39 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* ── Dark Mode: Manage + Modal ── */
+/* ═══════════════════════════════════════════════════════════
+   DARK MODE — Manage + Modal
+   ═══════════════════════════════════════════════════════════ */
+
+[data-theme="dark"] .vb-book-manage-status-icon.is-confirmed {
+  background: rgba(5, 150, 105, 0.15);
+  color: #34D399;
+  box-shadow: 0 0 0 8px rgba(52, 211, 153, 0.06);
+}
+
+[data-theme="dark"] .vb-book-manage-status-icon.is-cancelled {
+  background: rgba(220, 38, 38, 0.15);
+  color: #F87171;
+  box-shadow: 0 0 0 8px rgba(248, 113, 113, 0.06);
+}
+
+[data-theme="dark"] .vb-book-manage-status-icon.is-rescheduled {
+  background: rgba(234, 88, 12, 0.15);
+  color: #FB923C;
+  box-shadow: 0 0 0 8px rgba(251, 146, 60, 0.06);
+}
+
+[data-theme="dark"] .vb-book-manage-status-icon.is-completed {
+  background: rgba(5, 150, 105, 0.15);
+  color: #34D399;
+  box-shadow: 0 0 0 8px rgba(52, 211, 153, 0.06);
+}
+
+[data-theme="dark"] .vb-book-manage-status-icon.is-pending {
+  background: rgba(217, 119, 6, 0.15);
+  color: #FBBF24;
+  box-shadow: 0 0 0 8px rgba(251, 191, 36, 0.06);
+}
 
 [data-theme="dark"] .vb-book-manage-status-badge.is-confirmed {
   background: rgba(5, 150, 105, 0.15);
@@ -2646,21 +2939,52 @@ body {
   color: #34D399;
 }
 
+[data-theme="dark"] .vb-book-manage-status-badge.is-pending {
+  background: rgba(217, 119, 6, 0.15);
+  color: #FBBF24;
+}
+
+[data-theme="dark"] .vb-book-manage-active .vb-book-confirm-summary {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2),
+              0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .vb-book-manage-customer {
+  background: rgba(255, 255, 255, 0.03);
+}
+
 [data-theme="dark"] .vb-book-modal {
   background: var(--vb-bg-secondary);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5),
+              0 8px 24px rgba(0, 0, 0, 0.3),
+              0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 [data-theme="dark"] .vb-book-modal-overlay {
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75);
 }
 
 [data-theme="dark"] .vb-book-btn-danger {
-  background: #B91C1C;
+  border-color: rgba(248, 113, 113, 0.3);
+  color: #F87171;
+  background: transparent;
 }
 
 [data-theme="dark"] .vb-book-btn-danger:hover {
+  background: #B91C1C;
+  color: #FFFFFF;
+  border-color: #B91C1C;
+}
+
+[data-theme="dark"] .vb-book-modal-actions .vb-book-btn-danger {
+  background: #B91C1C;
+  color: #FFFFFF;
+  border-color: #B91C1C;
+}
+
+[data-theme="dark"] .vb-book-modal-actions .vb-book-btn-danger:hover {
   background: #991B1B;
+  border-color: #991B1B;
 }
 
 /* ═══════════════════════════════════════════════════════════
