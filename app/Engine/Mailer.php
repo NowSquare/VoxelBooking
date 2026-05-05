@@ -260,8 +260,9 @@ final class Mailer
         ]);
 
         $heading        = $tpl['heading'] ?? __('email.booking_confirmation.body');
+        // body_intro replaces both greeting and body as a single paragraph
         $greeting       = $tpl['body_intro'] ?? __('email.booking_confirmation.greeting', ['name' => $customerName]);
-        $bodyText       = $tpl['body_intro'] ?? __('email.booking_confirmation.body');
+        $bodyText       = isset($tpl['body_intro']) ? '' : __('email.booking_confirmation.body');
         $detailsHeading = __('email.booking_confirmation.details');
         $footer         = $tpl['body_outro'] ?? __('email.booking_confirmation.footer');
 
@@ -713,7 +714,7 @@ final class Mailer
 
         $heading  = $tpl['heading'] ?? __('email.cancellation.heading');
         $greeting = $tpl['body_intro'] ?? __('email.cancellation.greeting', ['name' => $customerName]);
-        $bodyText = $tpl['body_intro'] ?? __('email.cancellation.body');
+        $bodyText = isset($tpl['body_intro']) ? '' : __('email.cancellation.body');
         $detailsHeading = __('email.booking_confirmation.details');
         $footer   = $tpl['body_outro'] ?? __('email.cancellation.footer');
 
@@ -791,7 +792,7 @@ final class Mailer
 
         $heading  = $tpl['heading'] ?? __('email.booking_reminder.body');
         $greeting = $tpl['body_intro'] ?? __('email.booking_reminder.greeting', ['name' => $customerName]);
-        $bodyText = $tpl['body_intro'] ?? __('email.booking_reminder.body');
+        $bodyText = isset($tpl['body_intro']) ? '' : __('email.booking_reminder.body');
         $detailsHeading = __('email.booking_confirmation.details');
         $footer   = $tpl['body_outro'] ?? __('email.booking_confirmation.footer');
 
@@ -869,7 +870,7 @@ final class Mailer
 
         $heading        = $tpl['heading'] ?? __('email.approval_request.heading');
         $greeting       = $tpl['body_intro'] ?? __('email.approval_request.greeting', ['name' => $customerName]);
-        $bodyText       = $tpl['body_intro'] ?? __('email.approval_request.body');
+        $bodyText       = isset($tpl['body_intro']) ? '' : __('email.approval_request.body');
         $detailsHeading = __('email.booking_confirmation.details');
         $footer         = $tpl['body_outro'] ?? __('email.approval_request.footer');
 
@@ -1660,6 +1661,12 @@ final class Mailer
 
         $poweredBy = __('email.common.powered_by', ['app_name' => $appName]);
 
+        // Build the body paragraph: greeting only, or greeting + body text
+        $bodyParagraph = $h($greeting);
+        if ($bodyText !== '') {
+            $bodyParagraph .= '<br>' . $h($bodyText);
+        }
+
         // Build manage-booking CTA block (only if URL is provided)
         $manageBlock = '';
         if ($manageUrl !== '') {
@@ -1691,7 +1698,7 @@ final class Mailer
 
                         <!-- Greeting + Body -->
                         <tr><td style="padding: 24px 32px 0; text-align: center;">
-                            <p style="margin: 0; font-size: 15px; color: #374151; line-height: 1.5; font-family: {$font};">{$h($greeting)}<br>{$h($bodyText)}</p>
+                            <p style="margin: 0; font-size: 15px; color: #374151; line-height: 1.5; font-family: {$font};">{$bodyParagraph}</p>
                         </td></tr>
 
                         <!-- Summary card -->
@@ -1749,7 +1756,9 @@ final class Mailer
         $lines[] = mb_strtoupper($heading);
         $lines[] = '';
         $lines[] = $greeting;
-        $lines[] = $bodyText;
+        if ($bodyText !== '') {
+            $lines[] = $bodyText;
+        }
         $lines[] = '';
         $lines[] = $detailsHeading;
         foreach ($details as $label => $value) {
