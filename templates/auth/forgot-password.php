@@ -20,7 +20,7 @@ $csrfToken = $csrfToken ?? '';
     <meta name="robots" content="noindex, nofollow">
     <title><?= __('auth.forgot_password_page', ['app_name' => app_name()]) ?></title>
     <?php include dirname(__DIR__) . '/partials/admin-head.php'; ?>
-    <link rel="stylesheet" href="/assets/css/admin-css.css">
+    <link rel="stylesheet" href="/assets/css/admin-css.css?v=<?= filemtime(dirname(__DIR__, 2) . '/public/assets/css/admin-css.css') ?>">
     <style>body { background: var(--vb-bg-base); min-height: 100vh; display: flex; overflow: hidden; }</style>
 </head>
 <body>

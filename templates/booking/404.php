@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow">
     <title><?= __('booking.empty.404_title') ?></title>
+    <link rel="icon" href="/favicon.ico" type="image/png">
     <style>
         @font-face {
             font-family: 'Inter';
@@ -23,7 +24,7 @@
             unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
         }
     </style>
-    <link rel="stylesheet" href="/assets/css/booking-css.css">
+    <link rel="stylesheet" href="/assets/css/booking-css.css?v=<?= filemtime(dirname(__DIR__, 2) . '/public/assets/css/booking-css.css') ?>">
     <style>[x-cloak] { display: none !important; }</style>
     <script>
         (function() {

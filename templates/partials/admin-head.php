@@ -9,6 +9,7 @@
  * Design tokens and all other CSS live in admin.css (Tailwind 4).
  */
 ?>
+<link rel="icon" href="/favicon.ico" type="image/png">
 <style>
     @font-face {
         font-family: 'Inter';

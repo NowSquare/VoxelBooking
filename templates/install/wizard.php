@@ -21,6 +21,7 @@ $displayStep = is_numeric($step) ? (int) $step : (str_starts_with((string) $step
     <meta name="robots" content="noindex, nofollow">
     <meta name="description" content="<?= ($_ENV['APP_NAME'] ?? 'VoxelBooking') ?> Installation Wizard">
     <title><?= __('install.wizard.page_title', ['app_name' => $_ENV['APP_NAME'] ?? 'VoxelBooking']) ?></title>
+    <link rel="icon" href="/favicon.ico" type="image/png">
     <style>
         /* ── Self-hosted Inter (PRD §II: WOFF2, self-hosted) ── */
         @font-face {
