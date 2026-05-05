@@ -97,14 +97,13 @@
   padding: 0;
 }
 
-/* Flatten background across the entire shell so Chrome cannot render
-   compositor seams between transparent sections on certain GPUs. */
+/* Page background: only on full-width page-level elements.
+   Internal sections (header, flow, footer) must stay transparent
+   because .vb-book-flow is max-width: 640px centered — painting
+   it would create a visible column on wider viewports. */
 html,
-body,
-.vb-book-app,
-.vb-book-header,
-.vb-book-flow,
-.vb-book-footer {
+body {
+  min-height: 100%;
   background: var(--vb-bg);
 }
 
@@ -125,16 +124,16 @@ body {
 /* ── App Shell ── */
 .vb-book-app {
   position: relative;
-  isolation: isolate;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   min-height: 100svh;
   min-height: 100dvh;
+  background: var(--vb-bg);
 }
 
-/* Fixed backdrop layer — prevents any canvas/compositor color from
-   showing behind transparent regions regardless of GPU behaviour. */
+/* Fixed backdrop — prevents browser canvas color from showing
+   behind transparent regions regardless of GPU behaviour. */
 .vb-book-app::before {
   content: "";
   position: fixed;
@@ -1738,7 +1737,7 @@ body {
   text-align: center;
   font-size: 0.6875rem;
   color: var(--vb-text-tertiary);
-  /* background set in flattened shell rule above */
+
 }
 
 .vb-book-footer a {
