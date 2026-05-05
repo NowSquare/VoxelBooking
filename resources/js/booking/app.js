@@ -1182,6 +1182,10 @@ Alpine.data('bookingWizard', () => ({
     manageUrl(bookingId) {
         return `/book/${config.slug}/manage/${bookingId}`;
     },
+    get privacyUrl() {
+        const cid = this.managedBooking?.customer_id;
+        return cid ? `/book/${config.slug}/privacy/${cid}` : '';
+    },
 
     // Book another: reload page
     bookAnother() {

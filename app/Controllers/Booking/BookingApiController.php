@@ -1571,6 +1571,7 @@ final class BookingApiController
                 'resource_name'   => $booking['resource_name'] ?? null,
                 'event_name'      => $booking['event_name'] ?? null,
                 'event_location'  => $booking['event_location'] ?? null,
+                'customer_id'     => $booking['customer_id'] ?? null,
                 'customer_name'   => $booking['customer_name'] ?? null,
                 'customer_email'  => $booking['customer_email'] ?? null,
                 'cancelled_at'    => $booking['cancelled_at'] ?? null,

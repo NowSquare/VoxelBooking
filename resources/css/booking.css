@@ -2685,6 +2685,27 @@ body {
   line-height: 1.5;
 }
 
+.vb-book-manage-privacy-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  color: var(--vb-text-tertiary);
+  text-decoration: none;
+  transition: color var(--vb-duration-fast) var(--vb-ease-out);
+}
+
+.vb-book-manage-privacy-link:hover {
+  color: var(--vb-text-secondary);
+}
+
+.vb-book-manage-privacy-link svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
 .vb-book-manage-message {
   font-size: 0.9375rem;
   color: var(--vb-text-muted);

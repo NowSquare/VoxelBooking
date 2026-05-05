@@ -434,6 +434,7 @@ return [
         'reschedule_reason_disabled' => 'Rescheduling is not available for this booking.',
         'reschedule_reason_too_late' => 'The rescheduling window for this booking has passed.',
         'reschedule_reason_not_confirmed' => 'Only confirmed bookings can be rescheduled.',
+        'privacy_link'                    => 'Your data & privacy',
     ],
 
     // ── Demo Mode ──
