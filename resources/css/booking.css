@@ -97,9 +97,14 @@
   padding: 0;
 }
 
-/* Prevent browser canvas color (from color-scheme: dark) bleeding
-   through on certain Chrome GPU combos — match body exactly. */
-html {
+/* Flatten background across the entire shell so Chrome cannot render
+   compositor seams between transparent sections on certain GPUs. */
+html,
+body,
+.vb-book-app,
+.vb-book-header,
+.vb-book-flow,
+.vb-book-footer {
   background: var(--vb-bg);
 }
 
@@ -109,7 +114,6 @@ body {
   font-size: 0.9375rem; /* 15px — booking page base */
   line-height: 1.5;
   color: var(--vb-text);
-  background: var(--vb-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: 'cv02' 1, 'cv03' 1, 'cv04' 1, 'cv11' 1;
@@ -120,10 +124,23 @@ body {
 
 /* ── App Shell ── */
 .vb-book-app {
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100svh;
   min-height: 100dvh;
+}
+
+/* Fixed backdrop layer — prevents any canvas/compositor color from
+   showing behind transparent regions regardless of GPU behaviour. */
+.vb-book-app::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background: var(--vb-bg);
 }
 
@@ -1721,6 +1738,7 @@ body {
   text-align: center;
   font-size: 0.6875rem;
   color: var(--vb-text-tertiary);
+  /* background set in flattened shell rule above */
 }
 
 .vb-book-footer a {
