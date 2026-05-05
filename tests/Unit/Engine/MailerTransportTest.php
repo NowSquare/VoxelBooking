@@ -356,4 +356,141 @@ final class MailerTransportTest extends TestCase
         $this->assertFalse(Mailer::isProductionSmtp(),
             'SMTP with no host is not production SMTP');
     }
+
+    // ════════════════════════════════════════════════════════════════
+    // Resend transport — isConfigured / isProductionSmtp
+    // ════════════════════════════════════════════════════════════════
+
+    /**
+     * isConfigured returns true for resend transport with API key set.
+     */
+    public function testIsConfiguredTrueForResendWithApiKey(): void
+    {
+        $configProp = new \ReflectionProperty(Mailer::class, 'configCache');
+        $configProp->setValue(null, [
+            'mail_transport'   => 'resend',
+            'smtp_host'        => '',
+            'smtp_port'        => '',
+            'smtp_username'    => '',
+            'smtp_password'    => 're_test_api_key_123',
+            'smtp_encryption'  => '',
+            'mail_from_address' => 'book@example.com',
+            'mail_from_name'   => 'Test',
+        ]);
+
+        $this->assertTrue(Mailer::isConfigured(),
+            'Resend transport with API key must be configured');
+    }
+
+    /**
+     * isConfigured returns false for resend transport with no API key.
+     */
+    public function testIsConfiguredFalseForResendWithNoApiKey(): void
+    {
+        $configProp = new \ReflectionProperty(Mailer::class, 'configCache');
+        $configProp->setValue(null, [
+            'mail_transport'   => 'resend',
+            'smtp_host'        => '',
+            'smtp_port'        => '',
+            'smtp_username'    => '',
+            'smtp_password'    => '',
+            'smtp_encryption'  => '',
+            'mail_from_address' => 'book@example.com',
+            'mail_from_name'   => 'Test',
+        ]);
+
+        $this->assertFalse(Mailer::isConfigured(),
+            'Resend transport without API key must not be configured');
+    }
+
+    /**
+     * isProductionSmtp returns true for resend transport with API key.
+     * Resend delivers to real customer inboxes, same as SMTP.
+     */
+    public function testIsProductionSmtpTrueForResendWithApiKey(): void
+    {
+        $configProp = new \ReflectionProperty(Mailer::class, 'configCache');
+        $configProp->setValue(null, [
+            'mail_transport'   => 'resend',
+            'smtp_host'        => '',
+            'smtp_port'        => '',
+            'smtp_username'    => '',
+            'smtp_password'    => 're_test_api_key_123',
+            'smtp_encryption'  => '',
+            'mail_from_address' => 'book@example.com',
+            'mail_from_name'   => 'Test',
+        ]);
+
+        $this->assertTrue(Mailer::isProductionSmtp(),
+            'Resend with API key delivers to real inboxes');
+    }
+
+    /**
+     * isProductionSmtp returns false for resend transport with no API key.
+     */
+    public function testIsProductionSmtpFalseForResendWithNoApiKey(): void
+    {
+        $configProp = new \ReflectionProperty(Mailer::class, 'configCache');
+        $configProp->setValue(null, [
+            'mail_transport'   => 'resend',
+            'smtp_host'        => '',
+            'smtp_port'        => '',
+            'smtp_username'    => '',
+            'smtp_password'    => '',
+            'smtp_encryption'  => '',
+            'mail_from_address' => 'book@example.com',
+            'mail_from_name'   => 'Test',
+        ]);
+
+        $this->assertFalse(Mailer::isProductionSmtp(),
+            'Resend without API key cannot deliver to inboxes');
+    }
+
+    /**
+     * resolveEffectiveConfig does NOT modify config for resend transport.
+     * Resend early-returns via sendViaResendApi before config overrides apply.
+     */
+    public function testResolveEffectiveConfigPassthroughForResend(): void
+    {
+        $method = new \ReflectionMethod(Mailer::class, 'resolveEffectiveConfig');
+
+        $input = [
+            'mail_transport'    => 'resend',
+            'smtp_host'         => '',
+            'smtp_port'         => '',
+            'smtp_username'     => '',
+            'smtp_password'     => 're_test_key',
+            'smtp_encryption'   => '',
+            'mail_from_address' => 'from@example.com',
+            'mail_from_name'    => 'Sender',
+        ];
+
+        $effective = $method->invoke(null, $input);
+        $this->assertSame($input, $effective,
+            'Resend transport must not modify config in resolveEffectiveConfig');
+    }
+
+    /**
+     * Resend transport with no API key returns failure (does not reach SMTP path).
+     */
+    public function testResendTransportWithNoApiKeyReturnsFailed(): void
+    {
+        $configProp = new \ReflectionProperty(Mailer::class, 'configCache');
+        $configProp->setValue(null, [
+            'mail_transport'   => 'resend',
+            'smtp_host'        => '',
+            'smtp_port'        => '',
+            'smtp_username'    => '',
+            'smtp_password'    => '',
+            'smtp_encryption'  => '',
+            'mail_from_address' => 'book@example.com',
+            'mail_from_name'   => 'Test',
+        ]);
+
+        $result = Mailer::send('test@example.com', 'Test', '<p>Body</p>', 'test');
+
+        $this->assertFalse($result['sent'], 'Resend with no API key must fail');
+        $this->assertSame('Resend API key not configured', $result['error']);
+        $this->assertNotEmpty($result['log_id']);
+    }
 }

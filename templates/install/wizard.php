@@ -1141,6 +1141,7 @@ $displayStep = is_numeric($step) ? (int) $step : (str_starts_with((string) $step
                     <label class="form-label" for="mail_transport"><?= __('install.wizard.mail_transport') ?></label>
                     <select id="mail_transport" name="mail_transport" class="form-input">
                         <option value="smtp" <?= $selectedTransport === 'smtp' ? 'selected' : '' ?>><?= __('install.wizard.mail_transport_smtp') ?></option>
+                        <option value="resend" <?= $selectedTransport === 'resend' ? 'selected' : '' ?>><?= __('install.wizard.mail_transport_resend') ?></option>
                         <option value="mailpit" <?= $selectedTransport === 'mailpit' ? 'selected' : '' ?>><?= __('install.wizard.mail_transport_mailpit') ?></option>
                         <option value="log" <?= $selectedTransport === 'log' ? 'selected' : '' ?>><?= __('install.wizard.mail_transport_log') ?></option>
                     </select>
@@ -1185,6 +1186,18 @@ $displayStep = is_numeric($step) ? (int) $step : (str_starts_with((string) $step
                     </div>
                 </div>
 
+                <!-- Resend fields (shown for transport=resend) -->
+                <div id="resend-fields">
+                    <div class="form-group">
+                        <label class="form-label" for="resend_api_key"><?= __('install.wizard.resend_api_key') ?> <span class="form-required">*</span></label>
+                        <input type="password" id="resend_api_key" name="mail_password" class="form-input <?= isset($errors['mail_password']) ? 'error' : '' ?>">
+                        <?php if (isset($errors['mail_password'])): ?>
+                            <div class="form-error"><?= htmlspecialchars($errors['mail_password'], ENT_QUOTES, 'UTF-8') ?></div>
+                        <?php endif; ?>
+                        <div class="form-hint"><?= __('install.wizard.resend_api_key_hint') ?></div>
+                    </div>
+                </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" for="mail_from_address"><?= __('install.wizard.mail_from_address') ?> <span class="form-required">*</span></label>
@@ -1219,9 +1232,11 @@ $displayStep = is_numeric($step) ? (int) $step : (str_starts_with((string) $step
             <script>
             (function() {
                 var sel = document.getElementById('mail_transport');
-                var fields = document.getElementById('smtp-fields');
+                var smtpFields = document.getElementById('smtp-fields');
+                var resendFields = document.getElementById('resend-fields');
                 function toggle() {
-                    fields.style.display = sel.value === 'smtp' ? '' : 'none';
+                    smtpFields.style.display = sel.value === 'smtp' ? '' : 'none';
+                    resendFields.style.display = sel.value === 'resend' ? '' : 'none';
                 }
                 sel.addEventListener('change', toggle);
                 toggle();

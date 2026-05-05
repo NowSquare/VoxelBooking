@@ -1475,6 +1475,13 @@ final class Mailer
             return ['sent' => false, 'error' => 'Resend API key not configured', 'log_id' => $logId];
         }
 
+        // Guard: cURL is required by the installer, but defend against misconfigured servers
+        if (!function_exists('curl_init')) {
+            self::logEmail($logId, $tenantId, $bookingId, $type, $to, $subject, 'failed', 'Resend transport requires the cURL extension');
+            Logger::error('Resend transport requires the cURL PHP extension', ['type' => $type]);
+            return ['sent' => false, 'error' => 'Resend transport requires the cURL extension', 'log_id' => $logId];
+        }
+
         $fromAddress   = $config['mail_from_address'] ?: 'noreply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
         $effectiveName = self::resolveEffectiveFromName($fromName, $config);
         $from          = $effectiveName !== '' ? "{$effectiveName} <{$fromAddress}>" : $fromAddress;

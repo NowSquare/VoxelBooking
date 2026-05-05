@@ -312,6 +312,13 @@ final class WizardController
                 'mail_from_address' => 'required|email',
                 'mail_from_name'    => 'required|max_length:255',
             ]);
+        } elseif ($transport === 'resend') {
+            // Resend: need API key and from fields
+            $errors = Validator::validate($request->all(), [
+                'mail_password'     => 'required',
+                'mail_from_address' => 'required|email',
+                'mail_from_name'    => 'required|max_length:255',
+            ]);
         } else {
             // Log and Mailpit: only from fields (Mailer hardcodes host/port/auth)
             $errors = Validator::validate($request->all(), [
@@ -347,13 +354,16 @@ final class WizardController
             'mail_from_name'    => $request->string('mail_from_name'),
         ];
 
-        // Only store SMTP fields for smtp transport (mailpit is hardcoded in Mailer)
+        // Store transport-specific credentials
         if ($transport === 'smtp') {
             $mailSettings['smtp_host']       = $request->string('mail_host');
             $mailSettings['smtp_port']       = $request->string('mail_port');
             $mailSettings['smtp_username']   = $request->string('mail_username');
             $mailSettings['smtp_password']   = $request->string('mail_password');
             $mailSettings['smtp_encryption'] = $request->string('mail_encryption', 'tls');
+        } elseif ($transport === 'resend') {
+            // Resend: API key stored as smtp_password (used by Mailer::sendViaResendApi)
+            $mailSettings['smtp_password']   = $request->string('mail_password');
         }
 
         foreach ($mailSettings as $key => $value) {

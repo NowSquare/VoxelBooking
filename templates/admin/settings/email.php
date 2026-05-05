@@ -1,6 +1,6 @@
 <?php
 /**
- * Email Settings — SMTP configuration.
+ * Email Settings — mail transport configuration.
  *
  * Variables: $user, $version, $csrfToken, $settings, $flash, $pageTitle
  */
@@ -20,7 +20,7 @@ include dirname(__DIR__, 2) . '/partials/settings-tabs.php';
     <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 
     <div class="vb-grid vb-grid-2">
-        <!-- SMTP Configuration -->
+        <!-- Email Delivery Configuration -->
         <div class="vb-card vb-fade-in-up stagger-1">
             <div class="vb-card-header">
                 <div class="vb-card-title-row">
@@ -36,11 +36,13 @@ include dirname(__DIR__, 2) . '/partials/settings-tabs.php';
                 <label for="mail_transport" class="vb-label"><?= __('admin.email.transport_label') ?></label>
                 <select id="mail_transport" name="mail_transport" class="vb-select">
                     <option value="smtp" <?= ($settings['mail_transport'] ?? 'smtp') === 'smtp' ? 'selected' : '' ?>><?= __('admin.email.transport_smtp') ?></option>
+                    <option value="resend" <?= ($settings['mail_transport'] ?? '') === 'resend' ? 'selected' : '' ?>><?= __('admin.email.transport_resend') ?></option>
                     <option value="mailpit" <?= ($settings['mail_transport'] ?? '') === 'mailpit' ? 'selected' : '' ?>><?= __('admin.email.transport_mailpit') ?></option>
                     <option value="log" <?= ($settings['mail_transport'] ?? '') === 'log' ? 'selected' : '' ?>><?= __('admin.email.transport_log') ?></option>
                 </select>
             </div>
 
+            <!-- SMTP fields (shown for transport=smtp) -->
             <div id="smtp-config-fields">
                 <div class="vb-form-row">
                     <div class="vb-form-group">
@@ -67,6 +69,17 @@ include dirname(__DIR__, 2) . '/partials/settings-tabs.php';
                         <option value="ssl" <?= ($settings['smtp_encryption'] ?? '') === 'ssl' ? 'selected' : '' ?>>SSL</option>
                         <option value="none" <?= ($settings['smtp_encryption'] ?? '') === 'none' ? 'selected' : '' ?>>None</option>
                     </select>
+                </div>
+            </div>
+
+            <!-- Resend fields (shown for transport=resend) -->
+            <div id="resend-config-fields">
+                <div class="vb-form-group">
+                    <label for="resend_api_key" class="vb-label"><?= __('admin.email.resend_api_key_label') ?></label>
+                    <input type="password" id="resend_api_key" name="smtp_password" class="vb-input" placeholder="<?= __('admin.email.resend_api_key_hint') ?>" autocomplete="new-password">
+                </div>
+                <div class="vb-form-hint" style="margin-top: -0.25rem; margin-bottom: 0.75rem;">
+                    <?= __('admin.email.resend_help') ?>
                 </div>
             </div>
         </div>
@@ -105,10 +118,12 @@ include dirname(__DIR__, 2) . '/partials/settings-tabs.php';
 <script>
 (function() {
     var sel = document.getElementById('mail_transport');
-    var fields = document.getElementById('smtp-config-fields');
-    if (!sel || !fields) return;
+    var smtpFields = document.getElementById('smtp-config-fields');
+    var resendFields = document.getElementById('resend-config-fields');
+    if (!sel || !smtpFields || !resendFields) return;
     function toggle() {
-        fields.style.display = sel.value === 'smtp' ? '' : 'none';
+        smtpFields.style.display = sel.value === 'smtp' ? '' : 'none';
+        resendFields.style.display = sel.value === 'resend' ? '' : 'none';
     }
     sel.addEventListener('change', toggle);
     toggle();
