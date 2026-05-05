@@ -111,6 +111,10 @@ return [
         'guests_label'     => 'Guests',
         'total_label'      => 'Total',
         'per_night'        => '/night',
+        // Contact details (review step)
+        'contact_name'     => 'Name',
+        'contact_email'    => 'Email',
+        'contact_phone'    => 'Phone',
     ],
 
     // ── Resource Pattern ──
@@ -217,6 +221,7 @@ return [
         'spam_detected'     => 'Your request could not be processed. Please try again.',
         'required_name'     => 'Please enter your name.',
         'required_email'    => 'Please enter a valid email address.',
+        'required_consent'  => 'You must accept the consent checkbox to continue.',
     ],
 
     // ── Common / UI ──
@@ -432,5 +437,5 @@ return [
     ],
 
     // ── Demo Mode ──
-    'demo_notice' => 'This is a demo — bookings cannot be submitted.',
+    'demo_notice' => 'Demo mode — changes are reset daily.',
 ];

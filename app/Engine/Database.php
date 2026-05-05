@@ -8,10 +8,13 @@ use PDO;
 use PDOException;
 
 /**
- * PDO wrapper. Connects from .env credentials.
+ * PDO wrapper. Connects to MySQL from .env credentials.
  *
  * Provides query(), execute(), transaction(), lastInsertId().
  * All queries use prepared statements. PDO::ERRMODE_EXCEPTION is set globally.
+ *
+ * Demo mode (.demo sentinel) does NOT change the database connection.
+ * Both normal and demo mode use the same MySQL database from .env.
  */
 final class Database
 {
@@ -20,17 +23,6 @@ final class Database
     public static function connect(): PDO
     {
         if (self::$pdo !== null) {
-            return self::$pdo;
-        }
-
-        // Demo mode: switch to pre-seeded SQLite database
-        if (DemoMode::isActive()) {
-            $dbPath = DemoMode::databasePath();
-            self::$pdo = new PDO('sqlite:' . $dbPath, options: [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            ]);
-
             return self::$pdo;
         }
 
@@ -128,9 +120,7 @@ final class Database
     }
 
     /**
-     * Check if a specific table exists.
-     *
-     * Uses information_schema on MySQL, PRAGMA on SQLite.
+     * Check if a specific table exists (MySQL via information_schema).
      */
     public static function tableExists(string $table): bool
     {

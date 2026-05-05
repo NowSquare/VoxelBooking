@@ -384,11 +384,12 @@ return [
 
     // ── Demo Mode ──
     'demo' => [
-        'write_blocked'    => 'This action is disabled in demo mode.',
+        'write_blocked'    => 'This action is not available in demo mode.',
+        'settings_locked'  => 'Settings are locked in demo mode.',
         'banner_title'     => 'Demo Mode',
-        'banner_desc'      => 'You are viewing a read-only demo. Changes will not be saved.',
-        'toast_message'    => 'This feature is disabled in demo mode.',
-        'booking_notice'   => 'This is a demo — bookings cannot be submitted.',
+        'banner_desc'      => 'This is an interactive demo. Changes are reset daily.',
+        'toast_message'    => 'This feature is not available in demo mode.',
+        'booking_notice'   => 'Demo mode — changes are reset daily. Use your own email to test notifications.',
         'account_operator' => 'Operator',
         'account_demo_studio'     => 'Demo Studio',
         'account_hotel_marina'    => 'Hotel Marina',

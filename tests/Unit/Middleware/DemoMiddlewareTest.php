@@ -13,9 +13,9 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for DemoMiddleware.
  *
- * Verifies the two-path response behavior in demo mode:
- * - /api/* routes → JSON 403 (Agent API + Booking API contract)
- * - All other routes → 302 redirect (browser form no-JS fallback)
+ * Verifies the interactive demo's denylist enforcement:
+ * - Blocked routes: /api/* → JSON 403, others → 302 redirect with toast
+ * - Allowed routes (operational workflows): pass through to handler
  */
 final class DemoMiddlewareTest extends TestCase
 {
@@ -28,6 +28,11 @@ final class DemoMiddlewareTest extends TestCase
         touch($this->basePath . '/.demo');
         DemoMode::reset();
         DemoMode::init($this->basePath);
+
+        // Ensure session is active (FormState uses sessions)
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            @session_start();
+        }
     }
 
     protected function tearDown(): void
@@ -35,6 +40,7 @@ final class DemoMiddlewareTest extends TestCase
         @unlink($this->basePath . '/.demo');
         @rmdir($this->basePath);
         DemoMode::reset();
+        unset($_SERVER['HTTP_REFERER']);
     }
 
     private function passthrough(): callable
@@ -43,72 +49,32 @@ final class DemoMiddlewareTest extends TestCase
     }
 
     // ════════════════════════════════════════════════════════════════
-    // API routes: JSON 403
+    // Blocked routes: system settings → redirect
     // ════════════════════════════════════════════════════════════════
 
-    public function testApiPostReturnsJson403(): void
+    public function testSystemSettingsPostIsBlocked(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'POST';
-        $_SERVER['REQUEST_URI'] = '/api/demo-studio/bookings';
-
-        $middleware = new DemoMiddleware();
-        $response = $middleware->handle(new Request(), $this->passthrough());
-
-        $this->assertSame(403, $response->getStatusCode());
-        $body = json_decode($response->getBody(), true);
-        $this->assertSame('demo_mode', $body['error']);
-    }
-
-    public function testAgentApiPostReturnsJson403(): void
-    {
-        $_SERVER['REQUEST_METHOD'] = 'POST';
-        $_SERVER['REQUEST_URI'] = '/api/agent/v1/bookings';
-
-        $middleware = new DemoMiddleware();
-        $response = $middleware->handle(new Request(), $this->passthrough());
-
-        $this->assertSame(403, $response->getStatusCode());
-        $body = json_decode($response->getBody(), true);
-        $this->assertSame('demo_mode', $body['error']);
-    }
-
-    public function testApiPostReturnsJson403WithoutAcceptHeader(): void
-    {
-        // Verify path-based classification: even without Accept: application/json,
-        // /api/ routes still get JSON 403 (not a redirect).
-        $_SERVER['REQUEST_METHOD'] = 'POST';
-        $_SERVER['REQUEST_URI'] = '/api/demo-studio/bookings';
-        unset($_SERVER['HTTP_ACCEPT'], $_SERVER['HTTP_X_REQUESTED_WITH']);
-
-        $middleware = new DemoMiddleware();
-        $response = $middleware->handle(new Request(), $this->passthrough());
-
-        $this->assertSame(403, $response->getStatusCode());
-        $body = json_decode($response->getBody(), true);
-        $this->assertSame('demo_mode', $body['error']);
-    }
-
-    // ════════════════════════════════════════════════════════════════
-    // Browser form submissions: 302 redirect
-    // ════════════════════════════════════════════════════════════════
-
-    public function testPrivacyPostRedirectsBack(): void
-    {
-        $_SERVER['REQUEST_METHOD'] = 'POST';
-        $_SERVER['REQUEST_URI'] = '/book/demo-studio/privacy/cust-id-123';
+        $_SERVER['REQUEST_URI'] = '/admin/settings';
 
         $middleware = new DemoMiddleware();
         $response = $middleware->handle(new Request(), $this->passthrough());
 
         $this->assertSame(302, $response->getStatusCode());
-
-        $ref = new \ReflectionProperty($response, 'headers');
-        $headers = $ref->getValue($response);
-        // Public /book/ routes redirect to same path (GET handler)
-        $this->assertSame('/book/demo-studio/privacy/cust-id-123', $headers['Location'] ?? '');
     }
 
-    public function testAdminPostRedirectsToLogin(): void
+    public function testEmailSettingsPostIsBlocked(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['REQUEST_URI'] = '/admin/settings/email';
+
+        $middleware = new DemoMiddleware();
+        $response = $middleware->handle(new Request(), $this->passthrough());
+
+        $this->assertSame(302, $response->getStatusCode());
+    }
+
+    public function testTenantSettingsPostIsBlocked(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $_SERVER['REQUEST_URI'] = '/admin/tenants/t1/settings/general';
@@ -120,14 +86,14 @@ final class DemoMiddlewareTest extends TestCase
 
         $ref = new \ReflectionProperty($response, 'headers');
         $headers = $ref->getValue($response);
-        $this->assertSame('/admin/login', $headers['Location'] ?? '');
+        $this->assertSame('/admin/settings', $headers['Location'] ?? '');
     }
 
-    public function testAdminPostUsesRefererWhenAvailable(): void
+    public function testTenantSettingsUsesRefererWhenAvailable(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'POST';
-        $_SERVER['REQUEST_URI'] = '/admin/tenants/t1/settings/general';
-        $_SERVER['HTTP_REFERER'] = 'https://demo.voxelbooking.com/admin/tenants/t1/settings/general';
+        $_SERVER['REQUEST_URI'] = '/admin/tenants/t1/settings/branding';
+        $_SERVER['HTTP_REFERER'] = 'https://demo.voxelbooking.com/admin/tenants/t1/settings/branding';
 
         $middleware = new DemoMiddleware();
         $response = $middleware->handle(new Request(), $this->passthrough());
@@ -137,16 +103,48 @@ final class DemoMiddlewareTest extends TestCase
         $ref = new \ReflectionProperty($response, 'headers');
         $headers = $ref->getValue($response);
         $this->assertSame(
-            'https://demo.voxelbooking.com/admin/tenants/t1/settings/general',
+            'https://demo.voxelbooking.com/admin/tenants/t1/settings/branding',
             $headers['Location'] ?? ''
         );
-
-        unset($_SERVER['HTTP_REFERER']);
     }
 
     // ════════════════════════════════════════════════════════════════
-    // Allowed routes: pass through
+    // Allowed routes: operational workflows pass through
     // ════════════════════════════════════════════════════════════════
+
+    public function testBookingPostPassesThrough(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['REQUEST_URI'] = '/api/demo-studio/bookings';
+
+        $middleware = new DemoMiddleware();
+        $response = $middleware->handle(new Request(), $this->passthrough());
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('OK', $response->getBody());
+    }
+
+    public function testBookingCancelPassesThrough(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['REQUEST_URI'] = '/api/demo-studio/bookings/abc/cancel';
+
+        $middleware = new DemoMiddleware();
+        $response = $middleware->handle(new Request(), $this->passthrough());
+
+        $this->assertSame(200, $response->getStatusCode());
+    }
+
+    public function testBookingReschedulePassesThrough(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['REQUEST_URI'] = '/api/demo-studio/bookings/abc/reschedule';
+
+        $middleware = new DemoMiddleware();
+        $response = $middleware->handle(new Request(), $this->passthrough());
+
+        $this->assertSame(200, $response->getStatusCode());
+    }
 
     public function testAllowedLoginPostPassesThrough(): void
     {
@@ -164,6 +162,36 @@ final class DemoMiddlewareTest extends TestCase
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/admin/bookings';
+
+        $middleware = new DemoMiddleware();
+        $response = $middleware->handle(new Request(), $this->passthrough());
+
+        $this->assertSame(200, $response->getStatusCode());
+    }
+
+    public function testAdminBookingStatusPassesThrough(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['REQUEST_URI'] = '/admin/bookings/abc/status';
+
+        $middleware = new DemoMiddleware();
+        $response = $middleware->handle(new Request(), $this->passthrough());
+
+        $this->assertSame(200, $response->getStatusCode());
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // Demo mode inactive: everything passes through
+    // ════════════════════════════════════════════════════════════════
+
+    public function testAllPassesThroughWhenDemoInactive(): void
+    {
+        @unlink($this->basePath . '/.demo');
+        DemoMode::reset();
+        DemoMode::init($this->basePath);
+
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['REQUEST_URI'] = '/admin/settings';
 
         $middleware = new DemoMiddleware();
         $response = $middleware->handle(new Request(), $this->passthrough());

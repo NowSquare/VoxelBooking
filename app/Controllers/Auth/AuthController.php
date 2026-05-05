@@ -278,11 +278,6 @@ final class AuthController
     {
         Auth::startSession();
 
-        // Demo mode: password reset is not available (POST is blocked, email is not sent)
-        if (\App\Engine\DemoMode::isActive()) {
-            return Response::redirect('/admin/login');
-        }
-
         if (Auth::check()) {
             return $this->redirectAfterLogin();
         }

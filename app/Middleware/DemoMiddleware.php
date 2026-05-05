@@ -7,15 +7,17 @@ namespace App\Middleware;
 use App\Engine\DemoMode;
 use App\Engine\Request;
 use App\Engine\Response;
+use App\Engine\FormState;
 
 /**
  * Demo mode middleware.
  *
  * When demo mode is active (.demo sentinel exists):
- * 1. Blocks all POST/PUT/DELETE requests (except allowed routes):
- *    - /api/* routes: returns 403 JSON (Agent API + Booking API contract)
- *    - All other routes: returns 302 redirect back (no-JS browser forms)
- * 2. Injects `window.VB_DEMO = true` flag for frontend guards
+ * 1. Checks write requests against DemoMode's denylist.
+ *    - Blocked routes: returns 403 JSON (API) or redirect with toast (browser).
+ *    - Allowed routes: passes through to the next middleware (interactive demo).
+ * 2. Operational workflows (bookings, status changes, reschedule) are allowed.
+ * 3. System settings, tenant settings, install, updates are blocked.
  *
  * This middleware should run AFTER SecurityMiddleware and InstalledMiddleware,
  * but BEFORE CsrfMiddleware (blocked requests don't need CSRF validation).
@@ -38,11 +40,13 @@ final class DemoMiddleware
                 ], 403);
             }
 
-            // Browser form submissions (admin/public no-JS fallback): redirect back
+            // Browser form submissions: redirect back with toast
+            FormState::toast('error', __('admin.demo.settings_locked'));
+
             $referer = $request->header('Referer');
             $fallback = str_starts_with($request->path(), '/book/')
                 ? $request->path()   // Public pages: redirect to same path (GET handler)
-                : '/admin/login';    // Admin pages: redirect to login
+                : '/admin/settings'; // Admin pages: redirect to settings
             return Response::redirect($referer ?: $fallback);
         }
 

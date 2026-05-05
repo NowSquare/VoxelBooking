@@ -9,36 +9,94 @@ namespace App\Engine;
  *
  * Demo mode activates when the `.demo` file exists in the project root.
  * When active:
- * - Database::connect() is redirected to the SQLite demo database
- * - All POST/PUT/DELETE requests are blocked by DemoMiddleware (except allowed routes)
- * - Admin UI renders read-only guards and a demo banner
- * - Booking page shows a demo notice instead of submitting bookings
+ * - Interactive demo with daily reset: bookings, status changes, and
+ *   operational workflows are allowed so reviewers can test full flows.
+ * - System settings (SMTP, general config, cron token) are locked.
+ * - Tenant settings (branding, booking page config) are locked.
+ * - Install wizard, updates, file uploads, and security-sensitive
+ *   operations are blocked.
+ * - Email sending is allowed when configured, but suppressed to
+ *   demo/seeded domains (.test, example.com, etc.) via Mailer.
+ * - Database is reset/reseeded daily via cron or manual command.
  *
- * The demo database is a read-only SQLite file at storage/demo/demo.db,
- * pre-seeded with fictional data by demo-seed.php.
+ * The `.demo` file is a zero-byte sentinel. It is only checked for
+ * existence via `file_exists()`. SMTP and database configuration
+ * belong in `.env` or the server's environment variables.
  */
 final class DemoMode
 {
-    /** Routes that are allowed to POST even in demo mode. */
-    public const ALLOWED_WRITE_ROUTES = [
-        'POST /admin/login',
-        'POST /auth/logout',
-        'POST /admin/impersonate/exit',
+    /**
+     * Route patterns that are BLOCKED in demo mode.
+     *
+     * Everything NOT on this list is allowed through.
+     * This is a denylist — operational workflows pass by default.
+     */
+    private const BLOCKED_ROUTE_PATTERNS = [
+        // System settings
+        'POST /admin/settings',
+        'POST /admin/settings/email',
+        'POST /admin/settings/cron/run',
+
+        // Install wizard
+        'POST /install/step/2',
+        'POST /install/step/3',
+        'POST /install/step/4',
+        'POST /install/step/5',
+        'POST /install/complete',
+
+        // Updates
+        'POST /admin/updates/upload',
+        'POST /admin/updates/apply',
+
+        // Account password changes (preserve demo credentials)
+        'POST /admin/account',
+
+        // Deletion queue (GDPR — don't let demo visitors anonymize data)
+        'POST /admin/deletion-queue/confirm',
+
+        // Request access form (don't let demo visitors submit applications)
+        'POST /request-access',
     ];
 
     /**
-     * Route prefixes that are allowed to POST even in demo mode.
-     *
-     * Used for routes with dynamic segments (e.g. tenant ID)
-     * where exact matching is not possible.
+     * Route prefixes that are BLOCKED in demo mode.
+     * Matched with str_starts_with against "METHOD /path".
      */
-    private const ALLOWED_WRITE_PREFIXES = [
-        'POST /admin/tenants/',  // Matches .../impersonate
+    private const BLOCKED_ROUTE_PREFIXES = [
+        // Tenant settings (all sub-pages)
+        'POST /admin/tenants/',
     ];
 
-    /** Suffixes that qualify a prefix match as allowed. */
-    private const ALLOWED_WRITE_SUFFIXES = [
+    /**
+     * Suffixes within blocked prefixes that are ALLOWED (exceptions).
+     * These override the prefix block for operational workflows.
+     */
+    private const ALLOWED_SUFFIX_EXCEPTIONS = [
+        // Booking operations (status, reschedule, create)
+        '/bookings',
+        '/bookings/create',
+        '/status',
+        '/reschedule',
+        // Impersonation
         '/impersonate',
+        // Staff/service/resource/event activate/deactivate (toggle)
+        '/activate',
+        '/deactivate',
+    ];
+
+    /**
+     * Domains that are considered demo/seeded and should NOT receive email.
+     * Checked against the domain part of recipient email addresses.
+     */
+    public const SUPPRESSED_EMAIL_DOMAINS = [
+        'example.com',
+        'example.org',
+        'example.net',
+        'test',             // catches .test TLD
+        'invalid',          // catches .invalid TLD
+        'localhost',
+        'booking.test',
+        'voxelbooking.test',
     ];
 
     private static ?bool $active = null;
@@ -70,13 +128,6 @@ final class DemoMode
         return self::$active;
     }
 
-    /**
-     * Get the path to the demo SQLite database.
-     */
-    public static function databasePath(): string
-    {
-        return self::$basePath . '/storage/demo/demo.db';
-    }
 
     /**
      * Get the path to the demo sentinel file.
@@ -89,8 +140,9 @@ final class DemoMode
     /**
      * Check if a request method + path combination is allowed in demo mode.
      *
-     * Impersonation (session-only, no DB writes) is allowed so operators
-     * can explore tenant views in the demo.
+     * Uses a denylist approach: everything is allowed unless explicitly blocked.
+     * Operational workflows (bookings, status changes, etc.) pass through.
+     * System/tenant settings and security-sensitive operations are blocked.
      *
      * @param string $method HTTP method (GET, POST, etc.)
      * @param string $path   Request path
@@ -104,19 +156,54 @@ final class DemoMode
 
         $key = strtoupper($method) . ' ' . $path;
 
-        // Exact match
-        if (in_array($key, self::ALLOWED_WRITE_ROUTES, true)) {
-            return true;
+        // Exact-match block
+        if (in_array($key, self::BLOCKED_ROUTE_PATTERNS, true)) {
+            return false;
         }
 
-        // Prefix + suffix match (for routes with dynamic segments)
-        foreach (self::ALLOWED_WRITE_PREFIXES as $prefix) {
+        // Prefix block with suffix exceptions
+        foreach (self::BLOCKED_ROUTE_PREFIXES as $prefix) {
             if (str_starts_with($key, $prefix)) {
-                foreach (self::ALLOWED_WRITE_SUFFIXES as $suffix) {
+                // Check for always-blocked sub-paths first (before suffix exceptions)
+                // Settings sub-pages: /settings, /settings/branding, etc.
+                if (str_contains($path, '/settings')) {
+                    return false;
+                }
+                // User management (invite/deactivate/activate)
+                if (str_contains($path, '/users/')) {
+                    return false;
+                }
+
+                // Check if this is an allowed exception (operational workflow)
+                foreach (self::ALLOWED_SUFFIX_EXCEPTIONS as $suffix) {
                     if (str_ends_with($path, $suffix)) {
                         return true;
                     }
                 }
+
+                // Allow other tenant operations (archive, tenant create, etc.)
+                return true;
+            }
+        }
+
+        // Not in any blocklist — allow
+        return true;
+    }
+
+    /**
+     * Check if an email address belongs to a suppressed demo domain.
+     *
+     * In demo mode, emails to seeded/fictional addresses are suppressed
+     * to prevent spam and ensure only real reviewer addresses receive mail.
+     */
+    public static function isEmailSuppressed(string $email): bool
+    {
+        $domain = strtolower(substr($email, strrpos($email, '@') + 1));
+
+        foreach (self::SUPPRESSED_EMAIL_DOMAINS as $suppressed) {
+            // Exact match or TLD match (e.g., "test" matches "anything.test")
+            if ($domain === $suppressed || str_ends_with($domain, '.' . $suppressed)) {
+                return true;
             }
         }
 

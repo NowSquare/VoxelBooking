@@ -55,6 +55,11 @@ final class SettingsController
 
     public function saveGeneral(Request $request): Response
     {
+        if (DemoMode::isActive()) {
+            FormState::toast('error', __('admin.demo.settings_locked'));
+            return Response::redirect('/admin/settings');
+        }
+
         $appName    = trim($request->string('app_name'));
         $brandUrl   = rtrim(trim($request->string('brand_url')), '/');
         $timezone   = trim($request->string('timezone'));
@@ -176,6 +181,31 @@ final class SettingsController
             'mail_from_address', 'mail_from_name', 'mail_transport',
         ]);
 
+        // Merge .env fallbacks for display — operator sees the effective config.
+        // Password is never displayed regardless of source.
+        //
+        // IMPORTANT: Only apply .env fallback when the DB row is MISSING.
+        // If a row exists with an empty value, the operator deliberately cleared it.
+        // This must match Mailer::loadConfig() behavior exactly.
+        $envMap = [
+            'mail_transport'    => 'MAIL_TRANSPORT',
+            'smtp_host'         => 'MAIL_HOST',
+            'smtp_port'         => 'MAIL_PORT',
+            'smtp_username'     => 'MAIL_USERNAME',
+            'smtp_encryption'   => 'MAIL_ENCRYPTION',
+            'mail_from_address' => 'MAIL_FROM_ADDRESS',
+            'mail_from_name'    => 'MAIL_FROM_NAME',
+        ];
+
+        foreach ($envMap as $settingKey => $envKey) {
+            if (!$this->settingExistsInDb($settingKey)) {
+                $envValue = $_ENV[$envKey] ?? $_SERVER[$envKey] ?? getenv($envKey);
+                if ($envValue !== false && $envValue !== '') {
+                    $settings[$settingKey] = (string) $envValue;
+                }
+            }
+        }
+
         return $this->render('admin.settings.email', 'Email', [
             'settings' => $settings,
             'flash'    => FormState::getToast(),
@@ -184,6 +214,11 @@ final class SettingsController
 
     public function saveEmail(Request $request): Response
     {
+        if (DemoMode::isActive()) {
+            FormState::toast('error', __('admin.demo.settings_locked'));
+            return Response::redirect('/admin/settings/email');
+        }
+
         // Track changes for audit log
         $oldSettings = $this->loadSettings(['smtp_host', 'smtp_port', 'smtp_username', 'smtp_encryption', 'mail_from_address', 'mail_from_name', 'mail_transport']);
         $changes = [];
@@ -399,6 +434,26 @@ final class SettingsController
             return $rows[0]['value'] ?? '';
         } catch (\Throwable) {
             return '';
+        }
+    }
+
+    /**
+     * Check if a setting key has a row in the database (even if empty).
+     *
+     * Used by the email settings page to distinguish "never configured"
+     * (show .env fallback) from "deliberately cleared" (show empty).
+     * Must match the logic in Mailer::loadConfig().
+     */
+    private function settingExistsInDb(string $key): bool
+    {
+        try {
+            $rows = Database::query(
+                'SELECT 1 FROM `settings` WHERE `key` = ? LIMIT 1',
+                [$key]
+            );
+            return !empty($rows);
+        } catch (\Throwable) {
+            return false;
         }
     }
 

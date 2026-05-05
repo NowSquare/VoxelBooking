@@ -54,6 +54,16 @@ final class Mailer
         $logId = Ulid::generate();
         $transport = strtolower(trim($config['mail_transport'] ?? 'smtp'));
 
+        // ── Demo mode: suppress emails to seeded/demo domains ──
+        // Real reviewer addresses receive emails normally.
+        // Fictional addresses (.test, example.com, etc.) are logged but not sent.
+        if (DemoMode::isActive() && DemoMode::isEmailSuppressed($to)) {
+            self::logEmail($logId, $tenantId, $bookingId, $type, $to, $subject, 'demo_suppressed',
+                'Recipient domain is suppressed in demo mode');
+            Logger::info('Email suppressed (demo mode)', ['type' => $type, 'to' => $to]);
+            return ['sent' => false, 'error' => null, 'log_id' => $logId, 'demo_suppressed' => true];
+        }
+
         // Log-only transport: record the email without making any outbound connection
         if ($transport === 'log') {
             self::logEmail($logId, $tenantId, $bookingId, $type, $to, $subject, 'sent', null);
@@ -1320,6 +1330,7 @@ final class Mailer
 
         $keys = ['smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_encryption', 'mail_from_address', 'mail_from_name', 'mail_transport'];
         $config = [];
+        $dbKeys = []; // Keys that have a row in the database (even if empty)
 
         try {
             foreach ($keys as $key) {
@@ -1327,11 +1338,44 @@ final class Mailer
                     'SELECT `value` FROM `settings` WHERE `key` = ? LIMIT 1',
                     [$key]
                 );
-                $config[$key] = $rows[0]['value'] ?? '';
+                if (!empty($rows)) {
+                    $config[$key] = $rows[0]['value'] ?? '';
+                    $dbKeys[] = $key;
+                } else {
+                    $config[$key] = '';
+                }
             }
         } catch (\Throwable) {
             // Database not available — return empty config
             return array_fill_keys($keys, '');
+        }
+
+        // ── .env fallback ──
+        // When a mail setting has NO row in the database, fall back to MAIL_*
+        // environment variables. This lets operators configure SMTP via .env
+        // for demo/staging environments without touching the admin UI.
+        //
+        // IMPORTANT: If a key EXISTS in the database (even with an empty value),
+        // the .env fallback is NOT applied. An explicit empty row means the
+        // operator deliberately cleared the setting.
+        $envMap = [
+            'mail_transport'    => 'MAIL_TRANSPORT',
+            'smtp_host'         => 'MAIL_HOST',
+            'smtp_port'         => 'MAIL_PORT',
+            'smtp_username'     => 'MAIL_USERNAME',
+            'smtp_password'     => 'MAIL_PASSWORD',
+            'smtp_encryption'   => 'MAIL_ENCRYPTION',
+            'mail_from_address' => 'MAIL_FROM_ADDRESS',
+            'mail_from_name'    => 'MAIL_FROM_NAME',
+        ];
+
+        foreach ($envMap as $settingKey => $envKey) {
+            if (!in_array($settingKey, $dbKeys, true)) {
+                $envValue = $_ENV[$envKey] ?? $_SERVER[$envKey] ?? getenv($envKey);
+                if ($envValue !== false && $envValue !== '') {
+                    $config[$settingKey] = (string) $envValue;
+                }
+            }
         }
 
         self::$configCache = $config;

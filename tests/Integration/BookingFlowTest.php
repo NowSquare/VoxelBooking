@@ -936,32 +936,64 @@ final class BookingFlowTest extends TestCase
      */
     public function testCreateBookingReturnsEmailSentField(): void
     {
-        $slot = $this->getFirstAvailableSlot('next Thursday');
+        // Explicitly mark SMTP as unconfigured in the DB.
+        // Empty DB rows prevent .env MAIL_* fallback from activating.
+        $savedSmtp = [];
+        $smtpKeys = ['smtp_host', 'mail_transport'];
+        foreach ($smtpKeys as $key) {
+            $rows = Database::query(
+                "SELECT `value` FROM `settings` WHERE `key` = ? LIMIT 1", [$key]
+            );
+            $savedSmtp[$key] = ['had' => !empty($rows), 'value' => $rows[0]['value'] ?? null];
+            Database::execute(
+                "INSERT INTO `settings` (`key`, `value`) VALUES (?, '')
+                 ON DUPLICATE KEY UPDATE `value` = ''",
+                [$key]
+            );
+        }
+        Mailer::clearConfigCache();
 
-        $payload = [
-            'service_id'     => self::$seed['service_id'],
-            'staff_id'       => self::$seed['staff_id'],
-            'start_datetime' => $slot['date'] . 'T' . $slot['time'] . ':00',
-            'customer'       => [
-                'name'  => 'Email Flag Tester',
-                'email' => 'email-flag-' . substr(Ulid::generate(), -6) . '@example.com',
-            ],
-            'consent_given'  => true,
-            '__ts'           => (time() - 10) * 1000,
-            '__hp'           => '',
-        ];
+        try {
+            $slot = $this->getFirstAvailableSlot('next Thursday');
 
-        $csrf = $this->fetchCsrfContext();
-        $res = $this->httpPostJsonWithCsrf('/api/' . self::$seed['slug'] . '/bookings', $payload, $csrf);
+            $payload = [
+                'service_id'     => self::$seed['service_id'],
+                'staff_id'       => self::$seed['staff_id'],
+                'start_datetime' => $slot['date'] . 'T' . $slot['time'] . ':00',
+                'customer'       => [
+                    'name'  => 'Email Flag Tester',
+                    'email' => 'email-flag-' . substr(Ulid::generate(), -6) . '@example.com',
+                ],
+                'consent_given'  => true,
+                '__ts'           => (time() - 10) * 1000,
+                '__hp'           => '',
+            ];
 
-        $this->assertSame(201, $res['code'], 'Booking must succeed. Body: ' . $res['body']);
-        $data = json_decode($res['body'], true);
+            $csrf = $this->fetchCsrfContext();
+            $res = $this->httpPostJsonWithCsrf('/api/' . self::$seed['slug'] . '/bookings', $payload, $csrf);
 
-        $this->assertArrayHasKey('email_sent', $data['booking'], 'Response must include email_sent field');
-        $this->assertFalse($data['booking']['email_sent'],
-            'email_sent must be false when SMTP is not configured');
+            $this->assertSame(201, $res['code'], 'Booking must succeed. Body: ' . $res['body']);
+            $data = json_decode($res['body'], true);
 
-        $this->cleanupIds[] = ['bookings', $data['booking']['id']];
+            $this->assertArrayHasKey('email_sent', $data['booking'], 'Response must include email_sent field');
+            $this->assertFalse($data['booking']['email_sent'],
+                'email_sent must be false when SMTP is not configured');
+
+            $this->cleanupIds[] = ['bookings', $data['booking']['id']];
+        } finally {
+            // Restore SMTP settings
+            foreach ($savedSmtp as $key => $prior) {
+                if ($prior['had'] && $prior['value'] !== null) {
+                    Database::execute(
+                        "UPDATE `settings` SET `value` = ? WHERE `key` = ?",
+                        [$prior['value'], $key]
+                    );
+                } else {
+                    Database::execute("DELETE FROM `settings` WHERE `key` = ?", [$key]);
+                }
+            }
+            Mailer::clearConfigCache();
+        }
     }
 
     /**
