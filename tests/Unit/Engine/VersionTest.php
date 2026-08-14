@@ -44,9 +44,13 @@ final class VersionTest extends TestCase
         );
     }
 
-    public function testCurrentVersionIs100(): void
+    /**
+     * Pinning the literal version here made the test fail on every release.
+     * The VERSION file is the canonical source, so compare against it.
+     */
+    public function testMatchesTheVersionFile(): void
     {
-        $this->assertSame('1.0.0', Version::get());
+        $this->assertSame(trim(file_get_contents(Version::filePath())), Version::get());
     }
 
     public function testVersionFileExists(): void
