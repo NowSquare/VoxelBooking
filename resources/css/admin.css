@@ -76,6 +76,29 @@
         --vb-error-bg: rgba(239, 68, 68, 0.06);
         --vb-info: #3b82f6;
         --vb-info-bg: rgba(59, 130, 246, 0.08);
+        /* ── Hue ramps: session-state pills ──
+           The semantic tokens above carry one step per meaning, which is
+           enough for a badge or a border. The impersonation and demo pills
+           tint a background, a border, a left edge, and two text weights
+           from the same hue, so they need the steps around it. Amber marks
+           a borrowed session, indigo marks the demo. Both ramps follow the
+           accent family documented in the design doc. */
+        --vb-amber-50: #FFFBEB;
+        --vb-amber-100: #FEF3C7;
+        --vb-amber-200: #FDE68A;
+        --vb-amber-300: #FCD34D;
+        --vb-amber-400: #FBBF24;
+        --vb-amber-500: #F59E0B;
+        --vb-amber-600: #D97706;
+        --vb-amber-800: #92400E;
+        --vb-amber-900: #78350F;
+        --vb-indigo-50: #EEF2FF;
+        --vb-indigo-200: #C7D2FE;
+        --vb-indigo-300: #A5B4FC;
+        --vb-indigo-400: #818CF8;
+        --vb-indigo-500: #6366F1;
+        --vb-indigo-600: #4F46E5;
+        --vb-indigo-800: #3730A3;
         /* ── Typography: optical precision ── */
         --vb-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
         --vb-font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
@@ -617,7 +640,7 @@
     }
     .vb-tab:hover {
         color: var(--vb-text-primary);
-        background: var(--vb-bg-secondary);
+        background: var(--vb-bg-hover);
     }
     .vb-tab:hover::after {
         background: var(--vb-border-default);
@@ -788,8 +811,8 @@
         color: var(--vb-text-secondary);
     }
     .vb-notice-muted {
-        background: var(--vb-surface-hover);
-        border: 1px solid var(--vb-border);
+        background: var(--vb-bg-well);
+        border: 1px solid var(--vb-border-default);
     }
     .vb-notice-muted .vb-notice-icon { color: var(--vb-text-tertiary); }
     .vb-notice-info {
@@ -2445,13 +2468,13 @@
     align-items: center;
     gap: 0.375rem;
     padding: 0.25rem 0.375rem 0.25rem 0.625rem;
-    background: color-mix(in srgb, var(--vb-indigo-50, #EEF2FF) 85%, transparent);
-    border: 1px solid color-mix(in srgb, var(--vb-indigo-300, #A5B4FC) 30%, transparent);
-    border-left: 2px solid var(--vb-indigo-500, #6366F1);
+    background: color-mix(in srgb, var(--vb-indigo-50) 85%, transparent);
+    border: 1px solid color-mix(in srgb, var(--vb-indigo-300) 30%, transparent);
+    border-left: 2px solid var(--vb-indigo-500);
     border-radius: var(--vb-radius-full);
     font-size: 0.6875rem;
     font-weight: 500;
-    color: var(--vb-indigo-800, #3730A3);
+    color: var(--vb-indigo-800);
     letter-spacing: -0.005em;
     white-space: nowrap;
     max-width: 320px;
@@ -2461,7 +2484,7 @@
 .vb-demo-pill-icon {
     width: 12px;
     height: 12px;
-    color: var(--vb-indigo-500, #6366F1);
+    color: var(--vb-indigo-500);
     flex-shrink: 0;
     opacity: 0.75;
 }
@@ -2480,7 +2503,7 @@
     height: 20px;
     border: none;
     border-radius: var(--vb-radius-full);
-    color: var(--vb-indigo-600, #4F46E5);
+    color: var(--vb-indigo-600);
     background: transparent;
     cursor: pointer;
     flex-shrink: 0;
@@ -2493,8 +2516,8 @@
     height: 12px;
 }
 .vb-demo-pill-close:hover {
-    background: color-mix(in srgb, var(--vb-indigo-500, #6366F1) 15%, transparent);
-    color: var(--vb-indigo-800, #3730A3);
+    background: color-mix(in srgb, var(--vb-indigo-500) 15%, transparent);
+    color: var(--vb-indigo-800);
 }
 .vb-demo-pill-close:active {
     transform: scale(0.9);
@@ -2503,20 +2526,20 @@
 
 /* Dark mode */
 [data-theme="dark"] .vb-demo-pill {
-    background: color-mix(in srgb, var(--vb-indigo-500, #6366F1) 8%, transparent);
-    border-color: color-mix(in srgb, var(--vb-indigo-500, #6366F1) 18%, transparent);
-    border-left-color: var(--vb-indigo-500, #6366F1);
-    color: var(--vb-indigo-200, #C7D2FE);
+    background: color-mix(in srgb, var(--vb-indigo-500) 8%, transparent);
+    border-color: color-mix(in srgb, var(--vb-indigo-500) 18%, transparent);
+    border-left-color: var(--vb-indigo-500);
+    color: var(--vb-indigo-200);
 }
 [data-theme="dark"] .vb-demo-pill-icon {
-    color: var(--vb-indigo-400, #818CF8);
+    color: var(--vb-indigo-400);
 }
 [data-theme="dark"] .vb-demo-pill-close {
-    color: var(--vb-indigo-400, #818CF8);
+    color: var(--vb-indigo-400);
 }
 [data-theme="dark"] .vb-demo-pill-close:hover {
-    background: color-mix(in srgb, var(--vb-indigo-500, #6366F1) 12%, transparent);
-    color: var(--vb-indigo-200, #C7D2FE);
+    background: color-mix(in srgb, var(--vb-indigo-500) 12%, transparent);
+    color: var(--vb-indigo-200);
 }
 
 /* Responsive: compact on small screens */
@@ -5215,13 +5238,13 @@
     align-items: center;
     gap: 0.375rem;
     padding: 0.25rem 0.375rem 0.25rem 0.625rem;
-    background: color-mix(in srgb, var(--vb-amber-50, #FFFBEB) 85%, transparent);
-    border: 1px solid color-mix(in srgb, var(--vb-amber-300, #FCD34D) 30%, transparent);
-    border-left: 2px solid var(--vb-amber-500, #F59E0B);
+    background: color-mix(in srgb, var(--vb-amber-50) 85%, transparent);
+    border: 1px solid color-mix(in srgb, var(--vb-amber-300) 30%, transparent);
+    border-left: 2px solid var(--vb-amber-500);
     border-radius: var(--vb-radius-full);
     font-size: 0.6875rem;
     font-weight: 500;
-    color: var(--vb-amber-800, #92400E);
+    color: var(--vb-amber-800);
     letter-spacing: -0.005em;
     white-space: nowrap;
     max-width: 280px;
@@ -5242,7 +5265,7 @@
 .vb-impersonation-pill-icon {
     width: 12px;
     height: 12px;
-    color: var(--vb-amber-500, #F59E0B);
+    color: var(--vb-amber-500);
     flex-shrink: 0;
     opacity: 0.75;
 }
@@ -5255,7 +5278,7 @@
 
 .vb-impersonation-pill strong {
     font-weight: 650;
-    color: var(--vb-amber-900, #78350F);
+    color: var(--vb-amber-900);
 }
 
 .vb-impersonation-exit-btn {
@@ -5266,7 +5289,7 @@
     height: 20px;
     border: none;
     border-radius: var(--vb-radius-full);
-    color: var(--vb-amber-600, #D97706);
+    color: var(--vb-amber-600);
     background: transparent;
     cursor: pointer;
     flex-shrink: 0;
@@ -5279,8 +5302,8 @@
     height: 12px;
 }
 .vb-impersonation-exit-btn:hover {
-    background: color-mix(in srgb, var(--vb-amber-500, #F59E0B) 15%, transparent);
-    color: var(--vb-amber-800, #92400E);
+    background: color-mix(in srgb, var(--vb-amber-500) 15%, transparent);
+    color: var(--vb-amber-800);
 }
 .vb-impersonation-exit-btn:active {
     transform: scale(0.9);
@@ -5289,23 +5312,23 @@
 
 /* Dark mode */
 [data-theme="dark"] .vb-impersonation-pill {
-    background: color-mix(in srgb, var(--vb-amber-500, #F59E0B) 8%, transparent);
-    border-color: color-mix(in srgb, var(--vb-amber-500, #F59E0B) 18%, transparent);
-    border-left-color: var(--vb-amber-500, #F59E0B);
-    color: var(--vb-amber-200, #FDE68A);
+    background: color-mix(in srgb, var(--vb-amber-500) 8%, transparent);
+    border-color: color-mix(in srgb, var(--vb-amber-500) 18%, transparent);
+    border-left-color: var(--vb-amber-500);
+    color: var(--vb-amber-200);
 }
 [data-theme="dark"] .vb-impersonation-pill strong {
-    color: var(--vb-amber-100, #FEF3C7);
+    color: var(--vb-amber-100);
 }
 [data-theme="dark"] .vb-impersonation-pill-icon {
-    color: var(--vb-amber-400, #FBBF24);
+    color: var(--vb-amber-400);
 }
 [data-theme="dark"] .vb-impersonation-exit-btn {
-    color: var(--vb-amber-400, #FBBF24);
+    color: var(--vb-amber-400);
 }
 [data-theme="dark"] .vb-impersonation-exit-btn:hover {
-    background: color-mix(in srgb, var(--vb-amber-500, #F59E0B) 12%, transparent);
-    color: var(--vb-amber-200, #FDE68A);
+    background: color-mix(in srgb, var(--vb-amber-500) 12%, transparent);
+    color: var(--vb-amber-200);
 }
 
 /* Responsive: hide prefix text, show only tenant name */
