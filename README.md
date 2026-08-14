@@ -247,6 +247,9 @@ The `public/assets/` directory is missing or empty. Re-clone or re-extract — t
 **Emails are not being delivered**
 Go to Admin → Settings → Email → Send Test Email. The result tells you whether the SMTP connection succeeds. Port 587 with STARTTLS is the most widely supported configuration. Check that your SMTP host, port, encryption type, username, and password are all correct. If your host blocks outbound SMTP on port 25, switch to 587 or 465.
 
+**SMTP reports "Could not authenticate" but the credentials work elsewhere**
+Installations up to 1.1.0 discarded the SMTP password on save, so the server received a blank one. Update, then re-enter the password in Admin → Settings → Email and save. The field always loads blank, so typing it again is the only way to confirm it is stored.
+
 **Admin session drops after every page load**
 PHP cannot write session files. Confirm that `storage/sessions/` exists and is writable by the web server user (`chmod 755` or `chmod 775` depending on your server setup). Also check that your `session.save_path` in `php.ini` is not overriding this.
 

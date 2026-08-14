@@ -5726,6 +5726,18 @@
     gap: 0.3125rem;
 }
 
+/* ── Fieldset ── */
+
+/* Groups related controls so the browser can disable them as a unit, which
+   keeps the inactive set out of the submitted form. Carries no visual weight:
+   the surrounding card already provides the grouping the operator sees. */
+.vb-fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-inline-size: 0;
+}
+
 /* ── Blocked Dates Form ── */
 
 .vb-blocked-dates-form .vb-form-actions {

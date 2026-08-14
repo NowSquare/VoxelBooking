@@ -315,7 +315,7 @@ final class WizardController
         } elseif ($transport === 'resend') {
             // Resend: need API key and from fields
             $errors = Validator::validate($request->all(), [
-                'mail_password'     => 'required',
+                'resend_api_key'    => 'required',
                 'mail_from_address' => 'required|email',
                 'mail_from_name'    => 'required|max_length:255',
             ]);
@@ -354,16 +354,25 @@ final class WizardController
             'mail_from_name'    => $request->string('mail_from_name'),
         ];
 
-        // Store transport-specific credentials
+        // Store transport-specific credentials.
+        //
+        // An empty password row is not the same as a missing one: Mailer treats
+        // a present-but-empty row as a deliberate clear and stops falling back
+        // to MAIL_PASSWORD in .env. Servers that accept unauthenticated relay
+        // need no password here, so leave the row out rather than writing blank.
         if ($transport === 'smtp') {
             $mailSettings['smtp_host']       = $request->string('mail_host');
             $mailSettings['smtp_port']       = $request->string('mail_port');
             $mailSettings['smtp_username']   = $request->string('mail_username');
-            $mailSettings['smtp_password']   = $request->string('mail_password');
             $mailSettings['smtp_encryption'] = $request->string('mail_encryption', 'tls');
+
+            $smtpPassword = $request->string('mail_password');
+            if ($smtpPassword !== '') {
+                $mailSettings['smtp_password'] = $smtpPassword;
+            }
         } elseif ($transport === 'resend') {
             // Resend: API key stored as smtp_password (used by Mailer::sendViaResendApi)
-            $mailSettings['smtp_password']   = $request->string('mail_password');
+            $mailSettings['smtp_password']   = $request->string('resend_api_key');
         }
 
         foreach ($mailSettings as $key => $value) {

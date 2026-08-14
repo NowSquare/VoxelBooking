@@ -875,6 +875,15 @@ $displayStep = is_numeric($step) ? (int) $step : (str_starts_with((string) $step
             gap: 1rem;
         }
 
+        /* Groups the fields of one mail transport so the browser can disable
+           them as a unit. Carries no visual weight of its own. */
+        .field-group {
+            border: 0;
+            margin: 0;
+            padding: 0;
+            min-inline-size: 0;
+        }
+
         @media (max-width: 480px) {
             .form-row { grid-template-columns: 1fr; }
             .pattern-cards { grid-template-columns: 1fr; }
@@ -1133,7 +1142,7 @@ $displayStep = is_numeric($step) ? (int) $step : (str_starts_with((string) $step
                 <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 
                 <?php
-                    $selectedTransport = $mailTransport ?? 'smtp';
+                    $selectedTransport = ($mailTransport ?? '') !== '' ? $mailTransport : 'smtp';
                     $mf = $mailForm ?? [];
                 ?>
 
@@ -1147,7 +1156,7 @@ $displayStep = is_numeric($step) ? (int) $step : (str_starts_with((string) $step
                     </select>
                 </div>
 
-                <div id="smtp-fields">
+                <fieldset id="smtp-fields" class="field-group" data-transport="smtp" <?= $selectedTransport === 'smtp' ? '' : 'disabled' ?>>
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label" for="mail_host"><?= __('install.wizard.mail_host') ?> <span class="form-required">*</span></label>
@@ -1184,19 +1193,19 @@ $displayStep = is_numeric($step) ? (int) $step : (str_starts_with((string) $step
                             <option value="none" <?= ($mf['mail_encryption'] ?? '') === 'none' ? 'selected' : '' ?>><?= __('install.wizard.mail_encryption_none') ?></option>
                         </select>
                     </div>
-                </div>
+                </fieldset>
 
                 <!-- Resend fields (shown for transport=resend) -->
-                <div id="resend-fields">
+                <fieldset id="resend-fields" class="field-group" data-transport="resend" <?= $selectedTransport === 'resend' ? '' : 'disabled' ?>>
                     <div class="form-group">
                         <label class="form-label" for="resend_api_key"><?= __('install.wizard.resend_api_key') ?> <span class="form-required">*</span></label>
-                        <input type="password" id="resend_api_key" name="mail_password" class="form-input <?= isset($errors['mail_password']) ? 'error' : '' ?>">
-                        <?php if (isset($errors['mail_password'])): ?>
-                            <div class="form-error"><?= htmlspecialchars($errors['mail_password'], ENT_QUOTES, 'UTF-8') ?></div>
+                        <input type="password" id="resend_api_key" name="resend_api_key" class="form-input <?= isset($errors['resend_api_key']) ? 'error' : '' ?>">
+                        <?php if (isset($errors['resend_api_key'])): ?>
+                            <div class="form-error"><?= htmlspecialchars($errors['resend_api_key'], ENT_QUOTES, 'UTF-8') ?></div>
                         <?php endif; ?>
                         <div class="form-hint"><?= __('install.wizard.resend_api_key_hint') ?></div>
                     </div>
-                </div>
+                </fieldset>
 
                 <div class="form-row">
                     <div class="form-group">
@@ -1234,9 +1243,15 @@ $displayStep = is_numeric($step) ? (int) $step : (str_starts_with((string) $step
                 var sel = document.getElementById('mail_transport');
                 var smtpFields = document.getElementById('smtp-fields');
                 var resendFields = document.getElementById('resend-fields');
+                // Hidden inputs still post. Disabling the inactive transport keeps
+                // its credentials out of the request body.
+                function apply(fields, active) {
+                    fields.style.display = active ? '' : 'none';
+                    fields.disabled = !active;
+                }
                 function toggle() {
-                    smtpFields.style.display = sel.value === 'smtp' ? '' : 'none';
-                    resendFields.style.display = sel.value === 'resend' ? '' : 'none';
+                    apply(smtpFields, sel.value === 'smtp');
+                    apply(resendFields, sel.value === 'resend');
                 }
                 sel.addEventListener('change', toggle);
                 toggle();

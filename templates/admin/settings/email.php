@@ -32,18 +32,24 @@ include dirname(__DIR__, 2) . '/partials/settings-tabs.php';
                 </div>
             </div>
 
+            <?php
+            // A missing setting reads as an empty string, so fall back to SMTP
+            // the same way the select does when nothing is stored yet.
+            $transport = ($settings['mail_transport'] ?? '') !== '' ? $settings['mail_transport'] : 'smtp';
+            ?>
+
             <div class="vb-form-group">
                 <label for="mail_transport" class="vb-label"><?= __('admin.email.transport_label') ?></label>
                 <select id="mail_transport" name="mail_transport" class="vb-select">
-                    <option value="smtp" <?= ($settings['mail_transport'] ?? 'smtp') === 'smtp' ? 'selected' : '' ?>><?= __('admin.email.transport_smtp') ?></option>
-                    <option value="resend" <?= ($settings['mail_transport'] ?? '') === 'resend' ? 'selected' : '' ?>><?= __('admin.email.transport_resend') ?></option>
-                    <option value="mailpit" <?= ($settings['mail_transport'] ?? '') === 'mailpit' ? 'selected' : '' ?>><?= __('admin.email.transport_mailpit') ?></option>
-                    <option value="log" <?= ($settings['mail_transport'] ?? '') === 'log' ? 'selected' : '' ?>><?= __('admin.email.transport_log') ?></option>
+                    <option value="smtp" <?= $transport === 'smtp' ? 'selected' : '' ?>><?= __('admin.email.transport_smtp') ?></option>
+                    <option value="resend" <?= $transport === 'resend' ? 'selected' : '' ?>><?= __('admin.email.transport_resend') ?></option>
+                    <option value="mailpit" <?= $transport === 'mailpit' ? 'selected' : '' ?>><?= __('admin.email.transport_mailpit') ?></option>
+                    <option value="log" <?= $transport === 'log' ? 'selected' : '' ?>><?= __('admin.email.transport_log') ?></option>
                 </select>
             </div>
 
             <!-- SMTP fields (shown for transport=smtp) -->
-            <div id="smtp-config-fields">
+            <fieldset id="smtp-config-fields" class="vb-fieldset" data-transport="smtp" <?= $transport === 'smtp' ? '' : 'disabled' ?>>
                 <div class="vb-form-row">
                     <div class="vb-form-group">
                         <label for="smtp_host" class="vb-label"><?= __('admin.email.host_label') ?></label>
@@ -70,18 +76,18 @@ include dirname(__DIR__, 2) . '/partials/settings-tabs.php';
                         <option value="none" <?= ($settings['smtp_encryption'] ?? '') === 'none' ? 'selected' : '' ?>>None</option>
                     </select>
                 </div>
-            </div>
+            </fieldset>
 
             <!-- Resend fields (shown for transport=resend) -->
-            <div id="resend-config-fields">
+            <fieldset id="resend-config-fields" class="vb-fieldset" data-transport="resend" <?= $transport === 'resend' ? '' : 'disabled' ?>>
                 <div class="vb-form-group">
                     <label for="resend_api_key" class="vb-label"><?= __('admin.email.resend_api_key_label') ?></label>
-                    <input type="password" id="resend_api_key" name="smtp_password" class="vb-input" placeholder="<?= __('admin.email.resend_api_key_hint') ?>" autocomplete="new-password">
+                    <input type="password" id="resend_api_key" name="resend_api_key" class="vb-input" placeholder="<?= __('admin.email.resend_api_key_hint') ?>" autocomplete="new-password">
                 </div>
                 <div class="vb-form-hint" style="margin-top: -0.25rem; margin-bottom: 0.75rem;">
                     <?= __('admin.email.resend_help') ?>
                 </div>
-            </div>
+            </fieldset>
         </div>
 
         <!-- Sender Identity -->
@@ -125,9 +131,15 @@ include dirname(__DIR__, 2) . '/partials/settings-tabs.php';
     var resendFields = document.getElementById('resend-config-fields');
     var resendDomainHint = document.getElementById('resend-domain-hint');
     if (!sel || !smtpFields || !resendFields) return;
+    // Hidden inputs still post. Disabling the inactive transport keeps its
+    // credentials out of the request body so they cannot shadow the active one.
+    function apply(fields, active) {
+        fields.style.display = active ? '' : 'none';
+        fields.disabled = !active;
+    }
     function toggle() {
-        smtpFields.style.display = sel.value === 'smtp' ? '' : 'none';
-        resendFields.style.display = sel.value === 'resend' ? '' : 'none';
+        apply(smtpFields, sel.value === 'smtp');
+        apply(resendFields, sel.value === 'resend');
         if (resendDomainHint) resendDomainHint.style.display = sel.value === 'resend' ? '' : 'none';
     }
     sel.addEventListener('change', toggle);

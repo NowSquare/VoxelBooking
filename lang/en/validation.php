@@ -56,6 +56,8 @@ return [
         'db_password'          => 'Database password',
         'mail_host'            => 'Mail host',
         'mail_port'            => 'Mail port',
+        'mail_password'        => 'Mail password',
+        'resend_api_key'       => 'Resend API key',
         'mail_from_address'    => 'From address',
         'mail_from_name'       => 'From name',
         'smtp_host'            => 'SMTP host',

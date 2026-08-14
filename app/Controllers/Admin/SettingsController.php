@@ -243,7 +243,7 @@ final class SettingsController
 
             if ($transport === 'resend') {
                 // Resend: persist API key (as smtp_password), clear stale SMTP rows
-                $apiKey = $request->string('smtp_password');
+                $apiKey = $request->string('resend_api_key');
                 if ($apiKey !== '') {
                     $this->saveSetting('smtp_password', $apiKey);
                     $changes['smtp_password'] = ['old' => '[REDACTED]', 'new' => '[REDACTED]'];
