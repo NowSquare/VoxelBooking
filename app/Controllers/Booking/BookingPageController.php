@@ -96,8 +96,9 @@ final class BookingPageController
         // Detect embed mode (?embed=1) — renders chromeless booking UI in an iframe
         $isEmbed = ($request->string('embed') === '1');
 
-        // CSRF: embed mode is fully stateless (no session, no cookies).
-        // Booking POST goes through /api/{slug}/bookings which skips CSRF.
+        // CSRF: embed mode is fully stateless (no session, no cookies), so
+        // the page ships an empty token. The booking API accepts the browser's
+        // Origin header in its place (CsrfMiddleware::verifyPublicSubmission).
         // Non-embed mode uses a per-session CSRF token as normal.
         $csrfToken = $isEmbed ? '' : CsrfMiddleware::generateToken();
 

@@ -9,12 +9,15 @@ use App\Engine\Request;
 use App\Engine\Response;
 
 /**
- * CSRF token verification for state-changing requests.
+ * CSRF verification for state-changing requests.
  *
  * Per PRD §XV Security:
  * - Per-session CSRF token on all POST/PUT/DELETE
  * - Token stored in session, verified from form field or header
  * - Booking page uses a per-page token generated server-side
+ * - The public booking API verifies itself through verifyPublicSubmission(),
+ *   which also accepts a same-origin request so the embed widget stays
+ *   cookie-free
  */
 final class CsrfMiddleware
 {
@@ -52,11 +55,7 @@ final class CsrfMiddleware
             }
         }
 
-        $sessionToken = $_SESSION['_csrf_token'] ?? '';
-        $submittedToken = $request->string('_csrf_token')
-            ?: ($request->header('X-CSRF-Token') ?? '');
-
-        if ($sessionToken === '' || !hash_equals($sessionToken, $submittedToken)) {
+        if (!self::tokenMatches($request)) {
             if ($request->isJson()) {
                 return Response::json([
                     'error' => 'csrf_mismatch',
@@ -94,5 +93,80 @@ final class CsrfMiddleware
     public static function token(): string
     {
         return $_SESSION['_csrf_token'] ?? '';
+    }
+
+    /**
+     * Verify a state-changing request from the public booking page.
+     *
+     * The page proves it made the request in one of two ways:
+     *
+     * 1. Session token. The standalone page echoes the per-session token
+     *    in the X-CSRF-Token header. The middleware pipeline skips /api/
+     *    routes, so the booking API asks for this check itself.
+     * 2. Same origin. The embedded page runs in a cross-site iframe, where
+     *    browsers withhold cookies. It has no session and no token. Browsers
+     *    attach an Origin header to every POST and scripts cannot forge it,
+     *    so an Origin that names this host proves the request came from a
+     *    page this installation served.
+     *
+     * Both proofs stop cross-site forgery from a browser. Neither stops a
+     * direct HTTP client, and neither needs to: the booking API carries no
+     * ambient credentials. The anti-bot pipeline (timestamp, honeypot,
+     * rate limit) handles automation.
+     */
+    public static function verifyPublicSubmission(Request $request): bool
+    {
+        return self::tokenMatches($request) || self::isSameOrigin($request);
+    }
+
+    /**
+     * Whether the request echoes the CSRF token held in its session.
+     *
+     * The session is resumed only when the browser sent a session cookie.
+     * A request without one cannot hold a token, and starting a session
+     * for it would set a cookie the embed widget must never set.
+     */
+    public static function tokenMatches(Request $request): bool
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE && isset($_COOKIE[session_name()])) {
+            session_start();
+        }
+
+        $sessionToken = $_SESSION['_csrf_token'] ?? '';
+        $submittedToken = $request->string('_csrf_token')
+            ?: ($request->header('X-CSRF-Token') ?? '');
+
+        return $sessionToken !== ''
+            && $submittedToken !== ''
+            && hash_equals($sessionToken, $submittedToken);
+    }
+
+    /**
+     * Whether the browser attests that the request came from this host.
+     *
+     * Only hostnames are compared. Scheme and port are ignored so that a
+     * TLS-terminating proxy or an explicit default port cannot break the
+     * embed; a same-host request over another scheme is a network
+     * attacker's problem, not a cross-site one. The Host header is the
+     * comparator because the widget script builds its own origin from it,
+     * so both halves of the embed agree on the name.
+     */
+    public static function isSameOrigin(Request $request): bool
+    {
+        $originHost = self::hostOf($request->header('Origin') ?? '');
+        $ownHost = self::hostOf('http://' . ($request->header('Host') ?? ''));
+
+        return $originHost !== '' && $originHost === $ownHost;
+    }
+
+    /**
+     * Lower-cased hostname of a URL, or '' when there is none
+     * (missing header, the opaque origin "null", garbage).
+     */
+    private static function hostOf(string $url): string
+    {
+        $host = parse_url($url, PHP_URL_HOST);
+
+        return is_string($host) ? strtolower($host) : '';
     }
 }

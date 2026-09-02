@@ -23,6 +23,8 @@ use PHPUnit\Framework\TestCase;
  * - POST /api/{slug}/bookings  → creates booking with consent evidence
  * - POST /api/{slug}/bookings  → rejects duplicate booking (409)
  * - POST /api/{slug}/bookings  → validates required fields
+ * - POST /api/{slug}/bookings  → embedded submit: Origin header, no session
+ * - POST /api/{slug}/bookings  → rejects a foreign Origin (403)
  * - Config blob                → affordance flags, cancellation policy,
  *                                confirmation message, gating when disabled
  * - GET /api/{slug}/services   → includes preparation_text in response
@@ -864,6 +866,64 @@ final class BookingFlowTest extends TestCase
     }
 
     // ════════════════════════════════════════════════════════════════
+    // Embed mode: stateless submit proven by the Origin header
+    // ════════════════════════════════════════════════════════════════
+
+    /**
+     * The embed iframe runs cross-site, so browsers withhold its cookies.
+     * It has no session and no token. The browser still attaches an Origin
+     * header to the POST, and a matching Origin is proof enough.
+     */
+    public function testEmbeddedSubmitSucceedsWithSameOriginAndNoSession(): void
+    {
+        $slot = $this->getFirstAvailableSlot('next Monday');
+
+        $payload = [
+            'service_id'     => self::$seed['service_id'],
+            'staff_id'       => self::$seed['staff_id'],
+            'start_datetime' => $slot['date'] . 'T' . $slot['time'] . ':00',
+            'customer'       => [
+                'name'  => 'Embedded Tester',
+                'email' => 'embed-test-' . substr(Ulid::generate(), -6) . '@example.com',
+            ],
+            'consent_given' => true,
+            '__ts'          => (time() - 10) * 1000,
+            '__hp'          => '',
+        ];
+
+        $res = $this->httpPostJsonFromOrigin('/api/' . self::$seed['slug'] . '/bookings', $payload, $this->baseUrl);
+
+        $this->assertSame(201, $res['code'], 'Embedded submit must succeed without a session. Body: ' . $res['body']);
+        $data = json_decode($res['body'], true);
+        $this->assertArrayHasKey('booking', $data);
+        $this->cleanupIds[] = ['bookings', $data['booking']['id']];
+
+        $this->assertStringNotContainsStringIgnoringCase(
+            'set-cookie',
+            $res['headers'],
+            'A stateless submit must not start a session'
+        );
+    }
+
+    public function testBookingRejectsForeignOrigin(): void
+    {
+        $payload = [
+            'service_id'     => self::$seed['service_id'],
+            'start_datetime' => '2026-07-01T10:00:00',
+            'customer'       => ['name' => 'Foreign Origin', 'email' => 'foreign@test.local'],
+            'consent_given'  => true,
+            '__ts'           => (time() - 10) * 1000,
+            '__hp'           => '',
+        ];
+
+        $res = $this->httpPostJsonFromOrigin('/api/' . self::$seed['slug'] . '/bookings', $payload, 'https://evil.example');
+        $this->assertSame(403, $res['code'], 'A foreign Origin must return 403. Body: ' . $res['body']);
+
+        $data = json_decode($res['body'], true);
+        $this->assertSame('csrf_mismatch', $data['error'] ?? '');
+    }
+
+    // ════════════════════════════════════════════════════════════════
     // Slice 3: Max bookings per customer per day (3f)
     // ════════════════════════════════════════════════════════════════
 
@@ -1152,6 +1212,19 @@ final class BookingFlowTest extends TestCase
             'Accept: application/json',
             'X-CSRF-Token: ' . $csrf['token'],
         ], $csrf['cookieFile']);
+    }
+
+    /**
+     * POST JSON the way the embed iframe does: an Origin header,
+     * no cookie jar and no CSRF token.
+     */
+    private function httpPostJsonFromOrigin(string $path, array $payload, string $origin): array
+    {
+        return $this->request('POST', $path, $payload, [
+            'Content-Type: application/json',
+            'Accept: application/json',
+            'Origin: ' . $origin,
+        ]);
     }
 
     /**

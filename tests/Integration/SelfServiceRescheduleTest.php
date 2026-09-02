@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
  * POST /api/{slug}/bookings/{id}/reschedule
  *
  * Covers:
- * - CSRF enforcement
+ * - CSRF enforcement (session token, or the Origin header for the embed iframe)
  * - Status guard (only confirmed bookings)
  * - Tenant toggle (allow_rescheduling=0)
  * - Time-gate rejection
@@ -37,6 +37,7 @@ final class SelfServiceRescheduleTest extends TestCase
     private const RESOURCE_ID  = '01TESTSSRESCHEDRESRC000';
     private const CAP_SLOT_ID  = '01TESTSSRESCHEDCAPSLOT0';
     private const EVENT_ID     = '01TESTSSRESCHEDEVNT0000';
+    private const EMBED_BOOKING_ID = '01TESTSSRESCHEDEMBED000';
 
     public static function setUpBeforeClass(): void
     {
@@ -100,6 +101,57 @@ final class SelfServiceRescheduleTest extends TestCase
         $this->assertSame(403, $r['code']);
         $data = json_decode($r['body'], true);
         $this->assertSame('csrf_mismatch', $data['error'] ?? null);
+    }
+
+    public function test_reschedule_rejects_foreign_origin(): void
+    {
+        $r = $this->postJson("/api/test-fixture/bookings/" . self::BOOKING_ID . "/reschedule", [
+            'new_date' => date('Y-m-d', strtotime('+3 days')),
+            'new_time' => '14:00',
+        ], '', ['Origin: https://evil.example']);
+
+        $this->assertSame(403, $r['code']);
+        $data = json_decode($r['body'], true);
+        $this->assertSame('csrf_mismatch', $data['error'] ?? null);
+    }
+
+    /**
+     * The embed iframe runs cross-site, so browsers withhold its cookies.
+     * It has no session and no token. The browser still attaches an Origin
+     * header to the POST, and a matching Origin is proof enough.
+     */
+    public function test_reschedule_with_same_origin_and_no_session_succeeds(): void
+    {
+        $targetTs = strtotime('+3 days');
+        while (date('N', $targetTs) >= 6) {
+            $targetTs = strtotime('+1 day', $targetTs);
+        }
+        $targetDate = date('Y-m-d', $targetTs);
+        $origDate = date('Y-m-d', strtotime('+2 days'));
+
+        Database::execute("DELETE FROM `bookings` WHERE `id` = ?", [self::EMBED_BOOKING_ID]);
+        Database::execute(
+            "INSERT INTO `bookings`
+             (`id`, `tenant_id`, `booking_pattern`, `customer_id`, `service_id`,
+              `start_datetime`, `end_datetime`, `status`, `source`)
+             VALUES (?, ?, 'timeslot', ?, ?,
+              '{$origDate} 11:00:00', '{$origDate} 11:30:00',
+              'confirmed', 'web')",
+            [self::EMBED_BOOKING_ID, self::TENANT_ID, self::CUSTOMER_ID, self::SERVICE_ID]
+        );
+        self::ensureAvailability();
+
+        $r = $this->postJson("/api/test-fixture/bookings/" . self::EMBED_BOOKING_ID . "/reschedule", [
+            'new_date' => $targetDate,
+            'new_time' => '15:00',
+        ], '', ['Origin: ' . $this->baseUrl]);
+
+        $this->assertSame(200, $r['code'], 'Embedded reschedule must succeed without a session. Body: ' . $r['body']);
+        $data = json_decode($r['body'], true);
+        $this->assertTrue($data['rescheduled'] ?? false);
+
+        $original = Database::query("SELECT `status` FROM `bookings` WHERE `id` = ?", [self::EMBED_BOOKING_ID]);
+        $this->assertSame('rescheduled', $original[0]['status'] ?? null);
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -803,8 +855,11 @@ final class SelfServiceRescheduleTest extends TestCase
 
     /**
      * POST JSON to the given path.
+     *
+     * Extra headers let a test mimic the embed iframe, which sends
+     * an Origin header and nothing else.
      */
-    private function postJson(string $path, array $data, string $csrfToken): array
+    private function postJson(string $path, array $data, string $csrfToken, array $extraHeaders = []): array
     {
         $ch = curl_init($this->baseUrl . $path);
         $headers = [
@@ -814,6 +869,7 @@ final class SelfServiceRescheduleTest extends TestCase
         if ($csrfToken !== '') {
             $headers[] = 'X-CSRF-Token: ' . $csrfToken;
         }
+        $headers = array_merge($headers, $extraHeaders);
 
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,

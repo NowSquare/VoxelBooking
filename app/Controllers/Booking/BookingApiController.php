@@ -18,6 +18,7 @@ use App\Engine\Logger;
 use App\Engine\Mailer;
 use App\Engine\Request;
 use App\Engine\Response;
+use App\Middleware\CsrfMiddleware;
 
 /**
  * Public API controller for booking pages.
@@ -323,13 +324,10 @@ final class BookingApiController
             return Response::json(['error' => 'spam_detected', 'message' => __('booking.api.spam_detected')], 422);
         }
 
-        // CSRF: manually validate for booking POST (API routes skip middleware CSRF)
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-        $sessionToken = $_SESSION['_csrf_token'] ?? '';
-        $submittedToken = $request->header('X-CSRF-Token') ?? '';
-        if ($sessionToken === '' || $submittedToken === '' || !hash_equals($sessionToken, $submittedToken)) {
+        // CSRF: the middleware skips /api/ routes, so the booking API asks
+        // itself. Session token for the standalone page, same-origin
+        // attestation for the cookie-free embed iframe.
+        if (!CsrfMiddleware::verifyPublicSubmission($request)) {
             return Response::json(['error' => 'csrf_mismatch', 'message' => __('booking.api.csrf_mismatch')], 403);
         }
 
@@ -1602,13 +1600,8 @@ final class BookingApiController
 
         $this->resolveLocale($tenant, $request);
 
-        // CSRF validation
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-        $sessionToken = $_SESSION['_csrf_token'] ?? '';
-        $submittedToken = $request->header('X-CSRF-Token') ?? '';
-        if ($sessionToken === '' || $submittedToken === '' || !hash_equals($sessionToken, $submittedToken)) {
+        // CSRF: session token or same-origin attestation (see createBooking)
+        if (!CsrfMiddleware::verifyPublicSubmission($request)) {
             return Response::json(['error' => 'csrf_mismatch', 'message' => __('booking.api.csrf_mismatch')], 403);
         }
 
@@ -1728,13 +1721,8 @@ final class BookingApiController
 
         $this->resolveLocale($tenant, $request);
 
-        // CSRF validation (same pattern as cancelBookingAction)
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-        $sessionToken = $_SESSION['_csrf_token'] ?? '';
-        $submittedToken = $request->header('X-CSRF-Token') ?? '';
-        if ($sessionToken === '' || $submittedToken === '' || !hash_equals($sessionToken, $submittedToken)) {
+        // CSRF: session token or same-origin attestation (see createBooking)
+        if (!CsrfMiddleware::verifyPublicSubmission($request)) {
             return Response::json(['error' => 'csrf_mismatch', 'message' => __('booking.api.csrf_mismatch')], 403);
         }
 

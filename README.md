@@ -304,7 +304,7 @@ VoxelBooking makes no outbound connections unless you configure SMTP or run a Gi
 
 ### What it stores
 
-- **One session cookie** (`vb_session`) — strictly necessary for admin login. No analytics cookies, no marketing cookies, no fingerprinting.
+- **Two session cookies, both strictly necessary.** `vb_session` for admin login. `PHPSESSID` on the public booking page, holding only its CSRF token. The embedded booking widget sets no cookies at all. No analytics cookies, no marketing cookies, no fingerprinting.
 - **One localStorage entry** (`vb-theme`) — dark/light mode preference stored in the browser.
 
 ### GDPR controls
