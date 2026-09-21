@@ -259,7 +259,7 @@ final class Mailer
             'date'    => $booking['date'],
         ]);
 
-        $heading        = $tpl['heading'] ?? __('email.booking_confirmation.body');
+        $heading        = $tpl['heading'] ?? __('email.booking_confirmation.heading');
         // body_intro replaces both greeting and body as a single paragraph
         $greeting       = $tpl['body_intro'] ?? __('email.booking_confirmation.greeting', ['name' => $customerName]);
         $bodyText       = isset($tpl['body_intro']) ? '' : __('email.booking_confirmation.body');
@@ -790,11 +790,11 @@ final class Mailer
             'time'    => $booking['time'] ?? '',
         ]);
 
-        $heading  = $tpl['heading'] ?? __('email.booking_reminder.body');
+        $heading  = $tpl['heading'] ?? __('email.booking_reminder.heading');
         $greeting = $tpl['body_intro'] ?? __('email.booking_reminder.greeting', ['name' => $customerName]);
         $bodyText = isset($tpl['body_intro']) ? '' : __('email.booking_reminder.body');
         $detailsHeading = __('email.booking_confirmation.details');
-        $footer   = $tpl['body_outro'] ?? __('email.booking_confirmation.footer');
+        $footer   = $tpl['body_outro'] ?? __('email.booking_reminder.footer');
 
         $displayDate = $booking['formatted_date'] ?? $booking['date'];
         $details = [];

@@ -1103,6 +1103,18 @@ return [
         'email_field_intro'         => 'Body intro',
         'email_field_outro'         => 'Body outro',
         'email_field_cta'           => 'Button label',
+        'email_type_confirmation_label'                => 'Booking Confirmation',
+        'email_type_confirmation_desc'                 => 'Sent to customers after a booking is confirmed.',
+        'email_type_reminder_label'                    => 'Booking Reminder',
+        'email_type_reminder_desc'                     => 'Sent before the appointment (when reminders are enabled).',
+        'email_type_cancellation_label'                => 'Cancellation Confirmation',
+        'email_type_cancellation_desc'                 => 'Sent when a booking is cancelled.',
+        'email_type_reschedule_confirmation_label'     => 'Reschedule Confirmation',
+        'email_type_reschedule_confirmation_desc'      => 'Sent when a booking is rescheduled (old vs new details).',
+        'email_type_approval_request_label'            => 'Approval Request',
+        'email_type_approval_request_desc'             => 'Sent to customers when their booking requires approval.',
+        'email_type_approval_confirmed_label'          => 'Approval Confirmed',
+        'email_type_approval_confirmed_desc'           => 'Sent to customers when a pending booking is approved.',
         'emails_saved'              => 'Email templates saved.',
 
         // Embed
