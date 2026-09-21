@@ -256,7 +256,7 @@ final class Mailer
 
         $subject = $tpl['subject'] ?? __('email.booking_confirmation.subject', [
             'service' => $serviceName ?? $tenantName,
-            'date'    => $booking['date'],
+            'date'    => $booking['formatted_date'] ?? $booking['date'],
         ]);
 
         $heading        = $tpl['heading'] ?? __('email.booking_confirmation.heading');
