@@ -289,7 +289,7 @@ if ($canReschedule ?? false):
     <div class="vb-modal vb-modal-sm">
         <div class="vb-modal-header">
             <h3 class="vb-modal-title"><?= __('admin.bookings.reschedule_title') ?></h3>
-            <button type="button" class="vb-modal-close" id="btn-reschedule-close" aria-label="Close">
+            <button type="button" class="vb-modal-close" id="btn-reschedule-close" aria-label="<?= __('admin.common.close') ?>">
                 <i data-lucide="x"></i>
             </button>
         </div>

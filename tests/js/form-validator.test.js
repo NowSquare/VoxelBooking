@@ -356,4 +356,62 @@ describe('getErrorMessage (production)', () => {
         }
         container.remove();
     });
+
+    describe('server-translated fallback messages (window.__VB_ADMIN_I18N__)', () => {
+        afterEach(() => {
+            delete window.__VB_ADMIN_I18N__;
+        });
+
+        it('uses the translated required message when the payload is present', () => {
+            window.__VB_ADMIN_I18N__ = { validation: { required: '[translated] required' } };
+            const container = document.createElement('div');
+            container.innerHTML = `<input type="text" class="vb-input" required value="">`;
+            document.body.appendChild(container);
+            const input = container.querySelector('input');
+
+            input.checkValidity();
+
+            expect(getErrorMessage(input)).toBe('[translated] required');
+            container.remove();
+        });
+
+        it('substitutes :min in the translated minlength message', () => {
+            window.__VB_ADMIN_I18N__ = { validation: { minlength: '[translated] min :min chars' } };
+            const input = document.createElement('input');
+            input.minLength = 8;
+            // JSDOM only flags tooShort for user-edited values, so stub the validity state.
+            Object.defineProperty(input, 'validity', {
+                value: { valueMissing: false, typeMismatch: false, tooShort: true, patternMismatch: false },
+            });
+
+            expect(getErrorMessage(input)).toBe('[translated] min 8 chars');
+        });
+
+        it('data-error-* attributes still take precedence over the translated payload', () => {
+            window.__VB_ADMIN_I18N__ = { validation: { required: '[translated] required' } };
+            const container = document.createElement('div');
+            container.innerHTML = `<input type="text" class="vb-input" required value=""
+                                          data-error-required="Custom name required.">`;
+            document.body.appendChild(container);
+            const input = container.querySelector('input');
+
+            input.checkValidity();
+
+            expect(getErrorMessage(input)).toBe('Custom name required.');
+            container.remove();
+        });
+
+        it('falls back to the English default when a key is missing from the payload', () => {
+            window.__VB_ADMIN_I18N__ = { validation: {} };
+            const container = document.createElement('div');
+            container.innerHTML = `<input type="text" class="vb-input" required value="">`;
+            document.body.appendChild(container);
+            const input = container.querySelector('input');
+
+            input.checkValidity();
+
+            expect(getErrorMessage(input)).toBe('This field is required.');
+            container.remove();
+        });
+    });
 });

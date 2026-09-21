@@ -394,7 +394,7 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
         <div class="vb-modal vb-modal-sm">
             <div class="vb-modal-header">
                 <h3 class="vb-modal-title"><?= __('admin.confirm.title') ?? 'Confirm Action' ?></h3>
-                <button type="button" class="vb-modal-close" data-confirm-close aria-label="Close">
+                <button type="button" class="vb-modal-close" data-confirm-close aria-label="<?= __('admin.common.close') ?>">
                     <i data-lucide="x"></i>
                 </button>
             </div>
@@ -416,6 +416,21 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
     <script>window.VB_DEMO = true;</script>
     <span data-demo-toast style="display:none"><?= __('admin.demo.toast_message') ?></span>
     <?php endif; ?>
+    <script>
+        // Translated fallback texts read by the admin JS (form-validator.js, confirm dialog).
+        window.__VB_ADMIN_I18N__ = <?= json_encode([
+            'validation' => [
+                'required'  => __('admin.validation.required'),
+                'type'      => __('admin.validation.type'),
+                'minlength' => __('admin.validation.minlength'),
+                'pattern'   => __('admin.validation.pattern'),
+                'invalid'   => __('admin.validation.invalid'),
+            ],
+            'confirm' => [
+                'message' => __('admin.common.confirm'),
+            ],
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?>;
+    </script>
     <script src="/assets/js/admin.js" type="module"></script>
 </body>
 </html>

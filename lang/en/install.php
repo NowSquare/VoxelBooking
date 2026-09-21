@@ -155,6 +155,7 @@ return [
         'step5_title'            => 'Create Your First Business',
         'step5_desc'             => 'Set up your first booking page. You can create more businesses later.',
         'tenant_name'            => 'Business Name',
+        'tenant_name_placeholder' => 'e.g. Salon Bella',
         'tenant_pattern'         => 'Booking Pattern',
         'pattern_timeslot'       => 'Time Slots',
         'pattern_timeslot_desc'  => 'Salon, therapist, tutor',

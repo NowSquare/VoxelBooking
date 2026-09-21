@@ -55,23 +55,39 @@ export function markFieldError(input, message) {
 }
 
 /**
+ * Fallback message for a validation state, translated server-side.
+ *
+ * admin/layout.php exposes the translated texts as
+ * window.__VB_ADMIN_I18N__.validation. The English default is only used when
+ * that payload is absent (e.g. in unit tests).
+ */
+function fallbackMessage(key, defaultText) {
+    const messages = window.__VB_ADMIN_I18N__?.validation;
+    return (messages && messages[key]) || defaultText;
+}
+
+/**
  * Get a human-readable validation message for the field.
  */
 export function getErrorMessage(input) {
     if (input.validity.valueMissing) {
-        return input.dataset.errorRequired || 'This field is required.';
+        return input.dataset.errorRequired ||
+               fallbackMessage('required', 'This field is required.');
     }
     if (input.validity.typeMismatch) {
-        return input.dataset.errorType || 'Please enter a valid value.';
+        return input.dataset.errorType ||
+               fallbackMessage('type', 'Please enter a valid value.');
     }
     if (input.validity.tooShort) {
         return input.dataset.errorMinlength ||
-               `At least ${input.minLength} characters required.`;
+               fallbackMessage('minlength', 'At least :min characters required.')
+                   .replace(':min', input.minLength);
     }
     if (input.validity.patternMismatch) {
-        return input.dataset.errorPattern || 'Please match the expected format.';
+        return input.dataset.errorPattern ||
+               fallbackMessage('pattern', 'Please match the expected format.');
     }
-    return input.validationMessage || 'Invalid value.';
+    return input.validationMessage || fallbackMessage('invalid', 'Invalid value.');
 }
 
 /**

@@ -44,13 +44,13 @@ $dayLabels = [
     <div class="vb-form-group col-span-full">
         <label for="resource-name" class="vb-label"><?= __('admin.resources.field_name') ?> <span class="vb-required">*</span></label>
         <input type="text" name="name" id="resource-name" value="<?= $name ?>"
-               class="vb-input" required placeholder="e.g. Sea View Suite">
+               class="vb-input" required placeholder="<?= __('admin.resources.field_name_placeholder') ?>">
     </div>
 
     <div class="vb-form-group col-span-full">
         <label for="resource-description" class="vb-label"><?= __('admin.resources.field_description') ?></label>
         <textarea name="description" id="resource-description" class="vb-input resize-y" rows="3"
-                  placeholder="Describe the room or resource"><?= $description ?></textarea>
+                  placeholder="<?= __('admin.resources.field_description_placeholder') ?>"><?= $description ?></textarea>
     </div>
 
     <?php
@@ -122,7 +122,7 @@ $dayLabels = [
     <div class="vb-form-group">
         <label for="resource-amenities" class="vb-label"><?= __('admin.resources.field_amenities') ?></label>
         <input type="text" name="amenities" id="resource-amenities" value="<?= $amenitiesStr ?>"
-               class="vb-input" placeholder="Wi-Fi, Pool, Air conditioning">
+               class="vb-input" placeholder="<?= __('admin.resources.field_amenities_placeholder') ?>">
         <p class="vb-hint"><?= __('admin.resources.field_amenities_hint') ?></p>
     </div>
 

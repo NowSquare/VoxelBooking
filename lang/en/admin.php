@@ -344,6 +344,17 @@ return [
         'move_down'        => 'Move down',
         'col_order'        => 'Order',
         'export_csv'       => 'Export CSV',
+        'close'            => 'Close',
+        'error_generic'    => 'Something went wrong. Please try again.',
+    ],
+
+    // ── Client-side form validation (fallback messages used by the admin JS) ──
+    'validation' => [
+        'required'  => 'This field is required.',
+        'type'      => 'Please enter a valid value.',
+        'minlength' => 'At least :min characters required.',
+        'pattern'   => 'Please match the expected format.',
+        'invalid'   => 'Invalid value.',
     ],
 
     // ── Flash messages ──
@@ -930,6 +941,9 @@ return [
         'field_max_stay'        => 'Maximum stay (nights)',
         'field_amenities'       => 'Amenities',
         'field_amenities_hint'  => 'Comma-separated tags, e.g. Wi-Fi, Pool, Air conditioning',
+        'field_name_placeholder'        => 'e.g. Sea View Suite',
+        'field_description_placeholder' => 'Describe the room or resource',
+        'field_amenities_placeholder'   => 'Wi-Fi, Pool, Air conditioning',
         'seasonal_title'        => 'Seasonal Pricing',
         'seasonal_empty'        => 'No seasonal pricing configured.',
         'seasonal_add'          => 'Add seasonal rate',
