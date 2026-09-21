@@ -616,15 +616,14 @@ final class AdminRoutesTest extends TestCase
         $r = $this->get('/admin/tenants/' . $tenantId);
         $this->assertSame(200, $r['code']);
 
-        // "Next Up" should show the near booking before the far booking
-        $nearDate = date('M j', strtotime('+1 day'));
-        $farDate = date('M j', strtotime('+5 days'));
+        // "Next Up" should show the near booking before the far booking.
+        // Match on the booking links: the displayed date follows the locale's
+        // date notation, so it cannot be predicted here.
+        $nearPos = strpos($r['body'], '/bookings/01TESTBKNEAR000000000000');
+        $farPos = strpos($r['body'], '/bookings/01TESTBKFAR0000000000000');
 
-        $nearPos = strpos($r['body'], $nearDate);
-        $farPos = strpos($r['body'], $farDate);
-
-        $this->assertNotFalse($nearPos, "Near booking date ($nearDate) should appear on tenant dashboard");
-        $this->assertNotFalse($farPos, "Far booking date ($farDate) should appear on tenant dashboard");
+        $this->assertNotFalse($nearPos, 'Near booking should appear on tenant dashboard');
+        $this->assertNotFalse($farPos, 'Far booking should appear on tenant dashboard');
         $this->assertLessThan($farPos, $nearPos, 'Nearest booking should appear before the far one (ASC sort)');
     }
 

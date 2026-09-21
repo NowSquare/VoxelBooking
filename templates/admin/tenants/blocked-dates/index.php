@@ -158,10 +158,10 @@ if ($oldStaffId !== '' && $oldStaffId !== null) {
                     <td>
                         <span class="vb-cell-name vb-tabular">
                             <?php if ($bd['start_date'] === $bd['end_date']): ?>
-                                <?= htmlspecialchars(date('M j, Y', strtotime($bd['start_date'])), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars(\App\Engine\Locale::date(new \DateTimeImmutable($bd['start_date'])), ENT_QUOTES, 'UTF-8') ?>
                             <?php else: ?>
-                                <?= htmlspecialchars(date('M j', strtotime($bd['start_date'])), ENT_QUOTES, 'UTF-8') ?>
-                                — <?= htmlspecialchars(date('M j, Y', strtotime($bd['end_date'])), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars(\App\Engine\Locale::date(new \DateTimeImmutable($bd['start_date'])), ENT_QUOTES, 'UTF-8') ?>
+                                — <?= htmlspecialchars(\App\Engine\Locale::date(new \DateTimeImmutable($bd['end_date'])), ENT_QUOTES, 'UTF-8') ?>
                             <?php endif; ?>
                         </span>
                     </td>
@@ -232,10 +232,10 @@ if ($oldStaffId !== '' && $oldStaffId !== null) {
                     <td>
                         <span class="vb-cell-name vb-tabular">
                             <?php if ($bd['start_date'] === $bd['end_date']): ?>
-                                <?= htmlspecialchars(date('M j, Y', strtotime($bd['start_date'])), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars(\App\Engine\Locale::date(new \DateTimeImmutable($bd['start_date'])), ENT_QUOTES, 'UTF-8') ?>
                             <?php else: ?>
-                                <?= htmlspecialchars(date('M j', strtotime($bd['start_date'])), ENT_QUOTES, 'UTF-8') ?>
-                                — <?= htmlspecialchars(date('M j, Y', strtotime($bd['end_date'])), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars(\App\Engine\Locale::date(new \DateTimeImmutable($bd['start_date'])), ENT_QUOTES, 'UTF-8') ?>
+                                — <?= htmlspecialchars(\App\Engine\Locale::date(new \DateTimeImmutable($bd['end_date'])), ENT_QUOTES, 'UTF-8') ?>
                             <?php endif; ?>
                         </span>
                     </td>

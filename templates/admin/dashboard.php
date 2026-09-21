@@ -142,7 +142,7 @@ ob_start();
                     </td>
                     <td><?= htmlspecialchars(booking_display_label($b), ENT_QUOTES, 'UTF-8') ?></td>
                     <td>
-                        <div class="vb-cell-primary"><?= date('M j, Y', strtotime($b['start_datetime'])) ?></div>
+                        <div class="vb-cell-primary"><?= \App\Engine\Locale::date(new \DateTimeImmutable($b['start_datetime'])) ?></div>
                         <div class="vb-cell-secondary"><?= date('H:i', strtotime($b['start_datetime'])) ?> – <?= date('H:i', strtotime($b['end_datetime'])) ?></div>
                     </td>
                     <td>

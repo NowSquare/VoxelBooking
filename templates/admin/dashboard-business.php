@@ -271,7 +271,7 @@ if ($staffWorkingToday !== null || (isset($tenant['booking_pattern']) && $tenant
                             <?= __('admin.bookings.status_' . $b['status']) ?>
                         </span>
                         <div class="vb-upcoming-time">
-                            <div class="vb-upcoming-date"><?= date('M j', strtotime($b['start_datetime'])) ?></div>
+                            <div class="vb-upcoming-date"><?= \App\Engine\Locale::date(new \DateTimeImmutable($b['start_datetime'])) ?></div>
                             <div class="vb-upcoming-clock"><?= date('H:i', strtotime($b['start_datetime'])) ?></div>
                         </div>
                     </a>

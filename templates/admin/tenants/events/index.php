@@ -61,7 +61,7 @@ ob_start();
                             <?php endif; ?>
                         </td>
                         <td>
-                            <div class="vb-cell-primary"><?= date('M j, Y', strtotime($event['start_datetime'])) ?></div>
+                            <div class="vb-cell-primary"><?= \App\Engine\Locale::date(new \DateTimeImmutable($event['start_datetime'])) ?></div>
                             <div class="vb-cell-secondary">
                                 <?= date('H:i', strtotime($event['start_datetime'])) ?> – <?= date('H:i', strtotime($event['end_datetime'])) ?>
                             </div>

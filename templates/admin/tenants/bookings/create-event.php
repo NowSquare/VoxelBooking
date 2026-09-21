@@ -53,7 +53,7 @@ ob_start();
                                 <option value="<?= htmlspecialchars($event['id'], ENT_QUOTES, 'UTF-8') ?>"
                                         <?= old('event_id') === $event['id'] ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($event['name'], ENT_QUOTES, 'UTF-8') ?>
-                                    — <?= date('M j, Y H:i', strtotime($event['start_datetime'])) ?>
+                                    — <?= \App\Engine\Locale::date(new \DateTimeImmutable($event['start_datetime'])) ?> <?= date('H:i', strtotime($event['start_datetime'])) ?>
                                     (<?= (int) $event['max_participants'] ?> max)
                                 </option>
                             <?php endforeach; ?>

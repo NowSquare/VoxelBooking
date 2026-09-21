@@ -103,7 +103,7 @@ $csrfToken     = $csrfToken ?? '';
                     </td>
                     <td>
                         <span class="vb-cell-secondary">
-                            <?= htmlspecialchars(date('M j, Y', strtotime($app['created_at'])), ENT_QUOTES, 'UTF-8') ?>
+                            <?= htmlspecialchars(\App\Engine\Locale::date(new \DateTimeImmutable($app['created_at'])), ENT_QUOTES, 'UTF-8') ?>
                         </span>
                     </td>
                     <td>

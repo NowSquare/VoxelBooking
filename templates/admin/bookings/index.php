@@ -183,7 +183,7 @@ $hasActiveFilters = !empty($filters['status'] ?? '') || !empty($filters['from'] 
                             </div>
                         </td>
                         <td data-label="<?= __('admin.bookings.date_time') ?>">
-                            <div class="vb-cell-primary"><?= date('M j, Y', strtotime($b['start_datetime'])) ?></div>
+                            <div class="vb-cell-primary"><?= \App\Engine\Locale::date(new \DateTimeImmutable($b['start_datetime'])) ?></div>
                             <div class="vb-cell-secondary">
                                 <?= date('H:i', strtotime($b['start_datetime'])) ?> – <?= date('H:i', strtotime($b['end_datetime'])) ?>
                             </div>

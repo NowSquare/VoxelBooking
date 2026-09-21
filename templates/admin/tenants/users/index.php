@@ -95,7 +95,7 @@ ob_start();
                         </td>
                         <td class="vb-text-secondary">
                             <?php if ($bu['last_login_at']): ?>
-                                <?= htmlspecialchars(date('M j, Y H:i', strtotime($bu['last_login_at'])), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars(\App\Engine\Locale::date(new \DateTimeImmutable($bu['last_login_at'])) . ' ' . date('H:i', strtotime($bu['last_login_at'])), ENT_QUOTES, 'UTF-8') ?>
                             <?php else: ?>
                                 <span class="vb-text-tertiary">—</span>
                             <?php endif; ?>
