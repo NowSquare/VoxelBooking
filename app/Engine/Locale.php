@@ -465,8 +465,15 @@ final class Locale
     public static function dateLong(\DateTimeInterface $dt): string
     {
         $config = self::getConfig();
+        $format = $config['date_format_long'] ?? 'F j, Y';
 
-        return $dt->format($config['date_format_long'] ?? 'F j, Y');
+        // PHP always renders the "F" token as an English month name. Swap each
+        // unescaped "F" for a control character that DateTime::format() leaves
+        // untouched, then put the translated month name in its place.
+        $marker    = "\x1F";
+        $formatted = $dt->format(preg_replace('/(?<!\\\\)F/', $marker, $format));
+
+        return str_replace($marker, self::monthName((int) $dt->format('n')), $formatted);
     }
 
     /**
