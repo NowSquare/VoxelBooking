@@ -185,7 +185,7 @@ ob_start();
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(text).then(function() {
                     var label = copyBtn.querySelector('.vb-embed-copy-label');
-                    if (label) label.textContent = 'Copied!';
+                    if (label) label.textContent = <?= json_encode(__('admin.common.url_copied'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
                     copyBtn.classList.add('vb-embed-copied');
                     var icon = copyBtn.querySelector('[data-lucide]');
                     if (icon) icon.setAttribute('data-lucide', 'check');

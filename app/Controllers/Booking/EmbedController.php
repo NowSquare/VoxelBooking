@@ -7,6 +7,7 @@ namespace App\Controllers\Booking;
 use App\Engine\BrandColorHelper;
 use App\Engine\Database;
 use App\Engine\DemoMode;
+use App\Engine\Locale;
 use App\Engine\Request;
 use App\Engine\Response;
 
@@ -36,7 +37,7 @@ final class EmbedController
             'SELECT `slug`, `name`, `brand_color`, `logo_path`,
                     `booking_pattern`, `embed_button_position`, `embed_button_label`,
                     `allowed_embed_domains`, `requires_consent`, `consent_text`,
-                    `privacy_policy_url`, `custom_fields`
+                    `privacy_policy_url`, `custom_fields`, `locale`, `locale_override`
              FROM `tenants` WHERE `slug` = ? AND `status` = ? LIMIT 1',
             [$slug, 'active']
         );
@@ -46,6 +47,10 @@ final class EmbedController
         }
 
         $t = $tenant[0];
+
+        // Same locale chain as the booking page opened by the widget, so the
+        // button and overlay texts match the language of the booking flow.
+        Locale::resolveForBooking($t, $request->header('Accept-Language'));
 
         // Parse allowed domains to array for the response
         $allowedDomains = [];
@@ -64,7 +69,10 @@ final class EmbedController
             'logo_url'          => $t['logo_path'] ? '/' . ltrim($t['logo_path'], '/') : null,
             'booking_pattern'   => $t['booking_pattern'],
             'button_position'   => $t['embed_button_position'] ?: 'bottom-right',
-            'button_label'      => $t['embed_button_label'] ?: 'Book Now',
+            'button_label'      => $t['embed_button_label'] ?: __('booking.embed.button_label'),
+            'close_label'       => __('booking.embed.close'),
+            'frame_title'       => __('booking.embed.frame_title', ['name' => $t['name']]),
+            'demo_label'        => __('booking.embed.demo_badge'),
             'requires_consent'  => (bool) $t['requires_consent'],
             'consent_text'      => $t['consent_text'] ?: null,
             'privacy_policy_url'=> $t['privacy_policy_url'] ?: null,
@@ -75,6 +83,7 @@ final class EmbedController
 
         $response = Response::json($config);
         $response->header('Cache-Control', 'public, max-age=60');
+        $response->header('Vary', 'Accept-Language');
         $response->header('Access-Control-Allow-Origin', '*');
         return $response;
     }
@@ -149,14 +158,14 @@ final class EmbedController
   function injectButton(cfg){
     var btn=document.createElement("button");
     btn.id="vb-embed-btn";
-    btn.setAttribute("aria-label",cfg.button_label||"Book Now");
+    btn.setAttribute("aria-label",cfg.button_label);
 
     // Lucide 'calendar' icon as inline SVG (self-contained — Lucide JS not available on host page)
     var iconSvg='<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" '
       +'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">'
       +'<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/>'
       +'<path d="M3 10h18"/></svg>';
-    btn.innerHTML=iconSvg+'<span>'+((cfg.button_label||"Book Now").replace(/</g,"&lt;"))+'</span>';
+    btn.innerHTML=iconSvg+'<span>'+(cfg.button_label.replace(/</g,"&lt;"))+'</span>';
 
     var pos=cfg.button_position==="bottom-left"?"left":"right";
     btn.style.cssText="position:fixed;bottom:24px;"+pos+":24px;z-index:99990;"
@@ -197,7 +206,7 @@ final class EmbedController
     if(cfg.is_demo){
       var badge=document.createElement("span");
       badge.id="vb-embed-demo";
-      badge.textContent="Demo";
+      badge.textContent=cfg.demo_label;
       btn.appendChild(badge);
     }
 
@@ -221,12 +230,12 @@ final class EmbedController
     close.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" '
       +'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
       +'<path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
-    close.setAttribute("aria-label","Close booking");
+    close.setAttribute("aria-label",cfg.close_label);
 
     var iframe=document.createElement("iframe");
     iframe.id="vb-embed-iframe";
     iframe.src=BOOK_URL;
-    iframe.title="Book "+((cfg&&cfg.name)||"appointment");
+    iframe.title=cfg.frame_title;
     iframe.setAttribute("loading","eager");
 
     wrap.appendChild(close);

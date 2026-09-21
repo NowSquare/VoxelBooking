@@ -344,6 +344,20 @@ return [
         12 => 'December',
     ],
 
+    // ── Page Meta ──
+    'meta' => [
+        'title'       => 'Book – :name',
+        'description' => 'Book an appointment with :name',
+    ],
+
+    // ── Embed Widget (floating button + overlay on third-party sites) ──
+    'embed' => [
+        'button_label' => 'Book Now',
+        'close'        => 'Close booking',
+        'frame_title'  => 'Book :name',
+        'demo_badge'   => 'Demo',
+    ],
+
     // ── Footer ──
     'footer' => [
         'powered_by' => 'Powered by',

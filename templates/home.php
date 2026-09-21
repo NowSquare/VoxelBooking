@@ -528,7 +528,7 @@ $isLoggedIn = $isLoggedIn ?? false;
             </svg>
         </div>
         <div class="lp-simple-name"><?= htmlspecialchars(app_name(), ENT_QUOTES, 'UTF-8') ?></div>
-        <div class="lp-simple-sub">Booking infrastructure</div>
+        <div class="lp-simple-sub"><?= __('public.tagline_simple') ?></div>
     </section>
 
     <?php else: ?>
@@ -537,7 +537,7 @@ $isLoggedIn = $isLoggedIn ?? false;
         <!-- Top row: headline + form card side-by-side -->
         <div class="lp-hero-top">
             <div class="lp-hero-content">
-                <p class="lp-eyebrow">Scheduling infrastructure</p>
+                <p class="lp-eyebrow"><?= __('public.eyebrow') ?></p>
                 <h1><?= __('public.hero_heading') ?></h1>
                 <p class="lp-hero-sub"><?= __('public.hero_sub') ?></p>
 
