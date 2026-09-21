@@ -479,6 +479,17 @@ Before committing any CSS changes, run the token audit to confirm no hardcoded v
 python3 scripts/audit-css-tokens.py
 ```
 
+After adding or changing user-facing text, run the i18n audit. It scans the templates, the PHP code and the JS for hardcoded (untranslated) strings, English-only date formats, and translation keys used in code but missing from `lang/en/`, and checks that every other `lang/{locale}/` mirrors `lang/en/`:
+
+```bash
+python3 scripts/audit-i18n.py             # exit code 1 when problems are found
+python3 scripts/audit-i18n.py --verbose   # also list the clean files
+python3 scripts/audit-i18n.py --strict    # locale parity warnings fail too
+python3 -m unittest discover -s tests/scripts   # tests of the audit itself
+```
+
+The findings are heuristics. English that is intentional (API contracts, example data, last-resort defaults) is listed with its reason in the `IGNORE` table at the top of the script; a single line can also be silenced with an `i18n-ignore` comment.
+
 ### Building a release archive (optional)
 
 You no longer need a ZIP to install or update VoxelBooking — cloning the repository is the simplest path, and updates run from the admin panel. A packaged archive is still handy for offline installs, mirroring, or distribution. Build one with:
