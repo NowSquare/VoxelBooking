@@ -68,10 +68,10 @@ final class SettingsController
 
         $errors = [];
         if ($appName === '') {
-            $errors[] = 'Application name is required.';
+            $errors[] = __('admin.settings.error_app_name_required');
         }
         if ($brandUrl !== '' && !filter_var($brandUrl, FILTER_VALIDATE_URL)) {
-            $errors[] = 'Brand URL must be a valid URL.';
+            $errors[] = __('admin.settings.error_brand_url_invalid');
         }
 
         if (!empty($errors)) {

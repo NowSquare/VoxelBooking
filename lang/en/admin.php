@@ -147,6 +147,8 @@ return [
         'memory_limit'       => 'Memory limit',
         'server'             => 'Server',
         'database'           => 'Database',
+        'error_app_name_required' => 'Application name is required.',
+        'error_brand_url_invalid' => 'Brand URL must be a valid URL.',
     ],
 
     // ── Confirm Dialog ──
@@ -396,6 +398,8 @@ return [
         '500_title'        => 'Something went wrong',
         '500_desc'         => 'We\'ve logged the error. Try refreshing the page.',
         '500_action'       => 'Refresh page',
+        'csrf_title'       => '403 Forbidden',
+        'csrf_desc'        => 'Invalid security token.',
     ],
 
     // ── Demo Mode ──
@@ -1372,6 +1376,23 @@ return [
         'git_success'             => 'Updated to v:version via Git. :count migration(s) applied.',
         'git_already_current'     => 'Already up to date — no changes pulled.',
         'git_failed'              => 'Git update failed. Check the audit log for details.',
+        // Status / result messages returned by GitUpdater
+        'git_msg_no_exec'         => 'Process execution is disabled on this server (proc_open).',
+        'git_msg_not_checkout'    => 'This install is not a Git checkout.',
+        'git_msg_no_git'          => 'The git command is not available on this server.',
+        'git_msg_no_upstream'     => 'No upstream branch is configured. Run: git branch --set-upstream-to=origin/:branch',
+        'git_msg_fetch_timeout'   => 'Timed out reaching the repository.',
+        'git_msg_fetch_failed'    => 'Could not reach the repository.',
+        'git_msg_fetch_failed_detail' => 'Could not reach the repository. :error',
+        'git_msg_dirty'           => 'Local code changes detected. Resolve them before updating.',
+        'git_msg_ahead'           => 'This install has :count local commit(s) not in the repository; refusing to reset.',
+        'git_msg_update_available' => '{1} :count update available.|[2,*] :count updates available.',
+        'git_msg_up_to_date'      => 'Up to date.',
+        'git_msg_locked'          => 'Another update is already running. Try again in a moment.',
+        'git_msg_already_current' => 'Already up to date.',
+        'git_msg_reset_failed'    => 'git reset failed. :detail',
+        'git_msg_see_output'      => 'See output.',
+        'git_msg_updated'         => 'Updated to v:version.',
     ],
 
     // ── Business Applications ──
