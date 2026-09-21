@@ -344,6 +344,25 @@ return [
         12 => 'December',
     ],
 
+    // ── Month Names inside a date (1-12) ──
+    // Form used by Locale::dateLong(), e.g. "27 March 2026". Falls back to
+    // 'months' when a locale does not define it (some languages write months
+    // in lowercase inside a sentence but capitalized as a calendar heading).
+    'months_date' => [
+        1  => 'January',
+        2  => 'February',
+        3  => 'March',
+        4  => 'April',
+        5  => 'May',
+        6  => 'June',
+        7  => 'July',
+        8  => 'August',
+        9  => 'September',
+        10 => 'October',
+        11 => 'November',
+        12 => 'December',
+    ],
+
     // ── Page Meta ──
     'meta' => [
         'title'       => 'Book – :name',

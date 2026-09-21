@@ -300,6 +300,45 @@ final class LocaleTest extends TestCase
         }
     }
 
+    /**
+     * booking.months_date (month inside a date) wins over booking.months
+     * (calendar heading); months is the fallback when months_date is absent.
+     */
+    public function testDateLongPrefersMonthsDateOverMonths(): void
+    {
+        $base = sys_get_temp_dir() . '/vb-locale-' . uniqid();
+        mkdir($base . '/config', 0777, true);
+        mkdir($base . '/lang/fr', 0777, true);
+        copy($this->basePath . '/config/locales.php', $base . '/config/locales.php');
+        file_put_contents(
+            $base . '/lang/fr/booking.php',
+            "<?php return ['months' => [3 => 'Mars', 4 => 'Avril'], 'months_date' => [3 => 'mars']];"
+        );
+
+        try {
+            Locale::reset();
+            Locale::init($base);
+            Locale::setSystemDefaults([]);
+            Locale::setLocale('fr');
+
+            // Heading form is untouched
+            $this->assertSame('Mars', Locale::monthName(3));
+            // Date form uses months_date when defined...
+            $this->assertSame('mars', Locale::monthNameInDate(3));
+            $this->assertSame('27 mars 2026', Locale::dateLong(new \DateTimeImmutable('2026-03-27')));
+            // ...and falls back to months when it is not
+            $this->assertSame('Avril', Locale::monthNameInDate(4));
+            $this->assertSame('15 Avril 2026', Locale::dateLong(new \DateTimeImmutable('2026-04-15')));
+        } finally {
+            unlink($base . '/lang/fr/booking.php');
+            rmdir($base . '/lang/fr');
+            rmdir($base . '/lang');
+            unlink($base . '/config/locales.php');
+            rmdir($base . '/config');
+            rmdir($base);
+        }
+    }
+
     public function testDateLongFallsBackToEnglishMonthWithoutTranslation(): void
     {
         // Registered locale without a lang/ directory: monthName() falls back to English
