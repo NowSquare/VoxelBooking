@@ -30,7 +30,7 @@ $emailTypes = [
             'heading'    => 'Booking confirmed',
             'body_intro' => 'Thank you for your booking.',
             'body_outro' => 'If you need to make changes, please contact us.',
-            'cta_label'  => 'View Booking',
+            'cta_label'  => __('email.common.manage_booking'),
         ],
     ],
     'reminder' => [
@@ -41,7 +41,7 @@ $emailTypes = [
             'heading'    => 'Appointment Reminder',
             'body_intro' => 'This is a reminder for your upcoming appointment.',
             'body_outro' => '',
-            'cta_label'  => 'View Booking',
+            'cta_label'  => __('email.common.manage_booking'),
         ],
     ],
     'cancellation' => [
@@ -52,7 +52,7 @@ $emailTypes = [
             'heading'    => 'Booking Cancelled',
             'body_intro' => 'Your booking has been cancelled.',
             'body_outro' => 'If this was a mistake, please contact us to rebook.',
-            'cta_label'  => 'Book Again',
+            'cta_label'  => __('email.cancellation.book_again'),
         ],
     ],
     'reschedule_confirmation' => [
@@ -63,7 +63,7 @@ $emailTypes = [
             'heading'    => 'Booking Rescheduled',
             'body_intro' => 'Your booking has been moved to a new date and time.',
             'body_outro' => 'If you have any questions, please contact us.',
-            'cta_label'  => 'Add to Calendar',
+            'cta_label'  => __('email.common.manage_booking'),
         ],
     ],
     'approval_request' => [
@@ -74,7 +74,7 @@ $emailTypes = [
             'heading'    => 'Request Received',
             'body_intro' => 'Your booking is pending approval. We will notify you once it is confirmed.',
             'body_outro' => '',
-            'cta_label'  => '',
+            'cta_label'  => __('email.common.manage_booking'),
         ],
     ],
     'approval_confirmed' => [
@@ -85,7 +85,7 @@ $emailTypes = [
             'heading'    => 'Booking Approved',
             'body_intro' => 'Your booking has been approved and is now confirmed.',
             'body_outro' => '',
-            'cta_label'  => 'Add to Calendar',
+            'cta_label'  => __('email.common.manage_booking'),
         ],
     ],
 ];

@@ -292,12 +292,14 @@ final class Mailer
             $safeBrandColor, $heading, $greeting, $bodyText,
             $detailsHeading, $details, $footer, $tenantName, app_name(),
             $manageUrl,
+            $tpl['cta_label'] ?? '',
         );
 
         $poweredBy = __('email.common.powered_by', ['app_name' => app_name()]);
         $plainBody = self::renderConfirmationPlainText(
             $heading, $greeting, $bodyText, $detailsHeading,
             $details, $footer, $tenantName, $poweredBy, $manageUrl,
+            $tpl['cta_label'] ?? '',
         );
 
         // Resolve tenant Reply-To and From name: customer sees the business name
@@ -736,6 +738,7 @@ final class Mailer
             $safeBrandColor, $heading, $greeting, $bodyText,
             $detailsHeading, $details, $footer, $tenantName, app_name(),
             $tenantSlug,
+            $tpl['cta_label'] ?? '',
         );
 
         $poweredBy = __('email.common.powered_by', ['app_name' => app_name()]);
@@ -815,12 +818,14 @@ final class Mailer
             $safeBrandColor, $heading, $greeting, $bodyText,
             $detailsHeading, $details, $footer, $tenantName, app_name(),
             $manageUrl,
+            $tpl['cta_label'] ?? '',
         );
 
         $poweredBy = __('email.common.powered_by', ['app_name' => app_name()]);
         $plainBody = self::renderConfirmationPlainText(
             $heading, $greeting, $bodyText, $detailsHeading,
             $details, $footer, $tenantName, $poweredBy, $manageUrl,
+            $tpl['cta_label'] ?? '',
         );
 
         $replyTo = self::resolveTenantReplyTo($tenantId);
@@ -900,12 +905,14 @@ final class Mailer
             $safeBrandColor, $heading, $greeting, $bodyText,
             $detailsHeading, $details, $footer, $tenantName, app_name(),
             $manageUrl,
+            $tpl['cta_label'] ?? '',
         );
 
         $poweredBy = __('email.common.powered_by', ['app_name' => app_name()]);
         $plainBody = self::renderConfirmationPlainText(
             $heading, $greeting, $bodyText, $detailsHeading,
             $details, $footer, $tenantName, $poweredBy, $manageUrl,
+            $tpl['cta_label'] ?? '',
         );
 
         $replyTo = self::resolveTenantReplyTo($tenantId);
@@ -977,12 +984,14 @@ final class Mailer
             $safeBrandColor, $heading, $greeting, $bodyText,
             $detailsHeading, $details, $footer, $tenantName, app_name(),
             $manageUrl,
+            $tpl['cta_label'] ?? '',
         );
 
         $poweredBy = __('email.common.powered_by', ['app_name' => app_name()]);
         $plainBody = self::renderConfirmationPlainText(
             $heading, $greeting, $bodyText, $detailsHeading,
             $details, $footer, $tenantName, $poweredBy, $manageUrl,
+            $tpl['cta_label'] ?? '',
         );
 
         $replyTo = self::resolveTenantReplyTo($tenantId);
@@ -1054,12 +1063,14 @@ final class Mailer
             $safeBrandColor, $heading, $greeting, $bodyText,
             $detailsHeading, $details, $footer, $tenantName, app_name(),
             $manageUrl,
+            $tpl['cta_label'] ?? '',
         );
 
         $poweredBy = __('email.common.powered_by', ['app_name' => app_name()]);
         $plainBody = self::renderConfirmationPlainText(
             $heading, $greeting, $bodyText, $detailsHeading,
             $details, $footer, $tenantName, $poweredBy, $manageUrl,
+            $tpl['cta_label'] ?? '',
         );
 
         $replyTo = self::resolveTenantReplyTo($tenantId);
@@ -1642,6 +1653,7 @@ final class Mailer
         string $tenantName,
         string $appName,
         string $manageUrl = '',
+        string $ctaLabel = '',
     ): string {
         $h = fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
         $font = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
@@ -1670,7 +1682,7 @@ final class Mailer
         // Build manage-booking CTA block (only if URL is provided)
         $manageBlock = '';
         if ($manageUrl !== '') {
-            $manageCta = $h(__('email.common.manage_booking'));
+            $manageCta = $h($ctaLabel !== '' ? $ctaLabel : __('email.common.manage_booking'));
             $safeUrl = htmlspecialchars($manageUrl, ENT_QUOTES, 'UTF-8');
             $manageBlock = <<<MANAGE
                         <!-- Manage booking CTA -->
@@ -1751,6 +1763,7 @@ final class Mailer
         string $tenantName,
         string $poweredBy,
         string $manageUrl = '',
+        string $ctaLabel = '',
     ): string {
         $lines = [];
         $lines[] = mb_strtoupper($heading);
@@ -1766,7 +1779,7 @@ final class Mailer
         }
         $lines[] = '';
         if ($manageUrl !== '') {
-            $lines[] = __('email.common.manage_booking') . ':';
+            $lines[] = ($ctaLabel !== '' ? $ctaLabel : __('email.common.manage_booking')) . ':';
             $lines[] = $manageUrl;
             $lines[] = '';
         }
@@ -1830,6 +1843,7 @@ final class Mailer
         string $tenantName,
         string $appName,
         string $tenantSlug = '',
+        string $ctaLabel = '',
     ): string {
         $h = fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
         $font = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
@@ -1848,7 +1862,7 @@ final class Mailer
         }
 
         $poweredBy = __('email.common.powered_by', ['app_name' => $appName]);
-        $bookAgainLabel = __('email.cancellation.book_again');
+        $bookAgainLabel = $ctaLabel !== '' ? $ctaLabel : __('email.cancellation.book_again');
         $bookAgainUrl = '';
         if ($tenantSlug !== '') {
             $baseUrl = rtrim($_SERVER['REQUEST_SCHEME'] ?? 'https', '/') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
