@@ -137,7 +137,7 @@ final class Auth
     public static function login(string $email, string $password): array
     {
         if (empty($email) || empty($password)) {
-            return ['success' => false, 'error' => 'Email and password are required.'];
+            return ['success' => false, 'error' => __('auth.credentials_required')];
         }
 
         // Check 1: operators table (PRD §XV: operator match takes priority)
@@ -215,7 +215,7 @@ final class Auth
 
         AuditLog::logLoginFailed($email);
 
-        return ['success' => false, 'error' => 'Invalid email or password.'];
+        return ['success' => false, 'error' => __('auth.invalid_credentials')];
     }
 
     /**
@@ -234,7 +234,7 @@ final class Auth
         );
 
         if (empty($reg)) {
-            return ['success' => false, 'error' => 'No account found for this email.'];
+            return ['success' => false, 'error' => __('auth.account_not_found_for_email')];
         }
 
         $userType = $reg[0]['user_type'];
@@ -246,7 +246,7 @@ final class Auth
                 [$userId]
             );
             if (empty($operator)) {
-                return ['success' => false, 'error' => 'Account not found.'];
+                return ['success' => false, 'error' => __('auth.account_not_found')];
             }
             self::regenerateSession();
             self::setSession('operator', $operator[0]['id'], $operator[0]['name'], $operator[0]['email']);
@@ -261,7 +261,7 @@ final class Auth
             [$userId]
         );
         if (empty($bu)) {
-            return ['success' => false, 'error' => 'Account not found or deactivated.'];
+            return ['success' => false, 'error' => __('auth.account_not_found_or_inactive')];
         }
         self::regenerateSession();
         self::setSession('business_user', $bu[0]['id'], $bu[0]['name'], $bu[0]['email'], $bu[0]['tenant_id'], $bu[0]['role']);

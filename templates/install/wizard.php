@@ -1527,7 +1527,7 @@ $displayStep = is_numeric($step) ? (int) $step : (str_starts_with((string) $step
 
                 <div class="form-group">
                     <label class="form-label" for="tenant_name"><?= __('install.wizard.tenant_name') ?> <span class="form-required">*</span></label>
-                    <input type="text" id="tenant_name" name="name" class="form-input <?= isset($errors['name']) ? 'error' : '' ?>" required placeholder="e.g. Salon Bella">
+                    <input type="text" id="tenant_name" name="name" class="form-input <?= isset($errors['name']) ? 'error' : '' ?>" required placeholder="<?= __('install.wizard.tenant_name_placeholder') ?>">
                     <?php if (isset($errors['name'])): ?><div class="form-error"><?= htmlspecialchars($errors['name'], ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
                 </div>
 

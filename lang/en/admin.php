@@ -147,6 +147,8 @@ return [
         'memory_limit'       => 'Memory limit',
         'server'             => 'Server',
         'database'           => 'Database',
+        'error_app_name_required' => 'Application name is required.',
+        'error_brand_url_invalid' => 'Brand URL must be a valid URL.',
     ],
 
     // ── Confirm Dialog ──
@@ -344,6 +346,17 @@ return [
         'move_down'        => 'Move down',
         'col_order'        => 'Order',
         'export_csv'       => 'Export CSV',
+        'close'            => 'Close',
+        'error_generic'    => 'Something went wrong. Please try again.',
+    ],
+
+    // ── Client-side form validation (fallback messages used by the admin JS) ──
+    'validation' => [
+        'required'  => 'This field is required.',
+        'type'      => 'Please enter a valid value.',
+        'minlength' => 'At least :min characters required.',
+        'pattern'   => 'Please match the expected format.',
+        'invalid'   => 'Invalid value.',
     ],
 
     // ── Flash messages ──
@@ -385,6 +398,8 @@ return [
         '500_title'        => 'Something went wrong',
         '500_desc'         => 'We\'ve logged the error. Try refreshing the page.',
         '500_action'       => 'Refresh page',
+        'csrf_title'       => '403 Forbidden',
+        'csrf_desc'        => 'Invalid security token.',
     ],
 
     // ── Demo Mode ──
@@ -930,6 +945,9 @@ return [
         'field_max_stay'        => 'Maximum stay (nights)',
         'field_amenities'       => 'Amenities',
         'field_amenities_hint'  => 'Comma-separated tags, e.g. Wi-Fi, Pool, Air conditioning',
+        'field_name_placeholder'        => 'e.g. Sea View Suite',
+        'field_description_placeholder' => 'Describe the room or resource',
+        'field_amenities_placeholder'   => 'Wi-Fi, Pool, Air conditioning',
         'seasonal_title'        => 'Seasonal Pricing',
         'seasonal_empty'        => 'No seasonal pricing configured.',
         'seasonal_add'          => 'Add seasonal rate',
@@ -1103,6 +1121,18 @@ return [
         'email_field_intro'         => 'Body intro',
         'email_field_outro'         => 'Body outro',
         'email_field_cta'           => 'Button label',
+        'email_type_confirmation_label'                => 'Booking Confirmation',
+        'email_type_confirmation_desc'                 => 'Sent to customers after a booking is confirmed.',
+        'email_type_reminder_label'                    => 'Booking Reminder',
+        'email_type_reminder_desc'                     => 'Sent before the appointment (when reminders are enabled).',
+        'email_type_cancellation_label'                => 'Cancellation Confirmation',
+        'email_type_cancellation_desc'                 => 'Sent when a booking is cancelled.',
+        'email_type_reschedule_confirmation_label'     => 'Reschedule Confirmation',
+        'email_type_reschedule_confirmation_desc'      => 'Sent when a booking is rescheduled (old vs new details).',
+        'email_type_approval_request_label'            => 'Approval Request',
+        'email_type_approval_request_desc'             => 'Sent to customers when their booking requires approval.',
+        'email_type_approval_confirmed_label'          => 'Approval Confirmed',
+        'email_type_approval_confirmed_desc'           => 'Sent to customers when a pending booking is approved.',
         'emails_saved'              => 'Email templates saved.',
 
         // Embed
@@ -1346,6 +1376,23 @@ return [
         'git_success'             => 'Updated to v:version via Git. :count migration(s) applied.',
         'git_already_current'     => 'Already up to date — no changes pulled.',
         'git_failed'              => 'Git update failed. Check the audit log for details.',
+        // Status / result messages returned by GitUpdater
+        'git_msg_no_exec'         => 'Process execution is disabled on this server (proc_open).',
+        'git_msg_not_checkout'    => 'This install is not a Git checkout.',
+        'git_msg_no_git'          => 'The git command is not available on this server.',
+        'git_msg_no_upstream'     => 'No upstream branch is configured. Run: git branch --set-upstream-to=origin/:branch',
+        'git_msg_fetch_timeout'   => 'Timed out reaching the repository.',
+        'git_msg_fetch_failed'    => 'Could not reach the repository.',
+        'git_msg_fetch_failed_detail' => 'Could not reach the repository. :error',
+        'git_msg_dirty'           => 'Local code changes detected. Resolve them before updating.',
+        'git_msg_ahead'           => 'This install has :count local commit(s) not in the repository; refusing to reset.',
+        'git_msg_update_available' => '{1} :count update available.|[2,*] :count updates available.',
+        'git_msg_up_to_date'      => 'Up to date.',
+        'git_msg_locked'          => 'Another update is already running. Try again in a moment.',
+        'git_msg_already_current' => 'Already up to date.',
+        'git_msg_reset_failed'    => 'git reset failed. :detail',
+        'git_msg_see_output'      => 'See output.',
+        'git_msg_updated'         => 'Updated to v:version.',
     ],
 
     // ── Business Applications ──

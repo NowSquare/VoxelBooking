@@ -158,10 +158,10 @@ if ($oldStaffId !== '' && $oldStaffId !== null) {
                     <td>
                         <span class="vb-cell-name vb-tabular">
                             <?php if ($bd['start_date'] === $bd['end_date']): ?>
-                                <?= htmlspecialchars(date('M j, Y', strtotime($bd['start_date'])), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars(\App\Engine\Locale::date(new \DateTimeImmutable($bd['start_date'])), ENT_QUOTES, 'UTF-8') ?>
                             <?php else: ?>
-                                <?= htmlspecialchars(date('M j', strtotime($bd['start_date'])), ENT_QUOTES, 'UTF-8') ?>
-                                — <?= htmlspecialchars(date('M j, Y', strtotime($bd['end_date'])), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars(\App\Engine\Locale::date(new \DateTimeImmutable($bd['start_date'])), ENT_QUOTES, 'UTF-8') ?>
+                                — <?= htmlspecialchars(\App\Engine\Locale::date(new \DateTimeImmutable($bd['end_date'])), ENT_QUOTES, 'UTF-8') ?>
                             <?php endif; ?>
                         </span>
                     </td>
@@ -190,7 +190,7 @@ if ($oldStaffId !== '' && $oldStaffId !== null) {
                         <form method="POST"
                               action="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/blocked-dates/<?= htmlspecialchars($bd['id'], ENT_QUOTES, 'UTF-8') ?>/delete"
                               class="vb-form-flush"
-                              data-confirm="<?= __('admin.blocked_dates.delete_confirm') ?>" data-confirm-text="Delete">
+                              data-confirm="<?= __('admin.blocked_dates.delete_confirm') ?>" data-confirm-text="<?= __('admin.common.delete') ?>">
                             <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                             <button type="submit" class="vb-btn vb-btn-ghost vb-btn-sm vb-btn-destructive"
                                     title="<?= __('admin.blocked_dates.delete') ?>">
@@ -232,10 +232,10 @@ if ($oldStaffId !== '' && $oldStaffId !== null) {
                     <td>
                         <span class="vb-cell-name vb-tabular">
                             <?php if ($bd['start_date'] === $bd['end_date']): ?>
-                                <?= htmlspecialchars(date('M j, Y', strtotime($bd['start_date'])), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars(\App\Engine\Locale::date(new \DateTimeImmutable($bd['start_date'])), ENT_QUOTES, 'UTF-8') ?>
                             <?php else: ?>
-                                <?= htmlspecialchars(date('M j', strtotime($bd['start_date'])), ENT_QUOTES, 'UTF-8') ?>
-                                — <?= htmlspecialchars(date('M j, Y', strtotime($bd['end_date'])), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars(\App\Engine\Locale::date(new \DateTimeImmutable($bd['start_date'])), ENT_QUOTES, 'UTF-8') ?>
+                                — <?= htmlspecialchars(\App\Engine\Locale::date(new \DateTimeImmutable($bd['end_date'])), ENT_QUOTES, 'UTF-8') ?>
                             <?php endif; ?>
                         </span>
                     </td>
@@ -261,7 +261,7 @@ if ($oldStaffId !== '' && $oldStaffId !== null) {
                         <form method="POST"
                               action="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/blocked-dates/<?= htmlspecialchars($bd['id'], ENT_QUOTES, 'UTF-8') ?>/delete"
                               class="vb-form-flush"
-                              data-confirm="<?= __('admin.blocked_dates.delete_confirm') ?>" data-confirm-text="Delete">
+                              data-confirm="<?= __('admin.blocked_dates.delete_confirm') ?>" data-confirm-text="<?= __('admin.common.delete') ?>">
                             <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                             <button type="submit" class="vb-btn vb-btn-ghost vb-btn-sm vb-btn-destructive"
                                     title="<?= __('admin.blocked_dates.delete') ?>">

@@ -50,13 +50,13 @@ final class GitUpdater
     public function available(): array
     {
         if (!self::canExec()) {
-            return ['ok' => false, 'reason' => 'Process execution is disabled on this server (proc_open).'];
+            return ['ok' => false, 'reason' => __('admin.updates.git_msg_no_exec')];
         }
         if (!is_dir($this->root . '/.git')) {
-            return ['ok' => false, 'reason' => 'This install is not a Git checkout.'];
+            return ['ok' => false, 'reason' => __('admin.updates.git_msg_not_checkout')];
         }
         if ($this->git(['--version'], 10)['code'] !== 0) {
-            return ['ok' => false, 'reason' => 'The git command is not available on this server.'];
+            return ['ok' => false, 'reason' => __('admin.updates.git_msg_no_git')];
         }
         return ['ok' => true, 'reason' => null];
     }
@@ -127,8 +127,7 @@ final class GitUpdater
 
         if (!$hasUpstream) {
             $s['state']   = 'no_upstream';
-            $s['message'] = 'No upstream branch is configured. Run: git branch --set-upstream-to=origin/'
-                          . ($s['branch'] ?? 'main');
+            $s['message'] = __('admin.updates.git_msg_no_upstream', ['branch' => $s['branch'] ?? 'main']);
             return $s;
         }
 
@@ -138,7 +137,7 @@ final class GitUpdater
             $s['fetch_ok'] = $f['code'] === 0;
             if ($f['code'] !== 0) {
                 $s['fetch_error'] = self::firstLine($f['err'] ?: $f['out'])
-                    ?: ($f['timed_out'] ? 'Timed out reaching the repository.' : 'Could not reach the repository.');
+                    ?: ($f['timed_out'] ? __('admin.updates.git_msg_fetch_timeout') : __('admin.updates.git_msg_fetch_failed'));
             }
         }
 
@@ -151,19 +150,19 @@ final class GitUpdater
         // Collapse to a single coarse state for the UI.
         if ($s['dirty']) {
             $s['state']   = 'dirty';
-            $s['message'] = 'Local code changes detected. Resolve them before updating.';
+            $s['message'] = __('admin.updates.git_msg_dirty');
         } elseif ($s['fetched'] && $s['fetch_ok'] === false) {
             $s['state']   = 'setup_needed';
-            $s['message'] = 'Could not reach the repository. ' . (string) $s['fetch_error'];
+            $s['message'] = __('admin.updates.git_msg_fetch_failed_detail', ['error' => (string) $s['fetch_error']]);
         } elseif ($s['ahead'] > 0) {
             $s['state']   = 'ahead';
-            $s['message'] = 'This install has ' . $s['ahead'] . ' local commit(s) not in the repository; refusing to reset.';
+            $s['message'] = __('admin.updates.git_msg_ahead', ['count' => $s['ahead']]);
         } elseif ($s['behind'] > 0) {
             $s['state']   = 'update_available';
-            $s['message'] = $s['behind'] . ' update' . ($s['behind'] === 1 ? '' : 's') . ' available.';
+            $s['message'] = __p('admin.updates.git_msg_update_available', $s['behind']);
         } else {
             $s['state']   = 'up_to_date';
-            $s['message'] = 'Up to date.';
+            $s['message'] = __('admin.updates.git_msg_up_to_date');
         }
 
         $s['can_update'] = $s['state'] === 'update_available';
@@ -199,7 +198,7 @@ final class GitUpdater
                 fclose($lock);
             }
             $res['state']   = 'locked';
-            $res['message'] = 'Another update is already running. Try again in a moment.';
+            $res['message'] = __('admin.updates.git_msg_locked');
             return $res;
         }
 
@@ -234,7 +233,7 @@ final class GitUpdater
             if ($st['behind'] === 0) {
                 $res['ok']         = true;
                 $res['state']      = 'up_to_date';
-                $res['message']    = 'Already up to date.';
+                $res['message']    = __('admin.updates.git_msg_already_current');
                 $res['to_sha']     = $st['short_sha'];
                 $res['to_version'] = $this->versionFile();
                 return $res;
@@ -245,7 +244,9 @@ final class GitUpdater
             $res['output'] = trim($reset['out'] . "\n" . $reset['err']);
             if ($reset['code'] !== 0) {
                 $res['state']   = 'failed';
-                $res['message'] = 'git reset failed. ' . (self::firstLine($reset['err']) ?: 'See output.');
+                $res['message'] = __('admin.updates.git_msg_reset_failed', [
+                    'detail' => self::firstLine($reset['err']) ?: __('admin.updates.git_msg_see_output'),
+                ]);
                 return $res;
             }
 
@@ -271,17 +272,17 @@ final class GitUpdater
                     $res['migrations'] = ['ok' => false, 'error' => $e->getMessage()];
                     $res['ok']      = false;
                     $res['state']   = 'migration_failed';
-                    $res['message'] = 'Files updated to v' . $res['to_version']
-                        . ', but database migrations failed: ' . self::firstLine($e->getMessage())
-                        . '. The site may be in an inconsistent state — restore your database'
-                        . ' backup or resolve the migration, then re-run the update.';
+                    $res['message'] = __('admin.updates.error_migration_failed', [
+                        'version' => (string) $res['to_version'],
+                        'error'   => self::firstLine($e->getMessage()),
+                    ]);
                     return $res;
                 }
             }
 
             $res['ok']      = true;
             $res['state']   = 'updated';
-            $res['message'] = 'Updated to v' . $res['to_version'] . '.';
+            $res['message'] = __('admin.updates.git_msg_updated', ['version' => (string) $res['to_version']]);
             return $res;
         } finally {
             flock($lock, LOCK_UN);

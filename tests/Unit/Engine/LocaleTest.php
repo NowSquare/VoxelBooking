@@ -260,6 +260,92 @@ final class LocaleTest extends TestCase
         $this->assertSame('March 27, 2026', Locale::dateLong($dt));
     }
 
+    /**
+     * The "F" token of date_format_long must use the translated month name,
+     * not the English one PHP would render. Uses a throwaway lang directory
+     * so the test does not depend on which translations ship with the repo.
+     */
+    public function testDateLongUsesTranslatedMonthName(): void
+    {
+        $base = sys_get_temp_dir() . '/vb-locale-' . uniqid();
+        mkdir($base . '/config', 0777, true);
+        mkdir($base . '/lang/fr', 0777, true);
+        mkdir($base . '/lang/es', 0777, true);
+        copy($this->basePath . '/config/locales.php', $base . '/config/locales.php');
+        file_put_contents($base . '/lang/fr/booking.php', "<?php return ['months' => [3 => 'mars']];");
+        file_put_contents($base . '/lang/es/booking.php', "<?php return ['months' => [3 => 'marzo']];");
+
+        try {
+            Locale::reset();
+            Locale::init($base);
+            Locale::setSystemDefaults([]);
+            $dt = new \DateTimeImmutable('2026-03-27');
+
+            // 'j F Y'
+            Locale::setLocale('fr');
+            $this->assertSame('27 mars 2026', Locale::dateLong($dt));
+
+            // 'j \d\e F \d\e Y' — escaped literals must be left alone
+            Locale::setLocale('es');
+            $this->assertSame('27 de marzo de 2026', Locale::dateLong($dt));
+        } finally {
+            foreach (['fr', 'es'] as $lang) {
+                unlink($base . '/lang/' . $lang . '/booking.php');
+                rmdir($base . '/lang/' . $lang);
+            }
+            rmdir($base . '/lang');
+            unlink($base . '/config/locales.php');
+            rmdir($base . '/config');
+            rmdir($base);
+        }
+    }
+
+    /**
+     * booking.months_date (month inside a date) wins over booking.months
+     * (calendar heading); months is the fallback when months_date is absent.
+     */
+    public function testDateLongPrefersMonthsDateOverMonths(): void
+    {
+        $base = sys_get_temp_dir() . '/vb-locale-' . uniqid();
+        mkdir($base . '/config', 0777, true);
+        mkdir($base . '/lang/fr', 0777, true);
+        copy($this->basePath . '/config/locales.php', $base . '/config/locales.php');
+        file_put_contents(
+            $base . '/lang/fr/booking.php',
+            "<?php return ['months' => [3 => 'Mars', 4 => 'Avril'], 'months_date' => [3 => 'mars']];"
+        );
+
+        try {
+            Locale::reset();
+            Locale::init($base);
+            Locale::setSystemDefaults([]);
+            Locale::setLocale('fr');
+
+            // Heading form is untouched
+            $this->assertSame('Mars', Locale::monthName(3));
+            // Date form uses months_date when defined...
+            $this->assertSame('mars', Locale::monthNameInDate(3));
+            $this->assertSame('27 mars 2026', Locale::dateLong(new \DateTimeImmutable('2026-03-27')));
+            // ...and falls back to months when it is not
+            $this->assertSame('Avril', Locale::monthNameInDate(4));
+            $this->assertSame('15 Avril 2026', Locale::dateLong(new \DateTimeImmutable('2026-04-15')));
+        } finally {
+            unlink($base . '/lang/fr/booking.php');
+            rmdir($base . '/lang/fr');
+            rmdir($base . '/lang');
+            unlink($base . '/config/locales.php');
+            rmdir($base . '/config');
+            rmdir($base);
+        }
+    }
+
+    public function testDateLongFallsBackToEnglishMonthWithoutTranslation(): void
+    {
+        // Registered locale without a lang/ directory: monthName() falls back to English
+        Locale::setLocale('nl');
+        $this->assertSame('27 March 2026', Locale::dateLong(new \DateTimeImmutable('2026-03-27')));
+    }
+
     public function testTimeFormattingEnglish(): void
     {
         $dt = new \DateTimeImmutable('2026-03-27 14:30:00');

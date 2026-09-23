@@ -901,10 +901,14 @@ window.showDemoToast = showDemoToast;
     const btnCancel = overlay.querySelector('[data-confirm-cancel]');
     const btnClose  = overlay.querySelector('[data-confirm-close]');
 
+    // Default texts come from the server-rendered (translated) modal and i18n payload.
+    const defaultLabel   = btnText ? btnText.textContent : 'Confirm';
+    const defaultMessage = window.__VB_ADMIN_I18N__?.confirm?.message || 'Are you sure?';
+
     function open(form) {
         pendingForm = form;
-        const message = form.getAttribute('data-confirm') || 'Are you sure?';
-        const label   = form.getAttribute('data-confirm-text') || 'Confirm';
+        const message = form.getAttribute('data-confirm') || defaultMessage;
+        const label   = form.getAttribute('data-confirm-text') || defaultLabel;
 
         if (msgEl)   msgEl.textContent = message;
         if (btnText) btnText.textContent = label;

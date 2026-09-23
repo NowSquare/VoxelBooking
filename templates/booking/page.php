@@ -6,8 +6,8 @@
     <?php if (!empty($tenantConfig['manage_mode'])): ?>
     <meta name="robots" content="noindex, nofollow">
     <?php endif; ?>
-    <meta name="description" content="Book an appointment with <?= htmlspecialchars($tenant['name']) ?>">
-    <title>Book – <?= htmlspecialchars($tenant['name']) ?></title>
+    <meta name="description" content="<?= htmlspecialchars(__('booking.meta.description', ['name' => $tenant['name']])) ?>">
+    <title><?= htmlspecialchars(__('booking.meta.title', ['name' => $tenant['name']])) ?></title>
     <link rel="icon" href="/favicon.ico" type="image/png">
 
 
@@ -212,11 +212,11 @@
                 <!-- Calendar (reused structure) -->
                 <div class="vb-book-calendar" role="grid" @keydown="calendarGridKeydown">
                     <div class="vb-book-calendar-nav">
-                        <button class="vb-book-calendar-btn" @click="prevResourceMonth" x-bind:disabled="!canPrevResourceMonth" aria-label="Previous month">
+                        <button class="vb-book-calendar-btn" @click="prevResourceMonth" x-bind:disabled="!canPrevResourceMonth" aria-label="<?= __('booking.calendar.prev_month') ?>">
                             <i data-lucide="chevron-left"></i>
                         </button>
                         <span class="vb-book-calendar-month" x-text="resourceMonthLabel"></span>
-                        <button class="vb-book-calendar-btn" @click="nextResourceMonth" aria-label="Next month">
+                        <button class="vb-book-calendar-btn" @click="nextResourceMonth" aria-label="<?= __('booking.calendar.next_month') ?>">
                             <i data-lucide="chevron-right"></i>
                         </button>
                     </div>
@@ -697,11 +697,11 @@
                 <!-- Calendar -->
                 <div class="vb-book-calendar" role="grid" @keydown="calendarGridKeydown">
                     <div class="vb-book-calendar-nav">
-                        <button class="vb-book-calendar-btn" @click="prevMonth" x-bind:disabled="!canPrevMonth" aria-label="Previous month">
+                        <button class="vb-book-calendar-btn" @click="prevMonth" x-bind:disabled="!canPrevMonth" aria-label="<?= __('booking.calendar.prev_month') ?>">
                             <i data-lucide="chevron-left"></i>
                         </button>
                         <span class="vb-book-calendar-month" x-text="monthLabel"></span>
-                        <button class="vb-book-calendar-btn" @click="nextMonth" aria-label="Next month">
+                        <button class="vb-book-calendar-btn" @click="nextMonth" aria-label="<?= __('booking.calendar.next_month') ?>">
                             <i data-lucide="chevron-right"></i>
                         </button>
                     </div>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Middleware;
 
 use App\Engine\Auth;
+use App\Engine\Locale;
 use App\Engine\Request;
 use App\Engine\Response;
 
@@ -63,7 +64,15 @@ final class CsrfMiddleware
                 ], 403);
             }
 
-            return Response::html('<h1>403 Forbidden</h1><p>Invalid security token.</p>', 403);
+            // This middleware runs before any locale resolution, so pick the
+            // language from the browser to keep the page readable.
+            Locale::setLocale(Locale::negotiateFromHeader($request->header('Accept-Language')));
+
+            return Response::html(
+                '<h1>' . htmlspecialchars(__('admin.errors.csrf_title'), ENT_QUOTES, 'UTF-8') . '</h1>'
+                . '<p>' . htmlspecialchars(__('admin.errors.csrf_desc'), ENT_QUOTES, 'UTF-8') . '</p>',
+                403
+            );
         }
 
         return $next($request);

@@ -465,8 +465,15 @@ final class Locale
     public static function dateLong(\DateTimeInterface $dt): string
     {
         $config = self::getConfig();
+        $format = $config['date_format_long'] ?? 'F j, Y';
 
-        return $dt->format($config['date_format_long'] ?? 'F j, Y');
+        // PHP always renders the "F" token as an English month name. Swap each
+        // unescaped "F" for a control character that DateTime::format() leaves
+        // untouched, then put the translated month name in its place.
+        $marker    = "\x1F";
+        $formatted = $dt->format(preg_replace('/(?<!\\\\)F/', $marker, $format));
+
+        return str_replace($marker, self::monthNameInDate((int) $dt->format('n')), $formatted);
     }
 
     /**
@@ -552,6 +559,21 @@ final class Locale
         }
 
         return $value;
+    }
+
+    /**
+     * Get the month name as written inside a date (1-12).
+     *
+     * Reads booking.months_date.N and falls back to monthName() when the
+     * locale does not define it. Some languages (e.g. French) write months in
+     * lowercase inside a date but capitalized as a calendar heading.
+     */
+    public static function monthNameInDate(int $month): string
+    {
+        $key = 'booking.months_date.' . $month;
+        $value = self::translate($key);
+
+        return $value === $key ? self::monthName($month) : $value;
     }
 
     /**

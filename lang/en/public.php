@@ -9,6 +9,8 @@ return [
     'cta_login'        => 'Log in',
     'cta_dashboard'    => 'Dashboard',
     'toggle_theme'     => 'Toggle theme',
+    'tagline_simple'   => 'Booking infrastructure',
+    'eyebrow'          => 'Scheduling infrastructure',
 
     // Features
     'features_heading'  => 'Everything you need',
