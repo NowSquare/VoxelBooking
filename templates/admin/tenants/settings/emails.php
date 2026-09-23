@@ -24,7 +24,6 @@ foreach ($templates as $tpl) {
 // Placeholders mirror the system defaults in lang/*/email.php (what is really
 // sent when a field is left empty); tenant tokens are injected in place of the
 // :param markers so they read as {service_name}, {business_name}, etc.
-// The button label is not consumed by Mailer, so it has no default to show.
 $emailTypes = [
     'confirmation' => [
         'label'   => __('admin.tenant_settings.email_type_confirmation_label'),
@@ -34,7 +33,7 @@ $emailTypes = [
             'heading'    => __('email.booking_confirmation.heading'),
             'body_intro' => __('email.booking_confirmation.body'),
             'body_outro' => __('email.booking_confirmation.footer'),
-            'cta_label'  => '',
+            'cta_label'  => __('email.common.manage_booking'),
         ],
     ],
     'reminder' => [
@@ -45,7 +44,7 @@ $emailTypes = [
             'heading'    => __('email.booking_reminder.heading'),
             'body_intro' => __('email.booking_reminder.body'),
             'body_outro' => __('email.booking_reminder.footer'),
-            'cta_label'  => '',
+            'cta_label'  => __('email.common.manage_booking'),
         ],
     ],
     'cancellation' => [
@@ -56,7 +55,7 @@ $emailTypes = [
             'heading'    => __('email.cancellation.heading'),
             'body_intro' => __('email.cancellation.body'),
             'body_outro' => __('email.cancellation.footer'),
-            'cta_label'  => '',
+            'cta_label'  => __('email.cancellation.book_again'),
         ],
     ],
     'reschedule_confirmation' => [
@@ -67,7 +66,7 @@ $emailTypes = [
             'heading'    => __('email.reschedule_confirmation.heading'),
             'body_intro' => __('email.reschedule_confirmation.body'),
             'body_outro' => __('email.reschedule_confirmation.footer'),
-            'cta_label'  => '',
+            'cta_label'  => __('email.common.manage_booking'),
         ],
     ],
     'approval_request' => [
@@ -78,7 +77,7 @@ $emailTypes = [
             'heading'    => __('email.approval_request.heading'),
             'body_intro' => __('email.approval_request.body'),
             'body_outro' => __('email.approval_request.footer'),
-            'cta_label'  => '',
+            'cta_label'  => __('email.common.manage_booking'),
         ],
     ],
     'approval_confirmed' => [
@@ -89,7 +88,7 @@ $emailTypes = [
             'heading'    => __('email.approval_confirmed.heading'),
             'body_intro' => __('email.approval_confirmed.body'),
             'body_outro' => __('email.approval_confirmed.footer'),
-            'cta_label'  => '',
+            'cta_label'  => __('email.common.manage_booking'),
         ],
     ],
 ];

@@ -328,6 +328,63 @@ final class MailerTest extends TestCase
         $this->assertStringContainsString('Powered by VoxelBooking', $plain);
     }
 
+    /**
+     * A tenant-defined button label replaces the default one in the HTML email;
+     * without it the default label is kept. The label is escaped.
+     */
+    public function testConfirmationEmailUsesCustomCtaLabel(): void
+    {
+        $method = new \ReflectionMethod(Mailer::class, 'renderConfirmationEmail');
+        $args = static fn (string $ctaLabel): array => [
+            '#2563EB', 'Heading', 'Hi Emma,', '', 'Booking details', ['Date' => 'April 2, 2026'],
+            'Footer', 'Salon Bella', 'VoxelBooking', 'https://example.test/manage/abc', $ctaLabel,
+        ];
+
+        $custom = $method->invoke(null, ...$args('See my appointment'));
+        $this->assertStringContainsString('See my appointment', $custom);
+        $this->assertStringContainsString('https://example.test/manage/abc', $custom);
+        $this->assertStringNotContainsString('View or Manage Booking', $custom);
+
+        $default = $method->invoke(null, ...$args(''));
+        $this->assertStringContainsString('View or Manage Booking', $default);
+
+        $escaped = $method->invoke(null, ...$args('<b>Go</b>'));
+        $this->assertStringContainsString('&lt;b&gt;Go&lt;/b&gt;', $escaped);
+        $this->assertStringNotContainsString('<b>Go</b>', $escaped);
+    }
+
+    public function testPlainTextConfirmationUsesCustomCtaLabel(): void
+    {
+        $method = new \ReflectionMethod(Mailer::class, 'renderConfirmationPlainText');
+        $args = static fn (string $ctaLabel): array => [
+            'Heading', 'Hi Emma,', '', 'Booking details', ['Date' => 'April 2, 2026'],
+            'Footer', 'Salon Bella', 'Powered by VoxelBooking', 'https://example.test/manage/abc', $ctaLabel,
+        ];
+
+        $custom = $method->invoke(null, ...$args('See my appointment'));
+        $this->assertStringContainsString("See my appointment:\nhttps://example.test/manage/abc", $custom);
+
+        $default = $method->invoke(null, ...$args(''));
+        $this->assertStringContainsString("View or Manage Booking:\nhttps://example.test/manage/abc", $default);
+    }
+
+    public function testCancellationEmailUsesCustomCtaLabel(): void
+    {
+        $method = new \ReflectionMethod(Mailer::class, 'renderCancellationEmail');
+        $args = static fn (string $ctaLabel): array => [
+            '#2563EB', 'Heading', 'Hi Emma,', '', 'Booking details', ['Date' => 'April 2, 2026'],
+            'Footer', 'Salon Bella', 'VoxelBooking', 'salon-bella', $ctaLabel,
+        ];
+
+        $custom = $method->invoke(null, ...$args('Rebook now'));
+        // Match the link text: "Book Again" also appears in an HTML comment
+        $this->assertStringContainsString('>Rebook now</a>', $custom);
+        $this->assertStringNotContainsString('>Book Again</a>', $custom);
+
+        $default = $method->invoke(null, ...$args(''));
+        $this->assertStringContainsString('>Book Again</a>', $default);
+    }
+
     public function testBrandColorSanitizationFallback(): void
     {
         $tokens = \App\Engine\BrandColorHelper::derive('not-a-color');
