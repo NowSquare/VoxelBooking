@@ -137,7 +137,7 @@ final class AuthMiddleware
                 'csrfToken' => \App\Middleware\CsrfMiddleware::generateToken(),
             ], 403);
         } catch (\Throwable) {
-            return Response::html('<h1>403 Forbidden</h1><p>Access denied.</p>', 403);
+            return Response::html('<h1>403 ' . htmlspecialchars(__('admin.errors.403_title'), ENT_QUOTES, 'UTF-8') . '</h1><p>' . htmlspecialchars(__('admin.errors.403_desc_admin'), ENT_QUOTES, 'UTF-8') . '</p>', 403);
         }
     }
 }

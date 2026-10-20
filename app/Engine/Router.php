@@ -144,7 +144,7 @@ final class Router
         try {
             return View::response('errors.404', [], 404);
         } catch (\Throwable) {
-            return Response::html('<h1>404 Not Found</h1>', 404);
+            return Response::html('<h1>404 ' . htmlspecialchars(__('admin.errors.404_title'), ENT_QUOTES, 'UTF-8') . '</h1>', 404);
         }
     }
 

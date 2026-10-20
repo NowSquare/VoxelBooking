@@ -19,7 +19,7 @@ $displayStep = is_numeric($step) ? (int) $step : (str_starts_with((string) $step
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <meta name="description" content="<?= ($_ENV['APP_NAME'] ?? 'VoxelBooking') ?> Installation Wizard">
+    <meta name="description" content="<?= htmlspecialchars(__('install.wizard.meta_description', ['app_name' => $_ENV['APP_NAME'] ?? 'VoxelBooking']), ENT_QUOTES, 'UTF-8') ?>">
     <title><?= __('install.wizard.page_title', ['app_name' => $_ENV['APP_NAME'] ?? 'VoxelBooking']) ?></title>
     <link rel="icon" href="/favicon.ico" type="image/png">
     <style>

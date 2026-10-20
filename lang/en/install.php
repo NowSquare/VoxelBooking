@@ -54,7 +54,8 @@ return [
 
     // ── Wizard Template ──
     'wizard' => [
-        'page_title'             => 'Install — :app_name',
+        'page_title'             => 'Install · :app_name',
+        'meta_description'       => ':app_name installation wizard',
         'complete_page_title'    => 'Installation Complete',
 
         // Step-bar short names (progress bar)
@@ -89,7 +90,7 @@ return [
         'step3_desc'               => 'Choose how VoxelBooking sends emails. You can change this later in Settings.',
         'mail_transport'           => 'Transport',
         'mail_transport_smtp'      => 'SMTP (production)',
-        'mail_transport_resend'    => 'Resend (HTTPS API — no SMTP ports needed)',
+        'mail_transport_resend'    => 'Resend (HTTPS API, no SMTP ports needed)',
         'mail_transport_mailpit'   => 'Mailpit (local testing)',
         'mail_transport_log'       => 'Log to file (no sending)',
         'mail_host'                => 'SMTP Host',

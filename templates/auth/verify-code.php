@@ -16,7 +16,7 @@ $success = $success ?? null;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title><?= __('auth.enter_code_heading') ?> — <?= app_name() ?></title>
+    <title><?= __('auth.enter_code_heading') ?> · <?= app_name() ?></title>
     <?php include dirname(__DIR__) . '/partials/admin-head.php'; ?>
     <link rel="stylesheet" href="/assets/css/admin-css.css?v=<?= filemtime(dirname(__DIR__, 2) . '/public/assets/css/admin-css.css') ?>">
     <style>body { background: var(--vb-bg-base); min-height: 100vh; display: flex; overflow: hidden; }</style>

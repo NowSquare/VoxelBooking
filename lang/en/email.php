@@ -52,14 +52,14 @@ return [
     ],
 
     'deletion_acknowledgment' => [
-        'subject' => 'Deletion request received — :tenant',
+        'subject' => 'Deletion request received · :tenant',
         'title'   => 'Deletion Request Received',
         'body'    => 'Your data deletion request has been submitted to :tenant. The business will review your request and process it in accordance with data protection regulations.',
         'footer'  => 'Under GDPR, the business must respond within 30 days. Your personal data will be anonymized once the request is confirmed.',
     ],
 
     'operator_deletion' => [
-        'subject'          => 'New deletion request — :customer',
+        'subject'          => 'New deletion request · :customer',
         'title'            => 'New Deletion Request',
         'body'             => 'A customer has requested data deletion.',
         'detail_customer'  => 'Customer:',
@@ -84,7 +84,7 @@ return [
     ],
 
     'waitlist_confirmation' => [
-        'subject'  => 'Waitlisted — :event',
+        'subject'  => 'Waitlisted · :event',
         'heading'  => "You're on the waitlist",
         'greeting' => 'Hi :name,',
         'body'     => "The event is currently full, but you've been added to the waitlist. We'll notify you if a spot opens up.",
@@ -92,7 +92,7 @@ return [
     ],
 
     'cancellation' => [
-        'subject'    => 'Booking cancelled — :business',
+        'subject'    => 'Booking cancelled · :business',
         'heading'    => 'Booking Cancelled',
         'greeting'   => 'Hi :name,',
         'body'       => 'Your booking has been cancelled as requested.',
@@ -101,7 +101,7 @@ return [
     ],
 
     'approval_request' => [
-        'subject'  => 'Your booking request has been received — :business',
+        'subject'  => 'Your booking request has been received · :business',
         'heading'  => 'Request Received',
         'greeting' => 'Hi :name,',
         'body'     => 'Your booking is pending approval. We will notify you once it has been confirmed.',
@@ -109,7 +109,7 @@ return [
     ],
 
     'approval_confirmed' => [
-        'subject'  => 'Your booking has been approved — :business',
+        'subject'  => 'Your booking has been approved · :business',
         'heading'  => 'Booking Approved',
         'greeting' => 'Hi :name,',
         'body'     => 'Your booking has been approved and is now confirmed.',
@@ -117,7 +117,7 @@ return [
     ],
 
     'reschedule_confirmation' => [
-        'subject'  => 'Booking rescheduled — :business',
+        'subject'  => 'Booking rescheduled · :business',
         'heading'  => 'Booking Rescheduled',
         'greeting' => 'Hi :name,',
         'body'     => 'Your booking has been rescheduled to a new time.',
@@ -125,7 +125,7 @@ return [
     ],
 
     'test' => [
-        'subject' => ':app_name — SMTP Test',
+        'subject' => ':app_name · SMTP Test',
         'title'   => 'SMTP Configuration Verified',
         'body'    => 'This test email confirms your SMTP settings are working correctly.',
     ],

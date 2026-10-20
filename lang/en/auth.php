@@ -6,7 +6,7 @@ declare(strict_types=1);
  * English translations: authentication.
  */
 return [
-    'page_title'          => 'Login — :app_name',
+    'page_title'          => 'Login · :app_name',
     'meta_description'    => ':app_name Admin Login',
     'hero_name'           => 'VoxelBooking',
     'hero_sub'            => 'Scheduling infrastructure',
@@ -66,7 +66,7 @@ return [
     'forgot_password_sub'      => 'Enter your email and we\'ll send a reset link.',
     'forgot_password_button'   => 'Send reset link',
     'forgot_password_sent'     => 'If an account exists with that email, a reset link has been sent.',
-    'forgot_password_page'     => 'Forgot Password — :app_name',
+    'forgot_password_page'     => 'Forgot Password · :app_name',
     'reset_password_heading'   => 'Set a new password',
     'reset_password_button'    => 'Reset password',
     'reset_password_success'   => 'Password reset successfully. You can now sign in.',
@@ -75,10 +75,10 @@ return [
     'reset_confirm_label'      => 'Confirm password',
     'reset_password_mismatch'  => 'Passwords do not match.',
     'reset_password_too_short' => 'Password must be at least 8 characters.',
-    'reset_password_page'      => 'Reset Password — :app_name',
+    'reset_password_page'      => 'Reset Password · :app_name',
 
     // Password reset email
-    'reset_email_subject'      => 'Reset your password — :app_name',
+    'reset_email_subject'      => 'Reset your password · :app_name',
     'reset_email_body'         => 'Click below to reset your password:',
     'reset_email_cta'          => 'Reset your password',
     'reset_email_expiry'       => 'This link expires in 60 minutes and can only be used once.',
