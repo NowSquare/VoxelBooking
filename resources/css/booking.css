@@ -821,7 +821,7 @@ body {
 .vb-book-calendar-cell.has-slots::after {
   content: '';
   position: absolute;
-  bottom: 14px;
+  bottom: 6px;
   width: 5px;
   height: 5px;
   border-radius: 50%;
