@@ -50,15 +50,14 @@ $patterns = [
 ob_start();
 ?>
 
-<div class="vb-page-header">
-    <div>
-        <a href="/admin/tenants" class="vb-back-link">
-            <i data-lucide="chevron-left"></i>
-            <?= __('admin.tenants.title') ?>
-        </a>
-        <h2 class="vb-page-title"><?= __('admin.tenants.create') ?></h2>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.tenants.create'),
+    'backUrl' => '/admin/tenants',
+    'backLabel' => __('admin.tenants.title'),
+];
+include __DIR__ . '/../partials/page-header.php';
+?>
 
 <?php if ($flash): ?>
     <?php include __DIR__ . '/../../partials/alert.php'; ?>

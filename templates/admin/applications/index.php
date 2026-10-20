@@ -19,12 +19,13 @@ $csrfToken     = $csrfToken ?? '';
 <?php endif; ?>
 
 <!-- Page header (same pattern as Bookings / Businesses) -->
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.applications.title') ?></h2>
-        <p class="vb-page-subtitle"><?= __('admin.applications.subtitle') ?></p>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.applications.title'),
+    'subtitle' => __('admin.applications.subtitle'),
+];
+include __DIR__ . '/../partials/page-header.php';
+?>
 
 <!-- Status filter tabs -->
 <div class="vb-table-container">

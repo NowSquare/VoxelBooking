@@ -422,17 +422,33 @@ final class CalendarViewTest extends TestCase
         $this->doLoginOperator();
         $tid = TestFixtures::BUSINESS_TENANT_ID;
 
-        // The fixture booking is tomorrow — navigate to the correct month
-        $tomorrow = (new \DateTimeImmutable('+1 day'))->format('Y-m-d');
-        $r = $this->get("/admin/tenants/{$tid}/calendar?date={$tomorrow}");
-
-        $this->assertSame(200, $r['code']);
-        // The test fixture creates a booking for tomorrow
-        $this->assertStringContainsString(
-            'vb-calendar-month-pill',
-            $r['body'],
-            'Month view should render booking pills when bookings exist'
+        // Other workflows may cancel the shared fixture. Own the confirmed
+        // booking this assertion needs instead of depending on leaked rows.
+        $bookingId = Ulid::generate();
+        $customerId = Ulid::generate();
+        $tomorrow = (new \DateTimeImmutable('+1 day', new \DateTimeZone('UTC')))->format('Y-m-d');
+        Database::execute(
+            "INSERT INTO `customers` (`id`, `tenant_id`, `name`, `email`) VALUES (?, ?, 'Calendar Pill Customer', 'calendar-pill@example.test')",
+            [$customerId, $tid]
         );
+
+        try {
+            Database::execute(
+                "INSERT INTO `bookings` (`id`, `tenant_id`, `booking_pattern`, `customer_id`, `start_datetime`, `end_datetime`, `status`, `source`)
+                 VALUES (?, ?, 'timeslot', ?, ?, ?, 'confirmed', 'web')",
+                [$bookingId, $tid, $customerId, $tomorrow . ' 09:00:00', $tomorrow . ' 09:30:00']
+            );
+            $r = $this->get("/admin/tenants/{$tid}/calendar?date={$tomorrow}");
+
+            $this->assertSame(200, $r['code']);
+            $this->assertStringContainsString('vb-calendar-month-pill', $r['body'],
+                'Month view should render booking pills when bookings exist');
+            $this->assertStringContainsString('Calendar Pill Customer', $r['body'],
+                'The calendar must render the confirmed booking created by this test');
+        } finally {
+            Database::execute('DELETE FROM `bookings` WHERE `id` = ?', [$bookingId]);
+            Database::execute('DELETE FROM `customers` WHERE `id` = ?', [$customerId]);
+        }
     }
 
     public function test_month_view_shows_closed_state_on_outside_month_cells(): void

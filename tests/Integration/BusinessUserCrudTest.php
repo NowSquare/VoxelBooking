@@ -120,7 +120,9 @@ final class BusinessUserCrudTest extends TestCase
         $res = self::httpGet("/admin/tenants/" . self::$tenantId . "/users");
         $this->assertSame(200, $res['code'], 'User list must return 200');
         $this->assertStringContainsString('Team', $res['body']);
-        $this->assertStringContainsString('Invite User', $res['body']);
+        $this->assertStringContainsString('Invite user', $res['body']);
+        $this->assertStringContainsString('href="/admin/tenants/' . self::$tenantId . '/users/invite"', $res['body'],
+            'The team list must link to its own tenant invite form');
 
         // Invite form
         $res = self::httpGet("/admin/tenants/" . self::$tenantId . "/users/invite");

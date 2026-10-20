@@ -12,19 +12,21 @@ ob_start();
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>
 <?php endif; ?>
 
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title">
-            <i data-lucide="ticket" class="vb-page-header-icon"></i>
-            <?= __('admin.events.title') ?>
-        </h2>
-    </div>
-    <a href="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/events/create"
+<?php
+ob_start();
+?>
+<a href="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/events/create"
        class="vb-btn vb-btn-primary vb-btn-sm" id="btn-new-event">
         <i data-lucide="plus" class="vb-icon-sm"></i>
         <?= __('admin.events.new_event') ?>
     </a>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.events.title'),
+    'actions' => ob_get_clean(),
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <?php if (empty($events)): ?>
     <div class="vb-empty vb-animate-in">
@@ -63,7 +65,7 @@ ob_start();
                         <td>
                             <div class="vb-cell-primary"><?= \App\Engine\Locale::date(new \DateTimeImmutable($event['start_datetime'])) ?></div>
                             <div class="vb-cell-secondary">
-                                <?= date('H:i', strtotime($event['start_datetime'])) ?> – <?= date('H:i', strtotime($event['end_datetime'])) ?>
+                                <?= \App\Engine\Locale::time(new \DateTimeImmutable($event['start_datetime'])) ?> – <?= \App\Engine\Locale::time(new \DateTimeImmutable($event['end_datetime'])) ?>
                             </div>
                         </td>
                         <td>

@@ -360,9 +360,8 @@ final class TenantSettingsTest extends TestCase
 
         $row = Database::query('SELECT `brand_color`, `brand_color_text`, `booking_page_heading`, `booking_page_description` FROM `tenants` WHERE `id` = ?', [self::$tenantId]);
         $this->assertSame('#10B981', $row[0]['brand_color']);
-        // brand_color_text is auto-derived via BrandColorHelper WCAG luminance.
-        // #10B981 luminance ≈ 0.35 (< 0.5) → white text.
-        $this->assertSame('#FFFFFF', $row[0]['brand_color_text']);
+        // White fails AA on this green; the derived dark foreground passes.
+        $this->assertSame('#111827', $row[0]['brand_color_text']);
         $this->assertSame('Welcome!', $row[0]['booking_page_heading']);
         $this->assertSame('Book your appointment.', $row[0]['booking_page_description']);
     }

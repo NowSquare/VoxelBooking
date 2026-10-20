@@ -23,8 +23,12 @@ $isImpersonating = \App\Engine\Auth::isImpersonating();
 $impersonatedTenantId = $isImpersonating ? \App\Engine\Auth::impersonatedTenantId() : null;
 $impersonatedTenantName = $isImpersonating ? \App\Engine\Auth::impersonatedTenantName() : null;
 
-$operatorName = htmlspecialchars($user['name'] ?? __('admin.layout.operator'), ENT_QUOTES, 'UTF-8');
-$operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
+$profileRoleLabel = ($user['type'] ?? '') === 'business_user'
+    ? (($user['role'] ?? '') === 'manager' ? __('admin.users.role_manager') : __('admin.users.role_owner'))
+    : __('admin.layout.operator');
+
+$operatorName = $user['name'] ?? __('admin.layout.operator');
+$operatorInitials = htmlspecialchars(mb_strtoupper(mb_substr($operatorName, 0, 1)), ENT_QUOTES, 'UTF-8');
 ?>
 <!DOCTYPE html>
 <html lang="<?= \App\Engine\Locale::getLocale() ?>" dir="<?= \App\Engine\Locale::direction() ?>">
@@ -41,7 +45,7 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title><?= htmlspecialchars($documentTitle ?? $pageTitle, ENT_QUOTES, 'UTF-8') ?> — <?= htmlspecialchars(app_name(), ENT_QUOTES, 'UTF-8') ?></title>
+    <title><?= htmlspecialchars(str_replace(' — ', ' · ', $documentTitle ?? $pageTitle), ENT_QUOTES, 'UTF-8') ?> · <?= htmlspecialchars(app_name(), ENT_QUOTES, 'UTF-8') ?></title>
     <?php include dirname(__DIR__) . '/partials/admin-head.php'; ?>
     <style>
         /* Critical reset — prevents layout shift before external CSS loads */
@@ -73,7 +77,7 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
     <div class="vb-shell">
 
     <!-- Sidebar -->
-    <aside class="vb-sidebar" x-ref="sidebar">
+    <aside class="vb-sidebar" x-ref="sidebar" id="admin-sidebar" aria-label="<?= __('admin.nav.main_navigation') ?>">
         <a href="/admin" class="vb-sidebar-brand">
             <svg class="vb-sidebar-logo" width="24" height="26" viewBox="0 0 48 52" xmlns="http://www.w3.org/2000/svg">
                 <polygon points="24,2 46,14 24,26 2,14" fill="currentColor" opacity="1.0"/>
@@ -83,22 +87,27 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
             <span class="vb-sidebar-name"><?= htmlspecialchars(app_name(), ENT_QUOTES, 'UTF-8') ?></span>
         </a>
 
+        <button type="button" class="vb-sidebar-close" @click="closeSidebar" aria-label="<?= __('admin.nav.close_sidebar') ?>"><i data-lucide="x" aria-hidden="true"></i></button>
         <nav class="vb-sidebar-nav">
                 <?php
                 // Determine if we're in a tenant context
-                $sidebarTenantId = $impersonatedTenantId ?? ($tenantId ?? ($_SESSION['auth_tenant_id'] ?? null));
+                $sidebarTenantId = $impersonatedTenantId ?? ($tenantId ?? (($activePage === 'dashboard' ? ($tenant['id'] ?? null) : null) ?? ($_SESSION['auth_tenant_id'] ?? null)));
                 $inTenantContext = $sidebarTenantId !== null && $sidebarTenantId !== '';
                 $canManage = \App\Engine\Auth::isOperator() || \App\Engine\Auth::isOwner();
 
-                // Resolve tenant booking pattern for pattern-specific nav
-                $tenantPattern = null;
+                // A tenant loop on an operator list is not an active business context.
+                $sidebarTenant = null;
                 if ($inTenantContext) {
-                    $tenantPattern = $tenant['booking_pattern']
-                        ?? (\App\Engine\Database::query(
-                            'SELECT `booking_pattern` FROM `tenants` WHERE `id` = ? LIMIT 1',
+                    $sidebarTenant = ($tenant['id'] ?? null) === $sidebarTenantId ? $tenant : [];
+                    // Pages may load only a tenant's identity; navigation needs all three fields.
+                    if (!isset($sidebarTenant['name'], $sidebarTenant['slug'], $sidebarTenant['booking_pattern'])) {
+                        $sidebarTenant = \App\Engine\Database::query(
+                            'SELECT `name`, `slug`, `booking_pattern` FROM `tenants` WHERE `id` = ? LIMIT 1',
                             [$sidebarTenantId]
-                        )[0]['booking_pattern'] ?? null);
+                        )[0] ?? [];
+                    }
                 }
+                $tenantPattern = $sidebarTenant['booking_pattern'] ?? null;
                 $isTimeslot = $tenantPattern === 'timeslot';
                 ?>
 
@@ -110,19 +119,21 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
                 </a>
                 <?php endif; ?>
 
+                <a class="vb-sidebar-context" href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($sidebarTenant['name'] ?? '', ENT_QUOTES, 'UTF-8') ?></a>
+
                 <!-- Overview -->
                 <a href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>"
-                   class="vb-sidebar-link <?= $activePage === 'dashboard' ? 'active' : '' ?>">
+                   class="vb-sidebar-link <?= $activePage === 'dashboard' ? 'active' : '' ?>" <?= $activePage === 'dashboard' ? 'aria-current="page"' : '' ?>>
                     <i data-lucide="layout-dashboard"></i>
                     <?= __('admin.nav.dashboard') ?>
                 </a>
                 <a href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>/bookings"
-                   class="vb-sidebar-link <?= $activePage === 'bookings' ? 'active' : '' ?>">
+                   class="vb-sidebar-link <?= $activePage === 'bookings' ? 'active' : '' ?>" <?= $activePage === 'bookings' ? 'aria-current="page"' : '' ?>>
                     <i data-lucide="list"></i>
                     <?= __('admin.nav.bookings') ?>
                 </a>
                 <a href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>/calendar"
-                   class="vb-sidebar-link <?= $activePage === 'calendar' ? 'active' : '' ?>">
+                   class="vb-sidebar-link <?= $activePage === 'calendar' ? 'active' : '' ?>" <?= $activePage === 'calendar' ? 'aria-current="page"' : '' ?>>
                     <i data-lucide="calendar-days"></i>
                     <?= __('admin.nav.calendar') ?>
                 </a>
@@ -132,48 +143,48 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
                     <div class="vb-sidebar-section-label"><?= __('admin.nav.section_scheduling') ?></div>
                     <?php if ($canManage && $isTimeslot): ?>
                     <a href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>/services"
-                       class="vb-sidebar-link <?= $activePage === 'services' ? 'active' : '' ?>">
+                       class="vb-sidebar-link <?= $activePage === 'services' ? 'active' : '' ?>" <?= $activePage === 'services' ? 'aria-current="page"' : '' ?>>
                         <i data-lucide="layers"></i>
                         <?= __('admin.nav.services') ?>
                     </a>
                     <a href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>/staff"
-                       class="vb-sidebar-link <?= $activePage === 'staff' ? 'active' : '' ?>">
+                       class="vb-sidebar-link <?= $activePage === 'staff' ? 'active' : '' ?>" <?= $activePage === 'staff' ? 'aria-current="page"' : '' ?>>
                         <i data-lucide="users"></i>
                         <?= __('admin.nav.staff') ?>
                     </a>
                     <a href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>/availability"
-                       class="vb-sidebar-link <?= $activePage === 'availability' ? 'active' : '' ?>">
+                       class="vb-sidebar-link <?= $activePage === 'availability' ? 'active' : '' ?>" <?= $activePage === 'availability' ? 'aria-current="page"' : '' ?>>
                         <i data-lucide="clock"></i>
                         <?= __('admin.nav.availability') ?>
                     </a>
                     <a href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>/blocked-dates"
-                       class="vb-sidebar-link <?= $activePage === 'blocked-dates' ? 'active' : '' ?>">
+                       class="vb-sidebar-link <?= $activePage === 'blocked-dates' ? 'active' : '' ?>" <?= $activePage === 'blocked-dates' ? 'aria-current="page"' : '' ?>>
                         <i data-lucide="calendar-x"></i>
                         <?= __('admin.nav.blocked_dates') ?>
                     </a>
                     <?php endif; ?>
                     <?php if ($canManage && $tenantPattern === 'resource'): ?>
                     <a href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>/resources"
-                       class="vb-sidebar-link <?= $activePage === 'resources' ? 'active' : '' ?>">
+                       class="vb-sidebar-link <?= $activePage === 'resources' ? 'active' : '' ?>" <?= $activePage === 'resources' ? 'aria-current="page"' : '' ?>>
                         <i data-lucide="bed"></i>
                         <?= __('admin.nav.resources') ?>
                     </a>
                     <a href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>/blocked-dates"
-                       class="vb-sidebar-link <?= $activePage === 'blocked-dates' ? 'active' : '' ?>">
+                       class="vb-sidebar-link <?= $activePage === 'blocked-dates' ? 'active' : '' ?>" <?= $activePage === 'blocked-dates' ? 'aria-current="page"' : '' ?>>
                         <i data-lucide="calendar-x"></i>
                         <?= __('admin.nav.blocked_dates') ?>
                     </a>
                     <?php endif; ?>
                     <?php if ($canManage && $tenantPattern === 'capacity'): ?>
                     <a href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>/capacity-slots"
-                       class="vb-sidebar-link <?= $activePage === 'capacity-slots' ? 'active' : '' ?>">
+                       class="vb-sidebar-link <?= $activePage === 'capacity-slots' ? 'active' : '' ?>" <?= $activePage === 'capacity-slots' ? 'aria-current="page"' : '' ?>>
                         <i data-lucide="layout-grid"></i>
                         <?= __('admin.nav.capacity_slots') ?>
                     </a>
                     <?php endif; ?>
                     <?php if ($canManage && $tenantPattern === 'event'): ?>
                     <a href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>/events"
-                       class="vb-sidebar-link <?= $activePage === 'events' ? 'active' : '' ?>">
+                       class="vb-sidebar-link <?= $activePage === 'events' ? 'active' : '' ?>" <?= $activePage === 'events' ? 'aria-current="page"' : '' ?>>
                         <i data-lucide="ticket"></i>
                         <?= __('admin.nav.events') ?>
                     </a>
@@ -184,13 +195,13 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
                 <div class="vb-sidebar-section">
                     <div class="vb-sidebar-section-label"><?= __('admin.nav.section_people') ?></div>
                     <a href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>/customers"
-                       class="vb-sidebar-link <?= $activePage === 'customers' ? 'active' : '' ?>">
+                       class="vb-sidebar-link <?= $activePage === 'customers' ? 'active' : '' ?>" <?= $activePage === 'customers' ? 'aria-current="page"' : '' ?>>
                         <i data-lucide="contact"></i>
                         <?= __('admin.nav.customers') ?>
                     </a>
                     <?php if ($canManage): ?>
                     <a href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>/users"
-                       class="vb-sidebar-link <?= $activePage === 'users' ? 'active' : '' ?>">
+                       class="vb-sidebar-link <?= $activePage === 'users' ? 'active' : '' ?>" <?= $activePage === 'users' ? 'aria-current="page"' : '' ?>>
                         <i data-lucide="user-cog"></i>
                         <?= __('admin.nav.team') ?>
                     </a>
@@ -202,19 +213,16 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
                 <div class="vb-sidebar-section">
                     <div class="vb-sidebar-section-label"><?= __('admin.nav.section_system') ?></div>
                     <?php
-                    $tenantSlug = \App\Engine\Database::query(
-                        'SELECT `slug` FROM `tenants` WHERE `id` = ? LIMIT 1',
-                        [$sidebarTenantId]
-                    )[0]['slug'] ?? '';
+                    $tenantSlug = $sidebarTenant['slug'] ?? '';
                     ?>
                     <a href="/book/<?= htmlspecialchars($tenantSlug, ENT_QUOTES, 'UTF-8') ?>"
                        target="_blank" rel="noopener"
-                       class="vb-sidebar-link vb-sidebar-external <?= $activePage === 'booking-page' ? 'active' : '' ?>">
+                       class="vb-sidebar-link vb-sidebar-external <?= $activePage === 'booking-page' ? 'active' : '' ?>" <?= $activePage === 'booking-page' ? 'aria-current="page"' : '' ?>>
                         <i data-lucide="external-link"></i>
                         <?= __('admin.nav.booking_page') ?>
                     </a>
                     <a href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>/settings"
-                       class="vb-sidebar-link <?= $activePage === 'settings' ? 'active' : '' ?>">
+                       class="vb-sidebar-link <?= $activePage === 'settings' ? 'active' : '' ?>" <?= $activePage === 'settings' ? 'aria-current="page"' : '' ?>>
                         <i data-lucide="settings"></i>
                         <?= __('admin.nav.settings') ?>
                     </a>
@@ -222,15 +230,15 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
                 <?php endif; ?>
 
                 <?php elseif (\App\Engine\Auth::isOperator()): ?>
-                <a href="/admin" class="vb-sidebar-link <?= $activePage === 'dashboard' ? 'active' : '' ?>">
+                <a href="/admin" class="vb-sidebar-link <?= $activePage === 'dashboard' ? 'active' : '' ?>" <?= $activePage === 'dashboard' ? 'aria-current="page"' : '' ?>>
                     <i data-lucide="layout-dashboard"></i>
                     <?= __('admin.nav.dashboard') ?>
                 </a>
-                <a href="/admin/tenants" class="vb-sidebar-link <?= $activePage === 'tenants' ? 'active' : '' ?>">
+                <a href="/admin/tenants" class="vb-sidebar-link <?= $activePage === 'tenants' ? 'active' : '' ?>" <?= $activePage === 'tenants' ? 'aria-current="page"' : '' ?>>
                     <i data-lucide="building-2"></i>
                     <?= __('admin.nav.tenants') ?>
                 </a>
-                <a href="/admin/bookings" class="vb-sidebar-link <?= $activePage === 'bookings' ? 'active' : '' ?>">
+                <a href="/admin/bookings" class="vb-sidebar-link <?= $activePage === 'bookings' ? 'active' : '' ?>" <?= $activePage === 'bookings' ? 'aria-current="page"' : '' ?>>
                     <i data-lucide="calendar"></i>
                     <?= __('admin.nav.all_bookings') ?>
                 </a>
@@ -239,7 +247,7 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
                     "SELECT `value` FROM `settings` WHERE `key` = 'enable_applications' LIMIT 1"
                 )[0]['value'] ?? '0') === '1';
                 if ($appsEnabled): ?>
-                <a href="/admin/applications" class="vb-sidebar-link <?= $activePage === 'applications' ? 'active' : '' ?>">
+                <a href="/admin/applications" class="vb-sidebar-link <?= $activePage === 'applications' ? 'active' : '' ?>" <?= $activePage === 'applications' ? 'aria-current="page"' : '' ?>>
                     <i data-lucide="inbox"></i>
                     <?= __('admin.nav.applications') ?>
                     <?php
@@ -254,16 +262,16 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
                 <?php endif; ?>
             <?php if (\App\Engine\Auth::isOperator() && !$isImpersonating): ?>
             <div class="vb-sidebar-section">
-                <div class="vb-sidebar-section-label"><?= __('admin.nav.system') ?></div>
-                <a href="/admin/settings" class="vb-sidebar-link <?= str_starts_with($activePage, 'settings') ? 'active' : '' ?>">
+                <div class="vb-sidebar-section-label"><?= __('admin.nav.workspace') ?></div>
+                <a href="/admin/settings" class="vb-sidebar-link <?= (!$inTenantContext && str_starts_with($activePage, 'settings')) ? 'active' : '' ?>" <?= (!$inTenantContext && str_starts_with($activePage, 'settings')) ? 'aria-current="page"' : '' ?>>
                     <i data-lucide="settings"></i>
-                    <?= __('admin.nav.settings') ?>
+                    <?= __('admin.nav.system_settings') ?>
                 </a>
-                <a href="/admin/deletion-queue" class="vb-sidebar-link <?= $activePage === 'deletion-queue' ? 'active' : '' ?>">
+                <a href="/admin/deletion-queue" class="vb-sidebar-link <?= $activePage === 'deletion-queue' ? 'active' : '' ?>" <?= $activePage === 'deletion-queue' ? 'aria-current="page"' : '' ?>>
                     <i data-lucide="shield"></i>
                     <?= __('admin.nav.deletion_queue') ?>
                 </a>
-                <a href="/admin/updates" class="vb-sidebar-link <?= $activePage === 'updates' ? 'active' : '' ?>">
+                <a href="/admin/updates" class="vb-sidebar-link <?= $activePage === 'updates' ? 'active' : '' ?>" <?= $activePage === 'updates' ? 'aria-current="page"' : '' ?>>
                     <i data-lucide="download"></i>
                     <?= __('admin.nav.updates') ?>
                 </a>
@@ -277,15 +285,21 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
     </aside>
 
     <!-- Main -->
-    <div class="vb-main">
+    <div class="vb-main" x-ref="main">
         <header class="vb-topbar">
             <div class="vb-topbar-left">
                 <button type="button"
                         class="vb-hamburger"
+                        x-ref="sidebarTrigger"
+                        aria-controls="admin-sidebar"
+                        aria-expanded="false"
                         @click="toggleSidebar"
                         aria-label="<?= __('admin.nav.toggle_sidebar') ?>">
                     <i data-lucide="menu"></i>
                 </button>
+                <?php if ($inTenantContext && $pageTitle !== ($sidebarTenant['name'] ?? '')): ?>
+                <a class="vb-topbar-context" href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($sidebarTenant['name'] ?? '', ENT_QUOTES, 'UTF-8') ?></a>
+                <?php endif; ?>
                 <h1 class="vb-topbar-title"><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></h1>
             </div>
             <div class="vb-topbar-right">
@@ -337,8 +351,8 @@ $operatorInitials = mb_strtoupper(mb_substr($operatorName, 0, 1));
                         <div class="vb-profile-dropdown-header">
                             <span class="vb-avatar"><?= $operatorInitials ?></span>
                             <div>
-                                <div class="vb-profile-dropdown-name"><?= $operatorName ?></div>
-                                <div class="vb-profile-dropdown-role"><?= htmlspecialchars(ucfirst($user['type'] ?? 'operator'), ENT_QUOTES, 'UTF-8') ?></div>
+                                <div class="vb-profile-dropdown-name"><?= htmlspecialchars($operatorName, ENT_QUOTES, 'UTF-8') ?></div>
+                                <div class="vb-profile-dropdown-role"><?= htmlspecialchars($profileRoleLabel, ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                         </div>
                         <div class="vb-profile-dropdown-sep"></div>

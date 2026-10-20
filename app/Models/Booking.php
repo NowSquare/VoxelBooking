@@ -273,13 +273,22 @@ final class Booking
 
     /**
      * Get nearest upcoming bookings across all tenants (operator view).
+     * The threshold is an instant in the application timezone; storage is in
+     * each tenant's wall time. Bound each timezone group before merging by instant.
      *
      * @return list<array<string, mixed>>
      */
     public static function allUpcoming(string $afterDatetime, int $limit = 10): array
     {
-        return Database::query(
-            "SELECT b.*, t.`name` AS `tenant_name`, t.`slug` AS `tenant_slug`,
+        if ($limit <= 0) {
+            return [];
+        }
+        $after = new \DateTimeImmutable($afterDatetime);
+        $upcoming = [];
+        foreach (self::upcomingTimezones() as $timezoneName => $timezone) {
+            $rows = Database::query(
+                "SELECT b.*, t.`name` AS `tenant_name`, t.`slug` AS `tenant_slug`,
+                    t.`timezone` AS `tenant_timezone`,
                     c.`name` AS `customer_name`, c.`email` AS `customer_email`,
                     s.`name` AS `service_name`,
                     r.`name` AS `resource_name`,
@@ -291,11 +300,55 @@ final class Booking
              LEFT JOIN `resources` r ON r.`id` = b.`resource_id`
              LEFT JOIN `events` ev ON ev.`id` = b.`event_id`
              WHERE b.`status` = 'confirmed'
+                   AND COALESCE(NULLIF(t.`timezone`, ''), 'UTC') = ?
                    AND b.`start_datetime` >= ?
-             ORDER BY b.`start_datetime` ASC
+             ORDER BY b.`start_datetime` ASC, b.`id` ASC
              LIMIT ?",
-            [$afterDatetime, $limit]
+                [$timezoneName, $after->setTimezone($timezone)->format('Y-m-d H:i:s'), $limit]
+            );
+            foreach ($rows as $row) {
+                $upcoming[] = ['booking' => $row, 'instant' => (new \DateTimeImmutable($row['start_datetime'], $timezone))->getTimestamp()];
+            }
+        }
+        usort($upcoming, static fn(array $a, array $b): int =>
+            ($a['instant'] <=> $b['instant']) ?: strcmp($a['booking']['id'], $b['booking']['id'])
         );
+        return array_column(array_slice($upcoming, 0, $limit), 'booking');
+    }
+
+    /** Count confirmed starts between two application-timezone instants. */
+    public static function countUpcomingBetween(string $afterDatetime, string $beforeDatetime): int
+    {
+        $after = new \DateTimeImmutable($afterDatetime);
+        $before = new \DateTimeImmutable($beforeDatetime);
+        $count = 0;
+        foreach (self::upcomingTimezones() as $timezoneName => $timezone) {
+            $rows = Database::query(
+                "SELECT COUNT(*) AS cnt FROM `bookings` b
+                 INNER JOIN `tenants` t ON t.`id` = b.`tenant_id`
+                 WHERE b.`status` = 'confirmed'
+                   AND COALESCE(NULLIF(t.`timezone`, ''), 'UTC') = ?
+                   AND b.`start_datetime` BETWEEN ? AND ?",
+                [$timezoneName, $after->setTimezone($timezone)->format('Y-m-d H:i:s'), $before->setTimezone($timezone)->format('Y-m-d H:i:s')]
+            );
+            $count += (int) ($rows[0]['cnt'] ?? 0);
+        }
+        return $count;
+    }
+
+    /** @return array<string, \DateTimeZone> */
+    private static function upcomingTimezones(): array
+    {
+        $timezones = [];
+        foreach (Database::query("SELECT DISTINCT COALESCE(NULLIF(`timezone`, ''), 'UTC') AS timezone FROM `tenants`") as $row) {
+            $name = $row['timezone'];
+            try {
+                $timezones[$name] = new \DateTimeZone($name);
+            } catch (\Exception) {
+                $timezones[$name] = new \DateTimeZone('UTC');
+            }
+        }
+        return $timezones;
     }
 
     /**

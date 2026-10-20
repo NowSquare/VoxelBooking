@@ -20,16 +20,15 @@ ob_start();
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>
 <?php endif; ?>
 
-<div class="vb-page-header">
-    <div>
-        <a href="<?= $baseUrl ?>/bookings" class="vb-back-link">
-            <i data-lucide="chevron-left"></i>
-            <?= __('admin.bookings.title') ?>
-        </a>
-        <h2 class="vb-page-title"><?= __('admin.bookings.create_title') ?></h2>
-        <p class="vb-page-subtitle"><?= __('admin.bookings.create_subtitle') ?></p>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.bookings.create_title'),
+    'subtitle' => __('admin.bookings.create_subtitle'),
+    'backUrl' => '/admin/tenants/' . $tenantId . '/bookings',
+    'backLabel' => __('admin.bookings.title'),
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <form method="POST"
       action="<?= $baseUrl ?>/bookings/create"
@@ -57,9 +56,11 @@ ob_start();
             <div class="vb-card-header">
                 <div class="vb-card-title-row">
                     <i data-lucide="calendar" class="vb-card-icon"></i>
-                    <div class="vb-card-title"><?= __('admin.bookings.date_time') ?></div>
+                    <div>
+                        <div class="vb-card-title"><?= __('admin.bookings.date_time') ?></div>
+                        <div class="vb-card-desc"><?= __('admin.bookings.create_subtitle') ?></div>
+                    </div>
                 </div>
-                <div class="vb-card-desc"><?= __('admin.bookings.create_subtitle') ?></div>
             </div>
 
             <div class="vb-form-grid">
@@ -179,12 +180,12 @@ ob_start();
             <div class="vb-card-header">
                 <div class="vb-card-title-row">
                     <i data-lucide="notebook-pen" class="vb-card-icon"></i>
-                    <div class="vb-card-title"><?= __('admin.bookings.label_notes') ?></div>
+                    <div class="vb-card-title" id="create-notes-label"><?= __('admin.bookings.label_notes') ?></div>
                 </div>
             </div>
             <div class="vb-form-grid">
                 <div class="vb-form-group">
-                    <textarea id="create_notes" name="notes" class="vb-input" rows="3"
+                    <textarea id="create_notes" aria-labelledby="create-notes-label" name="notes" class="vb-input" rows="3"
                               placeholder="<?= __('admin.bookings.label_notes') ?>…"><?= e(old('notes', '')) ?></textarea>
                 </div>
             </div>

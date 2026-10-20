@@ -22,12 +22,13 @@ ob_start();
 ?>
 
 <!-- Page Header -->
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.deletion.title') ?></h2>
-        <p class="vb-page-subtitle"><?= __('admin.deletion.subtitle') ?></p>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.deletion.title'),
+    'subtitle' => __('admin.deletion.subtitle'),
+];
+include __DIR__ . '/partials/page-header.php';
+?>
 
 <!-- Pending Requests -->
 <div class="vb-card vb-animate-in stagger-2">

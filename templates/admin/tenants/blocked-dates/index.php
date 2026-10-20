@@ -26,12 +26,13 @@ $isResourcePattern = ($tenant['booking_pattern'] ?? '') === 'resource';
 ob_start();
 ?>
 
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.blocked_dates.title') ?></h2>
-        <p class="vb-page-subtitle"><?= __('admin.blocked_dates.subtitle') ?></p>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.blocked_dates.title'),
+    'subtitle' => __('admin.blocked_dates.subtitle'),
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <?php if ($flash): ?>
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>

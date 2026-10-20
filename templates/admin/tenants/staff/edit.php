@@ -17,22 +17,24 @@ $currentServices = old('service_ids', $linkedServiceIds);
 ob_start();
 ?>
 
-<div class="vb-page-header">
-    <div>
-        <a href="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/staff" class="vb-back-link">
-            <i data-lucide="chevron-left"></i>
-            <?= __('admin.staff.title') ?>
-        </a>
-        <h2 class="vb-page-title"><?= __('admin.staff.edit') ?></h2>
-    </div>
-    <div class="vb-page-actions">
-        <?php if ($member['is_active']): ?>
+<?php
+ob_start();
+?>
+<?php if ($member['is_active']): ?>
             <span class="vb-badge vb-badge-success"><?= __('admin.staff.status_active') ?></span>
         <?php else: ?>
             <span class="vb-badge vb-badge-default"><?= __('admin.staff.status_inactive') ?></span>
         <?php endif; ?>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.staff.edit'),
+    'subtitle' => $member['name'] ?? '',
+    'backUrl' => '/admin/tenants/' . $tenantId . '/staff',
+    'backLabel' => __('admin.staff.title'),
+    'actions' => ob_get_clean(),
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <?php if ($flash): ?>
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>

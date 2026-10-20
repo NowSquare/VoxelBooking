@@ -22,16 +22,15 @@ ob_start();
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>
 <?php endif; ?>
 
-<div class="vb-page-header">
-    <div>
-        <a href="<?= $baseUrl ?>/bookings" class="vb-back-link">
-            <i data-lucide="chevron-left"></i>
-            <?= __('admin.bookings.title') ?>
-        </a>
-        <h2 class="vb-page-title"><?= __('admin.bookings.create_title') ?></h2>
-        <p class="vb-page-subtitle"><?= __('admin.bookings.create_subtitle') ?></p>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.bookings.create_title'),
+    'subtitle' => __('admin.bookings.create_subtitle'),
+    'backUrl' => '/admin/tenants/' . $tenantId . '/bookings',
+    'backLabel' => __('admin.bookings.title'),
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <form method="POST"
       action="<?= $baseUrl ?>/bookings/create"
@@ -57,7 +56,7 @@ ob_start();
                             <?php foreach ($slots as $s): ?>
                                 <option value="<?= htmlspecialchars($s['id'], ENT_QUOTES, 'UTF-8') ?>"
                                         <?= old('slot_id') === $s['id'] ? 'selected' : '' ?>>
-                                    <?= $dayNames[(int) $s['day_of_week']] ?> <?= substr($s['start_time'], 0, 5) ?>–<?= substr($s['end_time'], 0, 5) ?>
+                                    <?= $dayNames[(int) $s['day_of_week']] ?> <?= \App\Engine\Locale::time(new \DateTimeImmutable($s['start_time'])) ?>–<?= \App\Engine\Locale::time(new \DateTimeImmutable($s['end_time'])) ?>
                                     <?php if ($s['label']): ?>(<?= htmlspecialchars($s['label'], ENT_QUOTES, 'UTF-8') ?>)<?php endif; ?>
                                     · <?= str_replace(':count', (string) (int) $s['max_capacity'], __('admin.capacity_slots.capacity_max_seats')) ?>
                                 </option>
@@ -139,12 +138,12 @@ ob_start();
             <div class="vb-card-header">
                 <div class="vb-card-title-row">
                     <i data-lucide="notebook-pen" class="vb-card-icon"></i>
-                    <div class="vb-card-title"><?= __('admin.bookings.label_notes') ?></div>
+                    <div class="vb-card-title" id="create-notes-label"><?= __('admin.bookings.label_notes') ?></div>
                 </div>
             </div>
             <div class="vb-form-grid">
                 <div class="vb-form-group">
-                    <textarea id="create_notes" name="notes" class="vb-input" rows="3"
+                    <textarea id="create_notes" aria-labelledby="create-notes-label" name="notes" class="vb-input" rows="3"
                               placeholder="<?= __('admin.bookings.label_notes') ?>…"><?= e(old('notes', '')) ?></textarea>
                 </div>
             </div>

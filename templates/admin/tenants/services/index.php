@@ -13,21 +13,22 @@ $tenantId = $tenantId ?? '';
 ob_start();
 ?>
 
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.services.title') ?></h2>
-        <p class="vb-page-subtitle">
-            <?= __p('admin.services.showing_count', count($services)) ?>
-        </p>
-    </div>
-    <div class="vb-page-actions">
-        <a href="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/services/create"
+<?php
+ob_start();
+?>
+<a href="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/services/create"
            class="vb-btn vb-btn-primary" id="new-service-btn">
             <i data-lucide="plus" class="w-4 h-4"></i>
             <?= __('admin.services.new') ?>
         </a>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.services.title'),
+    'subtitle' => __p('admin.services.showing_count', count($services)),
+    'actions' => ob_get_clean(),
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <?php if ($flash): ?>
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>

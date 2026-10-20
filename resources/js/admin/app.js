@@ -23,6 +23,7 @@
 import Alpine from '@alpinejs/csp';
 import { createIcons } from 'lucide';
 import { initTooltips } from './tooltips.js';
+import { initRowActions } from './row-actions.js';
 
 // ── Icon Registry (tree-shaken) ──
 // Only icons listed here are bundled. Add new icons as needed.
@@ -162,33 +163,89 @@ const ICON_SET = {
 Alpine.data('adminShell', () => ({
     sidebarOpen: false,
     profileOpen: false,
+    sidebarMedia: null,
+    keydownHandler: null,
+    clickHandler: null,
+    mediaHandler: null,
 
     init() {
-        // Close all on Escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
+        this.sidebarMedia = window.matchMedia('(max-width: 768px)');
+        this.mediaHandler = () => {
+            const focusWasInSidebar = this.$refs.sidebar.contains(document.activeElement);
+            this.sidebarOpen = false;
+            this.syncSidebar();
+            if (this.sidebarMedia.matches && focusWasInSidebar) this.$refs.sidebarTrigger?.focus();
+        };
+        this.sidebarMedia.addEventListener('change', this.mediaHandler);
+        this.syncSidebar();
+
+        this.keydownHandler = (event) => {
+            if (event.key === 'Escape') {
                 this.closeSidebar();
                 this.closeProfile();
             }
-        });
-
-        // Close profile on click outside
-        document.addEventListener('click', (e) => {
-            if (this.profileOpen && this.$refs.profileMenu &&
-                !this.$refs.profileMenu.contains(e.target)) {
-                this.closeProfile();
+            if (event.key === 'Tab' && this.sidebarOpen && this.sidebarMedia.matches) {
+                const controls = [...this.$refs.sidebar.querySelectorAll('a[href], button:not([disabled]), [tabindex="0"]')]
+                    .filter(control => !control.closest('[hidden], [inert]'));
+                const first = controls[0];
+                const last = controls[controls.length - 1];
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault();
+                    last?.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault();
+                    first?.focus();
+                }
             }
-        });
+        };
+        document.addEventListener('keydown', this.keydownHandler);
+        this.clickHandler = (event) => {
+            if (this.profileOpen && this.$refs.profileMenu && !this.$refs.profileMenu.contains(event.target)) this.closeProfile();
+        };
+        document.addEventListener('click', this.clickHandler);
+    },
+
+    destroy() {
+        document.removeEventListener('keydown', this.keydownHandler);
+        document.removeEventListener('click', this.clickHandler);
+        this.sidebarMedia?.removeEventListener('change', this.mediaHandler);
+    },
+
+    syncSidebar() {
+        const mobile = this.sidebarMedia.matches;
+        const open = mobile && this.sidebarOpen;
+        const sidebar = this.$refs.sidebar;
+        sidebar.classList.toggle('open', open);
+        sidebar.inert = mobile && !open;
+        this.$refs.main.inert = open;
+        this.$refs.sidebarTrigger?.setAttribute('aria-expanded', String(open));
+        if (mobile) {
+            sidebar.setAttribute('aria-hidden', String(!open));
+            sidebar.setAttribute('role', 'dialog');
+            sidebar.setAttribute('aria-modal', 'true');
+        } else {
+            sidebar.removeAttribute('aria-hidden');
+            sidebar.removeAttribute('role');
+            sidebar.removeAttribute('aria-modal');
+        }
     },
 
     toggleSidebar() {
-        this.sidebarOpen = !this.sidebarOpen;
-        this.$refs.sidebar.classList.toggle('open', this.sidebarOpen);
+        if (this.sidebarOpen) {
+            this.closeSidebar();
+            return;
+        }
+        this.sidebarOpen = true;
+        this.closeProfile();
+        this.syncSidebar();
+        this.$nextTick(() => this.$refs.sidebar.querySelector('a[href], button:not([disabled])')?.focus());
     },
 
     closeSidebar() {
+        if (!this.sidebarOpen) return;
         this.sidebarOpen = false;
-        this.$refs.sidebar.classList.remove('open');
+        this.syncSidebar();
+        this.$refs.sidebarTrigger?.focus();
     },
 
     toggleProfile() {
@@ -779,6 +836,7 @@ createIcons({ icons: ICON_SET });
 
 // ── Tooltips: replace native title= with styled tooltips ──
 initTooltips();
+initRowActions();
 
 // ── Refresh helper for Alpine-rendered content ──
 window.refreshIcons = () => {

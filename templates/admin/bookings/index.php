@@ -23,16 +23,10 @@ ob_start();
     <?php include __DIR__ . '/../../partials/alert.php'; ?>
 <?php endif; ?>
 
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.bookings.title') ?></h2>
-        <p class="vb-page-subtitle">
-            <?= $showTenantColumn ? __('admin.bookings.subtitle') : __('admin.bookings.subtitle_tenant') ?>
-            · <?= __p('admin.bookings.showing_count', (int) $total) ?>
-        </p>
-    </div>
-    <div class="vb-page-actions">
-        <?php
+<?php
+ob_start();
+?>
+<?php
         $exportUrl = $baseUrl . '/export' . ($filterParams ? '?' . $filterParams : '');
         ?>
         <a href="<?= htmlspecialchars($exportUrl, ENT_QUOTES, 'UTF-8') ?>"
@@ -48,8 +42,14 @@ ob_start();
             <?= __('admin.bookings.new_booking') ?>
         </a>
         <?php endif; ?>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.bookings.title'),
+    'subtitle' => ($showTenantColumn ? __('admin.bookings.subtitle') : __('admin.bookings.subtitle_tenant')) . ' · ' . __p('admin.bookings.showing_count', (int) $total),
+    'actions' => ob_get_clean(),
+];
+include __DIR__ . '/../partials/page-header.php';
+?>
 
 <?php
 // Detect whether any filter is active (status, date range, or search term).
@@ -183,10 +183,7 @@ $hasActiveFilters = !empty($filters['status'] ?? '') || !empty($filters['from'] 
                             </div>
                         </td>
                         <td data-label="<?= __('admin.bookings.date_time') ?>">
-                            <div class="vb-cell-primary"><?= \App\Engine\Locale::date(new \DateTimeImmutable($b['start_datetime'])) ?></div>
-                            <div class="vb-cell-secondary">
-                                <?= date('H:i', strtotime($b['start_datetime'])) ?> – <?= date('H:i', strtotime($b['end_datetime'])) ?>
-                            </div>
+                            <?php $bookingDateTime = $b; include __DIR__ . '/../partials/booking-datetime.php'; ?>
                         </td>
                         <td data-label="<?= __('admin.bookings.status') ?>">
                             <span class="vb-status vb-status-<?= htmlspecialchars($b['status'], ENT_QUOTES, 'UTF-8') ?>">

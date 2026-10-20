@@ -32,6 +32,7 @@
         /* ── Surfaces: layered depth, not flat planes ── */
         --vb-bg-base: #F9FAFB;
         --vb-bg-surface: #ffffff;
+        --vb-bg-sidebar: #ffffff;
         --vb-bg-surface-rgb: 255, 255, 255;
         --vb-bg-raised: #ffffff;
         --vb-bg-input: #ffffff;
@@ -45,17 +46,18 @@
         --vb-border-card: rgba(0, 0, 0, 0.04);
         /* ── Text: optical weight hierarchy ── */
         --vb-text-primary: #1a1a2e;
-        --vb-text-secondary: #64748B;
-        --vb-text-tertiary: #9999ad;
-        --vb-text-ghost: #c4c4d4;
+        --vb-text-secondary: #475569;
+        --vb-text-tertiary: #586579;
+        --vb-text-ghost: #5f6e82;
         --vb-text-inverted: #ffffff;
         /* ── Accent: rich indigo with luminous glow ── */
-        --vb-accent: #6366f1;
-        --vb-accent-hover: #5457e5;
+        --vb-accent: #4f46e5;
+        --vb-accent-text: #ffffff;
+        --vb-accent-hover: #4338ca;
         --vb-accent-active: #4f46e5;
         --vb-accent-subtle: rgba(99, 102, 241, 0.08);
         --vb-accent-glow: rgba(99, 102, 241, 0.2);
-        --vb-accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+
         /* ── Depth: multi-layer elevation system ── */
         --vb-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
         --vb-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -68,13 +70,14 @@
         --vb-shadow-modal: 0 12px 32px rgba(0, 0, 0, 0.08);
         --vb-inner-glow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
         /* ── Semantic ── */
-        --vb-success: #10b981;
+        --vb-success: #047857;
         --vb-success-bg: rgba(16, 185, 129, 0.08);
-        --vb-warning: #f59e0b;
+        --vb-warning: #92400e;
         --vb-warning-bg: rgba(245, 158, 11, 0.08);
-        --vb-error: #ef4444;
+        --vb-error: #b91c1c;
         --vb-error-bg: rgba(239, 68, 68, 0.06);
-        --vb-info: #3b82f6;
+        --vb-info: #1d4ed8;
+        --vb-waitlist: #6d28d9;
         --vb-info-bg: rgba(59, 130, 246, 0.08);
         /* ── Hue ramps: session-state pills ──
            The semantic tokens above carry one step per meaning, which is
@@ -102,8 +105,8 @@
         /* ── Typography: optical precision ── */
         --vb-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
         --vb-font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
-        --vb-text-2xs: 0.625rem;
-        --vb-text-xs: 0.6875rem;
+        --vb-text-2xs: 0.75rem;
+        --vb-text-xs: 0.75rem;
         --vb-text-sm: 0.8125rem;
         --vb-text-base: 0.875rem;
         --vb-text-md: 0.9375rem;
@@ -162,6 +165,7 @@
     [data-theme="dark"] {
         --vb-bg-base: #0c0c14;
         --vb-bg-surface: #151520;
+        --vb-bg-sidebar: #111118;
         --vb-bg-surface-rgb: 21, 21, 32;
         --vb-bg-raised: #1c1c2e;
         --vb-bg-input: rgba(28, 28, 46, 0.8);
@@ -173,15 +177,16 @@
         --vb-border-strong: rgba(255, 255, 255, 0.16);
         --vb-border-card: rgba(255, 255, 255, 0.05);
         --vb-text-primary: #ededf0;
-        --vb-text-secondary: #8888a0;
-        --vb-text-tertiary: #5c5c72;
-        --vb-text-ghost: #3a3a50;
+        --vb-text-secondary: #a6a6ba;
+        --vb-text-tertiary: #9494aa;
+        --vb-text-ghost: #89899f;
         --vb-accent: #818cf8;
+        --vb-accent-text: #0c0c14;
         --vb-accent-hover: #9198fa;
         --vb-accent-active: #a5aefb;
         --vb-accent-subtle: rgba(129, 140, 248, 0.1);
         --vb-accent-glow: rgba(129, 140, 248, 0.25);
-        --vb-accent-gradient: linear-gradient(135deg, #818cf8, #a78bfa);
+
         --vb-shadow-xs: none;
         --vb-shadow-sm: none;
         --vb-shadow-md: 0 4px 24px rgba(0, 0, 0, 0.3);
@@ -199,6 +204,7 @@
         --vb-error: #f87171;
         --vb-error-bg: rgba(248, 113, 113, 0.06);
         --vb-info: #60a5fa;
+        --vb-waitlist: #c4b5fd;
         --vb-info-bg: rgba(96, 165, 250, 0.08);
     }
 
@@ -329,7 +335,7 @@
         height: 36px; padding: 0 0.875rem;
         font-family: var(--vb-font-sans); font-size: var(--vb-text-sm); font-weight: 500;
         border: none; border-radius: var(--vb-radius-md); cursor: pointer;
-        transition: all var(--vb-duration-fast) var(--vb-ease-out);
+        transition: background var(--vb-duration-fast), color var(--vb-duration-fast), box-shadow var(--vb-duration-fast);
         text-decoration: none; white-space: nowrap;
         position: relative; overflow: hidden;
     }
@@ -337,19 +343,14 @@
     .vb-btn:active { transform: scale(0.97); transition-duration: 80ms; }
     .vb-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 
-    /* Primary: gradient with inner glow */
+    /* Primary actions use a solid, contrast-safe surface in both themes. */
     .vb-btn-primary {
-        color: #fff;
-        background: var(--vb-accent-gradient);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), var(--vb-inner-glow),
-                    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+        color: var(--vb-accent-text);
+        background: var(--vb-accent);
+        box-shadow: var(--vb-shadow-xs);
     }
-    .vb-btn-primary:hover {
-        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3), var(--vb-inner-glow),
-                    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-        transform: translateY(-1px);
-    }
-    .vb-btn-primary:active { transform: translateY(0) scale(0.98); }
+    .vb-btn-primary:hover { background: var(--vb-accent-hover); }
+    .vb-btn-primary:active { background: var(--vb-accent-active); }
 
     /* Secondary: glass border */
     .vb-btn-secondary {
@@ -407,7 +408,7 @@
         border-radius: 50%;
         animation: vb-spin 0.5s linear infinite;
     }
-    .vb-btn-primary.is-loading::after { border-color: rgba(255,255,255,0.4); border-right-color: transparent; border-top-color: #fff; }
+    .vb-btn-primary.is-loading::after { border-color: var(--vb-accent-text); border-right-color: transparent; }
 
     /* ══════════════════════════════════════════════════════════════
        INPUT SYSTEM — Refined form controls
@@ -534,7 +535,7 @@
         font-family: var(--vb-font-sans); font-size: var(--vb-text-xs); font-weight: 500;
         color: var(--vb-text-secondary); background: var(--vb-bg-input);
         border: 1px solid var(--vb-border-subtle); border-radius: var(--vb-radius-md);
-        transition: all var(--vb-duration-fast) var(--vb-ease-out);
+        transition: background var(--vb-duration-fast), color var(--vb-duration-fast), box-shadow var(--vb-duration-fast);
     }
     .vb-day-checkbox:hover span {
         border-color: var(--vb-border-default);
@@ -559,7 +560,6 @@
     }
     .vb-card-flush { padding: 0; overflow: hidden; }
     .vb-card-clip  { overflow: hidden; }
-    .vb-card:hover { box-shadow: var(--vb-shadow-card-hover); }
     .vb-card-header { margin-bottom: 1.25rem; }
     .vb-card-title {
         font-size: var(--vb-text-md); font-weight: 600;
@@ -733,7 +733,7 @@
     /* Decorative gradient accent bar */
     .vb-metric-accent {
         position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
-        background: var(--vb-accent-gradient); opacity: 0;
+        background: var(--vb-accent); opacity: 0;
         transition: opacity var(--vb-duration-normal);
     }
     .vb-metric:hover .vb-metric-accent { opacity: 1; }
@@ -782,8 +782,8 @@
     .vb-status-no_show { color: var(--vb-warning); }
     .vb-status-rescheduled::before { background: var(--vb-info); }
     .vb-status-rescheduled { color: var(--vb-info); }
-    .vb-status-waitlisted::before { background: #8B5CF6; }
-    .vb-status-waitlisted { color: #8B5CF6; }
+    .vb-status-waitlisted::before { background: var(--vb-waitlist); }
+    .vb-status-waitlisted { color: var(--vb-waitlist); }
 
     /* Pattern type label — subtle icon + text beneath item name in bookings list */
     .vb-pattern-label {
@@ -1144,7 +1144,7 @@
        ══════════════════════════════════════════════════════════════ */
     .vb-avatar {
         width: 32px; height: 32px; border-radius: var(--vb-radius-full);
-        background: var(--vb-accent-gradient);
+        background: var(--vb-accent);
         color: #fff; font-weight: 600; font-size: var(--vb-text-xs);
         display: flex; align-items: center; justify-content: center;
         flex-shrink: 0; text-transform: uppercase;
@@ -1242,7 +1242,7 @@
 /* Dark mode sidebar: sits one step above base for subtle spatial separation,
    but stays in the same tonal family so it reads as "same surface, different plane" */
 [data-theme="dark"] .vb-sidebar {
-    background: #111118; /* between base #0c0c14 and surface #151520 */
+    background: var(--vb-bg-sidebar);
     border-inline-end-color: rgba(255, 255, 255, 0.04);
 }
 
@@ -1257,12 +1257,12 @@
 .vb-sidebar-logo {
     color: var(--vb-accent);
     flex-shrink: 0;
-    filter: drop-shadow(0 0 10px var(--vb-accent-glow));
+    filter: none;
     transition: filter var(--vb-duration-normal);
 }
 
 .vb-sidebar-brand:hover .vb-sidebar-logo {
-    filter: drop-shadow(0 0 16px var(--vb-accent-glow));
+    filter: none;
 }
 
 .vb-sidebar-name {
@@ -1683,30 +1683,6 @@
 }
 
 
-/* ── Dashboard: Greeting ─────────────────────────────────────── */
-.vb-greeting {
-    margin-bottom: 1.5rem;
-}
-
-.vb-greeting-title {
-    font-size: var(--vb-text-4xl);
-    font-weight: 700;
-    letter-spacing: var(--vb-tracking-tighter);
-    line-height: var(--vb-leading-tight);
-    margin-bottom: 0.3125rem;
-    background: linear-gradient(180deg, var(--vb-text-primary) 0%, var(--vb-text-secondary) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    display: inline-block;
-}
-
-.vb-greeting-subtitle {
-    font-size: var(--vb-text-sm);
-    color: var(--vb-text-tertiary);
-    font-weight: 400;
-}
-
 /* ── Dashboard: Metric grid ──────────────────────────────────── */
 .vb-metrics {
     display: grid;
@@ -1732,7 +1708,7 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 2px;
-    background: var(--vb-accent-gradient);
+    background: var(--vb-accent);
     opacity: 0;
     transition: opacity var(--vb-duration-normal) var(--vb-ease-out);
 }
@@ -1822,7 +1798,7 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: var(--vb-accent-gradient);
+    background: var(--vb-accent);
     opacity: 0;
     transition: opacity var(--vb-duration-normal);
 }
@@ -2266,29 +2242,31 @@
 
 /* ── Public URL component ────────────────────────────────────── */
 
-/* Card header with icon: .vb-card-title-row > icon + text wrapper */
+/* Title-only cards use one row. A description adds a second text row. */
 .vb-card-title-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
     align-items: center;
-    gap: 0.625rem;
+    column-gap: 0.625rem;
 }
-/* When a wrapper div holds title+desc, top-align the icon with the title line */
-.vb-card-title-row > div:has(.vb-card-desc) {
-    /* The row stays center-aligned; the wrapper is a flex column so icon
-       aligns to the vertical center of the wrapper min-height. For title+desc,
-       switch the row to flex-start so the icon sits beside the title. */
+.vb-card-title-row > div:has(> .vb-card-desc:not(:empty)) {
+    display: contents;
 }
-.vb-card-title-row:has(.vb-card-desc) {
-    align-items: flex-start;
+.vb-card-title-row .vb-card-title,
+.vb-card-title-row .vb-card-desc {
+    grid-column: 2;
+}
+.vb-card-title-row .vb-card-desc {
+    margin-top: 0.25rem;
 }
 .vb-card-icon {
+    display: block;
     width: 20px;
     height: 20px;
-    color: var(--vb-text-tertiary);
+    color: var(--vb-accent);
     flex-shrink: 0;
-}
-.vb-card-title-row:has(.vb-card-desc) .vb-card-icon {
-    margin-top: 2px;
+    grid-column: 1;
+    grid-row: 1;
 }
 
 /* Inline URL preview inside a card body (below a slug input) */
@@ -2590,8 +2568,8 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 0.625rem;
-    margin-bottom: 1.5rem;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
 }
 
 /* Tighten header margin when tabs immediately follow */
@@ -2607,9 +2585,20 @@
     flex-shrink: 0;
 }
 
+.vb-page-heading { min-width: 0; }
+.vb-page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    flex-shrink: 0;
+}
+.vb-page-actions .vb-btn { min-height: 36px; font-size: var(--vb-text-sm); border-radius: var(--vb-radius-md); }
 .vb-page-title {
     font-size: var(--vb-text-xl);
-    font-weight: 700;
+    font-weight: 600;
+    overflow-wrap: anywhere;
     letter-spacing: var(--vb-tracking-tight);
     display: flex;
     align-items: center;
@@ -2875,7 +2864,7 @@
 }
 
 .vb-table th {
-    font-size: 0.6875rem; /* slightly refined headers */
+    font-size: var(--vb-text-xs);
     font-weight: 530; /* Less harsh font weight */
     color: var(--vb-text-tertiary);
     text-align: left;
@@ -3558,7 +3547,7 @@
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 2px;
-    background: var(--vb-accent-gradient);
+    background: var(--vb-accent);
     opacity: 0;
     transition: opacity var(--vb-duration-normal) var(--vb-ease-out);
 }
@@ -5037,7 +5026,7 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 2px;
-    background: var(--vb-accent-gradient);
+    background: var(--vb-accent);
     opacity: 0.6;
     transition: opacity var(--vb-duration-normal) var(--vb-ease-out);
 }
@@ -5963,12 +5952,16 @@
 
 /* ── Form Utilities (settings forms) ─── */
 
-/* Textarea styling: proper padding, vertical resize, autosize-ready */
-.vb-textarea {
+/* Textareas use their rows instead of the single-line input height. */
+.vb-textarea,
+:where(textarea).vb-input {
     resize: vertical;
     height: auto;
-    padding: 0.625rem 0.75rem;
-    min-height: 5rem;
+    padding: 0.75rem;
+    line-height: 1.5;
+    min-height: calc(4.5em + 1.5rem + 2px);
+}
+.vb-textarea {
     overflow: hidden; /* autosize: prevents scrollbar flash during resize */
 }
 
@@ -6211,21 +6204,6 @@
 
 /* ─── Embed settings ─── */
 
-/* Card title with icon */
-.vb-card-title-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-}
-
-.vb-card-icon {
-    width: 20px;
-    height: 20px;
-    color: var(--vb-accent);
-    flex-shrink: 0;
-    margin-top: 2px;
-}
-
 /* Button icon (small, inside buttons) */
 .vb-btn-icon-sm {
     width: 14px;
@@ -6425,7 +6403,7 @@
     }
 
     .vb-card-title-row {
-        gap: 0.5rem;
+        column-gap: 0.5rem;
     }
 }
 
@@ -6797,3 +6775,202 @@
     [dir="rtl"] .vb-table .vb-text-left       { text-align: right; }
 }
 
+
+/* Operational dashboards: work leads; aggregate counts remain compact context. */
+.vb-dashboard-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+.vb-dashboard-date, .vb-dashboard-kicker {
+    color: var(--vb-text-secondary);
+    font-size: var(--vb-text-sm);
+    font-weight: 500;
+    line-height: var(--vb-leading-normal);
+}
+.vb-dashboard-title {
+    font-size: var(--vb-text-2xl);
+    font-weight: 650;
+    letter-spacing: var(--vb-tracking-tight);
+    line-height: var(--vb-leading-snug);
+    margin-top: var(--space-1);
+}
+.vb-dashboard-actions, .vb-dashboard-footer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+}
+.vb-dashboard-notice {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-4);
+    border: 1px solid var(--vb-border-default);
+    border-radius: var(--vb-radius-md);
+    background: var(--vb-bg-surface);
+    color: var(--vb-text-primary);
+    text-decoration: none;
+    transition: border-color var(--vb-duration-fast), background var(--vb-duration-fast);
+}
+.vb-dashboard-notice:hover { border-color: var(--vb-accent); background: var(--vb-bg-hover); }
+.vb-dashboard-notice > span { display: flex; flex: 1; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-4); }
+.vb-dashboard-notice strong { font-size: var(--vb-text-base); font-weight: 600; }
+.vb-dashboard-notice span span { color: var(--vb-text-secondary); font-size: var(--vb-text-sm); }
+.vb-dashboard-notice > svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--vb-text-secondary); }
+.vb-dashboard-setup { padding: var(--space-4); border-inline-start: 2px solid var(--vb-warning); margin-bottom: var(--space-4); background: var(--vb-bg-surface); }
+.vb-dashboard-setup h3 { font-size: var(--vb-text-base); font-weight: 600; }
+.vb-dashboard-setup p { font-size: var(--vb-text-sm); color: var(--vb-text-secondary); margin-top: var(--space-2); }
+.vb-dashboard-setup-actions { display: flex; flex-wrap: wrap; column-gap: var(--space-5); row-gap: var(--space-2); margin-top: var(--space-2); }
+.vb-dashboard-next { display: flex; align-items: center; justify-content: space-between; gap: var(--space-5); margin-bottom: var(--space-5); padding: var(--space-5) 0; border-block: 1px solid var(--vb-border-default); }
+.vb-dashboard-next > div:first-child { min-width: 0; overflow-wrap: anywhere; }
+.vb-dashboard-next-name { display: inline-block; margin-top: var(--space-1); font-size: var(--vb-text-xl); font-weight: 600; color: var(--vb-text-primary); text-decoration: none; }
+.vb-dashboard-next-name:hover { text-decoration: underline; text-underline-offset: var(--space-1); }
+.vb-dashboard-next .vb-status { margin-top: var(--space-2); }
+.vb-dashboard-next p, .vb-dashboard-next-time span { color: var(--vb-text-secondary); font-size: var(--vb-text-sm); }
+.vb-dashboard-next-time { display: grid; gap: var(--space-1); min-width: 0; max-width: 50%; text-align: end; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.vb-dashboard-next-time .vb-cell-primary { font-size: var(--vb-text-lg); font-weight: 600; color: var(--vb-text-primary); }
+.vb-booking-datetime { display: grid; gap: var(--space-1); min-width: 0; max-width: 100%; font-variant-numeric: tabular-nums; }
+.vb-booking-datetime > span { white-space: normal; overflow-wrap: anywhere; }
+.vb-dashboard-schedule { margin-bottom: var(--space-5); }
+.vb-dashboard-section-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--vb-border-subtle); }
+.vb-dashboard-section-header h3 { font-size: var(--vb-text-base); font-weight: 600; }
+.vb-dashboard-quiet { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-5) var(--space-4); }
+.vb-dashboard-quiet > svg { width: 20px; height: 20px; color: var(--vb-text-secondary); flex-shrink: 0; }
+.vb-dashboard-quiet h3, .vb-dashboard-quiet h4 { font-size: var(--vb-text-base); font-weight: 550; }
+.vb-dashboard-quiet p { color: var(--vb-text-secondary); font-size: var(--vb-text-sm); margin-top: var(--space-1); }
+.vb-dashboard-schedule-list { padding: 0; }
+.vb-dashboard-schedule-row.vb-schedule-pill {
+    display: grid;
+    grid-template-columns: 6.5rem var(--space-2) minmax(0, 1fr) auto 16px;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    margin: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--vb-border-subtle);
+    color: var(--vb-text-primary);
+    background: transparent;
+    font-size: var(--vb-text-sm);
+    line-height: var(--vb-leading-normal);
+    text-decoration: none;
+    transition: background var(--vb-duration-fast);
+}
+.vb-dashboard-schedule-row--stay.vb-schedule-pill { grid-template-columns: minmax(9rem, 11rem) var(--space-2) minmax(0, 1fr) auto 16px; }
+.vb-dashboard-schedule-row.vb-schedule-pill:last-child { border-bottom: none; }
+.vb-dashboard-schedule-row.vb-schedule-pill:hover { background: var(--vb-bg-hover); transform: none; box-shadow: none; }
+.vb-dashboard-schedule-time, .vb-dashboard-schedule-person { display: grid; gap: var(--space-1); min-width: 0; }
+.vb-dashboard-schedule-time { font-variant-numeric: tabular-nums; }
+.vb-dashboard-schedule-time .vb-cell-primary { font-size: var(--vb-text-sm); font-weight: 550; }
+.vb-dashboard-schedule-time strong, .vb-dashboard-schedule-person strong { font-weight: 550; }
+.vb-dashboard-schedule-time > span, .vb-dashboard-schedule-person > span { color: var(--vb-text-secondary); font-size: var(--vb-text-xs); }
+.vb-dashboard-schedule-person { overflow-wrap: anywhere; }
+.vb-dashboard-schedule-person .vb-schedule-pill-staff { font-size: inherit; opacity: 1; margin: 0; }
+.vb-schedule-service-dot { width: var(--space-2); height: var(--space-2); border-radius: var(--vb-radius-full); }
+.vb-dashboard-staff { margin-bottom: var(--space-5); }
+.vb-dashboard-staff .vb-staff-today-list { padding: var(--space-2) 0 0; }
+.vb-dashboard-staff .vb-staff-today-row { padding-inline: 0; }
+.vb-dashboard-staff .vb-staff-today-title { display: block; color: var(--vb-text-secondary); font-size: var(--vb-text-xs); }
+.vb-dashboard-staff .vb-staff-today-window { font-size: var(--vb-text-xs); color: var(--vb-text-secondary); font-variant-numeric: tabular-nums; }
+.vb-dashboard-support { color: var(--vb-text-secondary); font-size: var(--vb-text-sm); margin-top: var(--space-2); }
+.vb-dashboard-metrics {
+    font-variant-numeric: tabular-nums;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    border-block: 1px solid var(--vb-border-default);
+    padding-block: var(--space-4);
+    margin-block: var(--space-5);
+}
+.vb-dashboard-metrics > div { display: flex; flex-direction: column; gap: var(--space-1); padding-inline: var(--space-4); border-inline-start: 1px solid var(--vb-border-subtle); }
+.vb-dashboard-metrics > div:first-child { padding-inline-start: 0; border-inline-start: none; }
+.vb-dashboard-metrics > div > span { font-size: var(--vb-text-xs); color: var(--vb-text-secondary); }
+.vb-dashboard-metrics > div > strong { font-size: var(--vb-text-xl); font-weight: 600; font-variant-numeric: tabular-nums; }
+.vb-dashboard-metrics .vb-metric { padding-block: 0; background: transparent; box-shadow: none; border-radius: 0; overflow: visible; }
+.vb-dashboard-metrics .vb-metric:hover { transform: none; box-shadow: none; }
+.vb-dashboard-metrics .vb-metric::before, .vb-dashboard-metrics .vb-metric-accent { display: none; }
+.vb-dashboard-metrics .vb-metric-label { font-size: var(--vb-text-xs); text-transform: none; letter-spacing: var(--vb-tracking-normal); color: var(--vb-text-secondary); }
+.vb-dashboard-metrics .vb-metric-value { font-size: var(--vb-text-xl); line-height: var(--vb-leading-snug); margin: 0; }
+.vb-dashboard-metrics .vb-metric-header { margin: 0; }
+.vb-dashboard-metrics .vb-metric-icon { display: none; }
+.vb-dashboard-footer-actions { justify-content: flex-end; }
+
+/* Business context and disclosure actions stay in the existing permission scope. */
+.vb-sidebar-context { display: block; padding: var(--space-3); margin-bottom: var(--space-2); color: var(--vb-text-primary); font-size: var(--vb-text-sm); font-weight: 600; overflow-wrap: anywhere; text-decoration: none; border-bottom: 1px solid var(--vb-border-subtle); }
+.vb-topbar-context { max-width: 15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--vb-text-secondary); font-size: var(--vb-text-sm); text-decoration: none; }
+.vb-topbar-context::after { content: '/'; color: var(--vb-text-tertiary); margin-inline-start: var(--space-3); }
+.vb-topbar-left { min-width: 0; }
+.vb-topbar-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vb-sidebar-section-label { font-size: var(--vb-text-xs); letter-spacing: var(--vb-tracking-wide); color: var(--vb-text-secondary); }
+.vb-sidebar-link { color: var(--vb-text-secondary); transition: background var(--vb-duration-fast), color var(--vb-duration-fast); }
+.vb-sidebar-link svg, .vb-sidebar-link [data-lucide] { color: var(--vb-text-tertiary); }
+.vb-sidebar-external { opacity: 1; }
+.vb-sidebar-footer { font-size: var(--vb-text-xs); color: var(--vb-text-tertiary); }
+.vb-sidebar-close { display: none; }
+.vb-business-name { color: var(--vb-text-primary); text-decoration: none; }
+.vb-business-name:hover { text-decoration: underline; text-underline-offset: var(--space-1); }
+/* Row menus are portalled to body by row-actions.js, above table scroll containers. */
+.vb-business-links { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-1); }
+.vb-row-actions { flex-shrink: 0; }
+.vb-row-actions > summary { list-style: none; cursor: pointer; }
+.vb-row-actions > summary::-webkit-details-marker { display: none; }
+.vb-row-actions > summary svg { transition: transform var(--vb-duration-fast); }
+.vb-row-actions[open] > summary svg { transform: rotate(180deg); }
+.vb-row-actions-menu { position: fixed; z-index: 1000; display: grid; gap: var(--space-1); width: max-content; min-width: 13rem; margin: 0; padding: var(--space-2); overflow-y: auto; border: 1px solid var(--vb-border-default); border-radius: var(--vb-radius-md); background: var(--vb-bg-raised); box-shadow: var(--vb-shadow-lg); }
+.vb-row-actions-menu[hidden] { display: none; }
+.vb-row-actions-menu > a, .vb-row-actions-menu button { display: flex; align-items: center; gap: var(--space-2); width: 100%; min-height: 36px; padding: var(--space-2); border: none; background: transparent; border-radius: var(--vb-radius-sm); color: var(--vb-text-primary); font-size: var(--vb-text-sm); font-weight: 450; text-align: start; text-decoration: none; cursor: pointer; }
+.vb-row-actions-menu > a:hover, .vb-row-actions-menu button:hover { background: var(--vb-bg-hover); }
+.vb-row-actions-menu svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--vb-text-secondary); }
+.vb-business-archive { margin-top: var(--space-1); padding-top: var(--space-1); border-top: 1px solid var(--vb-border-default); }
+.vb-business-archive svg { color: var(--vb-error); }
+.vb-row-actions-menu .vb-copy-btn { border: none; }
+.vb-row-actions-menu .vb-copy-check svg { color: var(--vb-success); }
+.vb-filter-tab-count { font-size: var(--vb-text-xs); }
+
+@media (max-width: 768px) {
+    .vb-dashboard-header { align-items: flex-start; flex-direction: column; }
+    .vb-dashboard-actions { width: 100%; }
+    .vb-dashboard-next-time { text-align: start; }
+    .vb-topbar-context { max-width: 7rem; }
+    .vb-hamburger { width: 44px; height: 44px; flex-shrink: 0; }
+    .vb-sidebar-brand { padding-inline-end: 3.5rem; }
+    .vb-sidebar-close { display: flex; align-items: center; justify-content: center; position: absolute; top: var(--space-1); inset-inline-end: var(--space-1); width: 44px; height: 44px; border: none; border-radius: var(--vb-radius-md); color: var(--vb-text-secondary); background: transparent; cursor: pointer; }
+    .vb-sidebar-close svg { width: 18px; height: 18px; }
+    .vb-sidebar-close:hover { background: var(--vb-bg-hover); }
+    .vb-dashboard-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--space-4); }
+    .vb-dashboard-metrics > div:nth-child(3) { padding-inline-start: 0; border-inline-start: none; }
+}
+@media (max-width: 480px) {
+    .vb-dashboard-next-time { max-width: 100%; }
+    .vb-dashboard-next { flex-direction: column; align-items: flex-start; gap: var(--space-3); }
+    .vb-dashboard-schedule-row.vb-schedule-pill { grid-template-columns: 5.5rem var(--space-2) minmax(0, 1fr); gap: var(--space-2); }
+    .vb-dashboard-schedule-time { grid-row: span 2; align-self: start; }
+    .vb-dashboard-schedule-row > .vb-status { grid-column: 3; justify-self: start; }
+    .vb-dashboard-schedule-row > svg { display: none; }
+    .vb-dashboard-footer-actions { justify-content: flex-start; }
+    .vb-dashboard-staff .vb-staff-today-row { flex-wrap: wrap; }
+    .vb-dashboard-staff .vb-staff-today-windows { flex-wrap: wrap; }
+}
+
+/* One header/action rhythm across list, detail and configuration pages. */
+@media (max-width: 768px) {
+    .vb-page-header { flex-direction: column; align-items: stretch; }
+    .vb-page-actions { justify-content: flex-start; }
+    .vb-page-actions .vb-btn { max-width: 100%; min-height: 44px; }
+}
+
+/* Stays need date facts, rather than the narrow time gutter used by appointments. */
+@media (max-width: 640px) {
+    .vb-dashboard-schedule-row--stay.vb-schedule-pill { grid-template-columns: var(--space-2) minmax(0, 1fr); }
+    .vb-dashboard-schedule-row--stay .vb-dashboard-schedule-person { grid-column: 2; grid-row: 1; }
+    .vb-dashboard-schedule-row--stay .vb-schedule-service-dot { grid-column: 1; grid-row: 1; }
+    .vb-dashboard-schedule-row--stay .vb-dashboard-schedule-time { grid-column: 2; grid-row: 2; }
+    .vb-dashboard-schedule-row--stay > .vb-status { grid-column: 2; grid-row: 3; }
+    .vb-dashboard-schedule-row--stay > svg { display: none; }
+}
+@media (max-width: 768px) {
+    .vb-row-actions > summary, .vb-row-actions-menu > a, .vb-row-actions-menu button { min-height: 44px; }
+}

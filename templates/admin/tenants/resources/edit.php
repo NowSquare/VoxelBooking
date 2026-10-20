@@ -11,19 +11,15 @@ $resource = $resource ?? [];
 ob_start();
 ?>
 
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.resources.edit') ?></h2>
-        <p class="vb-page-subtitle"><?= htmlspecialchars($resource['name'] ?? '', ENT_QUOTES, 'UTF-8') ?></p>
-    </div>
-    <div class="vb-page-actions">
-        <a href="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/resources"
-           class="vb-btn vb-btn-ghost">
-            <i data-lucide="arrow-left" class="w-4 h-4"></i>
-            <?= __('admin.resources.title') ?>
-        </a>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.resources.edit'),
+    'subtitle' => $resource['name'] ?? '',
+    'backUrl' => '/admin/tenants/' . $tenantId . '/resources',
+    'backLabel' => __('admin.resources.title'),
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <?php if ($flash): ?>
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>

@@ -73,11 +73,11 @@ final class BookingLinkCopyOutputTest extends TestCase
             'Dashboard must contain copy icon element'
         );
 
-        $this->assertStringContainsString(
-            'vb-action-rail',
-            $html,
-            'Dashboard must use bespoke action-rail component'
-        );
+        $dom = new \DOMDocument();
+        @$dom->loadHTML($html);
+        $xpath = new \DOMXPath($dom);
+        $this->assertSame(1, $xpath->query('//div[contains(@class, "vb-dashboard-header")]//button[@data-copy-url]')->length,
+            'Sharing is reachable from the dated operational header, including on a quiet day');
     }
 
     // ── Surface 2: Operator Tenant List ──

@@ -24,14 +24,7 @@ $baseUrl = "/admin/tenants/" . htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8');
 ob_start();
 ?>
 
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.customers.page_title') ?></h2>
-        <p class="vb-page-subtitle">
-            <?= __p('admin.customers.showing_count', (int) $total) ?>
-        </p>
-    </div>
-    <div class="vb-page-actions">
+<?php ob_start(); ?>
         <?php
         $exportParams = array_filter(['search' => $search], fn($v) => $v !== '');
         $exportUrl = $baseUrl . '/customers/export' . ($exportParams ? '?' . http_build_query($exportParams) : '');
@@ -42,8 +35,14 @@ ob_start();
             <i data-lucide="download" class="vb-icon-sm"></i>
             <?= __('admin.common.export_csv') ?>
         </a>
-    </div>
-</div>
+    <?php
+$pageHeader = [
+    'title' => __('admin.customers.page_title'),
+    'subtitle' => __p('admin.customers.showing_count', (int) $total),
+    'actions' => ob_get_clean(),
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <?php if (empty($customers) && $search === ''): ?>
     <div class="vb-empty-state vb-animate-in">

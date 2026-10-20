@@ -20,12 +20,13 @@ $isChecked = function (string $field) use ($tenant): string {
 ob_start();
 ?>
 
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.tenant_settings.title') ?></h2>
-        <p class="vb-page-subtitle"><?= e($tenant['name'] ?? '') ?></p>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.tenant_settings.title'),
+    'subtitle' => $tenant['name'] ?? '',
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <?php if ($flash): ?>
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>

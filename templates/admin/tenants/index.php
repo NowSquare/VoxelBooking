@@ -38,15 +38,10 @@ ob_start();
     <?php endif; ?>
 <?php endif; ?>
 
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.tenants.title') ?></h2>
-        <p class="vb-page-subtitle">
-            <?= __('admin.tenants.subtitle') ?> · <?= __p('admin.tenants.showing_count', (int) ($counts['total'] ?? 0)) ?>
-        </p>
-    </div>
-    <div class="vb-page-actions">
-        <?php
+<?php
+ob_start();
+?>
+<?php
         $exportParams = array_filter([
             'search' => $filters['search'] ?? '',
             'status' => ($filters['status'] ?? '') !== 'all' ? ($filters['status'] ?? '') : '',
@@ -63,8 +58,14 @@ ob_start();
             <i data-lucide="plus"></i>
             <?= __('admin.tenants.create') ?>
         </a>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.tenants.title'),
+    'subtitle' => __('admin.tenants.subtitle') . ' · ' . __p('admin.tenants.showing_count', (int) ($counts['total'] ?? 0)),
+    'actions' => ob_get_clean(),
+];
+include __DIR__ . '/../partials/page-header.php';
+?>
 
 <?php
 $hasActiveFilters = !empty($filters['search'] ?? '') || (!empty($filters['status'] ?? '') && ($filters['status'] ?? '') !== 'all');
@@ -138,17 +139,17 @@ $currentSearch = $filters['search'] ?? '';
                         <th><?= __('admin.tenants.status') ?></th>
                         <th class="vb-text-center"><?= __('admin.tenants.bookings') ?></th>
                         <th class="vb-text-center"><?= __('admin.tenants.services') ?></th>
-                        <th><?= __('admin.tenants.actions') ?></th>
+                        <th class="vb-text-right"><?= __('admin.tenants.actions') ?></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($tenants as $i => $tenant): ?>
                     <tr class="vb-fade-in-up stagger-<?= min($i + 1, 6) ?>">
                         <td data-label="<?= __('admin.tenants.name') ?>">
-                            <div class="vb-cell-name">
+                            <a class="vb-cell-name vb-business-name" href="/admin/tenants/<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>">
                                 <span class="vb-color-dot" style="background: <?= htmlspecialchars($tenant['brand_color'] ?? '#2563EB', ENT_QUOTES, 'UTF-8') ?>"></span>
                                 <?= htmlspecialchars($tenant['name'], ENT_QUOTES, 'UTF-8') ?>
-                            </div>
+                            </a>
                             <div class="vb-cell-detail">/book/<?= htmlspecialchars($tenant['slug'], ENT_QUOTES, 'UTF-8') ?></div>
                         </td>
                         <td data-label="<?= __('admin.tenants.pattern') ?>">
@@ -161,49 +162,42 @@ $currentSearch = $filters['search'] ?? '';
                         </td>
                         <td class="vb-text-center" data-label="<?= __('admin.tenants.bookings') ?>"><?= (int) $tenant['booking_count'] ?></td>
                         <td class="vb-text-center" data-label="<?= __('admin.tenants.services') ?>"><?= (int) $tenant['service_count'] ?></td>
-                        <td data-label="<?= __('admin.tenants.actions') ?>">
-                            <div class="vb-action-group">
-                                <a href="/admin/tenants/<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>/edit"
-                                   class="vb-btn vb-btn-ghost vb-btn-sm"
-                                   title="<?= __('admin.common.edit') ?>">
-                                    <i data-lucide="pencil"></i>
+                        <td class="vb-text-right" data-label="<?= __('admin.tenants.actions') ?>">
+                            <div class="vb-business-links">
+                                <a href="/book/<?= htmlspecialchars($tenant['slug'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener" class="vb-btn vb-btn-ghost vb-btn-sm">
+                                    <?= __('admin.tenants.view_booking_page') ?><i data-lucide="external-link"></i>
                                 </a>
-                                <a href="/book/<?= htmlspecialchars($tenant['slug'], ENT_QUOTES, 'UTF-8') ?>"
-                                   target="_blank"
-                                   rel="noopener"
-                                   class="vb-btn vb-btn-ghost vb-btn-sm"
-                                   title="<?= __('admin.tenants.view_booking_page') ?>">
-                                    <i data-lucide="external-link"></i>
-                                </a>
-                                <button type="button"
-                                        class="vb-btn vb-btn-ghost vb-btn-sm"
-                                        data-copy-url="<?= htmlspecialchars((isset($_SERVER['REQUEST_SCHEME']) ? $_SERVER['REQUEST_SCHEME'] : 'https') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/book/' . $tenant['slug'], ENT_QUOTES, 'UTF-8') ?>"
-                                        @click="copyBookingUrl"
-                                        title="<?= __('admin.common.copy_booking_url') ?>">
-                                    <span class="vb-copy-icon"><i data-lucide="copy"></i></span>
-                                    <span class="vb-copy-check"><i data-lucide="check"></i></span>
-                                </button>
-                                <form method="POST" action="/admin/tenants/<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>/impersonate" class="vb-inline-form">
-                                    <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
-                                    <button type="submit" class="vb-btn vb-btn-ghost vb-btn-sm" title="<?= __('admin.impersonation.start') ?>">
-                                        <i data-lucide="eye"></i>
-                                    </button>
-                                </form>
-                                <?php if ($tenant['status'] !== 'archived'): ?>
-                                    <form method="POST" action="/admin/tenants/<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>/archive" class="vb-inline-form">
-                                        <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
-                                        <button type="submit" class="vb-btn vb-btn-ghost vb-btn-sm" title="<?= __('admin.tenants.archive') ?>">
-                                            <i data-lucide="archive"></i>
+                                <details class="vb-row-actions" data-row-actions>
+                                    <summary class="vb-btn vb-btn-ghost vb-btn-sm" id="tenant-actions-<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>"
+                                             aria-haspopup="menu" aria-expanded="false" aria-controls="tenant-actions-menu-<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>">
+                                        <span aria-hidden="true"><?= __('admin.common.actions') ?></span>
+                                        <span class="sr-only"><?= htmlspecialchars(__('admin.tenants.more_actions', ['name' => $tenant['name']]), ENT_QUOTES, 'UTF-8') ?></span>
+                                        <i data-lucide="chevron-down" aria-hidden="true"></i>
+                                    </summary>
+                                    <div class="vb-row-actions-menu" id="tenant-actions-menu-<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>"
+                                         role="menu" aria-labelledby="tenant-actions-<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>" hidden>
+                                        <a href="/admin/tenants/<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>/edit"><i data-lucide="pencil" aria-hidden="true"></i><?= __('admin.common.edit') ?></a>
+                                        <button type="button" class="vb-copy-btn" @click="copyBookingUrl" data-copy-url="<?= htmlspecialchars(($_SERVER['REQUEST_SCHEME'] ?? 'https') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/book/' . $tenant['slug'], ENT_QUOTES, 'UTF-8') ?>">
+                                            <span class="vb-copy-icon"><i data-lucide="copy" aria-hidden="true"></i></span><span class="vb-copy-check"><i data-lucide="check" aria-hidden="true"></i></span><?= __('admin.common.copy_booking_url') ?>
                                         </button>
-                                    </form>
-                                <?php else: ?>
-                                    <form method="POST" action="/admin/tenants/<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>/activate" class="vb-inline-form">
-                                        <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
-                                        <button type="submit" class="vb-btn vb-btn-ghost vb-btn-sm" title="<?= __('admin.tenants.activate') ?>">
-                                            <i data-lucide="rotate-ccw"></i>
-                                        </button>
-                                    </form>
-                                <?php endif; ?>
+                                        <form method="POST" action="/admin/tenants/<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>/impersonate">
+                                            <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                                            <button type="submit"><i data-lucide="eye" aria-hidden="true"></i><?= __('admin.impersonation.start') ?></button>
+                                        </form>
+                                        <?php if ($tenant['status'] !== 'archived'): ?>
+                                        <form method="POST" action="/admin/tenants/<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>/archive" class="vb-business-archive"
+                                              data-confirm="<?= htmlspecialchars(__('admin.tenants.archive_confirm', ['name' => $tenant['name']]), ENT_QUOTES, 'UTF-8') ?>" data-confirm-text="<?= __('admin.tenants.archive') ?>">
+                                            <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                                            <button type="submit"><i data-lucide="archive" aria-hidden="true"></i><?= __('admin.tenants.archive') ?></button>
+                                        </form>
+                                        <?php else: ?>
+                                        <form method="POST" action="/admin/tenants/<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>/activate">
+                                            <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                                            <button type="submit"><i data-lucide="rotate-ccw" aria-hidden="true"></i><?= __('admin.tenants.activate') ?></button>
+                                        </form>
+                                        <?php endif; ?>
+                                    </div>
+                                </details>
                             </div>
                         </td>
                     </tr>

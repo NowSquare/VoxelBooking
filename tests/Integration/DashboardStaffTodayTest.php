@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
  * Covers:
  * - Staff-relevant tenant with staff working today
  * - Staff-relevant tenant with staff but none working today
- * - Staff-relevant tenant with no staff (CTA to create)
+ * - Timeslot tenant without staff-required services has no staff setup warning
  * - Non-staff-relevant pattern does not show the section
  * - Tenant scoping: staff from another tenant never appears
  */
@@ -147,16 +147,16 @@ final class DashboardStaffTodayTest extends TestCase
     // 4. Timeslot tenant with no staff → CTA to create
     // ════════════════════════════════════════════════════════════════
 
-    public function test_timeslot_no_staff_shows_create_cta(): void
+    public function test_timeslot_without_staff_required_services_does_not_request_staff(): void
     {
         $this->doLoginOperator();
         $r = $this->get('/admin/tenants/' . self::TENANT_NONSTAFFING);
         $this->assertSame(200, $r['code']);
 
-        $this->assertStringContainsString("Who's working today", $r['body'],
-            'Section must render even with no staff');
-        $this->assertStringContainsString('staff/create', $r['body'],
-            'CTA link to create staff must appear');
+        $this->assertStringNotContainsString('vb-dash-staff-today-wrap', $r['body'],
+            'A business with no staff has no staff schedule section');
+        $this->assertStringNotContainsString('staff/create', $r['body'],
+            'A timeslot pattern alone does not require staff');
     }
 
     // ════════════════════════════════════════════════════════════════

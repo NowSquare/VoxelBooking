@@ -10,16 +10,21 @@ $tenantId = $tenantId ?? '';
 
 ob_start();
 ?>
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.users.page_title') ?></h2>
-        <p class="vb-page-subtitle"><?= __('admin.users.page_subtitle') ?></p>
-    </div>
-    <a href="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/users/invite" class="vb-btn vb-btn-primary">
+<?php
+ob_start();
+?>
+<a href="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/users/invite" class="vb-btn vb-btn-primary">
         <i data-lucide="user-plus" class="vb-icon-md"></i>
         <?= __('admin.users.invite_btn') ?>
     </a>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.users.page_title'),
+    'subtitle' => __('admin.users.page_subtitle'),
+    'actions' => ob_get_clean(),
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <?php if (!empty($flash)): ?>
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>
@@ -95,7 +100,7 @@ ob_start();
                         </td>
                         <td class="vb-text-secondary">
                             <?php if ($bu['last_login_at']): ?>
-                                <?= htmlspecialchars(\App\Engine\Locale::date(new \DateTimeImmutable($bu['last_login_at'])) . ' ' . date('H:i', strtotime($bu['last_login_at'])), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars(\App\Engine\Locale::date(new \DateTimeImmutable($bu['last_login_at'])) . ' ' . \App\Engine\Locale::time(new \DateTimeImmutable($bu['last_login_at'])), ENT_QUOTES, 'UTF-8') ?>
                             <?php else: ?>
                                 <span class="vb-text-tertiary">—</span>
                             <?php endif; ?>

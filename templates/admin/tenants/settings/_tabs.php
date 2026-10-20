@@ -37,7 +37,7 @@ $tabs['embed']         = ['label' => __('admin.tenant_settings.tab_embed'),     
 <nav class="vb-tabs" aria-label="<?= __('admin.tenant_settings.title') ?>">
     <?php foreach ($tabs as $key => $tab): ?>
     <a href="<?= htmlspecialchars($tab['href'], ENT_QUOTES, 'UTF-8') ?>"
-       class="vb-tab <?= $activeTab === $key ? 'active' : '' ?>"
+       class="vb-tab <?= $activeTab === $key ? 'active' : '' ?>" <?= $activeTab === $key ? 'aria-current="page"' : '' ?>
        id="tab-<?= $key ?>">
         <i data-lucide="<?= $tab['icon'] ?>"></i>
         <?= $tab['label'] ?>

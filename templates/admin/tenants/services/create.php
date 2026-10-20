@@ -8,12 +8,14 @@ $tenantId = $tenantId ?? '';
 ob_start();
 ?>
 
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.services.new') ?></h2>
-        <p class="vb-page-subtitle"><?= htmlspecialchars($tenant['name'] ?? '', ENT_QUOTES, 'UTF-8') ?></p>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.services.new'),
+    'backUrl' => '/admin/tenants/' . $tenantId . '/services',
+    'backLabel' => __('admin.services.title'),
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <?php if ($flash): ?>
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>

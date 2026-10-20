@@ -17,12 +17,13 @@ for ($i = 0; $i < 7; $i++) {
 ob_start();
 ?>
 
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.capacity_slots.title') ?></h2>
-        <p class="vb-page-subtitle"><?= __('admin.capacity_slots.subtitle') ?></p>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.capacity_slots.title'),
+    'subtitle' => __('admin.capacity_slots.subtitle'),
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <?php if ($flash): ?>
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>
@@ -132,8 +133,8 @@ ob_start();
                     <?php foreach ($slots as $i => $slot): ?>
                     <tr class="vb-fade-in-up stagger-<?= min($i + 1, 6) ?> <?= !(int) $slot['is_active'] ? 'vb-row-inactive' : '' ?>">
                         <td class="vb-cell-name"><?= $dayNames[(int) $slot['day_of_week']] ?></td>
-                        <td class="vb-text-secondary"><?= substr($slot['start_time'], 0, 5) ?></td>
-                        <td class="vb-text-secondary"><?= substr($slot['end_time'], 0, 5) ?></td>
+                        <td class="vb-text-secondary"><?= \App\Engine\Locale::time(new \DateTimeImmutable($slot['start_time'])) ?></td>
+                        <td class="vb-text-secondary"><?= \App\Engine\Locale::time(new \DateTimeImmutable($slot['end_time'])) ?></td>
                         <td class="vb-text-center">
                             <span class="vb-badge vb-badge-neutral"><?= (int) $slot['max_capacity'] ?></span>
                         </td>

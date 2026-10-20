@@ -14,12 +14,13 @@ $currentUser = $user ?? [];
 ob_start();
 ?>
 
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.account.page_title') ?></h2>
-        <p class="vb-page-subtitle"><?= __('admin.account.page_subtitle') ?></p>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.account.page_title'),
+    'subtitle' => __('admin.account.page_subtitle'),
+];
+include __DIR__ . '/partials/page-header.php';
+?>
 
 <?php if ($flash): ?>
     <?php include __DIR__ . '/../partials/alert.php'; ?>

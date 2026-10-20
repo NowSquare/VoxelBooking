@@ -265,9 +265,9 @@ final class AdminRoutesTest extends TestCase
         $r = $this->get('/admin/tenants/create');
         $this->assertSame(200, $r['code']);
         $this->assertStringContainsString(
-            '<title>New Business',
+            '<title>New business · ',
             $r['body'],
-            'Browser tab should say "New Business", not just "Businesses"'
+            'Browser tab should identify the new business form'
         );
     }
 
@@ -277,9 +277,9 @@ final class AdminRoutesTest extends TestCase
         $r = $this->get('/admin/tenants/' . TestFixtures::BUSINESS_TENANT_ID . '/edit');
         $this->assertSame(200, $r['code']);
         $this->assertStringContainsString(
-            '<title>Edit Business',
+            '<title>Edit business · ',
             $r['body'],
-            'Browser tab should say "Edit Business", not just "Businesses"'
+            'Browser tab should identify the business edit form'
         );
     }
 
@@ -289,9 +289,9 @@ final class AdminRoutesTest extends TestCase
         $r = $this->get('/admin/bookings/' . TestFixtures::BOOKING_ID);
         $this->assertSame(200, $r['code']);
         $this->assertStringContainsString(
-            '<title>Booking Details',
+            '<title>Booking details · ',
             $r['body'],
-            'Browser tab should say "Booking Details", not just "Bookings"'
+            'Browser tab should identify the booking detail page'
         );
     }
 
@@ -301,7 +301,7 @@ final class AdminRoutesTest extends TestCase
         $r = $this->get('/admin/tenants');
         $this->assertSame(200, $r['code']);
         $this->assertStringContainsString(
-            '<title>Businesses',
+            '<title>Businesses · ',
             $r['body'],
             'Business list tab should say "Businesses"'
         );
@@ -565,16 +565,11 @@ final class AdminRoutesTest extends TestCase
         $r = $this->get('/admin');
         $this->assertSame(200, $r['code']);
 
-        // Extract "Bookings Today" metric value
-        $todayMatch = preg_match('/Bookings Today.*?vb-metric-value[^>]*>(\d+)/s', $r['body'], $mToday);
-        $this->assertSame(1, $todayMatch, 'Should find Bookings Today metric');
-        $todayCount = (int) ($mToday[1] ?? 0);
+        // Read each value from its labelled metric, avoiding other dashboard counts.
+        $todayCount = $this->metricValue($r['body'], 'Bookings today');
         $this->assertGreaterThanOrEqual(1, $todayCount, 'Bookings Today should be >= 1');
 
-        // Extract "This Week" metric value
-        $weekMatch = preg_match('/This Week.*?vb-metric-value[^>]*>(\d+)/s', $r['body'], $mWeek);
-        $this->assertSame(1, $weekMatch, 'Should find This Week metric');
-        $weekCount = (int) ($mWeek[1] ?? 0);
+        $weekCount = $this->metricValue($r['body'], 'This week');
 
         // The 30-day-old booking must be excluded from This Week.
         // If both test bookings were counted, weekCount would be todayCount + 1.
@@ -585,7 +580,7 @@ final class AdminRoutesTest extends TestCase
         );
     }
 
-    public function test_tenant_dashboard_shows_nearest_first_upcoming(): void
+    public function test_tenant_dashboard_highlights_nearest_upcoming_booking(): void
     {
         $tenantId = TestFixtures::BUSINESS_TENANT_ID;
         $customerId = $this->ensureTestCustomer($tenantId);
@@ -612,22 +607,53 @@ final class AdminRoutesTest extends TestCase
             ['01TESTBKNEAR000000000000', $tenantId, $customerId, $futureNear, $futureNearEnd]
         );
 
-        $this->doLoginOperator();
-        $r = $this->get('/admin/tenants/' . $tenantId);
-        $this->assertSame(200, $r['code']);
+        // The canonical fixture may otherwise be earlier than our controlled pair.
+        $fixture = Database::query('SELECT `status` FROM `bookings` WHERE `id` = ?', [TestFixtures::BOOKING_ID]);
+        Database::execute("UPDATE `bookings` SET `status` = 'cancelled' WHERE `id` = ?", [TestFixtures::BOOKING_ID]);
 
-        // "Next Up" should show the near booking before the far booking.
-        // Match on the booking links: the displayed date follows the locale's
-        // date notation, so it cannot be predicted here.
-        $nearPos = strpos($r['body'], '/bookings/01TESTBKNEAR000000000000');
-        $farPos = strpos($r['body'], '/bookings/01TESTBKFAR0000000000000');
+        try {
+            $this->doLoginOperator();
+            $r = $this->get('/admin/tenants/' . $tenantId);
+            $this->assertSame(200, $r['code']);
 
-        $this->assertNotFalse($nearPos, 'Near booking should appear on tenant dashboard');
-        $this->assertNotFalse($farPos, 'Far booking should appear on tenant dashboard');
-        $this->assertLessThan($farPos, $nearPos, 'Nearest booking should appear before the far one (ASC sort)');
+            $xpath = $this->htmlXPath($r['body']);
+            $nextCard = '//section[@aria-labelledby="next-booking"]';
+            $this->assertSame(1, $xpath->query($nextCard . '//a[@href="/admin/tenants/' . $tenantId . '/bookings/01TESTBKNEAR000000000000"]')->length,
+                'The next-booking card must link to the nearest upcoming booking');
+            $this->assertSame(0, $xpath->query($nextCard . '//a[contains(@href, "01TESTBKFAR0000000000000")]')->length,
+                'The later booking must not replace the next booking');
+            $this->assertSame(1, $xpath->query('//nav[contains(@class, "vb-dashboard-footer-actions")]//a[@href="/admin/tenants/' . $tenantId . '/bookings"]')->length,
+                'The complete booking list must remain accessible');
+        } finally {
+            if ($fixture !== []) {
+                Database::execute('UPDATE `bookings` SET `status` = ? WHERE `id` = ?', [$fixture[0]['status'], TestFixtures::BOOKING_ID]);
+            }
+            Database::execute("DELETE FROM `bookings` WHERE `id` IN ('01TESTBKNEAR000000000000', '01TESTBKFAR0000000000000')");
+        }
     }
 
     // ── Helpers ──
+
+    private function htmlXPath(string $html): \DOMXPath
+    {
+        $previous = libxml_use_internal_errors(true);
+        try {
+            $document = new \DOMDocument();
+            $document->loadHTML($html);
+            return new \DOMXPath($document);
+        } finally {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+        }
+    }
+
+    private function metricValue(string $html, string $label): int
+    {
+        $xpath = $this->htmlXPath($html);
+        $values = $xpath->query('//span[@class="vb-metric-label" and normalize-space(.)="' . $label . '"]/ancestor::div[@class="vb-metric"][1]//span[@class="vb-metric-value"]');
+        $this->assertSame(1, $values->length, 'Should find one labelled ' . $label . ' metric');
+        return (int) $values->item(0)->textContent;
+    }
 
     private function doLoginOperator(): void
     {

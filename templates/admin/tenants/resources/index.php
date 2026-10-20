@@ -13,21 +13,22 @@ $tenantId = $tenantId ?? '';
 ob_start();
 ?>
 
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.resources.title') ?></h2>
-        <p class="vb-page-subtitle">
-            <?= __p('admin.resources.showing_count', count($resources)) ?>
-        </p>
-    </div>
-    <div class="vb-page-actions">
-        <a href="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/resources/create"
+<?php
+ob_start();
+?>
+<a href="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/resources/create"
            class="vb-btn vb-btn-primary" id="new-resource-btn">
             <i data-lucide="plus" class="vb-icon-md"></i>
             <?= __('admin.resources.new') ?>
         </a>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.resources.title'),
+    'subtitle' => __p('admin.resources.showing_count', count($resources)),
+    'actions' => ob_get_clean(),
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <?php if ($flash): ?>
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>

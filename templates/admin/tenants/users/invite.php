@@ -12,12 +12,13 @@ $tenantId = $tenantId ?? '';
 
 ob_start();
 ?>
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.users.invite_title') ?></h2>
-        <p class="vb-page-subtitle"><?= __('admin.users.invite_subtitle') ?></p>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.users.invite_title'),
+    'subtitle' => __('admin.users.invite_subtitle'),
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <?php if (!empty($flash)): ?>
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>

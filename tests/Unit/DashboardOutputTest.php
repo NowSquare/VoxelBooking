@@ -22,6 +22,7 @@ final class DashboardOutputTest extends TestCase
 {
     private string $templateDir;
     private static bool $helpersReady = false;
+    private array $localeState = [];
 
     public static function setUpBeforeClass(): void
     {
@@ -42,6 +43,19 @@ final class DashboardOutputTest extends TestCase
         }
 
         $this->templateDir = dirname(__DIR__, 2) . '/templates';
+        foreach ((new \ReflectionClass(\App\Engine\Locale::class))->getProperties(\ReflectionProperty::IS_STATIC) as $property) {
+            $this->localeState[$property->getName()] = $property->getValue();
+        }
+        \App\Engine\Locale::reset();
+        \App\Engine\Locale::init(dirname(__DIR__, 2));
+        \App\Engine\Locale::setTenantOverrides(['time_format' => '24h']);
+    }
+
+    protected function tearDown(): void
+    {
+        foreach ($this->localeState as $name => $value) {
+            (new \ReflectionProperty(\App\Engine\Locale::class, $name))->setValue(null, $value);
+        }
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -179,7 +193,7 @@ final class DashboardOutputTest extends TestCase
             ],
         ]);
 
-        $this->assertStringContainsString('rgba(59, 130, 246, 0.12)', $html);
+        $this->assertStringContainsString('vb-schedule-service-dot', $html);
         $this->assertStringContainsString('#3B82F6', $html);
     }
 
@@ -203,7 +217,7 @@ final class DashboardOutputTest extends TestCase
             ],
         ]);
 
-        $this->assertStringContainsString('var(--vb-accent-subtle)', $html);
+        $this->assertStringContainsString('vb-schedule-service-dot', $html);
         $this->assertStringContainsString('var(--vb-accent)', $html);
     }
 
@@ -280,14 +294,14 @@ final class DashboardOutputTest extends TestCase
         $this->assertStringContainsString('vb-staff-today-avatar', $html);
     }
 
-    public function test_tenant_dashboard_renders_staff_none_cta(): void
+    public function test_tenant_dashboard_does_not_require_optional_staff(): void
     {
         $html = $this->renderTenantDashboard([
             'staffWorkingToday' => null,
         ]);
 
-        $this->assertStringContainsString('staff/create', $html);
-        $this->assertStringContainsString('vb-link-cta', $html);
+        $this->assertStringNotContainsString('staff/create', $html);
+        $this->assertStringNotContainsString('vb-dash-staff-today-wrap', $html);
     }
 
     public function test_tenant_dashboard_hides_staff_for_non_timeslot(): void
@@ -298,6 +312,103 @@ final class DashboardOutputTest extends TestCase
         ]);
 
         $this->assertStringNotContainsString('vb-dash-staff-today-wrap', $html);
+    }
+
+    public function test_business_dashboard_leads_with_work_before_compact_metrics(): void
+    {
+        $html = $this->renderTenantDashboard(['upcoming' => [$this->booking()]]);
+        $this->assertStringContainsString('Test Salon', $html);
+        $this->assertStringContainsString('dashboard-date', $html);
+        $this->assertLessThan(strpos($html, 'vb-dashboard-metrics'), strpos($html, 'next-booking'));
+        $this->assertLessThan(strpos($html, 'vb-dashboard-metrics'), strpos($html, 'schedule-today'));
+    }
+
+    public function test_quiet_business_day_has_useful_actions_without_setup_warning(): void
+    {
+        $html = $this->renderTenantDashboard();
+        $this->assertStringContainsString('/bookings/create', $html);
+        $this->assertStringContainsString('data-copy-url=', $html);
+        $this->assertStringNotContainsString('dashboard-setup', $html);
+    }
+
+    public function test_pending_approvals_have_a_filtered_booking_action(): void
+    {
+        $html = $this->renderTenantDashboard(['pendingApprovals' => 3]);
+        $this->assertStringContainsString('/bookings?status=pending', $html);
+        $this->assertStringContainsString('Awaiting approval', $html);
+    }
+
+    public function test_setup_configuration_actions_are_hidden_from_managers(): void
+    {
+        $html = $this->renderTenantDashboard([
+            'user' => ['name' => 'Manager', 'type' => 'business_user', 'role' => 'manager'],
+            'setupActions' => [['key' => 'setup_services', 'path' => 'services']],
+        ]);
+        $this->assertStringContainsString('dashboard-setup', $html);
+        $this->assertStringContainsString('business owner', $html);
+        $this->assertStringNotContainsString('/services', $html);
+    }
+
+    public function test_required_setup_has_specific_owner_action(): void
+    {
+        $html = $this->renderTenantDashboard([
+            'setupActions' => [['key' => 'setup_resources', 'path' => 'resources']],
+        ]);
+        $this->assertStringContainsString('dashboard-setup', $html);
+        $this->assertStringContainsString('/admin/tenants/test-tenant-id/resources', $html);
+    }
+
+    public function test_all_business_dashboard_times_honor_twelve_hour_locale_format(): void
+    {
+        \App\Engine\Locale::setTenantOverrides(['time_format' => '12h']);
+        try {
+            $html = $this->renderTenantDashboard([
+                'todaySchedule' => [$this->booking()],
+                'upcoming' => [$this->booking()],
+                'staffWorkingToday' => [['id' => 's', 'name' => 'Staff', 'windows' => [['start' => '14:00', 'end' => '17:00']]]],
+            ]);
+            $this->assertStringContainsString('2:00 PM', $html);
+            $this->assertStringContainsString('2:30 PM', $html);
+            $this->assertStringContainsString('5:00 PM', $html);
+            $this->assertStringNotContainsString('14:00', $html);
+            $this->assertStringNotContainsString('17:00', $html);
+        } finally {
+            \App\Engine\Locale::setTenantOverrides(['time_format' => '24h']);
+        }
+    }
+
+    public function test_operator_work_precedes_metrics_and_times_use_locale(): void
+    {
+        \App\Engine\Locale::setTenantOverrides(['time_format' => '12h']);
+        try {
+            $html = $this->renderOperatorDashboard(['upcoming' => [$this->booking()]]);
+            $this->assertLessThan(strpos($html, 'vb-dashboard-metrics'), strpos($html, 'vb-table-container'));
+            $this->assertStringContainsString('2:00 PM', $html);
+        } finally {
+            \App\Engine\Locale::setTenantOverrides(['time_format' => '24h']);
+        }
+    }
+
+    public function test_resource_dashboards_show_arrival_and_departure_dates(): void
+    {
+        $booking = array_merge($this->booking(), ['booking_pattern' => 'resource', 'resource_name' => 'Hotel stay',
+            'start_datetime' => '2026-10-22 00:00:00', 'end_datetime' => '2026-10-25 00:00:00']);
+        foreach ([$this->renderOperatorDashboard(['upcoming' => [$booking]]),
+            $this->renderTenantDashboard(['upcoming' => [$booking], 'todaySchedule' => [$booking]])] as $html) {
+            $this->assertStringContainsString(\App\Engine\Locale::date(new \DateTimeImmutable('2026-10-25')), $html);
+            $this->assertStringNotContainsString('00:00', $html);
+            $this->assertStringNotContainsString('12:00 AM', $html);
+        }
+        $this->assertStringContainsString('vb-dashboard-schedule-row--stay', $this->renderTenantDashboard(['todaySchedule' => [$booking]]));
+    }
+
+    private function booking(): array
+    {
+        return [
+            'id' => 'booking-1', 'tenant_id' => 'test-tenant-id', 'customer_name' => 'Next Customer',
+            'service_name' => 'Consultation', 'status' => 'confirmed',
+            'start_datetime' => date('Y-m-d') . ' 14:00:00', 'end_datetime' => date('Y-m-d') . ' 14:30:00',
+        ];
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -328,7 +439,7 @@ final class DashboardOutputTest extends TestCase
     private function renderTenantDashboard(array $overrides = []): string
     {
         $defaults = [
-            'user' => ['name' => 'Test Owner', 'type' => 'business'],
+            'user' => ['name' => 'Test Owner', 'type' => 'business_user', 'role' => 'owner'],
             'version' => '1.0.0-test',
             'csrfToken' => 'test-csrf-token',
             'pageTitle' => 'Test Salon',
@@ -343,6 +454,8 @@ final class DashboardOutputTest extends TestCase
             'deltaWeek' => 0,
             'todaySchedule' => [],
             'staffWorkingToday' => null,
+            'setupActions' => [],
+            'pendingApprovals' => 0,
         ];
 
         return $this->renderTemplate(

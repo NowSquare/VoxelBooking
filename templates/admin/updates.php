@@ -36,12 +36,13 @@ ob_start();
 <?php endif; ?>
 
 <!-- Page Header -->
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.updates.title') ?></h2>
-        <p class="vb-page-subtitle"><?= __('admin.updates.subtitle') ?></p>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.updates.title'),
+    'subtitle' => __('admin.updates.subtitle'),
+];
+include __DIR__ . '/partials/page-header.php';
+?>
 
 <div class="vb-grid">
 

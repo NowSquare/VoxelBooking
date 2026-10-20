@@ -31,18 +31,19 @@ $slug   = $tenant['slug'] ?? '';
 
 $brandColor     = $tenant['brand_color'] ?? '#4F46E5';
 $brandColorText = \App\Engine\BrandColorHelper::derive($brandColor)['brand_text'];
-$buttonLabel    = $tenant['embed_button_label'] ?? 'Book Now';
+$buttonLabel    = $tenant['embed_button_label'] ?? __('booking.embed.button_label');
 $buttonPosition = $tenant['embed_button_position'] ?? 'bottom-right';
 
 ob_start();
 ?>
 
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.tenant_settings.title') ?></h2>
-        <p class="vb-page-subtitle"><?= e($tenant['name'] ?? '') ?></p>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.tenant_settings.title'),
+    'subtitle' => $tenant['name'] ?? '',
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <?php if ($flash): ?>
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>
@@ -103,7 +104,7 @@ ob_start();
                             <label class="vb-label" for="ts-embed-label"><?= __('admin.tenant_settings.embed_label') ?></label>
                             <input type="text" class="vb-input" id="ts-embed-label" name="embed_button_label"
                                    value="<?= e(old('embed_button_label', $tenant['embed_button_label'] ?? '')) ?>"
-                                   placeholder="Book Now" maxlength="50">
+                                   placeholder="<?= e(__('booking.embed.button_label')) ?>" maxlength="50">
                         </div>
                         <div class="vb-settings-field">
                             <label class="vb-label" for="ts-embed-position"><?= __('admin.tenant_settings.embed_position') ?></label>
@@ -210,7 +211,7 @@ ob_start();
 
     if (labelInput && previewLabel) {
         labelInput.addEventListener('input', function() {
-            previewLabel.textContent = this.value || 'Book Now';
+            previewLabel.textContent = this.value || this.placeholder;
         });
     }
     if (positionSelect && previewBtn) {

@@ -36,7 +36,7 @@ final class DashboardController
         $todayEnd = $today . ' 23:59:59';
         $now = date('Y-m-d H:i:s');
         $weekStart = date('Y-m-d', strtotime('-6 days'));
-        $now24h = date('Y-m-d H:i:s', strtotime('+24 hours'));
+        $now24h = (new \DateTimeImmutable($now))->setTimezone(new \DateTimeZone('UTC'))->modify('+24 hours')->format('c');
         $prevDay = date('Y-m-d', strtotime('-7 days'));
         $prevWeekStart = date('Y-m-d', strtotime('-13 days'));
         $prevWeekEnd = date('Y-m-d', strtotime('-7 days'));
@@ -49,10 +49,7 @@ final class DashboardController
             "SELECT COUNT(*) as cnt FROM `bookings` WHERE `start_datetime` >= ? AND `start_datetime` <= ?",
             [$weekStart, $todayEnd]
         );
-        $upcoming24h = $this->queryCount(
-            "SELECT COUNT(*) as cnt FROM `bookings` WHERE `start_datetime` BETWEEN ? AND ? AND `status` = 'confirmed'",
-            [$now, $now24h]
-        );
+        $upcoming24h = Booking::countUpcomingBetween($now, $now24h);
 
         // Deltas: same-day-last-week for daily, previous-7-day-window for weekly
         $prevTodayBookings = $this->queryCount(
@@ -68,7 +65,7 @@ final class DashboardController
         $deltaWeek = $weekBookings - $prevWeekBookings;
 
         // Cross-tenant upcoming bookings list
-        $upcoming = Booking::allUpcoming(date('Y-m-d H:i:s'), 10);
+        $upcoming = Booking::allUpcoming($now, 5);
 
         return View::response('admin.dashboard', [
             'user'           => Auth::user(),
@@ -81,6 +78,7 @@ final class DashboardController
             'deltaToday'     => $deltaToday,
             'deltaWeek'      => $deltaWeek,
             'upcoming'       => $upcoming,
+            'pendingApprovals' => $this->queryCount("SELECT COUNT(*) AS cnt FROM `bookings` WHERE `status` = 'pending'"),
         ]);
     }
 
@@ -107,10 +105,11 @@ final class DashboardController
             return Response::redirect('/admin');
         }
 
-        $today = date('Y-m-d');
-        $weekStart = date('Y-m-d', strtotime('-6 days'));
-        $monthStart = date('Y-m-01');
-        $now = date('Y-m-d H:i:s');
+        $tenantNow = new \DateTimeImmutable('now', new \DateTimeZone($tenant['timezone'] ?? 'UTC'));
+        $today = $tenantNow->format('Y-m-d');
+        $weekStart = $tenantNow->modify('-6 days')->format('Y-m-d');
+        $monthStart = $tenantNow->format('Y-m-01');
+        $now = $tenantNow->format('Y-m-d H:i:s');
 
         $todayBookings = Booking::countForTenant($tenantId, null, $today, $today);
         $weekBookings = Booking::countForTenant($tenantId, null, $weekStart, $today);
@@ -118,9 +117,9 @@ final class DashboardController
         $totalCustomers = Customer::countForTenant($tenantId, null);
 
         // Deltas: same-day-last-week for daily, previous-7-day-window for weekly
-        $prevDay = date('Y-m-d', strtotime('-7 days'));
-        $prevWeekStart = date('Y-m-d', strtotime('-13 days'));
-        $prevWeekEnd = date('Y-m-d', strtotime('-7 days'));
+        $prevDay = $tenantNow->modify('-7 days')->format('Y-m-d');
+        $prevWeekStart = $tenantNow->modify('-13 days')->format('Y-m-d');
+        $prevWeekEnd = $tenantNow->modify('-7 days')->format('Y-m-d');
 
         $prevTodayBookings = Booking::countForTenant($tenantId, null, $prevDay, $prevDay);
         $prevWeekBookings = Booking::countForTenant($tenantId, null, $prevWeekStart, $prevWeekEnd);
@@ -134,7 +133,7 @@ final class DashboardController
         // "Who's working today" — timeslot-pattern tenants only
         $staffWorkingToday = null;
         if (($tenant['booking_pattern'] ?? '') === 'timeslot') {
-            $staffWorkingToday = $this->loadStaffWorkingToday($tenantId);
+            $staffWorkingToday = $this->loadStaffWorkingToday($tenantId, $tenantNow);
         }
 
         return View::response('admin.dashboard-business', [
@@ -144,6 +143,7 @@ final class DashboardController
             'activePage'     => 'dashboard',
             'csrfToken'      => \App\Middleware\CsrfMiddleware::generateToken(),
             'tenant'         => $tenant,
+            'dashboardDate'  => $tenantNow,
             'todayBookings'  => $todayBookings,
             'weekBookings'   => $weekBookings,
             'monthBookings'  => $monthBookings,
@@ -153,7 +153,40 @@ final class DashboardController
             'deltaWeek'      => $deltaWeek,
             'todaySchedule'  => $todaySchedule,
             'staffWorkingToday' => $staffWorkingToday,
+            'pendingApprovals' => Booking::countForTenant($tenantId, 'pending', null, null),
+            'setupActions' => $this->loadSetupActions($tenantId, $tenant['booking_pattern'] ?? 'timeslot'),
         ]);
+    }
+
+    /**
+     * Surface missing prerequisites for this booking pattern, never optional staff.
+     * These notices describe configuration only; they do not claim availability.
+     *
+     * @return list<array{key: string, path: string}>
+     */
+    private function loadSetupActions(string $tenantId, string $pattern): array
+    {
+        $catalog = match ($pattern) {
+            'resource' => ['resources', 'setup_resources', 'resources'],
+            'capacity' => ['capacity_slots', 'setup_capacity', 'capacity-slots'],
+            'event' => ['events', 'setup_events', 'events'],
+            default => ['services', 'setup_services', 'services'],
+        };
+        [$table, $key, $path] = $catalog;
+        $count = Database::query("SELECT COUNT(*) AS cnt FROM `{$table}` WHERE `tenant_id` = ? AND `is_active` = 1", [$tenantId]);
+        if ((int) ($count[0]['cnt'] ?? 0) === 0) {
+            return [['key' => $key, 'path' => $path]];
+        }
+        if ($pattern !== 'timeslot') {
+            return [];
+        }
+
+        $actions = [];
+        $hours = Database::query('SELECT COUNT(*) AS cnt FROM `availability` WHERE `tenant_id` = ? AND `is_available` = 1', [$tenantId]);
+        if ((int) ($hours[0]['cnt'] ?? 0) === 0) {
+            $actions[] = ['key' => 'setup_hours', 'path' => 'availability'];
+        }
+        return $actions;
     }
 
     /**
@@ -168,7 +201,7 @@ final class DashboardController
      *
      * @return list<array{id: string, name: string, title: ?string, windows: list<array{start: string, end: string}>}>|null
      */
-    private function loadStaffWorkingToday(string $tenantId): ?array
+    private function loadStaffWorkingToday(string $tenantId, ?\DateTimeImmutable $today = null): ?array
     {
         // 1. Load all active staff
         $allStaff = Database::query(
@@ -179,11 +212,11 @@ final class DashboardController
         );
 
         if (empty($allStaff)) {
-            return null; // no staff at all → template shows "create staff" CTA
+            return null; // Staff are optional; omit an empty staff section.
         }
 
         // 2. Today's day_of_week (0=Mon … 6=Sun, ISO convention)
-        $todayDow = ((int) date('N')) - 1;
+        $todayDow = ((int) ($today ?? new \DateTimeImmutable())->format('N')) - 1;
 
         // 3. Bulk-load all staff overrides for today in one query
         $staffIds = array_column($allStaff, 'id');

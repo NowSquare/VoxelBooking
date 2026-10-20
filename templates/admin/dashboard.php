@@ -1,104 +1,27 @@
 <?php
 /**
- * Operator dashboard — Visual Design §16: Dashboard Specification.
- *
- * Four rhythm bands:
- *   1. Greeting (personalized hero, time-of-day greeting)
- *   2. Metrics (4 metric cards with deltas — redesigned with header+value+delta+context)
- *   3. Upcoming bookings (cross-tenant, max 10, with status chips)
- *   4. Activity / Empty (onboarding CTA pointing to tenant creation)
- *
- * Icons: Lucide via data-lucide (rendered by admin/app.js).
- * Styles: admin-head.php design tokens — .vb-metric, .vb-status, .vb-cell-*.
- *
- * Variables: $user, $version, $activeTenants, $tenantCounts, $todayBookings, $weekBookings,
- *            $upcoming24h, $deltaToday, $deltaWeek, $upcoming
+ * Operator dashboard: dated cross-business work and approval exceptions,
+ * followed by compact aggregate context and business management actions.
+ * Customer links retain the existing explicit impersonation POST boundary.
  */
 $pageTitle = __('admin.dashboard.title');
 $activePage = 'dashboard';
 $csrfToken = \App\Middleware\CsrfMiddleware::generateToken();
 
-// Time-of-day greeting
-$hour = (int) date('H');
-if ($hour < 12) {
-    $greeting = __('admin.dashboard.good_morning');
-} elseif ($hour < 18) {
-    $greeting = __('admin.dashboard.good_afternoon');
-} else {
-    $greeting = __('admin.dashboard.good_evening');
-}
-$userName = htmlspecialchars($user['name'] ?? __('admin.layout.operator'), ENT_QUOTES, 'UTF-8');
-
 ob_start();
 ?>
-
-<!-- Greeting Band -->
-<div class="vb-greeting vb-fade-in-up stagger-1">
-    <div class="vb-greeting-title"><?= $greeting ?>, <?= $userName ?></div>
-    <div class="vb-greeting-subtitle"><?= __('admin.dashboard.greeting_subtitle', ['app_name' => app_name()]) ?></div>
+<div class="vb-dashboard-header">
+    <div>
+        <p class="vb-dashboard-date" id="dashboard-date"><?= \App\Engine\Locale::date(new \DateTimeImmutable('today')) ?></p>
+        <h2 class="vb-dashboard-title"><?= __('admin.dashboard.schedule_overview') ?></h2>
+    </div>
+    <a href="/admin/tenants" class="vb-btn vb-btn-secondary"><?= __('admin.tenants.title') ?><i data-lucide="arrow-right"></i></a>
 </div>
-
-<!-- Metric Band — redesigned with header + delta badges -->
-<div class="vb-metrics">
-    <div class="vb-metric vb-fade-in-up stagger-1">
-        <div class="vb-metric-header">
-            <i data-lucide="building-2" class="vb-metric-icon"></i>
-            <span class="vb-metric-label"><?= __('admin.dashboard.active_tenants') ?></span>
-        </div>
-        <div class="vb-metric-value-row">
-            <span class="vb-metric-value"><?= (int) ($activeTenants ?? 0) ?></span>
-        </div>
-        <div class="vb-metric-accent"></div>
-    </div>
-    <div class="vb-metric vb-fade-in-up stagger-2">
-        <div class="vb-metric-header">
-            <i data-lucide="calendar-check" class="vb-metric-icon"></i>
-            <span class="vb-metric-label"><?= __('admin.dashboard.bookings_today') ?></span>
-        </div>
-        <div class="vb-metric-value-row">
-            <span class="vb-metric-value"><?= (int) ($todayBookings ?? 0) ?></span>
-            <?php if (($deltaToday ?? 0) !== 0): ?>
-            <span class="vb-metric-delta <?= $deltaToday > 0 ? 'is-up' : 'is-down' ?>">
-                <i data-lucide="<?= $deltaToday > 0 ? 'trending-up' : 'trending-down' ?>"></i>
-                <?= abs($deltaToday) ?>
-            </span>
-            <?php endif; ?>
-        </div>
-        <?php if (($deltaToday ?? 0) !== 0): ?>
-        <div class="vb-metric-context"><?= __('admin.dashboard.vs_last_period') ?></div>
-        <?php endif; ?>
-        <div class="vb-metric-accent"></div>
-    </div>
-    <div class="vb-metric vb-fade-in-up stagger-3">
-        <div class="vb-metric-header">
-            <i data-lucide="bar-chart-3" class="vb-metric-icon"></i>
-            <span class="vb-metric-label"><?= __('admin.dashboard.this_week') ?></span>
-        </div>
-        <div class="vb-metric-value-row">
-            <span class="vb-metric-value"><?= (int) ($weekBookings ?? 0) ?></span>
-            <?php if (($deltaWeek ?? 0) !== 0): ?>
-            <span class="vb-metric-delta <?= $deltaWeek > 0 ? 'is-up' : 'is-down' ?>">
-                <i data-lucide="<?= $deltaWeek > 0 ? 'trending-up' : 'trending-down' ?>"></i>
-                <?= abs($deltaWeek) ?>
-            </span>
-            <?php endif; ?>
-        </div>
-        <?php if (($deltaWeek ?? 0) !== 0): ?>
-        <div class="vb-metric-context"><?= __('admin.dashboard.vs_last_period') ?></div>
-        <?php endif; ?>
-        <div class="vb-metric-accent"></div>
-    </div>
-    <div class="vb-metric vb-fade-in-up stagger-4">
-        <div class="vb-metric-header">
-            <i data-lucide="clock" class="vb-metric-icon"></i>
-            <span class="vb-metric-label"><?= __('admin.dashboard.upcoming_24h') ?></span>
-        </div>
-        <div class="vb-metric-value-row">
-            <span class="vb-metric-value"><?= (int) ($upcoming24h ?? 0) ?></span>
-        </div>
-        <div class="vb-metric-accent"></div>
-    </div>
-</div>
+<?php if (($pendingApprovals ?? 0) > 0): ?>
+<a href="/admin/bookings?status=pending" class="vb-dashboard-notice">
+    <i data-lucide="clock" aria-hidden="true"></i><span><strong><?= __('admin.dashboard.awaiting_approval') ?></strong><span><?= __('admin.dashboard.review_pending', ['count' => \App\Engine\Locale::number($pendingApprovals)]) ?></span></span><i data-lucide="arrow-right" aria-hidden="true"></i>
+</a>
+<?php endif; ?>
 
 <!-- Upcoming Bookings (cross-tenant) -->
 <?php if (!empty($upcoming)): ?>
@@ -142,8 +65,7 @@ ob_start();
                     </td>
                     <td><?= htmlspecialchars(booking_display_label($b), ENT_QUOTES, 'UTF-8') ?></td>
                     <td>
-                        <div class="vb-cell-primary"><?= \App\Engine\Locale::date(new \DateTimeImmutable($b['start_datetime'])) ?></div>
-                        <div class="vb-cell-secondary"><?= date('H:i', strtotime($b['start_datetime'])) ?> – <?= date('H:i', strtotime($b['end_datetime'])) ?></div>
+                        <?php $bookingDateTime = $b; include __DIR__ . '/partials/booking-datetime.php'; ?>
                     </td>
                     <td>
                         <span class="vb-status vb-status-<?= htmlspecialchars($b['status'], ENT_QUOTES, 'UTF-8') ?>">
@@ -165,7 +87,71 @@ ob_start();
         </table>
     </div>
 </div>
+<?php elseif (($tenantCounts['total'] ?? 0) > 0): ?>
+<div class="vb-dashboard-quiet"><i data-lucide="calendar-check" aria-hidden="true"></i><div><h3><?= __('admin.dashboard.no_upcoming_bookings') ?></h3><p><?= __('admin.dashboard.operator_quiet_hint') ?></p></div></div>
 <?php endif; ?>
+
+<!-- Aggregate context follows operational work. -->
+<div class="vb-metrics vb-dashboard-metrics">
+    <div class="vb-metric">
+        <div class="vb-metric-header">
+            <i data-lucide="building-2" class="vb-metric-icon"></i>
+            <span class="vb-metric-label"><?= __('admin.dashboard.active_tenants') ?></span>
+        </div>
+        <div class="vb-metric-value-row">
+            <span class="vb-metric-value"><?= (int) ($activeTenants ?? 0) ?></span>
+        </div>
+        <div class="vb-metric-accent"></div>
+    </div>
+    <div class="vb-metric">
+        <div class="vb-metric-header">
+            <i data-lucide="calendar-check" class="vb-metric-icon"></i>
+            <span class="vb-metric-label"><?= __('admin.dashboard.bookings_today') ?></span>
+        </div>
+        <div class="vb-metric-value-row">
+            <span class="vb-metric-value"><?= (int) ($todayBookings ?? 0) ?></span>
+            <?php if (($deltaToday ?? 0) !== 0): ?>
+            <span class="vb-metric-delta <?= $deltaToday > 0 ? 'is-up' : 'is-down' ?>">
+                <i data-lucide="<?= $deltaToday > 0 ? 'trending-up' : 'trending-down' ?>"></i>
+                <?= abs($deltaToday) ?>
+            </span>
+            <?php endif; ?>
+        </div>
+        <?php if (($deltaToday ?? 0) !== 0): ?>
+        <div class="vb-metric-context"><?= __('admin.dashboard.vs_last_period') ?></div>
+        <?php endif; ?>
+        <div class="vb-metric-accent"></div>
+    </div>
+    <div class="vb-metric">
+        <div class="vb-metric-header">
+            <i data-lucide="bar-chart-3" class="vb-metric-icon"></i>
+            <span class="vb-metric-label"><?= __('admin.dashboard.this_week') ?></span>
+        </div>
+        <div class="vb-metric-value-row">
+            <span class="vb-metric-value"><?= (int) ($weekBookings ?? 0) ?></span>
+            <?php if (($deltaWeek ?? 0) !== 0): ?>
+            <span class="vb-metric-delta <?= $deltaWeek > 0 ? 'is-up' : 'is-down' ?>">
+                <i data-lucide="<?= $deltaWeek > 0 ? 'trending-up' : 'trending-down' ?>"></i>
+                <?= abs($deltaWeek) ?>
+            </span>
+            <?php endif; ?>
+        </div>
+        <?php if (($deltaWeek ?? 0) !== 0): ?>
+        <div class="vb-metric-context"><?= __('admin.dashboard.vs_last_period') ?></div>
+        <?php endif; ?>
+        <div class="vb-metric-accent"></div>
+    </div>
+    <div class="vb-metric">
+        <div class="vb-metric-header">
+            <i data-lucide="clock" class="vb-metric-icon"></i>
+            <span class="vb-metric-label"><?= __('admin.dashboard.upcoming_24h') ?></span>
+        </div>
+        <div class="vb-metric-value-row">
+            <span class="vb-metric-value"><?= (int) ($upcoming24h ?? 0) ?></span>
+        </div>
+        <div class="vb-metric-accent"></div>
+    </div>
+</div>
 
 <!-- Activity Band / Empty State -->
 <?php if (($tenantCounts['total'] ?? 0) === 0): ?>

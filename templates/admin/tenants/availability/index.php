@@ -37,18 +37,19 @@ $formAction = $currentStaffId
     : "/admin/tenants/{$tenantId}/availability";
 
 $subtitle = $currentStaffId
-    ? str_replace(':name', htmlspecialchars($currentStaff['name'] ?? '', ENT_QUOTES, 'UTF-8'), __('admin.availability.staff_subtitle'))
+    ? __('admin.availability.staff_subtitle', ['name' => $currentStaff['name'] ?? ''])
     : __('admin.availability.subtitle');
 
 ob_start();
 ?>
 
-<div class="vb-page-header">
-    <div>
-        <h2 class="vb-page-title"><?= __('admin.availability.title') ?></h2>
-        <p class="vb-page-subtitle"><?= $subtitle ?></p>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.availability.title'),
+    'subtitle' => $subtitle,
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <?php if ($flash): ?>
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>

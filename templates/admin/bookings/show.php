@@ -47,15 +47,14 @@ ob_start();
     <?php include __DIR__ . '/../../partials/alert.php'; ?>
 <?php endif; ?>
 
-<div class="vb-page-header">
-    <div>
-        <a href="<?= htmlspecialchars($backUrl, ENT_QUOTES, 'UTF-8') ?>" class="vb-back-link">
-            <i data-lucide="chevron-left"></i>
-            <?= __('admin.bookings.back_to_list') ?>
-        </a>
-        <h2 class="vb-page-title"><?= __('admin.bookings.detail_title') ?></h2>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.bookings.detail_title'),
+    'backUrl' => $backUrl,
+    'backLabel' => __('admin.bookings.back_to_list'),
+];
+include __DIR__ . '/../partials/page-header.php';
+?>
 
 <div class="vb-grid vb-grid-2 vb-fade-in-up">
     <!-- Booking Info -->
@@ -101,10 +100,7 @@ ob_start();
         <div class="vb-info-row">
             <span class="vb-info-label"><?= __('admin.bookings.date_time') ?></span>
             <span class="vb-info-value">
-                <?= \App\Engine\Locale::dateLong(new \DateTimeImmutable($booking['start_datetime'])) ?><br>
-                <span class="vb-cell-secondary">
-                    <?= date('H:i', strtotime($booking['start_datetime'])) ?> – <?= date('H:i', strtotime($booking['end_datetime'])) ?>
-                </span>
+                <?php $bookingDateTime = $booking; $bookingDateTimeContext = 'detail'; include __DIR__ . '/../partials/booking-datetime.php'; ?>
             </span>
         </div>
         <div class="vb-info-row">
@@ -347,7 +343,7 @@ if ($canReschedule ?? false):
                                 [$booking['tenant_id']]
                             );
                             foreach ($capSlots as $cs):
-                                $slotLabel = $cs['label'] ?: (substr($cs['start_time'], 0, 5) . ' – ' . substr($cs['end_time'], 0, 5));
+                                $slotLabel = $cs['label'] ?: (\App\Engine\Locale::time(new \DateTimeImmutable($cs['start_time'])) . ' – ' . \App\Engine\Locale::time(new \DateTimeImmutable($cs['end_time'])));
                                 $dayNames = [__('admin.availability.day_mon'), __('admin.availability.day_tue'), __('admin.availability.day_wed'), __('admin.availability.day_thu'), __('admin.availability.day_fri'), __('admin.availability.day_sat'), __('admin.availability.day_sun')];
                                 $dayLabel = $dayNames[(int) $cs['day_of_week']] ?? '';
                             ?>

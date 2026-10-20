@@ -12,19 +12,14 @@ ob_start();
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>
 <?php endif; ?>
 
-<div class="vb-page-header">
-    <div>
-        <a href="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/events"
-           class="vb-btn vb-btn-ghost vb-btn-sm mb-2">
-            <i data-lucide="arrow-left" class="w-4 h-4"></i>
-            <?= __('admin.events.title') ?>
-        </a>
-        <h2 class="vb-page-title">
-            <i data-lucide="plus" class="vb-page-header-icon"></i>
-            <?= __('admin.events.create_title') ?>
-        </h2>
-    </div>
-</div>
+<?php
+$pageHeader = [
+    'title' => __('admin.events.create_title'),
+    'backUrl' => '/admin/tenants/' . $tenantId . '/events',
+    'backLabel' => __('admin.events.title'),
+];
+include __DIR__ . '/../../partials/page-header.php';
+?>
 
 <div class="vb-card p-6 vb-animate-in">
     <form method="POST"
