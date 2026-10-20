@@ -52,8 +52,11 @@ Your production server needs only PHP and MySQL — never Composer, Node.js, or 
 | PHP | 8.3+ |
 | MySQL | 8.0+ |
 | Web server | Apache with `mod_rewrite`, or Nginx |
+| Location | The root of a domain or subdomain |
 
 **Required PHP extensions:** `pdo` `pdo_mysql` `curl` `json` `mbstring` `fileinfo` `openssl` `gd` `zip`
+
+VoxelBooking runs at `example.com` or `booking.example.com`. It can't run from a subfolder like `example.com/booking`, because every route and link starts at `/`. If your main site already uses the domain, add a subdomain for VoxelBooking.
 
 Most shared hosting providers include all of these by default. The installer's system check step confirms every requirement before proceeding.
 
@@ -77,11 +80,11 @@ The clone includes `vendor/` and the pre-built `public/assets/`, so it runs imme
 
 ### Step 2 — Point your web server at `public/`
 
-The document root is the `public/` directory. How you set it depends on your host.
+VoxelBooking works with the document root on the project folder or on its `public/` folder. Either way, it has to be the document root of a domain or subdomain.
 
-**Shared hosting (cPanel, Plesk, DirectAdmin).** Put the files in your web root (typically `public_html/`). The repository's root `.htaccess` rewrites every request into `public/` and blocks direct access to the application directories, so it works even when you cannot change the document root. Create a MySQL database in your control panel and note the name, user, and password — the wizard asks for them.
+**Shared hosting (cPanel, Plesk, DirectAdmin).** Put the files in the web root of the domain or subdomain (typically `public_html/`, or the folder your control panel created for the subdomain). The root `.htaccess` rewrites every request into `public/` and blocks direct access to the application directories, so you don't need to change the document root. Create a MySQL database in your control panel and note the name, user, and password — the wizard asks for them.
 
-**VPS / dedicated server — Apache.** Point `DocumentRoot` at the `public/` directory:
+**VPS / dedicated server — Apache.** Point `DocumentRoot` at the `public/` directory. That keeps `.env`, `app/`, and `vendor/` outside the web root:
 
 ```apache
 <VirtualHost *:80>
@@ -162,6 +165,14 @@ From the admin panel you can:
 
 Each business has a public booking page at `yourdomain.com/book/{slug}`. The slug is set at business creation and can be changed from Business Settings at any time.
 
+Customers see one booking summary through selection, details, and review. They can edit the choices that apply to their booking pattern. Labelled phases show where they are. Failed availability requests offer **Try again**. Field errors stay beside their inputs, and customers keep their entered details while they correct a problem.
+
+Physical bookings use venue time. Timezone context appears when the customer and business clocks differ at the appointment. Virtual appointments offer a timezone choice on a mismatch and show the converted date beside its time, including a previous or next day. Use the calendar to browse appointments. The optional **Find a time for me** experiment searches 7 days through the same availability rules.
+
+The booking page preserves each business's identity color. Selected fills use a measured foreground, while primary actions keep white labels on a derived brand fill. Normal and hover states reach at least 4.5:1 contrast. The calendar supports date-based keyboard navigation, a single tab stop, and named unavailable dates.
+
+The admin dashboard leads with upcoming bookings and today's work, with totals below. Business users see pending approvals, their next booking, and today's schedule. Setup guidance follows the booking pattern and the user's role.
+
 ### Retention cron (recommended)
 
 For automated GDPR data retention — anonymizing customer PII after a configurable number of months — schedule this URL to run once daily:
@@ -187,7 +198,7 @@ Back up your database and `public/uploads/` before any update, and test on a sta
 
 ## Demo mode
 
-Demo mode switches the database to a pre-seeded SQLite file and blocks all writes, letting you explore the full admin and booking UI without affecting any real data.
+Demo mode lets visitors try bookings against the configured demo database while settings and account changes stay locked. Use a separate installation with fictional fixtures.
 
 ### Activate
 
@@ -196,10 +207,11 @@ touch .demo
 ```
 
 When active:
-- The database switches to `storage/demo/demo.db`
-- All write operations (POST, PUT, DELETE) are blocked, except login and logout
-- A dismissible "Demo Mode" indicator pill appears in the admin topbar
-- The booking page shows a toast notice when a submission is attempted
+
+- Public bookings, cancellations, and rescheduling use the normal workflow
+- System/business settings and security-sensitive writes stay locked
+- The admin topbar shows the existing dismissible demo pill
+- The public booking notice can be dismissed for the current visit and returns after a reload
 - The login page shows clickable credential cards for all demo accounts
 
 ### Demo accounts
@@ -223,7 +235,7 @@ The operator sees all four businesses on the dashboard. Each business owner is a
 rm .demo
 ```
 
-The next request reconnects to your MySQL database.
+The next request stops applying demo restrictions. The configured database stays the same.
 
 ---
 
@@ -234,6 +246,9 @@ Enable PHP error output temporarily (add `php_flag display_errors on` to `.htacc
 
 **The installer does not appear — I see a default server page**
 The root `.htaccess` is not being applied. Confirm `mod_rewrite` is enabled (`a2enmod rewrite` on Ubuntu/Debian) and that `AllowOverride All` is set for the document root directory in your Apache config.
+
+**Every page returns 404, including the installer**
+You're opening VoxelBooking from a subfolder, such as `example.com/booking` or `server-ip/VoxelBooking/public`. VoxelBooking only runs at the root of a domain or subdomain. Create a subdomain (or an Apache virtual host) whose document root is the VoxelBooking folder or its `public/` folder, then open that address. Nothing shows up in `storage/logs/` for this, because a 404 isn't an error.
 
 **"Access denied" on the database step**
 The MySQL user lacks sufficient privileges. The installation user needs `CREATE`, `ALTER`, `INSERT`, `SELECT`, `UPDATE`, `DELETE`, and `DROP` on the target database. Grant full privileges for installation; you can restrict them afterwards if your security policy requires it.
@@ -266,7 +281,7 @@ English ships as the only complete translation. Twelve additional locales are re
 
 | Surface | Locale source | Timezone source |
 |---------|--------------|----------------|
-| Booking page | Business override → browser `Accept-Language` (if translation exists) → business default → `en` | Business timezone for storage; browser timezone for display |
+| Booking page | Business override → browser `Accept-Language` (if translation exists) → business default → `en` | Business timezone for storage and physical bookings; chosen customer timezone for virtual appointment display |
 | Privacy pages | Same as booking page | Business timezone |
 | Admin panel | Business locale → `APP_LOCALE` in `.env` → `en` | Browser-detected (set in session) |
 | Emails | Active locale at send time | Business timezone |
@@ -473,7 +488,7 @@ npm run build    # production — compiles CSS and JS to public/assets/
 npm run dev      # dev server with hot module replacement
 ```
 
-Before committing any CSS changes, run the token audit to confirm no hardcoded values have been introduced:
+After changing CSS, run the token audit. It checks admin and booking stylesheets for undefined `--vb-*` references, with exemptions for runtime properties:
 
 ```bash
 python3 scripts/audit-css-tokens.py

@@ -1,10 +1,14 @@
 # ╔═══════════════════════════════════════════════════════════╗
-# ║  VoxelBooking — Root .htaccess (Apache shared hosting)   ║
+# ║  VoxelBooking — Root .htaccess (Apache)                  ║
 # ║                                                          ║
-# ║  This file exists ONLY for shared hosting environments   ║
-# ║  where the document root cannot be changed to public/.   ║
-# ║  The preferred setup is to point the web server directly ║
-# ║  at the public/ directory.                               ║
+# ║  Lets VoxelBooking run when the document root is the     ║
+# ║  project folder, the usual case on shared hosting.       ║
+# ║  Pointing the document root at public/ also works and    ║
+# ║  keeps app files outside the web root.                   ║
+# ║                                                          ║
+# ║  Either way, VoxelBooking must be served from the root   ║
+# ║  of a domain or subdomain. Subfolders are unsupported:   ║
+# ║  the router matches paths from /.                        ║
 # ╚═══════════════════════════════════════════════════════════╝
 
 <IfModule mod_rewrite.c>
