@@ -583,15 +583,12 @@ final class BookingFlowTest extends TestCase
         $res = $this->httpGet('/book/' . self::$seed['slug']);
         $this->assertSame(200, $res['code']);
 
-        // Email-sent message (always rendered, filled at runtime)
-        $this->assertStringContainsString('x-text="confirmEmailSent"', $res['body'],
-            'Confirmation must bind email-sent message');
-
-        // Custom confirmation message (conditional)
-        $this->assertStringContainsString('x-if="confirmCustomMessage"', $res['body'],
-            'Confirmation must gate custom message on confirmCustomMessage');
-        $this->assertStringContainsString('x-text="confirmCustomMessage"', $res['body'],
-            'Confirmation must bind custom message text');
+        $xpath = $this->htmlXPath($res['body']);
+        $outcome = '//div[@data-book-step="confirmed"]//div[@data-outcome="booking"]';
+        $this->assertSame(1, $xpath->query($outcome . '//p[@x-text="confirmEmailSent" and @x-show="!eventIsWaitlisted && !bookingIsPending && confirmEmailSent"]')->length,
+            'Confirmed email feedback must be gated off for pending and waitlisted outcomes');
+        $this->assertSame(1, $xpath->query($outcome . '//p[@x-show="confirmCustomMessage" and @x-text="confirmCustomMessage"]')->length,
+            'The shared booking outcome must conditionally show the custom confirmation message');
     }
 
     public function testPageShellContainsCalendarActionHooks(): void
@@ -610,20 +607,20 @@ final class BookingFlowTest extends TestCase
             'Confirmation must have Google Calendar link');
     }
 
-    public function testPageShellContainsRescheduleCancelAffordances(): void
+    public function testPageShellLinksToManagedBookingActions(): void
     {
         $res = $this->httpGet('/book/' . self::$seed['slug']);
         $this->assertSame(200, $res['code']);
 
-        // Reschedule affordance: gated on showReschedule and booking availability
-        $this->assertStringContainsString('showReschedule', $res['body'],
-            'Confirmation must gate reschedule on showReschedule');
-        $this->assertStringContainsString('manageUrl(booking.id)', $res['body'],
-            'Reschedule/cancel must link to the manage URL via manageUrl');
-
-        // Cancel affordance: gated
-        $this->assertStringContainsString('showCancel', $res['body'],
-            'Confirmation must gate cancel on showCancel');
+        $xpath = $this->htmlXPath($res['body']);
+        $confirmed = '//div[@data-book-step="confirmed"]';
+        $manage = '//div[@data-book-step="manage"]';
+        $this->assertSame(1, $xpath->query($confirmed . '//template[@x-if="booking"]//a[@*[name()="x-bind:href"]="manageUrl(booking.id)"]')->length,
+            'Confirmation must link the newly created booking to its managed page');
+        $this->assertSame(1, $xpath->query($manage . '//template[@x-if="manageCanReschedule"]//button[@*[name()="@click"]="startReschedule"]')->length,
+            'Managed rescheduling must follow the authorized API gate');
+        $this->assertSame(1, $xpath->query($manage . '//template[@x-if="manageCanCancel"]//button[@*[name()="@click"]="openCancellation"]')->length,
+            'Managed cancellation must follow the authorized API gate');
 
         // Book another action
         $this->assertStringContainsString('@click="bookAnother"', $res['body'],
@@ -1301,6 +1298,19 @@ final class BookingFlowTest extends TestCase
             'headers' => substr($response, 0, $headerSize),
             'body'    => substr($response, $headerSize),
         ];
+    }
+
+    private function htmlXPath(string $html): \DOMXPath
+    {
+        $previous = libxml_use_internal_errors(true);
+        try {
+            $document = new \DOMDocument();
+            $document->loadHTML($html);
+            return new \DOMXPath($document);
+        } finally {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+        }
     }
 
     // ════════════════════════════════════════════════════════════════

@@ -74,6 +74,7 @@ final class BookingPageController
             'cancellation_policy'   => $tenant['cancellation_policy'] ?: null,
             'allow_cancellation'    => (bool) ($tenant['allow_cancellation'] ?? true),
             'allow_rescheduling'    => (bool) ($tenant['allow_rescheduling'] ?? true),
+            'requires_approval'     => (bool) ($tenant['booking_requires_approval'] ?? false),
         ];
 
         // Capacity pattern: inject party size bounds from slot configuration
@@ -194,6 +195,7 @@ final class BookingPageController
             'cancellation_policy'   => $tenant['cancellation_policy'] ?: null,
             'allow_cancellation'    => (bool) ($tenant['allow_cancellation'] ?? true),
             'allow_rescheduling'    => (bool) ($tenant['allow_rescheduling'] ?? true),
+            'requires_approval'     => (bool) ($tenant['booking_requires_approval'] ?? false),
             // Manage mode flags
             'manage_mode'           => true,
             'manage_booking_id'     => $bookingId,

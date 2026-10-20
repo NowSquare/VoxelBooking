@@ -14,7 +14,7 @@ use RRule\RRule;
  * optional waitlist support.
  *
  * For one-off events:
- * - Checks remaining spots (confirmed + rescheduled bookings only)
+ * - Counts confirmed bookings and legacy rescheduled rows without a replacement
  * - Waitlisted bookings do NOT count toward capacity
  *
  * For recurring events:
@@ -72,6 +72,9 @@ final class EventCalculator
                 $instances = array_merge($instances, $expanded);
             } else {
                 // One-off event
+                if (!VenueDateTime::wallTimeExists(substr($event['start_datetime'], 0, 10), substr($event['start_datetime'], 11, 5), $tz)) {
+                    continue;
+                }
                 $startDt = new \DateTimeImmutable($event['start_datetime'], $tz);
                 if ($startDt >= $now && $startDt <= $maxDate) {
                     $instances[] = self::buildInstance($event, $startDt, $tz);
@@ -89,12 +92,13 @@ final class EventCalculator
             return ['events' => []];
         }
 
-        // Load booking counts per event+date (confirmed + rescheduled)
+        // Load live booking counts per event and occurrence date.
         $bookingSums = Database::query(
             'SELECT `event_id`, DATE(`start_datetime`) AS `d`, SUM(`party_size`) AS `booked`
              FROM `bookings`
              WHERE `tenant_id` = ? AND `booking_pattern` = \'event\'
              AND `status` IN (\'confirmed\', \'rescheduled\')
+             AND (`status` <> \'rescheduled\' OR NULLIF(`rescheduled_to_id`, \'\') IS NULL)
              GROUP BY `event_id`, DATE(`start_datetime`)',
             [$tenantId]
         );
@@ -174,6 +178,10 @@ final class EventCalculator
             $instanceDate = new \DateTimeImmutable($event['start_datetime'], $tz);
         }
 
+        if (!VenueDateTime::wallTimeExists($instanceDate->format('Y-m-d'), substr($event['start_datetime'], 11, 5), $tz)) {
+            return ['event' => null];
+        }
+
         $instance = self::buildInstance($event, $instanceDate, $tz);
 
         // Check exception dates for recurring events
@@ -189,7 +197,8 @@ final class EventCalculator
             'SELECT COALESCE(SUM(`party_size`), 0) AS `total`
              FROM `bookings`
              WHERE `tenant_id` = ? AND `event_id` = ? AND `booking_pattern` = \'event\'
-             AND DATE(`start_datetime`) = ? AND `status` IN (\'confirmed\', \'rescheduled\')',
+             AND DATE(`start_datetime`) = ? AND `status` IN (\'confirmed\', \'rescheduled\')
+             AND (`status` <> \'rescheduled\' OR NULLIF(`rescheduled_to_id`, \'\') IS NULL)',
             [$tenantId, $eventId, $instance['date']]
         );
 
@@ -245,6 +254,10 @@ final class EventCalculator
 
         $event = $events[0];
 
+        if (!VenueDateTime::wallTimeExists($date, substr($event['start_datetime'], 11, 5), $tz)) {
+            return ['available' => false, 'waitlisted' => false, 'remaining' => 0, 'error' => 'invalid_date'];
+        }
+
         // Check exception dates for recurring events
         if ((int) $event['is_recurring']) {
             $exceptions = json_decode($event['exception_dates'] ?? '[]', true) ?: [];
@@ -264,12 +277,13 @@ final class EventCalculator
             }
         }
 
-        // Sum existing confirmed+rescheduled bookings
+        // Replacement-linked origins retain history without consuming spots.
         $booked = Database::query(
             'SELECT COALESCE(SUM(`party_size`), 0) AS `total`
              FROM `bookings`
              WHERE `tenant_id` = ? AND `event_id` = ? AND `booking_pattern` = \'event\'
-             AND DATE(`start_datetime`) = ? AND `status` IN (\'confirmed\', \'rescheduled\')',
+             AND DATE(`start_datetime`) = ? AND `status` IN (\'confirmed\', \'rescheduled\')
+             AND (`status` <> \'rescheduled\' OR NULLIF(`rescheduled_to_id`, \'\') IS NULL)',
             [$tenantId, $eventId, $date]
         );
 
@@ -351,6 +365,10 @@ final class EventCalculator
                 break;
             }
 
+            if (!VenueDateTime::wallTimeExists($occDate, substr($event['start_datetime'], 11, 5), $tz)) {
+                continue;
+            }
+
             // Skip exception dates
             if (in_array($occDate, $exceptions, true)) {
                 continue;
@@ -387,11 +405,9 @@ final class EventCalculator
      */
     private static function buildInstance(array $event, \DateTimeImmutable $startDt, \DateTimeZone $tz): array
     {
-        // Calculate end time: same duration as original event, applied to instance date
-        $origStart = new \DateTimeImmutable($event['start_datetime'], $tz);
-        $origEnd = new \DateTimeImmutable($event['end_datetime'], $tz);
-        $duration = $origStart->diff($origEnd);
-        $endDt = $startDt->add($duration);
+        $range = VenueDateTime::eventRange($event['start_datetime'], $event['end_datetime'], $startDt->format('Y-m-d'), $tz);
+        $startDt = $range['start'];
+        $endDt = $range['end'];
 
         return [
             'id'               => $event['id'],

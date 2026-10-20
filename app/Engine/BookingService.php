@@ -761,13 +761,9 @@ final class BookingService
         }
 
         $event = $events[0];
-        $eventStart = new \DateTimeImmutable($event['start_datetime'], $tz);
-        $eventEnd = new \DateTimeImmutable($event['end_datetime'], $tz);
-
-        // Build instance datetime: target date + event's time-of-day
-        $newStartDt = new \DateTimeImmutable("{$date} " . $eventStart->format('H:i:s'), $tz);
-        $duration = $eventStart->diff($eventEnd);
-        $newEndDt = $newStartDt->add($duration);
+        $range = VenueDateTime::eventRange($event['start_datetime'], $event['end_datetime'], $date, $tz);
+        $newStartDt = $range['start'];
+        $newEndDt = $range['end'];
 
         // Same-slot check: same event, same date
         $origStart = new \DateTimeImmutable($booking['start_datetime'], $tz);

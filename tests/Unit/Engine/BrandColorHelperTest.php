@@ -115,4 +115,72 @@ class BrandColorHelperTest extends TestCase
         $tokens = BrandColorHelper::derive('#000000');
         $this->assertSame('#FFFFFF', $tokens['brand_text']);
     }
+
+    #[Test]
+    public function brand_presets_keep_aa_text_contrast_in_default_and_hover_states(): void
+    {
+        foreach (['#2563EB', '#D97706', '#16A34A', '#0D9488', '#0EA5E9', '#F97316', '#8B5CF6', '#777777', '#FFFFFF', '#000000'] as $brand) {
+            $tokens = BrandColorHelper::derive($brand);
+
+            $this->assertSame($brand, $tokens['brand'], 'The tenant brand color stays intact.');
+            foreach (['brand', 'brand_hover'] as $background) {
+                $this->assertGreaterThanOrEqual(
+                    4.5,
+                    $this->contrastRatio($tokens['brand_text'], $tokens[$background]),
+                    "{$brand}: {$tokens['brand_text']} on {$background} {$tokens[$background]} must pass WCAG AA.",
+                );
+            }
+        }
+    }
+
+    #[Test]
+    public function action_fills_keep_white_labels_readable_without_replacing_the_brand(): void
+    {
+        foreach (['#2563EB', '#0EA5E9', '#F97316', '#8B5CF6', '#FFFF00', '#FFFFFF', '#000000'] as $brand) {
+            $tokens = BrandColorHelper::derive($brand);
+            $this->assertSame($brand, $tokens['brand']);
+            foreach (['brand_action', 'brand_action_hover'] as $fill) {
+                $this->assertArrayHasKey($fill, $tokens);
+                $this->assertGreaterThanOrEqual(4.5, $this->contrastRatio('#FFFFFF', $tokens[$fill]));
+            }
+        }
+    }
+
+    #[Test]
+    public function foreground_and_hover_contrast_cover_the_rgb_color_space(): void
+    {
+        // Cover every channel combination on a 17-step grid, including extremes
+        // and the narrow middle-luminance range where near-black can fail AA.
+        for ($r = 0; $r <= 255; $r += 17) {
+            for ($g = 0; $g <= 255; $g += 17) {
+                for ($b = 0; $b <= 255; $b += 17) {
+                    $tokens = BrandColorHelper::derive(sprintf('#%02X%02X%02X', $r, $g, $b));
+                    foreach (['brand', 'brand_hover'] as $background) {
+                        $this->assertGreaterThanOrEqual(
+                            4.5,
+                            $this->contrastRatio($tokens['brand_text'], $tokens[$background]),
+                            "{$tokens['brand']}: {$tokens['brand_text']} on {$tokens[$background]} must pass WCAG AA.",
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    private function contrastRatio(string $foreground, string $background): float
+    {
+        $luminance = static function (string $hex): float {
+            $channels = array_map(static function (string $channel): float {
+                $value = hexdec($channel) / 255;
+                return $value <= 0.04045 ? $value / 12.92 : (($value + 0.055) / 1.055) ** 2.4;
+            }, str_split(ltrim($hex, '#'), 2));
+
+            return $channels[0] * 0.2126 + $channels[1] * 0.7152 + $channels[2] * 0.0722;
+        };
+        $foregroundLuminance = $luminance($foreground);
+        $backgroundLuminance = $luminance($background);
+
+        return (max($foregroundLuminance, $backgroundLuminance) + 0.05)
+            / (min($foregroundLuminance, $backgroundLuminance) + 0.05);
+    }
 }

@@ -22,6 +22,8 @@ import {
     Sun, Moon, ArrowDown,
 } from 'lucide';
 import { resolveInitialPartySize } from './party-size.js';
+import { enhanceBookingWizard } from './experience.js';
+import { timezoneOffsetName } from './timezone.js';
 
 const ICON_SET = {
     ChevronLeft, ChevronRight, ChevronDown, Clock, Globe, Check, X,
@@ -40,7 +42,6 @@ const ICON_SET = {
 
 // ── Globals injected by PHP ──
 const config = window.__VB_CONFIG__;
-const apiBase = `/api/${config.slug}`;
 const csrfToken = window.__VB_CSRF__ || '';
 const i18n = window.__VB_I18N__ || {};
 const fmt   = window.__VB_FMT__  || {};
@@ -71,17 +72,16 @@ function scrollBehavior() {
 }
 
 // ── Timezone conversion engine (extracted to timezone.js for testability) ──
-import { convertTime, getTimezoneOffsetMinutes, formatSlotDisplay } from './timezone.js';
 
 // ── Timezone list (injected by server from PHP's canonical timezone_identifiers_list()) ──
 const TIMEZONE_GROUPS = window.__VB_TZ_GROUPS__ || [];
 
 // Human-readable timezone label
-function tzLabel(tz) {
+function tzLabel(tz, appointmentOffset) {
     const city = tz.split('/').pop().replace(/_/g, ' ');
     try {
         const now = new Date();
-        const offset = new Intl.DateTimeFormat('en-US', {
+        const offset = appointmentOffset || new Intl.DateTimeFormat('en-US', {
             timeZone: tz, timeZoneName: 'shortOffset',
         }).formatToParts(now).find(p => p.type === 'timeZoneName')?.value || '';
         return `${city} (${offset})`;
@@ -150,56 +150,8 @@ function radiogroupKeydownFocusOnly(event) {
     }
 }
 
-// Calendar grid keyboard navigation (WAI-ARIA grid pattern).
-// Arrow left/right = prev/next day, up/down = prev/next week, Home/End = first/last of month.
-function calendarGridKeydown(event) {
-    const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
-    if (!keys.includes(event.key)) return;
-
-    const grid = event.currentTarget;
-    const cells = Array.from(grid.querySelectorAll('.vb-book-calendar-cell:not(.is-disabled)'));
-    if (cells.length === 0) return;
-
-    const current = document.activeElement;
-    const idx = cells.indexOf(current);
-    if (idx === -1) return;
-
-    event.preventDefault();
-    let next;
-
-    switch (event.key) {
-        case 'ArrowRight':
-            next = cells[Math.min(idx + 1, cells.length - 1)];
-            break;
-        case 'ArrowLeft':
-            next = cells[Math.max(idx - 1, 0)];
-            break;
-        case 'ArrowDown': {
-            // Find next cell ~7 positions ahead (same day next week)
-            const target = idx + 7;
-            next = target < cells.length ? cells[target] : cells[cells.length - 1];
-            break;
-        }
-        case 'ArrowUp': {
-            const target = idx - 7;
-            next = target >= 0 ? cells[target] : cells[0];
-            break;
-        }
-        case 'Home':
-            next = cells[0];
-            break;
-        case 'End':
-            next = cells[cells.length - 1];
-            break;
-    }
-
-    if (next && next !== current) {
-        next.focus();
-    }
-}
-
 // ── Alpine: Booking Wizard Component ──
-Alpine.data('bookingWizard', () => ({
+Alpine.data('bookingWizard', () => enhanceBookingWizard({
     // Step management
     step: 'loading',
     calendarFading: false,
@@ -282,6 +234,7 @@ Alpine.data('bookingWizard', () => ({
     rescheduleCheckIn: null,
     rescheduleCheckOut: null,
     rescheduleResourceDates: [],
+    rescheduleResourceAvailability: null,
     // Capacity reschedule
     rescheduleCapacitySlots: [],
     rescheduleCapacitySlot: null,
@@ -290,11 +243,7 @@ Alpine.data('bookingWizard', () => ({
     rescheduleSelectedEvent: null,
 
     // CSP-safe setters for x-model (nested property assignment is prohibited)
-    setCustomerName(val) { this.customerName = val; },
-    setCustomerEmail(val) { this.customerEmail = val; },
-    setCustomerPhone(val) { this.customerPhone = val; },
     setCustomerNotes(val) { this.customerNotes = val; },
-    setConsentGiven(val) { this.consentGiven = val; },
     setTzSearchQuery(val) { this.tzSearchQuery = val; },
 
     // Timezone
@@ -357,7 +306,7 @@ Alpine.data('bookingWizard', () => ({
     get hasEventLocation() { return !!(this.selectedEvent && this.selectedEvent.location); },
     get eventPrice() { return this.selectedEvent ? this.selectedEvent.price : 0; },
     get eventCapacityLabel() { return this.selectedEvent ? this.selectedEvent.remaining + ' / ' + this.selectedEvent.max_participants : ''; },
-    get eventTimeSummary() { return this.selectedEvent ? this.formatEventTime(this.selectedEvent.start_datetime) + ' – ' + this.formatEventTime(this.selectedEvent.end_datetime) : ''; },
+    get eventTimeSummary() { return this.selectedEvent ? this.formatEventTime(this.selectedEvent.start_datetime, this.selectedEvent.start_utc) + ' – ' + this.formatEventTime(this.selectedEvent.end_datetime, this.selectedEvent.end_utc) : ''; },
     get showEventMaxHint() { return this.eventSpotCount >= this.eventMaxSpots && this.selectedEvent && this.selectedEvent.remaining > 0; },
     get eventMaxHintText() {
         if (!this.selectedEvent) return '';
@@ -368,13 +317,12 @@ Alpine.data('bookingWizard', () => ({
     },
 
     get hasSelectedDate() { return !!this.selectedDate; },
-    get hasNoSlots() { return this.availableSlots.length === 0 && !!this.selectedDate; },
     get hasSlots() { return this.availableSlots.length > 0; },
-    get isTzMismatch() { return !this.tzMatch; },
     get isCalendarFading() { return this.calendarFading; },
 
     // ── Init ──
     init() {
+        this.setupExperience();
         // Detect browser timezone
         try {
             this.customerTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -406,7 +354,7 @@ Alpine.data('bookingWizard', () => ({
         } else if (config.booking_pattern === 'event') {
             this.loadEvents();
         } else {
-            this.step = 'unsupported';
+            this.goToStep('unsupported');
         }
     },
 
@@ -420,91 +368,14 @@ Alpine.data('bookingWizard', () => ({
     },
 
     // ── Step transitions (spec: §6.4 Flow Orchestrator) ──
-    // Exit:  .is-exiting → opacity 0, translateY(-10px), 180ms ease-in
-    // Swap:  after 200ms total (180ms exit + 20ms gap), step property changes
-    // Enter: @keyframes vb-step-enter → opacity 1, translateY(0), 250ms ease-out
-    // Focus: move to first interactive element in new step
-    goToStep(name) {
-        // Flush any stale exit marks from prior transitions
-        this.clearExitStates();
-
-        // Mark current visible step as exiting
-        const currentStepEl = this.$el.querySelector('.vb-book-step:not([style*="display: none"])');
-        if (currentStepEl) {
-            currentStepEl.classList.add('is-exiting');
-        }
-
-        setTimeout(() => {
-            // Remove exit class before step change — the element is about
-            // to be hidden by Alpine's x-show, so the class must not persist
-            // for when this step is revisited via back navigation.
-            if (currentStepEl) {
-                currentStepEl.classList.remove('is-exiting');
-            }
-
-            this.step = name;
-            this.$nextTick(() => {
-                createIcons({ icons: ICON_SET });
-                // Focus management: move focus to first interactive element
-                const newStep = this.$el.querySelector('.vb-book-step:not([style*="display: none"])');
-                if (newStep) {
-                    const focusTarget = newStep.querySelector(
-                        'button:not([disabled]), [role="radio"], input:not([type="hidden"]), a[href], [tabindex="0"]'
-                    );
-                    if (focusTarget) {
-                        focusTarget.focus({ preventScroll: true });
-                    }
-                }
-
-                // Embed mode: notify parent window on booking confirmation
-                if (name === 'confirmed' && window.__VB_EMBED__ && window.parent !== window) {
-                    try {
-                        window.parent.postMessage({ type: 'booking:confirmed' }, '*');
-                    } catch (e) { /* cross-origin safety */ }
-                }
-            });
-        }, 200); // 180ms exit animation + 20ms settle gap
-    },
+    // Step orientation and recovery live in experience.js. CSS handles entry motion.
 
     // Remove .is-exiting from all step elements. Called before any
     // step assignment to prevent stale exit animation state.
     clearExitStates() {
-        this.$el.querySelectorAll('.vb-book-step.is-exiting').forEach(
+        (this.rootElement || this.$el).querySelectorAll('.vb-book-step.is-exiting').forEach(
             el => el.classList.remove('is-exiting')
         );
-    },
-
-    // ── Progress indicator ──
-    get progressSteps() {
-        if (config.booking_pattern === 'resource') {
-            return ['resource', 'resource-date', 'guests', 'details', 'review'];
-        }
-        if (config.booking_pattern === 'capacity') {
-            return ['party-size', 'capacity-date', 'capacity-time', 'details', 'review'];
-        }
-        if (config.booking_pattern === 'event') {
-            return ['event-list', 'event-detail', 'event-spots', 'details', 'review'];
-        }
-        const steps = ['service'];
-        if (this.staff.length > 1) steps.push('staff');
-        steps.push('date', 'details', 'review');
-        return steps;
-    },
-
-    get currentStepIndex() {
-        return this.progressSteps.indexOf(this.step);
-    },
-
-    isProgressDotActive(i) {
-        return i === this.currentStepIndex;
-    },
-
-    isProgressDotCompleted(i) {
-        return i < this.currentStepIndex;
-    },
-
-    get showProgress() {
-        return this.step !== 'loading' && this.step !== 'confirmed' && this.step !== 'unsupported' && this.step !== 'empty';
     },
 
     // ── Timezone ──
@@ -527,11 +398,18 @@ Alpine.data('bookingWizard', () => ({
         return group.label;
     },
 
-    tzDisplayLabel(tz) {
-        return tzLabel(tz);
+    tzDisplayLabel(tz, date, time, utcInstant = null) {
+        const reference = this.timezoneReference;
+        const useReference = !date;
+        date ||= reference.date;
+        time ||= reference.time;
+        utcInstant ||= useReference ? reference.utc : null;
+        return tzLabel(tz, date ? timezoneOffsetName(date, time.slice(0, 5), this.tenantTz, tz, utcInstant) : null);
     },
 
     selectTimezone(tz) {
+        this.cancelFinder();
+        this.timezoneWasEdited = true;
         this.customerTz = tz;
         this.tzDropdownOpen = false;
         this.tzSearchQuery = '';
@@ -557,27 +435,17 @@ Alpine.data('bookingWizard', () => ({
     },
 
     // ── API ──
-    async api(path, options = {}) {
-        const url = `${apiBase}${path}`;
-        const res = await fetch(url, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': csrfToken,
-            },
-            ...options,
-        });
-        return res.json();
-    },
 
     // ── Step 1: Services ──
     async loadServices() {
+        const isCurrent = this.readGuard('loadServices');
         const data = await this.api('/services');
+        if (!isCurrent()) return;
         this.services = data.services || [];
 
         if (this.services.length === 0) {
             this.clearExitStates();
-            this.step = 'empty';
+            this.goToStep('empty');
             return;
         }
 
@@ -594,12 +462,22 @@ Alpine.data('bookingWizard', () => ({
 
     // Service card stagger index for animation-delay
     serviceAnimDelay(i) {
-        return 'animation-delay:' + (i * 60) + 'ms';
+        return 'animation-delay:' + Math.min(i * 30, 120) + 'ms';
     },
 
     selectService(service) {
+        this.cancelFinder();
+        this.loadError = '';
+        this.slotsLoading = false;
+        if (this.selectedService?.id !== service.id) {
+            this.selectedStaff = null;
+            this.selectedDate = null;
+            this.selectedSlot = null;
+            this.availableSlots = [];
+            this._slotRequest++;
+        }
         this.selectedService = service;
-        setTimeout(() => this.loadStaff(), 200);
+        this.loadStaff();
     },
 
     isServiceSelected(service) {
@@ -608,8 +486,17 @@ Alpine.data('bookingWizard', () => ({
 
     // ── Step 2: Staff ──
     async loadStaff() {
+        const request = ++this._staffRequest;
+        if (this.selectedService?.requires_staff === false || this.selectedService?.requires_staff === 0) {
+            this.staff = []; this.selectedStaff = null;
+            await this.loadDates();
+            return;
+        }
         const params = this.selectedService ? `?service_id=${this.selectedService.id}` : '';
+        const isCurrent = this.readGuard('loadStaff');
         const data = await this.api(`/staff${params}`);
+        if (!isCurrent()) return;
+        if (request !== this._staffRequest) return;
         this.staff = data.staff || [];
 
         if (this.staff.length <= 1) {
@@ -622,13 +509,29 @@ Alpine.data('bookingWizard', () => ({
     },
 
     selectStaff(staff) {
+        this.cancelFinder();
+        this.loadError = '';
+        if (this.selectedStaff?.id !== staff.id) {
+            this.selectedSlot = null;
+            this.availableSlots = [];
+            this._slotRequest++;
+        }
+        this.slotsLoading = false;
         this.selectedStaff = staff;
-        setTimeout(() => this.loadDates(), 200);
+        this.loadDates();
     },
 
     selectAnyStaff() {
+        this.cancelFinder();
+        this.loadError = '';
+        if (!!this.selectedStaff) {
+            this.selectedSlot = null;
+            this.availableSlots = [];
+            this._slotRequest++;
+        }
+        this.slotsLoading = false;
         this.selectedStaff = null;
-        setTimeout(() => this.loadDates(), 200);
+        this.loadDates();
     },
 
     isStaffSelected(staff) {
@@ -645,6 +548,8 @@ Alpine.data('bookingWizard', () => ({
 
     // ── Step 3: Date & Time ──
     async loadDates() {
+        const request = ++this._dateRequest;
+        const isCurrent = this.readGuard('loadDates');
         const params = new URLSearchParams({
             year: this.currentYear,
             month: this.currentMonth + 1,
@@ -653,7 +558,17 @@ Alpine.data('bookingWizard', () => ({
         if (this.selectedStaff) params.set('staff_id', this.selectedStaff.id);
 
         const data = await this.api(`/available-dates?${params}`);
+        if (request !== this._dateRequest || !isCurrent()) return;
         this.availableDates = data.dates || [];
+        const visibleMonth = `${this.currentYear}-${String(this.currentMonth + 1).padStart(2, '0')}`;
+        if (this.selectedDate?.startsWith(visibleMonth)) {
+            if (this.availableDates.includes(this.selectedDate)) {
+                const chosen = this.selectedSlot;
+                await this.selectDate(this.selectedDate);
+                if (request !== this._dateRequest || !isCurrent()) return;
+                if (chosen) this.selectedSlot = this.availableSlots.find(slot => slot.time === chosen.time) || null;
+            } else { this.selectedDate = null; this.selectedSlot = null; this.availableSlots = []; }
+        }
 
         if (this.step !== 'date') {
             this.goToStep('date');
@@ -665,7 +580,7 @@ Alpine.data('bookingWizard', () => ({
         this.currentMonth--;
         if (this.currentMonth < 0) { this.currentMonth = 11; this.currentYear--; }
         await this.loadDates();
-        setTimeout(() => { this.calendarFading = false; }, 180);
+        this.calendarFading = false;
     },
 
     async nextMonth() {
@@ -673,7 +588,7 @@ Alpine.data('bookingWizard', () => ({
         this.currentMonth++;
         if (this.currentMonth > 11) { this.currentMonth = 0; this.currentYear++; }
         await this.loadDates();
-        setTimeout(() => { this.calendarFading = false; }, 180);
+        this.calendarFading = false;
     },
 
     get canPrevMonth() {
@@ -696,7 +611,7 @@ Alpine.data('bookingWizard', () => ({
     get calendarCells() {
         const year = this.currentYear;
         const month = this.currentMonth;
-        const today = new Date();
+        const today = new Date(this.tenantToday + 'T00:00:00');
         const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const weekStart = fmt.week_start ?? 0;
@@ -712,7 +627,7 @@ Alpine.data('bookingWizard', () => ({
 
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const isPast = new Date(dateStr) < new Date(today.toDateString());
+            const isPast = new Date(dateStr + 'T00:00:00') < new Date(today.toDateString());
             const hasSlots = this.availableDates.includes(dateStr);
             cells.push({
                 day,
@@ -733,6 +648,7 @@ Alpine.data('bookingWizard', () => ({
     },
 
     clickDate(cell) {
+        if (this.calendarLoading) return;
         if (!cell.disabled && cell.day) {
             this.selectDate(cell.dateStr);
         }
@@ -768,7 +684,7 @@ Alpine.data('bookingWizard', () => ({
     },
 
     slotAnimDelay(i) {
-        return 'animation-delay:' + (i * 40) + 'ms';
+        return 'animation-delay:' + Math.min(i * 20, 120) + 'ms';
     },
 
     hasPrice(service) {
@@ -795,11 +711,11 @@ Alpine.data('bookingWizard', () => ({
         return !member.avatar_path;
     },
 
-    customFieldId(field) {
-        return 'vb-cf-' + field.name;
-    },
 
     async selectDate(dateStr) {
+        if (this.selectedDate !== dateStr) this.slotAlternatives = [];
+        const request = ++this._slotRequest;
+        this.slotsLoading = true;
         this.selectedDate = dateStr;
         this.selectedSlot = null;
         this.availableSlots = [];
@@ -809,20 +725,17 @@ Alpine.data('bookingWizard', () => ({
         if (this.selectedStaff) params.set('staff_id', this.selectedStaff.id);
 
         const data = await this.api(`/availability?${params}`);
+        if (request !== this._slotRequest || dateStr !== this.selectedDate) return;
         this.availableSlots = data.slots || [];
+        this.slotsLoading = false;
 
-        // Scroll time slots into view after render (respects reduced-motion)
-        if (this.availableSlots.length > 0 && !prefersReducedMotion()) {
-            this.$nextTick(() => {
-                const el = document.getElementById('vb-time-container');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            });
-        }
+        this.announcement = this.availableSlots.length
+            ? t('availability.times_available', { count: this.availableSlots.length }) : t('empty.no_times');
     },
 
     // Display a slot time in the customer's timezone
     displaySlotTime(slot) {
-        return formatSlotDisplay(slot.time, this.selectedDate, this.tenantTz, this.customerTz);
+        return this.formatDisplayTime(slot.time, this.selectedDate, slot.start_utc);
     },
 
     selectSlot(slot) {
@@ -846,41 +759,13 @@ Alpine.data('bookingWizard', () => ({
         if (!this.selectedSlot || !this.selectedDate) return '';
         const start = this.displaySlotTime(this.selectedSlot);
         const end = this.selectedSlot.end_time
-            ? formatSlotDisplay(this.selectedSlot.end_time, this.selectedDate, this.tenantTz, this.customerTz)
+            ? this.formatDisplayTime(this.selectedSlot.end_time, this.selectedDate, this.selectedSlot.end_utc)
             : null;
         const timeStr = end ? start + ' – ' + end : start;
-        return this.formatDateDisplay(this.selectedDate) + '  ·  ' + timeStr;
+        return this.formatDateDisplay(this.selectedDisplayDate()) + '  ·  ' + timeStr;
     },
 
     // ── Step 4: Details ──
-    submitDetails() {
-        this.formErrors = {};
-
-        if (!this.customerName.trim()) {
-            this.formErrors.name = true;
-        }
-        if (!this.customerEmail.trim()) {
-            this.formErrors.email = true;
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.customerEmail.trim())) {
-            this.formErrors.email = true;
-        }
-        if (config.require_phone && !this.customerPhone.trim()) {
-            this.formErrors.phone = true;
-        }
-        if (config.requires_consent && !this.consentGiven) {
-            this.formErrors.consent = true;
-        }
-
-        if (Object.keys(this.formErrors).length > 0) return;
-
-        // Collect custom field values from refs
-        const customEls = this.$el.querySelectorAll('[data-book-custom]');
-        customEls.forEach(el => {
-            this.customFields[el.dataset.bookCustom] = el.value.trim();
-        });
-
-        this.goToStep('review');
-    },
 
     hasError(field) {
         return !!this.formErrors[field];
@@ -898,28 +783,17 @@ Alpine.data('bookingWizard', () => ({
         if (this.selectedStaff) {
             rows.push({ label: t('summary.with_label'), value: this.selectedStaff.name });
         }
-        rows.push({ label: t('summary.date_label'), value: this.formatDateDisplay(this.selectedDate) });
+        rows.push({ label: t('summary.date_label'), value: this.formatDateDisplay(this.selectedDisplayDate()) });
         if (this.selectedSlot) {
-            const displayStart = formatSlotDisplay(this.selectedSlot.time, this.selectedDate, this.tenantTz, this.customerTz);
-            const displayEnd   = formatSlotDisplay(this.selectedSlot.end_time, this.selectedDate, this.tenantTz, this.customerTz);
+            const displayStart = this.formatDisplayTime(this.selectedSlot.time, this.selectedDate, this.selectedSlot.start_utc);
+            const displayEnd   = this.formatDisplayTime(this.selectedSlot.end_time, this.selectedDate, this.selectedSlot.end_utc);
             rows.push({ label: t('summary.time_label'), value: `${displayStart} – ${displayEnd}` });
         }
         if (this.selectedService) {
             rows.push({ label: t('summary.duration_label'), value: this.formatDuration(this.selectedService.duration_minutes) });
         }
-        if (!this.tzMatch) {
-            rows.push({ label: t('timezone.label'), value: this.tzDisplayLabel(this.customerTz) });
-        }
+        if (this.hasTimezoneDifference) rows.push({ label: t('timezone.label'), value: this.tzDisplayLabel(this.displayTimezone) });
 
-        // Custom field values (only filled fields appear in the summary)
-        if (config.custom_fields && config.custom_fields.length) {
-            for (const field of config.custom_fields) {
-                const value = (this.customFields[field.name] || '').trim();
-                if (value) {
-                    rows.push({ label: field.label, value });
-                }
-            }
-        }
 
         return rows;
     },
@@ -940,19 +814,10 @@ Alpine.data('bookingWizard', () => ({
             rows.push({ label: t('resource.nights_label'), value: String(this.resourceAvailability.nights) });
             rows.push({ label: t('resource.total_label'), value: this.formatPrice(this.resourceAvailability.total) });
         }
-        if (this.guestCount > 1) {
+        if (this.guestCount >= 1) {
             rows.push({ label: t('resource.guests_label'), value: String(this.guestCount) });
         }
 
-        // Custom field values
-        if (config.custom_fields && config.custom_fields.length) {
-            for (const field of config.custom_fields) {
-                const value = (this.customFields[field.name] || '').trim();
-                if (value) {
-                    rows.push({ label: field.label, value });
-                }
-            }
-        }
         return rows;
     },
 
@@ -965,6 +830,7 @@ Alpine.data('bookingWizard', () => ({
     async submitBooking() {
 
 
+        if (this.submitting) return;
         this.submitting = true;
 
         const slot = this.selectedSlot;
@@ -984,7 +850,7 @@ Alpine.data('bookingWizard', () => ({
             consent_given: this.consentGiven,
             customer_timezone: this.customerTz,
             __ts: window.__VB_TS__,
-            __hp: this.$el.querySelector('[name="__hp"]')?.value || '',
+            __hp: (this.rootElement || this.$el).querySelector('[name="__hp"]')?.value || '',
         };
 
         try {
@@ -995,6 +861,7 @@ Alpine.data('bookingWizard', () => ({
 
             if (data.error) {
                 this.submitting = false;
+                if (this.applyServerErrors(data)) return;
                 if (data.error === 'slot_unavailable') {
                     const alts = data.alternatives || [];
                     if (alts.length > 0) {
@@ -1023,14 +890,15 @@ Alpine.data('bookingWizard', () => ({
 
     // Slot-taken recovery: user picks an alternative time
     selectAlternative(alt) {
-        this.selectedSlot = { time: alt.time, end_time: alt.end_time, staff_id: alt.staff_id };
+        if (this.submitting || !this.slotAlternatives.includes(alt)) return;
+        this.selectedSlot = { ...alt };
         this.slotAlternatives = [];
         // No auto-submit — user must explicitly click "Confirm booking" again
     },
 
     // Format a slot time for display (used by recovery pills)
-    formatSlotTime(time) {
-        return formatSlotDisplay(time, this.selectedDate, this.tenantTz, this.customerTz);
+    formatSlotTime(time, utcInstant = null) {
+        return this.formatDisplayTime(time, this.selectedDate, utcInstant);
     },
 
     // ── Confirmation ──
@@ -1040,12 +908,13 @@ Alpine.data('bookingWizard', () => ({
         const rows = [];
         if (b.service) rows.push({ label: t('summary.service_label'), value: b.service });
         if (b.staff) rows.push({ label: t('summary.with_label'), value: b.staff });
-        rows.push({ label: t('summary.date_label'), value: this.formatDateDisplay(b.date) });
+        rows.push({ label: t('summary.date_label'), value: this.formatDateDisplay(this.displayDate(b.date, b.time, b.start_utc)) });
 
-        const displayStart = formatSlotDisplay(b.time, b.date, this.tenantTz, this.customerTz);
-        const displayEnd   = formatSlotDisplay(b.end_time, b.date, this.tenantTz, this.customerTz);
+        const displayStart = this.formatDisplayTime(b.time, b.date, b.start_utc);
+        const displayEnd   = this.formatDisplayTime(b.end_time, b.date, b.end_utc);
         rows.push({ label: t('summary.time_label'), value: `${displayStart} – ${displayEnd}` });
         rows.push({ label: t('summary.duration_label'), value: this.formatDuration(b.duration) });
+        if (this.hasTimezoneDifference) rows.push({ label: t('timezone.label'), value: this.tzDisplayLabel(this.displayTimezone) });
         return rows;
     },
 
@@ -1070,27 +939,13 @@ Alpine.data('bookingWizard', () => ({
             const start = b.check_in.replace(/-/g, '');
             const end = b.check_out.replace(/-/g, '');
             const title = encodeURIComponent(b.resource || config.name);
-            return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}`;
+            return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&ctz=${encodeURIComponent(this.tenantTz)}`;
         }
 
-        if (config.booking_pattern === 'capacity') {
-            const start = `${b.date.replace(/-/g, '')}T${b.time.replace(':', '')}00`;
-            const end = `${b.date.replace(/-/g, '')}T${b.end_time.replace(':', '')}00`;
-            const title = encodeURIComponent(b.label || config.name);
-            return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}`;
-        }
-
-        if (config.booking_pattern === 'event') {
-            const start = `${b.date.replace(/-/g, '')}T${b.time.replace(':', '')}00`;
-            const end = `${b.date.replace(/-/g, '')}T${b.end_time.replace(':', '')}00`;
-            const title = encodeURIComponent(b.event_name || config.name);
-            return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}`;
-        }
-
-        const start = `${b.date.replace(/-/g, '')}T${b.time.replace(':', '')}00`;
-        const end = `${b.date.replace(/-/g, '')}T${b.end_time.replace(':', '')}00`;
-        const title = encodeURIComponent(b.service || config.name);
-        return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}`;
+        const start = this.calendarUtc(b.start_utc) || `${b.date.replace(/-/g, '')}T${b.time.replace(':', '')}00`;
+        const end = this.calendarUtc(b.end_utc) || `${(b.end_date || b.date).replace(/-/g, '')}T${b.end_time.replace(':', '')}00`;
+        const title = encodeURIComponent(b.service || b.event_name || b.label || config.name);
+        return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&ctz=${encodeURIComponent(this.tenantTz)}`;
     },
 
     // Basic client-side .ics export (no VTIMEZONE definition block).
@@ -1130,9 +985,11 @@ Alpine.data('bookingWizard', () => ({
             ];
         } else {
             const pad = (s) => s.replace(/-/g, '').replace(/:/g, '');
-            const dtStart = `${pad(b.date)}T${pad(b.time)}00`;
-            const dtEnd = `${pad(b.date)}T${pad(b.end_time)}00`;
-            const summary = esc(b.service || config.name);
+            const utcStart = this.calendarUtc(b.start_utc);
+            const utcEnd = this.calendarUtc(b.end_utc);
+            const dtStart = utcStart || `${pad(b.date)}T${pad(b.time)}00`;
+            const dtEnd = utcEnd || `${pad(b.end_date || b.date)}T${pad(b.end_time)}00`;
+            const summary = esc(b.service || b.event_name || b.label || config.name);
             const description = b.staff ? esc(`With ${b.staff}`) : '';
 
             lines = [
@@ -1143,8 +1000,8 @@ Alpine.data('bookingWizard', () => ({
                 'METHOD:PUBLISH',
                 'BEGIN:VEVENT',
                 `UID:${uid}`,
-                `DTSTART;TZID=${this.tenantTz}:${dtStart}`,
-                `DTEND;TZID=${this.tenantTz}:${dtEnd}`,
+                utcStart ? `DTSTART:${dtStart}` : `DTSTART;TZID=${this.tenantTz}:${dtStart}`,
+                utcEnd ? `DTEND:${dtEnd}` : `DTEND;TZID=${this.tenantTz}:${dtEnd}`,
                 `SUMMARY:${summary}`,
                 description ? `DESCRIPTION:${description}` : '',
                 `DTSTAMP:${new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15)}Z`,
@@ -1172,6 +1029,7 @@ Alpine.data('bookingWizard', () => ({
 
     // Custom confirmation message from tenant config
     get confirmCustomMessage() {
+        if (this.bookingIsPending || this.eventIsWaitlisted) return '';
         return config.confirmation_message || '';
     },
 
@@ -1198,11 +1056,6 @@ Alpine.data('bookingWizard', () => ({
     togglePolicy() { this.policyOpen = !this.policyOpen; },
 
     // ── Toast ──
-    showToast(message, type = 'error') {
-        if (this.toastTimer) clearTimeout(this.toastTimer);
-        this.toast = { message, type };
-        this.toastTimer = setTimeout(() => { this.toast = null; }, 5000);
-    },
 
     dismissToast() {
         this.toast = null;
@@ -1227,33 +1080,28 @@ Alpine.data('bookingWizard', () => ({
         this.manageLoading = true;
         this.step = 'manage';
         try {
-            const resp = await fetch(`/api/${config.slug}/bookings/${this.manageBookingId}`);
-            const data = await resp.json();
-            if (!resp.ok || data.error) {
-                this.showToast(data.message || t('manage.not_found'));
-                return;
-            }
+            const data = await this.api(`/bookings/${this.manageBookingId}`);
             this.managedBooking = data.booking;
+            if (data.booking.is_virtual && data.booking.customer_timezone) {
+                try {
+                    new Intl.DateTimeFormat('en', { timeZone: data.booking.customer_timezone }).format();
+                    this.customerTz = data.booking.customer_timezone;
+                } catch { /* Legacy invalid zones keep the customer's current zone. */ }
+            }
             this.manageCanCancel = data.can_cancel;
             this.manageCanReschedule = data.can_reschedule;
             this.manageRescheduleReason = data.reschedule_reason || null;
+            this.manageCancelled = data.booking.status === 'cancelled';
+            this.goToStep('manage', { forceFocus: true });
+        } finally { this.manageLoading = false; }
 
-            // If already cancelled, show the cancelled state
-            if (data.booking.status === 'cancelled') {
-                this.manageCancelled = true;
-            }
-        } catch {
-            this.showToast(t('errors.connection'));
-        } finally {
-            this.manageLoading = false;
-        }
     },
 
     /**
      * Cancel the managed booking via API.
      */
     async cancelManagedBooking() {
-        if (!this.manageBookingId) return;
+        if (!this.manageBookingId || this.manageCancelling) return;
         this.manageCancelling = true;
         try {
             const resp = await fetch(`/api/${config.slug}/bookings/${this.manageBookingId}/cancel`, {
@@ -1267,12 +1115,15 @@ Alpine.data('bookingWizard', () => ({
             const data = await resp.json();
             if (!resp.ok || data.error) {
                 this.showToast(data.message || t('errors.generic'));
-                this.manageCancelModalOpen = false;
+                this.manageCancelling = false;
+                this.closeCancellation();
                 return;
             }
             // Success — show cancelled state
             this.manageCancelled = true;
-            this.manageCancelModalOpen = false;
+            this.manageCancelling = false;
+            this.closeCancellation();
+            this.goToStep('manage', { forceFocus: true });
             this.manageCanCancel = false;
             this.manageCanReschedule = false;
             this.manageRescheduleReason = null;
@@ -1323,6 +1174,7 @@ Alpine.data('bookingWizard', () => ({
         this.rescheduleCheckIn = null;
         this.rescheduleCheckOut = null;
         this.rescheduleResourceDates = [];
+        this.rescheduleResourceAvailability = null;
         this.rescheduleCapacitySlots = [];
         this.rescheduleCapacitySlot = null;
         this.rescheduleEvents = [];
@@ -1367,6 +1219,7 @@ Alpine.data('bookingWizard', () => ({
         this.rescheduleCheckIn = null;
         this.rescheduleCheckOut = null;
         this.rescheduleResourceDates = [];
+        this.rescheduleResourceAvailability = null;
         this.rescheduleCapacitySlots = [];
         this.rescheduleCapacitySlot = null;
         this.rescheduleEvents = [];
@@ -1407,7 +1260,10 @@ Alpine.data('bookingWizard', () => ({
         if (b.service_id) params.set('service_id', b.service_id);
         if (b.staff_id) params.set('staff_id', b.staff_id);
 
+        const isCurrent = this.readGuard('loadRescheduleDates');
+        params.set('reschedule_booking_id', this.manageBookingId);
         const data = await this.api(`/available-dates?${params}`);
+        if (!isCurrent()) return;
         this.rescheduleDates = data.dates || [];
     },
 
@@ -1422,7 +1278,7 @@ Alpine.data('bookingWizard', () => ({
         this.rescheduleSlot = null;
         this.rescheduleSlots = [];
         await this.loadRescheduleDates();
-        setTimeout(() => { this.rescheduleCalendarFading = false; }, 180);
+        this.rescheduleCalendarFading = false;
     },
 
     /**
@@ -1436,7 +1292,7 @@ Alpine.data('bookingWizard', () => ({
         this.rescheduleSlot = null;
         this.rescheduleSlots = [];
         await this.loadRescheduleDates();
-        setTimeout(() => { this.rescheduleCalendarFading = false; }, 180);
+        this.rescheduleCalendarFading = false;
     },
 
     /**
@@ -1454,7 +1310,7 @@ Alpine.data('bookingWizard', () => ({
     get rescheduleCalendarCells() {
         const year = this.rescheduleYear;
         const month = this.rescheduleMonth;
-        const today = new Date();
+        const today = new Date(this.tenantToday + 'T00:00:00');
         const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const weekStart = fmt.week_start ?? 0;
@@ -1469,7 +1325,7 @@ Alpine.data('bookingWizard', () => ({
 
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const isPast = new Date(dateStr) < new Date(today.toDateString());
+            const isPast = new Date(dateStr + 'T00:00:00') < new Date(today.toDateString());
             const hasSlots = this.rescheduleDates.includes(dateStr);
             cells.push({
                 day,
@@ -1488,18 +1344,24 @@ Alpine.data('bookingWizard', () => ({
      * Select a date in the reschedule calendar and load time slots.
      */
     async selectRescheduleDate(cell) {
+        if (this.calendarLoading) return;
         if (cell.disabled || !cell.day) return;
         this.rescheduleDate = cell.dateStr;
         this.rescheduleSlot = null;
         this.rescheduleSlots = [];
+        this.slotsLoading = true;
 
         const b = this.managedBooking;
         const params = new URLSearchParams({ date: cell.dateStr });
         if (b.service_id) params.set('service_id', b.service_id);
         if (b.staff_id) params.set('staff_id', b.staff_id);
 
+        const isCurrent = this.readGuard('selectRescheduleDate');
+        params.set('reschedule_booking_id', this.manageBookingId);
         const data = await this.api(`/availability?${params}`);
-        this.rescheduleSlots = data.slots || [];
+        if (!isCurrent()) return;
+        this.rescheduleSlots = (data.slots || []).filter(slot => this.rescheduleDate !== this.managedBooking.date || slot.time !== this.managedBooking.time);
+        this.slotsLoading = false;
     },
 
     /**
@@ -1516,12 +1378,12 @@ Alpine.data('bookingWizard', () => ({
 
     get rescheduleSlotLabel() {
         if (!this.rescheduleSlot || !this.rescheduleDate) return '';
-        const start = formatSlotDisplay(this.rescheduleSlot.time, this.rescheduleDate, this.tenantTz, this.customerTz);
+        const start = this.formatDisplayTime(this.rescheduleSlot.time, this.rescheduleDate, this.rescheduleSlot.start_utc);
         const end = this.rescheduleSlot.end_time
-            ? formatSlotDisplay(this.rescheduleSlot.end_time, this.rescheduleDate, this.tenantTz, this.customerTz)
+            ? this.formatDisplayTime(this.rescheduleSlot.end_time, this.rescheduleDate, this.rescheduleSlot.end_utc)
             : null;
         const timeStr = end ? start + ' – ' + end : start;
-        return this.formatDateDisplay(this.rescheduleDate) + '  ·  ' + timeStr;
+        return this.formatDateDisplay(this.displayDate(this.rescheduleDate, this.rescheduleSlot?.time || this.rescheduleCapacitySlot?.time, this.rescheduleSlot?.start_utc || this.rescheduleCapacitySlot?.start_utc)) + '  ·  ' + timeStr;
     },
 
     /**
@@ -1538,12 +1400,12 @@ Alpine.data('bookingWizard', () => ({
         }
         if (pattern === 'event') {
             const parts = [b.event_name || ''];
-            if (b.date) parts.push(this.formatDateDisplay(b.date));
-            if (b.time && b.end_time) parts.push(`${b.time} – ${b.end_time}`);
+            if (b.date) parts.push(this.formatDateDisplay(this.displayDate(b.date, b.time, b.start_utc)));
+            if (b.time && b.end_time) parts.push(`${this.formatDisplayTime(b.time, b.date, b.start_utc)} – ${this.formatDisplayTime(b.end_time, b.date, b.end_utc)}`);
             return parts.filter(Boolean).join(', ');
         }
-        const dateLabel = this.formatDateDisplay(b.date);
-        const timeLabel = b.time && b.end_time ? `${b.time} – ${b.end_time}` : '';
+        const dateLabel = this.formatDateDisplay(this.displayDate(b.date, b.time, b.start_utc));
+        const timeLabel = b.time && b.end_time ? `${this.formatDisplayTime(b.time, b.date, b.start_utc)} – ${this.formatDisplayTime(b.end_time, b.date, b.end_utc)}` : '';
         return timeLabel ? `${dateLabel}, ${timeLabel}` : dateLabel;
     },
 
@@ -1558,10 +1420,10 @@ Alpine.data('bookingWizard', () => ({
         }
         if (pattern === 'capacity') {
             if (!this.rescheduleDate || !this.rescheduleCapacitySlot) return '';
-            const dateLabel = this.formatDateDisplay(this.rescheduleDate);
+            const dateLabel = this.formatDateDisplay(this.displayDate(this.rescheduleDate, this.rescheduleSlot?.time || this.rescheduleCapacitySlot?.time, this.rescheduleSlot?.start_utc || this.rescheduleCapacitySlot?.start_utc));
             const label = this.rescheduleCapacitySlot.label || '';
             const time = this.rescheduleCapacitySlot.time && this.rescheduleCapacitySlot.end_time
-                ? `${this.rescheduleCapacitySlot.time} – ${this.rescheduleCapacitySlot.end_time}` : '';
+                ? `${this.formatDisplayTime(this.rescheduleCapacitySlot.time, this.rescheduleDate, this.rescheduleCapacitySlot.start_utc)} – ${this.formatDisplayTime(this.rescheduleCapacitySlot.end_time, this.rescheduleDate, this.rescheduleCapacitySlot.end_utc)}` : '';
             return [dateLabel, label, time].filter(Boolean).join(', ');
         }
         if (pattern === 'event') {
@@ -1569,15 +1431,16 @@ Alpine.data('bookingWizard', () => ({
             const ev = this.rescheduleSelectedEvent;
             const parts = [ev.name || ''];
             if (ev.start_datetime) {
-                parts.push(this.formatEventDate(ev.start_datetime));
-                parts.push(this.formatEventTime(ev.start_datetime) + '–' + this.formatEventTime(ev.end_datetime));
+                parts.push(this.formatEventDate(ev.start_datetime, ev.start_utc));
+                parts.push(this.formatEventTime(ev.start_datetime, ev.start_utc) + '–' + this.formatEventTime(ev.end_datetime, ev.end_utc));
             }
             return parts.filter(Boolean).join(', ');
         }
         if (!this.rescheduleDate || !this.rescheduleSlot) return '';
-        const dateLabel = this.formatDateDisplay(this.rescheduleDate);
+        const dateLabel = this.formatDateDisplay(this.displayDate(this.rescheduleDate, this.rescheduleSlot?.time || this.rescheduleCapacitySlot?.time, this.rescheduleSlot?.start_utc || this.rescheduleCapacitySlot?.start_utc));
         const endTime = this.rescheduleSlot.end_time || '';
-        const timeLabel = endTime ? `${this.rescheduleSlot.time} – ${endTime}` : this.rescheduleSlot.time;
+        const startTime = this.formatDisplayTime(this.rescheduleSlot.time, this.rescheduleDate, this.rescheduleSlot.start_utc);
+        const timeLabel = endTime ? `${startTime} – ${this.formatDisplayTime(endTime, this.rescheduleDate, this.rescheduleSlot?.end_utc)}` : startTime;
         return `${dateLabel}, ${timeLabel}`;
     },
 
@@ -1650,14 +1513,17 @@ Alpine.data('bookingWizard', () => ({
             year: this.rescheduleYear,
             month: this.rescheduleMonth + 1,
         });
+        const isCurrent = this.readGuard('loadRescheduleResourceDates');
+        params.set('reschedule_booking_id', this.manageBookingId);
         const data = await this.api(`/resources/${this.managedBooking.resource_id}/availability?${params}`);
+        if (!isCurrent()) return;
         this.rescheduleResourceDates = data.dates || [];
     },
 
     get rescheduleResourceCalendarCells() {
         const year = this.rescheduleYear;
         const month = this.rescheduleMonth;
-        const today = new Date();
+        const today = new Date(this.tenantToday + 'T00:00:00');
         const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const weekStart = fmt.week_start ?? 0;
@@ -1669,8 +1535,10 @@ Alpine.data('bookingWizard', () => ({
         }
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const isPast = new Date(dateStr) < new Date(today.toDateString());
-            const hasSlots = this.rescheduleResourceDates.includes(dateStr);
+            const isPast = new Date(dateStr + 'T00:00:00') < new Date(today.toDateString());
+            const hasSlots = this.rescheduleCheckIn && !this.rescheduleCheckOut && dateStr > this.rescheduleCheckIn
+                ? this.canResourceCheckout(this.rescheduleCheckIn, dateStr, this.rescheduleResourceDates, year, month)
+                : this.rescheduleResourceDates.includes(dateStr);
             const isCheckIn = dateStr === this.rescheduleCheckIn;
             const isCheckOut = dateStr === this.rescheduleCheckOut;
             const inRange = this.rescheduleCheckIn && this.rescheduleCheckOut
@@ -1688,6 +1556,7 @@ Alpine.data('bookingWizard', () => ({
     },
 
     selectRescheduleResourceDate(cell) {
+        if (this.calendarLoading) return;
         if (cell.disabled || !cell.day) return;
         if (!this.rescheduleCheckIn || (this.rescheduleCheckIn && this.rescheduleCheckOut)) {
             this.rescheduleCheckIn = cell.dateStr;
@@ -1701,9 +1570,23 @@ Alpine.data('bookingWizard', () => ({
         }
     },
 
-    confirmRescheduleResource() {
+    async confirmRescheduleResource() {
         if (!this.rescheduleCheckIn || !this.rescheduleCheckOut) return;
+        if (this.rescheduleCheckIn === this.managedBooking.check_in && this.rescheduleCheckOut === this.managedBooking.check_out) {
+            this.showToast(t('manage.same_slot'), 'warn'); return;
+        }
+        const isCurrent = this.readGuard('confirmRescheduleResource');
+        const params = new URLSearchParams({
+            check_in: this.rescheduleCheckIn, check_out: this.rescheduleCheckOut,
+            guests: this.managedBooking.party_size || 1,
+            reschedule_booking_id: this.manageBookingId,
+        });
+        const data = await this.api(`/resources/${this.managedBooking.resource_id}/availability?${params}`);
+        if (!isCurrent()) return;
+        if (!data.available) { this.showToast(t('resource.error_' + data.error), 'warn'); return; }
+        this.rescheduleResourceAvailability = data;
         this.goToStep('reschedule-review');
+
     },
 
     async rescheduleResourcePrevMonth() {
@@ -1711,7 +1594,7 @@ Alpine.data('bookingWizard', () => ({
         this.rescheduleMonth--;
         if (this.rescheduleMonth < 0) { this.rescheduleMonth = 11; this.rescheduleYear--; }
         await this.loadRescheduleResourceDates();
-        setTimeout(() => { this.rescheduleCalendarFading = false; }, 180);
+        this.rescheduleCalendarFading = false;
     },
 
     async rescheduleResourceNextMonth() {
@@ -1719,7 +1602,7 @@ Alpine.data('bookingWizard', () => ({
         this.rescheduleMonth++;
         if (this.rescheduleMonth > 11) { this.rescheduleMonth = 0; this.rescheduleYear++; }
         await this.loadRescheduleResourceDates();
-        setTimeout(() => { this.rescheduleCalendarFading = false; }, 180);
+        this.rescheduleCalendarFading = false;
     },
 
     get rescheduleResourceLabel() {
@@ -1734,18 +1617,25 @@ Alpine.data('bookingWizard', () => ({
     async loadRescheduleCapacityDates() {
         if (!this.managedBooking) return;
         const ps = this.managedBooking.party_size || 1;
-        const res = await this.api(`/capacity/available-dates?year=${this.rescheduleYear}&month=${this.rescheduleMonth + 1}&party_size=${ps}`);
+        const isCurrent = this.readGuard('loadRescheduleCapacityDates');
+        const res = await this.api(`/capacity/available-dates?year=${this.rescheduleYear}&month=${this.rescheduleMonth + 1}&party_size=${ps}&reschedule_booking_id=${encodeURIComponent(this.manageBookingId)}`);
+        if (!isCurrent()) return;
         this.rescheduleDates = res.dates || [];
     },
 
     async selectRescheduleCapacityDate(cell) {
+        if (this.calendarLoading) return;
         if (cell.disabled || !cell.day) return;
         this.rescheduleDate = cell.dateStr;
         this.rescheduleCapacitySlot = null;
         this.rescheduleCapacitySlots = [];
+        this.slotsLoading = true;
         const ps = this.managedBooking?.party_size || 1;
-        const res = await this.api(`/capacity/slots?date=${cell.dateStr}&party_size=${ps}`);
-        this.rescheduleCapacitySlots = res.slots || [];
+        const isCurrent = this.readGuard('selectRescheduleCapacityDate');
+        const res = await this.api(`/capacity/slots?date=${cell.dateStr}&party_size=${ps}&reschedule_booking_id=${encodeURIComponent(this.manageBookingId)}`);
+        if (!isCurrent()) return;
+        this.rescheduleCapacitySlots = (res.slots || []).filter(slot => this.rescheduleDate !== this.managedBooking.date || slot.time !== this.managedBooking.time);
+        this.slotsLoading = false;
     },
 
     selectRescheduleCapacitySlot(slot) {
@@ -1765,7 +1655,7 @@ Alpine.data('bookingWizard', () => ({
         this.rescheduleCapacitySlot = null;
         this.rescheduleCapacitySlots = [];
         await this.loadRescheduleCapacityDates();
-        setTimeout(() => { this.rescheduleCalendarFading = false; }, 180);
+        this.rescheduleCalendarFading = false;
     },
 
     async rescheduleCapacityNextMonth() {
@@ -1776,29 +1666,29 @@ Alpine.data('bookingWizard', () => ({
         this.rescheduleCapacitySlot = null;
         this.rescheduleCapacitySlots = [];
         await this.loadRescheduleCapacityDates();
-        setTimeout(() => { this.rescheduleCalendarFading = false; }, 180);
+        this.rescheduleCalendarFading = false;
     },
 
     get rescheduleCapacitySlotLabel() {
         if (!this.rescheduleCapacitySlot || !this.rescheduleDate) return '';
         const sl = this.rescheduleCapacitySlot;
-        const dateLabel = this.formatDateDisplay(this.rescheduleDate);
-        const time = sl.time && sl.end_time ? `${sl.time} – ${sl.end_time}` : '';
-        return [dateLabel, sl.label, time].filter(Boolean).join('  ·  ');
+        const dateLabel = this.formatDateDisplay(this.displayDate(this.rescheduleDate, this.rescheduleSlot?.time || this.rescheduleCapacitySlot?.time, this.rescheduleSlot?.start_utc || this.rescheduleCapacitySlot?.start_utc));
+        const time = sl.time && sl.end_time ? this.rescheduleCapacityTimeLabel(sl) : '';
+        return [dateLabel, time].filter(Boolean).join('  ·  ');
     },
 
     // ── Event reschedule methods ──
 
     async loadRescheduleEvents() {
+        const isCurrent = this.readGuard('loadRescheduleEvents');
         const data = await this.api('/events');
+        if (!isCurrent()) return;
         // Exclude the exact same occurrence (same event_id + same date) but allow
         // same event on a different date (recurring-event reschedule to another occurrence).
         const currentEventId = this.managedBooking?.event_id;
         const currentDate = this.managedBooking?.date;
-        const now = new Date();
         this.rescheduleEvents = (data.events || []).filter(ev => {
             if (ev.id === currentEventId && ev.date === currentDate) return false;
-            if (ev.start_datetime && new Date(ev.start_datetime) < now) return false;
             return true;
         });
     },
@@ -1832,8 +1722,8 @@ Alpine.data('bookingWizard', () => ({
 
         if (pattern === 'event') {
             if (nb.event_name) rows.push({ label: t('event.events_title').replace(/s$/, ''), value: nb.event_name });
-            if (nb.date) rows.push({ label: t('summary.date_label'), value: this.formatDateDisplay(nb.date) });
-            if (nb.time) rows.push({ label: t('summary.time_label'), value: `${nb.time} – ${nb.end_time}` });
+            if (nb.date) rows.push({ label: t('summary.date_label'), value: this.formatDateDisplay(this.displayDate(nb.date, nb.time, nb.start_utc)) });
+            if (nb.time) rows.push({ label: t('summary.time_label'), value: `${this.formatDisplayTime(nb.time, nb.date, nb.start_utc)} – ${this.formatDisplayTime(nb.end_time, nb.date, nb.end_utc)}` });
             return rows;
         }
 
@@ -1845,10 +1735,10 @@ Alpine.data('bookingWizard', () => ({
             rows.push({ label: t('summary.with_label'), value: this.managedBooking.staff_name });
         }
         if (nb.date) {
-            rows.push({ label: t('summary.date_label'), value: this.formatDateDisplay(nb.date) });
+            rows.push({ label: t('summary.date_label'), value: this.formatDateDisplay(this.displayDate(nb.date, nb.time, nb.start_utc)) });
         }
         if (nb.time) {
-            rows.push({ label: t('summary.time_label'), value: `${nb.time} – ${nb.end_time}` });
+            rows.push({ label: t('summary.time_label'), value: `${this.formatDisplayTime(nb.time, nb.date, nb.start_utc)} – ${this.formatDisplayTime(nb.end_time, nb.date, nb.end_utc)}` });
         }
         return rows;
     },
@@ -1874,14 +1764,17 @@ Alpine.data('bookingWizard', () => ({
             if (b.check_in) rows.push({ label: t('resource.check_in_label'), value: this.formatDateDisplay(b.check_in) });
             if (b.check_out) rows.push({ label: t('resource.check_out_label'), value: this.formatDateDisplay(b.check_out) });
         } else {
-            if (b.date) rows.push({ label: t('summary.date_label'), value: this.formatDateDisplay(b.date) });
-            if (b.time) rows.push({ label: t('summary.time_label'), value: `${b.time} – ${b.end_time}` });
+            if (b.date) rows.push({ label: t('summary.date_label'), value: this.formatDateDisplay(this.displayDate(b.date, b.time, b.start_utc)) });
+            if (b.time) rows.push({ label: t('summary.time_label'), value: this.formatDisplayTime(b.time, b.date, b.start_utc) + (b.end_time ? ' – ' + this.formatDisplayTime(b.end_time, b.date, b.end_utc) : '') });
+            if (b.time && this.hasTimezoneDifference) rows.push({ label: t('timezone.label'), value: this.tzDisplayLabel(this.displayTimezone) });
         }
 
-        // Party size (capacity/event)
-        if (b.party_size > 1) {
-            rows.push({ label: t('capacity.party_size_label'), value: `${b.party_size}` });
+        // A single guest or place is still part of the saved reservation.
+        if (b.party_size >= 1 && ['resource', 'capacity', 'event'].includes(b.booking_pattern)) {
+            const label = b.booking_pattern === 'event' ? 'event.spots_title' : b.booking_pattern === 'resource' ? 'resource.guests_label' : 'capacity.party_size_label';
+            rows.push({ label: t(label), value: String(b.party_size) });
         }
+        if (b.event_location) rows.push({ label: t('event.location_label'), value: b.event_location });
 
         return rows;
     },
@@ -1949,70 +1842,6 @@ Alpine.data('bookingWizard', () => ({
         return label.charAt(0).toUpperCase() + label.slice(1);
     },
 
-    // ── Details step: compact context summary (pattern-aware) ──
-    get detailsContextSummary() {
-        const shortDate = (dateStr) => {
-            if (!dateStr) return '';
-            const d = new Date(dateStr + 'T00:00:00');
-            return d.toLocaleDateString(fmt.intl_locale || config.locale || 'en', {
-                weekday: 'short', day: 'numeric', month: 'short',
-            });
-        };
-
-        // Resource pattern: resource + check-in/check-out
-        if (config.booking_pattern === 'resource') {
-            const parts = [];
-            if (this.selectedResource) parts.push(this.selectedResource.name);
-            if (this.checkInDate) parts.push(shortDate(this.checkInDate));
-            if (this.checkOutDate) parts.push('→ ' + shortDate(this.checkOutDate));
-            return parts.join('  ·  ');
-        }
-
-        // Capacity pattern: slot label + date + time range
-        if (config.booking_pattern === 'capacity') {
-            const parts = [];
-            if (this.selectedCapacitySlot?.label) parts.push(this.selectedCapacitySlot.label);
-            if (this.selectedDate) parts.push(shortDate(this.selectedDate));
-            if (this.selectedCapacitySlot) {
-                const start = formatSlotDisplay(this.selectedCapacitySlot.time, this.selectedDate, this.tenantTz, this.customerTz);
-                const end = this.selectedCapacitySlot.end_time
-                    ? formatSlotDisplay(this.selectedCapacitySlot.end_time, this.selectedDate, this.tenantTz, this.customerTz)
-                    : null;
-                parts.push(end ? `${start}–${end}` : start);
-            }
-            return parts.join('  ·  ');
-        }
-
-        // Event pattern: event name + date + time range
-        if (config.booking_pattern === 'event') {
-            const parts = [];
-            if (this.selectedEvent) {
-                parts.push(this.selectedEvent.name);
-                if (this.selectedEvent.start_datetime) {
-                    parts.push(this.formatEventDate(this.selectedEvent.start_datetime));
-                    parts.push(this.formatEventTime(this.selectedEvent.start_datetime)
-                        + '–' + this.formatEventTime(this.selectedEvent.end_datetime));
-                }
-            }
-            return parts.join('  ·  ');
-        }
-
-        // Timeslot pattern (default): service + date + time range
-        const parts = [];
-        if (this.selectedService) parts.push(this.selectedService.name);
-        if (this.selectedDate) parts.push(shortDate(this.selectedDate));
-        if (this.selectedSlot) {
-            const start = formatSlotDisplay(this.selectedSlot.time, this.selectedDate, this.tenantTz, this.customerTz);
-            const end = this.selectedSlot.end_time
-                ? formatSlotDisplay(this.selectedSlot.end_time, this.selectedDate, this.tenantTz, this.customerTz)
-                : null;
-            parts.push(end ? `${start}–${end}` : start);
-        }
-        return parts.join('  ·  ');
-    },
-
-    // ── Time slot grouping (Morning / Afternoon / Evening) ──
-    // Uses customer-displayed time, not raw tenant-timezone slot.time
     get groupedSlots() {
         if (!this.availableSlots || this.availableSlots.length === 0) return [];
         const groups = [];
@@ -2020,9 +1849,7 @@ Alpine.data('bookingWizard', () => ({
 
         for (const slot of this.availableSlots) {
             // Resolve the displayed time in the customer's timezone
-            const displayTime = this.selectedDate
-                ? formatSlotDisplay(slot.time, this.selectedDate, this.tenantTz, this.customerTz)
-                : slot.time;
+            const displayTime = this.selectedDate ? this.formatFinderDatetime(this.selectedDate, slot.time, slot.start_utc).time : slot.time;
             const hour = parseInt(displayTime.split(':')[0], 10);
             let period;
             if (hour < 12) period = t('time_periods.morning') || 'Morning';
@@ -2050,6 +1877,7 @@ Alpine.data('bookingWizard', () => ({
     },
 
     goBack(target) {
+        if (this.submitting || this.rescheduleSubmitting) return;
         if (target === 'service') this.loadServices();
         else if (target === 'staff') this.loadStaff();
         else if (target === 'date') this.loadDates();
@@ -2070,12 +1898,14 @@ Alpine.data('bookingWizard', () => ({
     // ── Resource booking flow ──
 
     async loadResources() {
+        const isCurrent = this.readGuard('loadResources');
         const data = await this.api('/resources');
+        if (!isCurrent()) return;
         this.resources = data.resources || [];
 
         if (this.resources.length === 0) {
             this.clearExitStates();
-            this.step = 'empty';
+            this.goToStep('empty');
             return;
         }
 
@@ -2091,12 +1921,14 @@ Alpine.data('bookingWizard', () => ({
     },
 
     selectResource(resource) {
+        this.cancelFinder();
+        this.loadError = '';
         this.selectedResource = resource;
         this.guestCount = 1;
         this.checkInDate = null;
         this.checkOutDate = null;
         this.resourceAvailability = null;
-        setTimeout(() => this.loadResourceDates(), 200);
+        this.loadResourceDates();
     },
 
     isResourceSelected(resource) {
@@ -2109,7 +1941,9 @@ Alpine.data('bookingWizard', () => ({
             month: this.checkInMonth + 1,
         });
 
+        const isCurrent = this.readGuard('loadResourceDates');
         const data = await this.api(`/resources/${this.selectedResource.id}/availability?${params}`);
+        if (!isCurrent()) return;
         this.resourceDates = data.dates || [];
 
         // Store day-of-week restrictions from API (also available on selectedResource)
@@ -2135,8 +1969,14 @@ Alpine.data('bookingWizard', () => ({
     },
 
     selectCheckOut(dateStr) {
-        if (!this.isResourceDateAvailable(dateStr)) return;
         if (dateStr <= this.checkInDate) return;
+        const nights = Math.round((Date.parse(dateStr + 'T00:00:00Z') - Date.parse(this.checkInDate + 'T00:00:00Z')) / 86400000);
+        const min = Number(this.selectedResource?.min_stay_nights) || 1;
+        const max = Number(this.selectedResource?.max_stay_nights) || Infinity;
+        if (nights < min || nights > max) {
+            this.showToast(t(nights < min ? 'resource.error_min_stay_violation' : 'resource.error_max_stay_violation'), 'warn');
+            return;
+        }
         this.checkOutDate = dateStr;
         this.checkResourceAvailability();
     },
@@ -2144,9 +1984,11 @@ Alpine.data('bookingWizard', () => ({
     async checkResourceAvailability() {
         if (!this.checkInDate || !this.checkOutDate) return;
 
+        const isCurrent = this.readGuard('checkResourceAvailability');
         const data = await this.api(
             `/resources/${this.selectedResource.id}/availability?check_in=${this.checkInDate}&check_out=${this.checkOutDate}&guests=${this.guestCount}`
         );
+        if (!isCurrent()) return;
 
         if (data.available) {
             this.resourceAvailability = data;
@@ -2209,7 +2051,7 @@ Alpine.data('bookingWizard', () => ({
     get resourceCalendarCells() {
         const year = this.checkInYear;
         const month = this.checkInMonth;
-        const today = new Date();
+        const today = new Date(this.tenantToday + 'T00:00:00');
         const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const weekStart = fmt.week_start ?? 0;
@@ -2229,8 +2071,10 @@ Alpine.data('bookingWizard', () => ({
 
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const isPast = new Date(dateStr) < new Date(today.toDateString());
-            const available = this.resourceDates.includes(dateStr);
+            const isPast = new Date(dateStr + 'T00:00:00') < new Date(today.toDateString());
+            const available = isSelectingCheckOut && dateStr > this.checkInDate
+                ? this.canResourceCheckout(this.checkInDate, dateStr, this.resourceDates, year, month, Number(this.selectedResource?.min_stay_nights) || 1, Number(this.selectedResource?.max_stay_nights) || Infinity)
+                : this.resourceDates.includes(dateStr);
             const isCheckIn = dateStr === this.checkInDate;
             const isCheckOut = dateStr === this.checkOutDate;
             const inRange = this.checkInDate && this.checkOutDate && dateStr > this.checkInDate && dateStr < this.checkOutDate;
@@ -2270,11 +2114,12 @@ Alpine.data('bookingWizard', () => ({
     },
 
     clickResourceDate(cell) {
+        if (this.calendarLoading) return;
         if (cell.disabled || !cell.day) return;
 
         const ciDays = this.selectedResource?.check_in_days ?? this.selectedResource?._check_in_days ?? null;
         const coDays = this.selectedResource?.check_out_days ?? this.selectedResource?._check_out_days ?? null;
-        const dow = new Date(cell.dateStr).getDay();
+        const dow = new Date(cell.dateStr + 'T12:00:00').getDay();
 
         if (!this.checkInDate || (this.checkInDate && this.checkOutDate)) {
             // Selecting check-in
@@ -2334,7 +2179,7 @@ Alpine.data('bookingWizard', () => ({
             contact.push({ label: t('summary.contact_phone'), value: this.customerPhone.trim() });
         }
 
-        return [...rows, ...contact];
+        return [...rows, ...this.customFieldRows, ...contact];
     },
 
     // Pattern-aware back target from details step
@@ -2355,6 +2200,7 @@ Alpine.data('bookingWizard', () => ({
     async submitResourceBooking() {
 
 
+        if (this.submitting) return;
         this.submitting = true;
 
         const payload = {
@@ -2372,7 +2218,7 @@ Alpine.data('bookingWizard', () => ({
             consent_given: this.consentGiven,
             customer_timezone: this.customerTz,
             __ts: window.__VB_TS__,
-            __hp: this.$el.querySelector('[name="__hp"]')?.value || '',
+            __hp: (this.rootElement || this.$el).querySelector('[name="__hp"]')?.value || '',
         };
 
         try {
@@ -2383,6 +2229,7 @@ Alpine.data('bookingWizard', () => ({
 
             if (data.error) {
                 this.submitting = false;
+                if (this.applyServerErrors(data)) return;
                 this.showToast(data.message || t('errors.generic'), 'error');
                 return;
             }
@@ -2406,7 +2253,8 @@ Alpine.data('bookingWizard', () => ({
         if (b.check_in) rows.push({ label: t('resource.check_in_label'), value: this.formatDateDisplay(b.check_in) });
         if (b.check_out) rows.push({ label: t('resource.check_out_label'), value: this.formatDateDisplay(b.check_out) });
         if (b.nights) rows.push({ label: t('resource.nights_label'), value: String(b.nights) });
-        if (b.total) rows.push({ label: t('resource.total_label'), value: this.formatPrice(b.total) });
+        if (b.guest_count) rows.push({ label: t('resource.guests_label'), value: String(b.guest_count) });
+        if (b.total != null) rows.push({ label: t('resource.total_label'), value: this.formatPrice(b.total) });
         return rows;
     },
 
@@ -2454,20 +2302,11 @@ Alpine.data('bookingWizard', () => ({
     },
 
     async loadCapacityDates() {
-        // Transition to loading shimmer via orchestrator for proper exit animation.
-        // On init this is harmless (loading → loading is a no-op exit).
-        this.goToStep('loading');
-        try {
-            const year = this.capacityYear;
-            const month = this.capacityMonth + 1;
-            const res = await this.api(`/capacity/available-dates?year=${year}&month=${month}&party_size=${this.partySize}`);
-            this.capacityDates = res.dates || [];
-            this.selectedDate = null;
-            this.goToStep('capacity-date');
-        } catch (e) {
-            this.showToast(t('errors.connection'), 'error');
-            this.goToStep('party-size');
-        }
+        const isCurrent = this.readGuard('loadCapacityDates');
+        const res = await this.api(`/capacity/available-dates?year=${this.capacityYear}&month=${this.capacityMonth + 1}&party_size=${this.partySize}`);
+        if (!isCurrent()) return;
+        this.capacityDates = res.dates || [];
+        this.goToStep('capacity-date');
     },
 
     get capacityCalendarGrid() {
@@ -2477,7 +2316,7 @@ Alpine.data('bookingWizard', () => ({
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const weekStart = fmt.week_start ?? 0;
         let startDow = (firstDay.getDay() - weekStart + 7) % 7;
-        const today = new Date();
+        const today = new Date(this.tenantToday + 'T00:00:00');
         today.setHours(0, 0, 0, 0);
 
         const cells = [];
@@ -2524,22 +2363,22 @@ Alpine.data('bookingWizard', () => ({
     },
 
     selectCapacityDate(cell) {
+        if (this.calendarLoading) return;
         if (cell.disabled || !cell.day) return;
         this.selectedDate = cell.dateStr;
         this.loadCapacitySlots();
     },
 
     async loadCapacitySlots() {
-        this.goToStep('loading');
-        try {
-            const res = await this.api(`/capacity/slots?date=${this.selectedDate}&party_size=${this.partySize}`);
-            this.capacitySlots = res.slots || [];
-            this.selectedCapacitySlot = null;
-            this.goToStep('capacity-time');
-        } catch (e) {
-            this.showToast(t('errors.connection'), 'error');
-            this.goToStep('capacity-date');
-        }
+        this.slotsLoading = true;
+        this.selectedCapacitySlot = null;
+        this.capacitySlots = [];
+        this.goToStep('capacity-time');
+        const isCurrent = this.readGuard('loadCapacitySlots');
+        const res = await this.api(`/capacity/slots?date=${this.selectedDate}&party_size=${this.partySize}`);
+        if (!isCurrent()) return;
+        this.capacitySlots = res.slots || [];
+        this.slotsLoading = false;
     },
 
     selectCapacitySlot(slot) {
@@ -2554,12 +2393,12 @@ Alpine.data('bookingWizard', () => ({
     get capacitySlotLabel() {
         if (!this.selectedCapacitySlot || !this.selectedDate) return '';
         const slot = this.selectedCapacitySlot;
-        const time = this.formatCapacitySlotTime(slot.time) + ' – ' + this.formatCapacitySlotTime(slot.end_time);
-        return this.formatDateDisplay(this.selectedDate) + '  ·  ' + time;
+        const time = this.formatCapacitySlotTime(slot.time, slot.start_utc) + ' – ' + this.formatCapacitySlotTime(slot.end_time, slot.end_utc);
+        return this.formatDateDisplay(this.selectedDisplayDate()) + '  ·  ' + time;
     },
 
-    formatCapacitySlotTime(time) {
-        return formatSlotDisplay(time, this.selectedDate, this.tenantTz, this.customerTz);
+    formatCapacitySlotTime(time, utcInstant = null) {
+        return this.formatDisplayTime(time, this.selectedDate, utcInstant);
     },
 
     get capacitySummaryRows() {
@@ -2568,12 +2407,13 @@ Alpine.data('bookingWizard', () => ({
             if (this.selectedCapacitySlot.label) {
                 rows.push({ label: t('summary.service_label'), value: this.selectedCapacitySlot.label });
             }
-            rows.push({ label: t('summary.date_label'), value: this.formatDateDisplay(this.selectedDate) });
-            const displayStart = formatSlotDisplay(this.selectedCapacitySlot.time, this.selectedDate, this.tenantTz, this.customerTz);
-            const displayEnd   = formatSlotDisplay(this.selectedCapacitySlot.end_time, this.selectedDate, this.tenantTz, this.customerTz);
+            rows.push({ label: t('summary.date_label'), value: this.formatDateDisplay(this.selectedDisplayDate()) });
+            const displayStart = this.formatDisplayTime(this.selectedCapacitySlot.time, this.selectedDate, this.selectedCapacitySlot.start_utc);
+            const displayEnd   = this.formatDisplayTime(this.selectedCapacitySlot.end_time, this.selectedDate, this.selectedCapacitySlot.end_utc);
             rows.push({ label: t('summary.time_label'), value: `${displayStart} – ${displayEnd}` });
             rows.push({ label: t('capacity.party_size_label'), value: `${this.partySize} ${this.partySize === 1 ? t('capacity.guest') : t('capacity.guests')}` });
         }
+        if (this.hasTimezoneDifference) rows.push({ label: t('timezone.label'), value: this.tzDisplayLabel(this.displayTimezone) });
         return rows;
     },
 
@@ -2582,13 +2422,14 @@ Alpine.data('bookingWizard', () => ({
         const b = this.booking;
         const rows = [];
         if (b.label) rows.push({ label: t('summary.service_label'), value: b.label });
-        if (b.date) rows.push({ label: t('summary.date_label'), value: this.formatDateDisplay(b.date) });
+        if (b.date) rows.push({ label: t('summary.date_label'), value: this.formatDateDisplay(this.displayDate(b.date, b.time, b.start_utc)) });
         if (b.time) {
-            const displayStart = formatSlotDisplay(b.time, b.date, this.tenantTz, this.customerTz);
-            const displayEnd   = formatSlotDisplay(b.end_time, b.date, this.tenantTz, this.customerTz);
+            const displayStart = this.formatDisplayTime(b.time, b.date, b.start_utc);
+            const displayEnd   = this.formatDisplayTime(b.end_time, b.date, b.end_utc);
             rows.push({ label: t('summary.time_label'), value: `${displayStart} – ${displayEnd}` });
         }
         rows.push({ label: t('capacity.party_size_label'), value: `${b.party_size} ${b.party_size === 1 ? t('capacity.guest') : t('capacity.guests')}` });
+        if (this.hasTimezoneDifference) rows.push({ label: t('timezone.label'), value: this.tzDisplayLabel(this.displayTimezone) });
         return rows;
     },
 
@@ -2611,7 +2452,7 @@ Alpine.data('bookingWizard', () => ({
             consent_given: this.consentGiven,
             customer_timezone: this.customerTz,
             __ts: window.__VB_TS__,
-            __hp: this.$el.querySelector('[name="__hp"]')?.value || '',
+            __hp: (this.rootElement || this.$el).querySelector('[name="__hp"]')?.value || '',
         };
 
         try {
@@ -2622,6 +2463,7 @@ Alpine.data('bookingWizard', () => ({
 
             if (data.error) {
                 this.submitting = false;
+                if (this.applyServerErrors(data)) return;
                 this.showToast(data.message || t('errors.generic'), 'error');
                 return;
             }
@@ -2639,22 +2481,16 @@ Alpine.data('bookingWizard', () => ({
     // ── Event pattern methods ──
 
     async loadEvents() {
-        this.goToStep('loading');
-        try {
-            const data = await this.api('/events');
-            this.eventList = data.events || [];
-            if (this.eventList.length === 0) {
-                this.step = 'empty'; // Terminal state, no prior visible step
-            } else {
-                this.goToStep('event-list');
-            }
-        } catch {
-            this.showToast(t('errors.connection'), 'error');
-            this.step = 'empty'; // Terminal state
-        }
+        if (this.step === 'loading') this.goToStep('loading');
+        const isCurrent = this.readGuard('loadEvents');
+        const data = await this.api('/events');
+        if (!isCurrent()) return;
+        this.eventList = data.events || [];
+        this.goToStep(this.eventList.length ? 'event-list' : 'empty');
     },
 
     selectEvent(event) {
+        if (!this.eventCanBook(event) || this.submitting) return;
         this.selectedEvent = event;
         // Initialize spot count to event's minimum per booking
         this.eventSpotCount = event.min_spot_count || 1;
@@ -2668,12 +2504,20 @@ Alpine.data('bookingWizard', () => ({
     // Effective max spots for the counter (per-booking cap vs remaining capacity)
     get eventMaxSpots() {
         if (!this.selectedEvent) return 1;
-        const remaining = this.selectedEvent.remaining || 0;
-        const perBookingMax = this.selectedEvent.max_spot_count;
-        if (perBookingMax !== null && perBookingMax !== undefined) {
-            return Math.min(perBookingMax, remaining);
-        }
-        return remaining;
+        return this.eventBookingLimit(this.selectedEvent);
+    },
+
+    eventBookingLimit(event) {
+        const min = Number(event.min_spot_count) || 1;
+        const remaining = Number(event.remaining) || 0;
+        const capacity = remaining >= min ? remaining : event.allow_waitlist ? Math.max(0, Number(event.waitlist_max) - Number(event.waitlist_count || 0)) : 0;
+        return Math.min(Number(event.max_spot_count) || Infinity, capacity);
+    },
+    eventCanBook(event) { return this.eventBookingLimit(event) >= (Number(event.min_spot_count) || 1); },
+    eventWaitlistOnly(event) { return event.remaining < (Number(event.min_spot_count) || 1) && this.eventCanBook(event); },
+    eventUnavailableLabel(event) {
+        if (event.remaining > 0) return t('event.minimum_spots', { count: event.min_spot_count });
+        return t(event.allow_waitlist ? 'event.waitlist_full' : 'event.full_badge');
     },
 
     // Effective min spots for the counter
@@ -2698,23 +2542,12 @@ Alpine.data('bookingWizard', () => ({
         this.goToStep('details');
     },
 
-    formatEventDate(dateStr) {
-        try {
-            const d = new Date(dateStr);
-            const label = d.toLocaleDateString(fmt.intl_locale || config.locale || 'en', { weekday: 'short', month: 'short', day: 'numeric' });
-            return label.charAt(0).toUpperCase() + label.slice(1);
-        } catch {
-            return dateStr;
-        }
+    formatEventDate(dateStr, utcInstant = null) {
+        return dateStr ? this.formatDateDisplay(this.displayDate(dateStr.slice(0, 10), dateStr.slice(11, 16), utcInstant)) : '';
     },
 
-    formatEventTime(dateStr) {
-        try {
-            const d = new Date(dateStr);
-            return d.toLocaleTimeString(config.locale || 'en', { hour: '2-digit', minute: '2-digit' });
-        } catch {
-            return '';
-        }
+    formatEventTime(dateStr, utcInstant = null) {
+        return dateStr ? this.formatDisplayTime(dateStr.slice(11, 16), dateStr.slice(0, 10), utcInstant) : '';
     },
 
     formatEventPrice(price) {
@@ -2726,10 +2559,10 @@ Alpine.data('bookingWizard', () => ({
         const rows = [];
         if (this.selectedEvent) {
             rows.push({ label: t('summary.service_label'), value: this.selectedEvent.name });
-            rows.push({ label: t('event.date_label'), value: this.formatEventDate(this.selectedEvent.start_datetime) });
+            rows.push({ label: t('event.date_label'), value: this.formatEventDate(this.selectedEvent.start_datetime, this.selectedEvent.start_utc) });
             rows.push({
                 label: t('event.time_label'),
-                value: `${this.formatEventTime(this.selectedEvent.start_datetime)} – ${this.formatEventTime(this.selectedEvent.end_datetime)}`
+                value: `${this.formatEventTime(this.selectedEvent.start_datetime, this.selectedEvent.start_utc)} – ${this.formatEventTime(this.selectedEvent.end_datetime, this.selectedEvent.end_utc)}`
             });
             if (this.selectedEvent.location) {
                 rows.push({ label: t('event.location_label'), value: this.selectedEvent.location });
@@ -2742,6 +2575,7 @@ Alpine.data('bookingWizard', () => ({
                 rows.push({ label: t('event.price_label'), value: this.formatPrice(this.selectedEvent.price) });
             }
         }
+        if (this.hasTimezoneDifference) rows.push({ label: t('timezone.label'), value: this.tzDisplayLabel(this.displayTimezone) });
         return rows;
     },
 
@@ -2750,17 +2584,15 @@ Alpine.data('bookingWizard', () => ({
         const b = this.booking;
         const rows = [];
         if (b.event_name) rows.push({ label: t('summary.service_label'), value: b.event_name });
-        if (b.date) rows.push({ label: t('event.date_label'), value: this.formatDateDisplay(b.date) });
+        if (b.date) rows.push({ label: t('event.date_label'), value: this.formatDateDisplay(this.displayDate(b.date, b.time, b.start_utc)) });
         if (b.time) {
-            rows.push({ label: t('event.time_label'), value: `${b.time} – ${b.end_time}` });
+            rows.push({ label: t('event.time_label'), value: `${this.formatDisplayTime(b.time, b.date, b.start_utc)} – ${this.formatDisplayTime(b.end_time, b.date, b.end_utc)}` });
         }
         rows.push({
             label: t('event.spots_title'),
             value: `${b.spot_count} ${b.spot_count === 1 ? t('event.spot') : t('event.spots')}`
         });
-        if (b.waitlisted) {
-            rows.push({ label: t('event.waitlist_badge'), value: t('event.waitlisted_message') });
-        }
+        if (this.hasTimezoneDifference) rows.push({ label: t('timezone.label'), value: this.tzDisplayLabel(this.displayTimezone) });
         return rows;
     },
 
@@ -2787,7 +2619,7 @@ Alpine.data('bookingWizard', () => ({
             consent_given: this.consentGiven,
             customer_timezone: this.customerTz,
             __ts: window.__VB_TS__,
-            __hp: this.$el.querySelector('[name="__hp"]')?.value || '',
+            __hp: (this.rootElement || this.$el).querySelector('[name="__hp"]')?.value || '',
         };
 
         try {
@@ -2798,6 +2630,7 @@ Alpine.data('bookingWizard', () => ({
 
             if (data.error) {
                 this.submitting = false;
+                if (this.applyServerErrors(data)) return;
                 this.showToast(data.message || t('errors.generic'), 'error');
                 return;
             }
@@ -2820,7 +2653,7 @@ Alpine.data('bookingWizard', () => ({
     // ── Keyboard navigation passthroughs ──
     radiogroupKeydown,
     radiogroupKeydownFocusOnly,
-    calendarGridKeydown,
+    experienceConfig: { config, fmt, t, refreshIcons: () => createIcons({ icons: ICON_SET }) },
 }));
 
 

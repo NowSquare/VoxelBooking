@@ -11,7 +11,7 @@ namespace App\Engine;
  * with fixed time windows and limited seats per slot.
  *
  * For each configured slot on a requested date:
- * - Sums existing party_size from confirmed/rescheduled bookings
+ * - Counts confirmed bookings and legacy rescheduled rows without a replacement
  * - Subtracts from max_capacity to get remaining spots
  * - Filters by max_party_size and blocked dates
  *
@@ -28,7 +28,7 @@ final class CapacityCalculator
      *
      * @return array{slots: list<array{id: string, time: string, end_time: string, label: string|null, remaining: int, max: int, max_party_size: int}>}
      */
-    public static function getAvailableSlots(array $tenant, string $date, int $partySize = 1): array
+    public static function getAvailableSlots(array $tenant, string $date, int $partySize = 1, ?string $excludeBookingId = null): array
     {
         $tenantId = $tenant['id'];
         $tz = new \DateTimeZone($tenant['timezone'] ?? 'UTC');
@@ -71,8 +71,10 @@ final class CapacityCalculator
              WHERE `tenant_id` = ? AND `booking_pattern` = \'capacity\'
              AND `start_datetime` >= ? AND `start_datetime` <= ?
              AND `status` IN (\'confirmed\', \'rescheduled\')
+             AND (`status` <> \'rescheduled\' OR NULLIF(`rescheduled_to_id`, \'\') IS NULL)
+             AND (? IS NULL OR `id` <> ?)
              GROUP BY TIME(`start_datetime`)',
-            [$tenantId, $dayStart, $dayEnd]
+            [$tenantId, $dayStart, $dayEnd, $excludeBookingId, $excludeBookingId]
         );
 
         $bookedByTime = [];
@@ -84,6 +86,9 @@ final class CapacityCalculator
         foreach ($slots as $slot) {
             $startTime = substr($slot['start_time'], 0, 5); // HH:MM
             $endTime   = substr($slot['end_time'], 0, 5);
+            if (!VenueDateTime::wallTimeExists($date, $startTime, $tz)) {
+                continue;
+            }
             $maxCapacity  = (int) $slot['max_capacity'];
             $minPartySize = (int) ($slot['min_party_size'] ?? 1);
             $maxPartySize = (int) $slot['max_party_size'];
@@ -131,7 +136,7 @@ final class CapacityCalculator
      *
      * @return array{dates: list<string>} List of Y-m-d dates with available capacity
      */
-    public static function getAvailableDates(array $tenant, string $month, int $partySize = 1): array
+    public static function getAvailableDates(array $tenant, string $month, int $partySize = 1, ?string $excludeBookingId = null): array
     {
         $tz = new \DateTimeZone($tenant['timezone'] ?? 'UTC');
         $today = new \DateTimeImmutable('today', $tz);
@@ -194,8 +199,10 @@ final class CapacityCalculator
              WHERE `tenant_id` = ? AND `booking_pattern` = \'capacity\'
              AND `start_datetime` >= ? AND `start_datetime` <= ?
              AND `status` IN (\'confirmed\', \'rescheduled\')
+             AND (`status` <> \'rescheduled\' OR NULLIF(`rescheduled_to_id`, \'\') IS NULL)
+             AND (? IS NULL OR `id` <> ?)
              GROUP BY DATE(`start_datetime`), TIME(`start_datetime`)',
-            [$tenant['id'], $start->format('Y-m-d') . ' 00:00:00', $end->format('Y-m-d') . ' 23:59:59']
+            [$tenant['id'], $start->format('Y-m-d') . ' 00:00:00', $end->format('Y-m-d') . ' 23:59:59', $excludeBookingId, $excludeBookingId]
         );
 
         $bookedMap = [];
@@ -212,6 +219,9 @@ final class CapacityCalculator
             if (!in_array($dateStr, $blocked, true) && isset($slotsByDay[$dow])) {
                 // Check if any slot on this day has enough remaining capacity
                 foreach ($slotsByDay[$dow] as $slot) {
+                    if (!VenueDateTime::wallTimeExists($dateStr, $slot['start_time'], $tz)) {
+                        continue;
+                    }
                     $booked = $bookedMap[$dateStr][$slot['start_time']] ?? 0;
                     $remaining = (int) $slot['max_capacity'] - $booked;
                     $maxParty = (int) $slot['max_party_size'];
@@ -266,6 +276,9 @@ final class CapacityCalculator
         if ((int) $slot['day_of_week'] !== $expectedDow) {
             return ['available' => false, 'remaining' => 0, 'error' => 'slot_not_on_day'];
         }
+        if (!VenueDateTime::wallTimeExists($date, $slot['start_time'], $tz)) {
+            return ['available' => false, 'remaining' => 0, 'error' => 'slot_not_on_day'];
+        }
 
         // Check blocked date
         $blockedCount = Database::query(
@@ -292,7 +305,8 @@ final class CapacityCalculator
             'SELECT COALESCE(SUM(`party_size`), 0) AS `total`
              FROM `bookings`
              WHERE `tenant_id` = ? AND `booking_pattern` = \'capacity\'
-             AND `start_datetime` = ? AND `status` IN (\'confirmed\', \'rescheduled\')',
+             AND `start_datetime` = ? AND `status` IN (\'confirmed\', \'rescheduled\')
+             AND (`status` <> \'rescheduled\' OR NULLIF(`rescheduled_to_id`, \'\') IS NULL)',
             [$tenantId, $startDt]
         );
 

@@ -22,9 +22,17 @@ final class CsrfMiddlewareTest extends TestCase
 
     /** @var array<string, string|null> */
     private array $originalServer = [];
+    private array $originalCookies = [];
 
     protected function setUp(): void
     {
+        $this->originalCookies = $_COOKIE;
+        $_COOKIE = [];
+        // A previous fixture can leave a CLI session open. Each CSRF test
+        // models a fresh request and chooses its own session proof.
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
         foreach (self::SERVER_KEYS as $key) {
             $this->originalServer[$key] = $_SERVER[$key] ?? null;
             unset($_SERVER[$key]);
@@ -35,6 +43,10 @@ final class CsrfMiddlewareTest extends TestCase
 
     protected function tearDown(): void
     {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        $_COOKIE = $this->originalCookies;
         foreach (self::SERVER_KEYS as $key) {
             if ($this->originalServer[$key] === null) {
                 unset($_SERVER[$key]);

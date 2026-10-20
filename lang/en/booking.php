@@ -15,12 +15,12 @@ return [
         'service_title'    => 'Choose a service',
         'staff_title'      => 'Who would you like?',
         'staff_subtitle'   => 'Pick a team member, or let us assign whoever is available first.',
-        'date_title'       => 'Pick a date',
+        'date_title'       => 'Choose a date and time',
         'time_title'       => 'Pick a time',
         'details_title'    => 'Your details',
-        'details_subtitle' => 'We\'ll send a confirmation to your email.',
-        'confirm_title'    => 'Confirm your booking',
-        'confirm_subtitle' => 'Please review the details below.',
+        'details_subtitle' => 'A few details so the business can look after your booking.',
+        'confirm_title'    => 'Review your booking',
+        'confirm_subtitle' => 'Check your booking and contact details.',
         // Resource-pattern
         'resource_title'    => 'Choose a room',
         'dates_title'       => 'Select dates',
@@ -59,13 +59,15 @@ return [
         'notes_placeholder' => 'Any special requests?',
         'consent_default'   => 'I agree to the processing of my personal data for this booking.',
         'privacy_link'      => 'Privacy policy',
+        'select_option'     => 'Choose an option',
+        'checked_value'     => 'Yes',
     ],
 
     // ── Buttons ──
     'buttons' => [
         'review'           => 'Review booking',
         'confirm'          => 'Confirm booking',
-        'book_another'     => 'Book another appointment',
+        'book_another'     => 'Make another booking',
         'add_to_calendar'  => 'Add to Google Calendar',
         'download_ics'     => 'Download for Calendar',
         'reschedule'       => 'Reschedule',
@@ -73,6 +75,9 @@ return [
         'pick_another_time'=> 'Pick another time',
         'continue'         => 'Continue',
         'selected_time'    => 'Selected',
+        'retry'            => 'Try again',
+        'view_booking'     => 'View booking',
+        'request'          => 'Request booking',
     ],
 
     // ── Confirmation ──
@@ -86,13 +91,14 @@ return [
     // ── Pending Approval ──
     'pending' => [
         'heading'           => 'Booking received',
-        'message'           => 'Your booking is awaiting approval. We will notify you once it is confirmed.',
+        'message'           => 'The business needs to approve this booking. Check its status using your booking link.',
         'reference_label'   => 'Reference',
     ],
 
     // ── Review ──
     'review' => [
         'cancellation_policy_label' => 'Cancellation policy',
+        'approval_hint' => 'The business needs to approve this request before your booking is confirmed.',
     ],
 
     // ── Summary ──
@@ -144,6 +150,9 @@ return [
         'error_invalid_check_in_day'  => 'Check-in is not available on this day of the week.',
         'error_invalid_check_out_day' => 'Check-out is not available on this day of the week.',
         'select_dates'                => 'Select your new check-in and check-out dates.',
+        'stay_hint_range'             => 'Stay :min–:max nights. Choose check-in first, then check-out.',
+        'stay_hint_min'               => 'Stay at least :min night(s). Choose check-in first, then check-out.',
+        'stay_total'                  => ':nights night(s) · :total',
     ],
 
     // ── Empty States ──
@@ -172,13 +181,13 @@ return [
 
     // ── Capacity-Pattern Booking Page ──
     'capacity' => [
-        'party_size_title'    => 'Party Size',
+        'party_size_title'    => 'Party size',
         'party_size_label'    => 'How many guests?',
         'party_size_hint'     => 'Select the number of guests in your party.',
         'guest'               => 'guest',
         'guests'              => 'guests',
-        'date_title'          => 'Select Date',
-        'time_title'          => 'Select Time',
+        'date_title'          => 'Choose a date',
+        'time_title'          => 'Choose a time',
         'spots_remaining'     => ':count spots left',
         'slot_full'           => 'Full',
         'min_guests_hint'     => 'Minimum :count guests',
@@ -187,24 +196,27 @@ return [
 
     // ── Event-Pattern Booking Page ──
     'event' => [
-        'events_title'        => 'Upcoming Events',
-        'event_detail_title'  => 'Event Details',
-        'spots_title'         => 'How Many Spots?',
+        'events_title'        => 'Upcoming events',
+        'event_detail_title'  => 'Event details',
+        'spots_title'         => 'Number of spots',
         'spot'                => 'spot',
         'spots'               => 'spots',
         'spots_remaining'     => ':count spots left',
         'event_full'          => 'This event is full.',
         'max_spots_reached'   => 'Maximum :count spots per booking',
         'max_reached'         => 'Maximum spots reached',
-        'join_waitlist'       => 'Join Waitlist',
+        'join_waitlist'       => 'Join waitlist',
+        'loading'             => 'Loading events…',
         'waitlist_notice'     => 'You will be added to the waitlist.',
-        'waitlisted_title'    => 'You\'re on the Waitlist',
-        'waitlisted_message'  => 'We\'ll notify you when a spot opens up.',
+        'waitlisted_title'    => 'You\'re on the waitlist',
+        'waitlisted_message'  => 'You have a place on the waitlist. Check your booking link for updates.',
         'location_label'      => 'Location',
         'price_label'         => 'Price',
         'date_label'          => 'Date',
         'time_label'          => 'Time',
         'per_person'          => 'per person',
+        'minimum_spots'       => 'At least :count spots required per booking',
+        'waitlist_full'       => 'Event and waitlist full',
         'free'                => 'Free',
         'select_event'        => 'Select an event…',
         'full_badge'          => 'Full',
@@ -215,6 +227,13 @@ return [
 
     // ── Errors & Toasts ──
     'errors' => [
+        'load_title'        => 'Let\'s try that again.',
+        'rate_limited'      => 'Too many requests. Wait a moment, then try again.',
+        'required_phone'    => 'Please enter your phone number.',
+        'invalid_email'     => 'Please enter a valid email address.',
+        'required_field'    => 'Please complete this field.',
+        'invalid_field'     => 'Please enter a valid value.',
+        'correct_fields'    => 'Check the highlighted fields before continuing.',
         'slot_taken'        => 'This time slot was just taken. Please choose another.',
         'generic'           => 'Something went wrong. Please try again.',
         'connection'        => 'A connection error occurred. Please try again.',
@@ -227,6 +246,7 @@ return [
     // ── Common / UI ──
     'common' => [
         'dismiss' => 'Dismiss',
+        'dismiss_demo' => 'Dismiss demo notice',
     ],
 
     // ── Timezone ──
@@ -235,11 +255,58 @@ return [
         'same_as_business' => 'same as business',
         'notice'           => 'Times shown in your timezone (:tz)',
         'search'           => 'Search timezone…',
+        'venue_time'       => 'Business time · :timezone',
+        'business_date'    => ':date in business time',
+        'calendar_dates'   => 'Calendar dates use :timezone.',
         'group_americas'   => 'Americas',
         'group_europe'     => 'Europe',
         'group_asia'       => 'Asia & Pacific',
         'group_africa'     => 'Africa',
         'group_other'      => 'Other',
+    ],
+
+    'progress' => [
+        'label' => 'Booking progress',
+        'choose' => 'Choose',
+        'event' => 'Event',
+        'when' => 'When',
+        'details' => 'Details',
+        'review' => 'Review',
+    ],
+    'counter' => [
+        'fewer_guests' => 'Fewer guests',
+        'more_guests' => 'More guests',
+        'fewer_spots' => 'Fewer spots',
+        'more_spots' => 'More spots',
+    ],
+    'object' => [
+        'label' => 'Your booking',
+        'saved' => 'Booking details',
+        'reservation' => 'Your reservation',
+        'table_for' => 'A table for :count',
+        'spot_count' => ':count spots',
+        'edit_choice' => 'Change choice',
+        'edit_when' => 'Change dates / time',
+        'edit_details' => 'Edit your details',
+    ],
+    'availability' => [
+        'choose_date' => 'Available times',
+        'choose_date_hint' => 'Choose an available day to see its times.',
+        'loading_times' => 'Checking available times…',
+        'times_available' => ':count times available.',
+    ],
+    'finder' => [
+        'open' => 'Find a time for me',
+        'title' => 'Find a time in the next 7 days',
+        'description' => 'See up to 3 appointments, one per day, over the next 7 days. Dates follow the business timezone.',
+        'time_label' => 'Preferred start time',
+        'any_time' => 'Any time',
+        'after_time' => 'At or after :time',
+        'search' => 'Find possibilities',
+        'searching' => 'Finding times…',
+        'no_results' => 'No matches in the next 7 days. Try another start time or browse later dates below.',
+        'results_ready' => 'Your possible appointments are ready.',
+        'choose' => 'Choose this time',
     ],
 
     // ── Duration Formatting ──
@@ -300,6 +367,9 @@ return [
 
     // ── Calendar ──
     'calendar' => [
+        'unavailable' => 'unavailable',
+        'loading' => 'Checking available dates…',
+        'no_dates' => 'No available dates this month. Try another month.',
         'today'      => 'Today',
         'label'      => 'Calendar',
         'prev_month' => 'Previous month',
@@ -371,7 +441,7 @@ return [
 
     // ── Embed Widget (floating button + overlay on third-party sites) ──
     'embed' => [
-        'button_label' => 'Book Now',
+        'button_label' => 'Book now',
         'close'        => 'Close booking',
         'frame_title'  => 'Book :name',
         'demo_badge'   => 'Demo',
@@ -428,15 +498,16 @@ return [
 
     // ── Self-Service Manage Page ──
     'manage' => [
-        'page_title'             => 'Manage Booking',
-        'heading'                => 'Your Booking',
-        'cancel_heading'         => 'Cancel Booking',
+        'view_current_booking' => 'View current booking',
+        'page_title'             => 'Manage booking',
+        'heading'                => 'Your booking',
+        'cancel_heading'         => 'Cancel booking',
         'cancel_confirm'         => 'Are you sure you want to cancel this booking?',
         'cancel_reason_label'    => 'Reason (optional)',
         'cancel_reason_placeholder' => 'Let us know why you are cancelling…',
         'cancel_button'          => 'Yes, cancel booking',
         'cancel_nevermind'       => 'Keep my booking',
-        'cancelled_heading'      => 'Booking Cancelled',
+        'cancelled_heading'      => 'Booking cancelled',
         'cancelled_message'      => 'Your booking has been cancelled.',
         'book_again'             => 'Book again',
         'time_gate_cancel'       => 'This booking can no longer be cancelled.',
@@ -447,21 +518,22 @@ return [
         'rescheduling_disabled'  => 'Rescheduling is not available for this booking.',
         'same_slot'              => 'You selected the same time as your current booking.',
         'status_confirmed'       => 'Confirmed',
-        'status_pending'         => 'Awaiting Approval',
+        'status_pending'         => 'Awaiting approval',
+        'status_waitlisted'      => 'On the waitlist',
         'status_cancelled'       => 'Cancelled',
         'status_rescheduled'     => 'Rescheduled',
         'status_completed'       => 'Completed',
         'loading'                => 'Loading booking details…',
         // Reschedule flow
-        'reschedule_heading'         => 'Reschedule Booking',
+        'reschedule_heading'         => 'Reschedule booking',
         'reschedule_pick_date'       => 'Choose a new date and time',
-        'reschedule_review_heading'  => 'Confirm Reschedule',
+        'reschedule_review_heading'  => 'Confirm reschedule',
         'reschedule_review_subtitle' => 'Your booking will be moved to the new time.',
         'reschedule_original_label'  => 'Current',
         'reschedule_new_label'       => 'New time',
         'reschedule_confirm_button'  => 'Confirm reschedule',
         'reschedule_cancel'          => '← Back to booking',
-        'reschedule_success_heading' => 'Booking Rescheduled',
+        'reschedule_success_heading' => 'Booking rescheduled',
         'reschedule_success_message' => 'Your booking has been moved to the new time.',
         'reschedule_back_to_date'    => '← Change date or time',
         'reschedule_reason_disabled' => 'Rescheduling is not available for this booking.',
@@ -471,5 +543,5 @@ return [
     ],
 
     // ── Demo Mode ──
-    'demo_notice' => 'Demo mode — changes are reset daily.',
+    'demo_notice' => 'Demo mode. Changes reset each day.',
 ];

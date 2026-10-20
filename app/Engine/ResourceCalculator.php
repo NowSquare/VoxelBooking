@@ -37,6 +37,7 @@ final class ResourceCalculator
         string $resourceId,
         int $year,
         int $month,
+        ?string $excludeBookingId = null,
     ): array {
         $tenantId = $tenant['id'];
         $timezone = $tenant['timezone'] ?? 'UTC';
@@ -59,7 +60,7 @@ final class ResourceCalculator
         $blockedRanges = self::getBlockedRanges($tenantId, $resourceId, $monthStart, $monthEnd);
 
         // Pre-load all bookings for this resource in this month
-        $bookedDates = self::getBookedDates($tenantId, $resourceId, $monthStart, $monthEnd);
+        $bookedDates = self::getBookedDates($tenantId, $resourceId, $monthStart, $monthEnd, $excludeBookingId);
 
         for ($day = 1; $day <= $daysInMonth; $day++) {
             $dateStr = sprintf('%04d-%02d-%02d', $year, $month, $day);
@@ -136,6 +137,7 @@ final class ResourceCalculator
         string $checkIn,
         string $checkOut,
         int $guestCount = 1,
+        ?string $excludeBookingId = null,
     ): array {
         $tenantId = $tenant['id'];
         $timezone = $tenant['timezone'] ?? 'UTC';
@@ -225,9 +227,11 @@ final class ResourceCalculator
             'SELECT `id` FROM `bookings`
              WHERE `tenant_id` = ? AND `resource_id` = ?
              AND `status` IN (\'confirmed\', \'rescheduled\')
+             AND (`status` <> \'rescheduled\' OR NULLIF(`rescheduled_to_id`, \'\') IS NULL)
+             AND (? IS NULL OR `id` <> ?)
              AND `start_datetime` < ? AND `end_datetime` > ?
              LIMIT 1',
-            [$tenantId, $resourceId, $checkOut . ' 00:00:00', $checkIn . ' 00:00:00']
+            [$tenantId, $resourceId, $excludeBookingId, $excludeBookingId, $checkOut . ' 00:00:00', $checkIn . ' 00:00:00']
         );
 
         if (!empty($conflicts)) {
@@ -305,14 +309,16 @@ final class ResourceCalculator
      *
      * @return list<string>
      */
-    private static function getBookedDates(string $tenantId, string $resourceId, string $rangeStart, string $rangeEnd): array
+    private static function getBookedDates(string $tenantId, string $resourceId, string $rangeStart, string $rangeEnd, ?string $excludeBookingId): array
     {
         $bookings = Database::query(
             'SELECT `start_datetime`, `end_datetime` FROM `bookings`
              WHERE `tenant_id` = ? AND `resource_id` = ?
              AND `status` IN (\'confirmed\', \'rescheduled\')
+             AND (`status` <> \'rescheduled\' OR NULLIF(`rescheduled_to_id`, \'\') IS NULL)
+             AND (? IS NULL OR `id` <> ?)
              AND `start_datetime` < ? AND `end_datetime` > ?',
-            [$tenantId, $resourceId, $rangeEnd . ' 23:59:59', $rangeStart . ' 00:00:00']
+            [$tenantId, $resourceId, $excludeBookingId, $excludeBookingId, $rangeEnd . ' 23:59:59', $rangeStart . ' 00:00:00']
         );
 
         $dates = [];

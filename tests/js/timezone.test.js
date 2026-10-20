@@ -24,13 +24,74 @@
  * - EU: Spring forward last Sunday March (Mar 29), Fall back last Sunday Oct (Oct 25)
  */
 import { describe, it, expect } from 'vitest';
-import { convertTime, getTimezoneOffsetMinutes, formatSlotDisplay } from '../../resources/js/booking/timezone.js';
+import { execFileSync } from 'node:child_process';
+import { convertTime, getTimezoneOffsetMinutes, formatSlotDisplay, slotDisplayDatetime, timezoneOffsetName } from '../../resources/js/booking/timezone.js';
+
+describe('appointment offset labels', () => {
+    it('uses the authoritative server instant for a repeated Amsterdam hour', () => {
+        expect(slotDisplayDatetime('02:30', '2026-10-25', 'Europe/Amsterdam', 'UTC', '2026-10-25T01:30:00Z'))
+            .toEqual({ date: '2026-10-25', time: '01:30' });
+        expect(timezoneOffsetName('2026-10-25', '02:30', 'Europe/Amsterdam', 'Europe/Amsterdam', '2026-10-25T01:30:00Z')).toBe('GMT+1');
+    });
+    it('retains the complete end date for an overnight event', () => {
+        expect(slotDisplayDatetime('01:00', '2026-10-24', 'Europe/Amsterdam', 'UTC', '2026-10-24T23:00:00Z'))
+            .toEqual({ date: '2026-10-24', time: '23:00' });
+    });
+    it.each([
+        ['2026-10-25', '00:30', 'UTC', 'Europe/Berlin', 'GMT+2'],
+        ['2026-10-25', '01:30', 'UTC', 'Europe/Berlin', 'GMT+1'],
+        ['2026-11-01', '05:30', 'UTC', 'America/New_York', 'GMT-4'],
+        ['2026-11-01', '06:30', 'UTC', 'America/New_York', 'GMT-5'],
+    ])('uses the offset at %s %s in %s for %s', (date, time, source, target, expected) => {
+        expect(timezoneOffsetName(date, time, source, target)).toBe(expected);
+    });
+});
 
 // ════════════════════════════════════════════════════════════════
 // convertTime()
 // ════════════════════════════════════════════════════════════════
 
 describe('convertTime', () => {
+    it.each([
+        ['2026-03-08', '03:30', 'America/New_York', 'UTC', '2026-03-08', '07:30'],
+        ['2026-03-29', '01:30', 'UTC', 'Europe/Amsterdam', '2026-03-29', '03:30'],
+        ['2026-10-25', '02:30', 'Europe/Amsterdam', 'UTC', '2026-10-25', '00:30'],
+        ['2026-11-01', '06:30', 'UTC', 'America/New_York', '2026-11-01', '01:30'],
+    ])('uses the offset at the resolved instant for %s %s in %s', (date, time, from, to, displayDate, displayTime) => {
+        expect(convertTime(date, time, from, to)).toEqual({ date: displayDate, time: displayTime });
+    });
+
+    it('moves nonexistent spring-forward wall times ahead by the gap', () => {
+        expect(convertTime('2026-03-08', '02:30', 'America/New_York', 'UTC'))
+            .toEqual({ date: '2026-03-08', time: '07:30' });
+        expect(convertTime('2026-03-29', '02:30', 'Europe/Amsterdam', 'UTC'))
+            .toEqual({ date: '2026-03-29', time: '01:30' });
+    });
+
+    it('uses the earlier occurrence of an ambiguous fall-back wall time', () => {
+        expect(convertTime('2026-11-01', '01:30', 'America/New_York', 'UTC'))
+            .toEqual({ date: '2026-11-01', time: '05:30' });
+    });
+
+    it.each(['UTC', 'America/New_York', 'Europe/Amsterdam', 'Pacific/Auckland'])('does not depend on the process timezone %s', (hostTz) => {
+        const moduleUrl = new URL('../../resources/js/booking/timezone.js', import.meta.url).href;
+        const source = `import { convertTime, getTimezoneOffsetMinutes } from ${JSON.stringify(moduleUrl)};
+            console.log(JSON.stringify({
+                spring: convertTime('2026-03-08', '03:30', 'America/New_York', 'UTC'),
+                midnight: convertTime('2026-10-21', '00:30', 'Europe/Amsterdam', 'America/New_York'),
+                offset: getTimezoneOffsetMinutes('2026-01-15', '14:00', 'Europe/Amsterdam'),
+            }));`;
+        const result = execFileSync(process.execPath, ['--input-type=module', '-e', source], {
+            env: { ...process.env, TZ: hostTz }, encoding: 'utf8',
+        });
+
+        expect(JSON.parse(result)).toEqual({
+            spring: { date: '2026-03-08', time: '07:30' },
+            midnight: { date: '2026-10-20', time: '18:30' },
+            offset: -60,
+        });
+    });
+
     it('returns input unchanged when fromTz === toTz', () => {
         const result = convertTime('2026-06-15', '14:30', 'Europe/Amsterdam', 'Europe/Amsterdam');
         expect(result).toEqual({ date: '2026-06-15', time: '14:30' });
@@ -232,13 +293,20 @@ describe('convertTime', () => {
 // ════════════════════════════════════════════════════════════════
 
 describe('getTimezoneOffsetMinutes', () => {
+    it.each([
+        ['2026-01-15', '14:00', 'Europe/Amsterdam', -60],
+        ['2026-07-15', '14:00', 'Europe/Amsterdam', -120],
+        ['2026-03-08', '01:30', 'America/New_York', 300],
+        ['2026-03-08', '03:30', 'America/New_York', 240],
+        ['2026-11-01', '01:30', 'America/New_York', 240],
+        ['2026-01-15', '14:00', 'Asia/Kolkata', -330],
+    ])('returns the UTC-minus-local offset for %s %s in %s', (date, time, zone, expected) => {
+        expect(getTimezoneOffsetMinutes(date, time, zone)).toBe(expected);
+    });
     // Amsterdam CET = UTC+1 → offset should cause local to be 1 hour ahead
     it('returns correct offset for Amsterdam in winter (CET, UTC+1)', () => {
         const offset = getTimezoneOffsetMinutes('2026-01-15', '14:00', 'Europe/Amsterdam');
-        // The function returns (dt.getTime() - localDt.getTime()) / 60000
-        // This is system-dependent, but the relative offsets must be consistent
-        expect(typeof offset).toBe('number');
-        expect(Number.isFinite(offset)).toBe(true);
+        expect(offset).toBe(-60);
     });
 
     // The offsets between two zones should produce a consistent difference
@@ -269,6 +337,23 @@ describe('getTimezoneOffsetMinutes', () => {
         const kolkataOffset = getTimezoneOffsetMinutes('2026-01-15', '14:00', 'Asia/Kolkata');
         // CET (UTC+1) vs IST (UTC+5:30) = 4:30 = 270 minutes
         expect(kolkataOffset - amsOffset).toBe(-270);
+    });
+});
+
+describe('slotDisplayDatetime', () => {
+    it('retains the customer calendar date when a slot falls on the previous day', () => {
+        expect(slotDisplayDatetime('00:30', '2026-10-21', 'Europe/Amsterdam', 'America/New_York'))
+            .toEqual({ date: '2026-10-20', time: '18:30' });
+    });
+
+    it('retains the customer calendar date when a slot falls on the next day', () => {
+        expect(slotDisplayDatetime('23:30', '2026-01-15', 'America/New_York', 'Europe/Amsterdam'))
+            .toEqual({ date: '2026-01-16', time: '05:30' });
+    });
+
+    it('returns a complete datetime unchanged when the zones match', () => {
+        expect(slotDisplayDatetime('14:30', '2026-01-15', 'Europe/Amsterdam', 'Europe/Amsterdam'))
+            .toEqual({ date: '2026-01-15', time: '14:30' });
     });
 });
 

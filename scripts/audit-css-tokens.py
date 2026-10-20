@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CSS Design-Token Audit — flags any var(--vb-*) reference in admin.css
+CSS Design-Token Audit — flags any var(--vb-*) reference in admin.css and booking.css
 that does not resolve to a token defined in the :root block.
 
 Intentionally excluded:
@@ -14,11 +14,12 @@ Usage:
 """
 import re, sys, os
 
-CSS_PATH = os.path.join(os.path.dirname(__file__), '..', 'resources', 'css', 'admin.css')
+CSS_PATHS = [os.path.join(os.path.dirname(__file__), '..', 'resources', 'css', name)
+             for name in ('admin.css', 'booking.css')]
 
 # Tokens set dynamically at runtime, not in :root
 DYNAMIC_TOKENS = {
-    '--block-color', '--pill-color', '--brand-color', '--tenant-brand',
+    '--block-color', '--pill-color', '--brand-color', '--tenant-brand', '--svc-color',
     '--vb-brand', '--vb-brand-hover', '--vb-brand-light', '--vb-brand-text',
     '--vb-body-weight',
 }
@@ -33,8 +34,8 @@ SKIP_PREFIXES = (
 )
 
 
-def main():
-    with open(CSS_PATH) as f:
+def audit(css_path):
+    with open(css_path) as f:
         css = f.read()
 
     # 1. Collect all tokens defined in :root { ... }
@@ -61,17 +62,17 @@ def main():
 
     # 4. Report
     if undefined:
-        print(f'FAIL: {len(undefined)} undefined CSS token(s) in admin.css:\n')
+        print(f'FAIL: {len(undefined)} undefined CSS token(s) in {os.path.basename(css_path)}:\n')
         for token, lines in sorted(undefined.items()):
             locs = ', '.join(str(l) for l in lines[:5])
             suffix = f' (+{len(lines)-5} more)' if len(lines) > 5 else ''
             print(f'  {token}  →  lines {locs}{suffix}')
         print(f'\nDefined tokens: {len(defined)}  |  Used: {len(usages)}  |  Broken: {len(undefined)}')
-        sys.exit(1)
+        return False
     else:
-        print(f'✓ 0 undefined CSS tokens. {len(defined)} defined, {len(usages)} used.')
-        sys.exit(0)
+        print(f'✓ {os.path.basename(css_path)}: 0 undefined CSS tokens. {len(defined)} defined, {len(usages)} used.')
+        return True
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(0 if all([audit(path) for path in CSS_PATHS]) else 1)

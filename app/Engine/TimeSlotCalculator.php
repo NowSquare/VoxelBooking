@@ -33,6 +33,7 @@ final class TimeSlotCalculator
         string $date,
         ?string $serviceId = null,
         ?string $staffId = null,
+        ?string $excludeBookingId = null,
     ): array {
         $tenantId = $tenant['id'];
         $timezone = $tenant['timezone'] ?? 'UTC';
@@ -104,7 +105,7 @@ final class TimeSlotCalculator
             }
 
             // Get existing bookings for this date + staff
-            $existingBookings = self::getExistingBookings($tenantId, $date, $currentStaffId);
+            $existingBookings = self::getExistingBookings($tenantId, $date, $currentStaffId, $excludeBookingId);
 
             // Generate slots from availability windows
             foreach ($availWindows as $window) {
@@ -114,6 +115,10 @@ final class TimeSlotCalculator
                 // Walk through the window in slot_duration_minutes increments
                 for ($startMin = $windowStart; $startMin + $serviceDuration <= $windowEnd; $startMin += (int) ($tenant['slot_duration_minutes'] ?? 30)) {
                     $endMin = $startMin + $serviceDuration;
+                    $startTime = sprintf('%02d:%02d', (int) floor($startMin / 60), $startMin % 60);
+                    if (!VenueDateTime::wallTimeExists($date, $startTime, $requestedDate->getTimezone())) {
+                        continue;
+                    }
 
                     // Check min_advance: if today, skip past times
                     if ($requestedDate->format('Y-m-d') === $now->format('Y-m-d')) {
@@ -141,7 +146,7 @@ final class TimeSlotCalculator
 
                     if (!$conflicts) {
                         $allSlots[] = [
-                            'time'     => sprintf('%02d:%02d', (int) floor($startMin / 60), $startMin % 60),
+                            'time'     => $startTime,
                             'end_time' => sprintf('%02d:%02d', (int) floor($endMin / 60), $endMin % 60),
                             'staff_id' => $currentStaffId,
                         ];
@@ -179,13 +184,14 @@ final class TimeSlotCalculator
         int $month,
         ?string $serviceId = null,
         ?string $staffId = null,
+        ?string $excludeBookingId = null,
     ): array {
         $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
         $availableDates = [];
 
         for ($day = 1; $day <= $daysInMonth; $day++) {
             $date = sprintf('%04d-%02d-%02d', $year, $month, $day);
-            $result = self::getAvailableSlots($tenant, $date, $serviceId, $staffId);
+            $result = self::getAvailableSlots($tenant, $date, $serviceId, $staffId, $excludeBookingId);
             if (!empty($result['slots'])) {
                 $availableDates[] = $date;
             }
@@ -276,14 +282,16 @@ final class TimeSlotCalculator
     }
 
     /**
-     * Get existing confirmed bookings for a date and optional staff.
+     * Get occupied time windows, excluding replacement-linked history.
      */
-    private static function getExistingBookings(string $tenantId, string $date, ?string $staffId): array
+    private static function getExistingBookings(string $tenantId, string $date, ?string $staffId, ?string $excludeBookingId): array
     {
         $sql = 'SELECT `start_datetime`, `end_datetime` FROM `bookings`
                 WHERE `tenant_id` = ? AND `status` IN (\'confirmed\', \'rescheduled\')
-                AND DATE(`start_datetime`) = ?';
-        $params = [$tenantId, $date];
+                AND (`status` <> \'rescheduled\' OR NULLIF(`rescheduled_to_id`, \'\') IS NULL)
+                AND DATE(`start_datetime`) = ?
+                AND (? IS NULL OR `id` <> ?)';
+        $params = [$tenantId, $date, $excludeBookingId, $excludeBookingId];
 
         if ($staffId !== null) {
             $sql .= ' AND `staff_id` = ?';

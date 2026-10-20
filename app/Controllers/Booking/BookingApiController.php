@@ -18,6 +18,7 @@ use App\Engine\Logger;
 use App\Engine\Mailer;
 use App\Engine\Request;
 use App\Engine\Response;
+use App\Engine\VenueDateTime;
 use App\Middleware\CsrfMiddleware;
 
 /**
@@ -58,6 +59,46 @@ final class BookingApiController
     }
 
     /**
+     * A manage-link booking ID is the existing bearer proof. Only a permitted
+     * reschedule of that booking's unchanged offering may exclude its occupancy.
+     */
+    private function availabilityBookingContext(Request $request, array $tenant, string $pattern, array $selectors): array|Response|null
+    {
+        $bookingId = $request->string('reschedule_booking_id');
+        if ($bookingId === '') return null;
+
+        $booking = BookingService::findById($bookingId);
+        if (!$booking || $booking['tenant_id'] !== $tenant['id']) {
+            return Response::json(['error' => 'booking_not_found'], 404);
+        }
+        if (($booking['booking_pattern'] ?? 'timeslot') !== $pattern) {
+            return Response::json(['error' => 'reschedule_context_mismatch'], 400);
+        }
+        $permission = BookingService::canReschedule($booking, $tenant);
+        if (!$permission['allowed']) {
+            return Response::json(['error' => 'rescheduling_unavailable', 'reason' => $permission['reason']], 403);
+        }
+        foreach ($selectors as $field => $value) {
+            if ((string) ($booking[$field] ?? '') !== (string) $value) {
+                return Response::json(['error' => 'reschedule_context_mismatch'], 400);
+            }
+        }
+        return $booking;
+    }
+
+    private function customerBookingCountForDate(string $customerId, string $tenantId, string $date): int
+    {
+        $rows = Database::query(
+            'SELECT COUNT(*) AS `cnt` FROM `bookings`
+             WHERE `customer_id` = ? AND `tenant_id` = ? AND DATE(`start_datetime`) = ?
+             AND `status` IN (\'confirmed\', \'rescheduled\')
+             AND (`status` <> \'rescheduled\' OR NULLIF(`rescheduled_to_id`, \'\') IS NULL)',
+            [$customerId, $tenantId, $date]
+        );
+        return (int) ($rows[0]['cnt'] ?? 0);
+    }
+
+    /**
      * GET /api/{slug}/services — list active services.
      */
     public function services(Request $request): Response
@@ -69,15 +110,17 @@ final class BookingApiController
         }
 
         $services = Database::query(
-            'SELECT `id`, `name`, `description`, `duration_minutes`, `price`, `price_label`, `category`, `preparation_text`, `cover_image_path`, `color`
+            'SELECT `id`, `name`, `description`, `duration_minutes`, `price`, `price_label`, `category`, `preparation_text`, `cover_image_path`, `color`, `is_virtual`, `requires_staff`
              FROM `services`
              WHERE `tenant_id` = ? AND `is_active` = 1
              ORDER BY `sort_order` ASC, `name` ASC',
             [$tenant['id']]
         );
 
-        // Normalize cover image paths to absolute (consistent with resource/staff pattern)
+        // Normalize booking flags and absolute cover paths for the public UI.
         foreach ($services as &$svc) {
+            $svc['is_virtual'] = (bool) $svc['is_virtual'];
+            $svc['requires_staff'] = (bool) $svc['requires_staff'];
             if (!empty($svc['cover_image_path'])) {
                 $svc['cover_image_path'] = '/' . ltrim($svc['cover_image_path'], '/');
             }
@@ -151,7 +194,13 @@ final class BookingApiController
             return Response::json(['error' => 'invalid_date', 'message' => __('booking.api.invalid_date')], 400);
         }
 
-        $result = TimeSlotCalculator::getAvailableSlots($tenant, $date, $serviceId ?: null, $staffId ?: null);
+        $context = $this->availabilityBookingContext($request, $tenant, 'timeslot', ['service_id' => $serviceId, 'staff_id' => $staffId]);
+        if ($context instanceof Response) return $context;
+        $result = TimeSlotCalculator::getAvailableSlots($tenant, $date, $serviceId ?: null, $staffId ?: null, $context['id'] ?? null);
+        foreach ($result['slots'] as &$slot) {
+            $slot += VenueDateTime::utcRange($date . ' ' . $slot['time'], $date . ' ' . $slot['end_time'], $tenant['timezone'] ?? 'UTC');
+        }
+        unset($slot);
 
         return Response::json($result);
     }
@@ -176,7 +225,9 @@ final class BookingApiController
             return Response::json(['error' => 'invalid_month'], 400);
         }
 
-        $dates = TimeSlotCalculator::getAvailableDates($tenant, $year, $month, $serviceId ?: null, $staffId ?: null);
+        $context = $this->availabilityBookingContext($request, $tenant, 'timeslot', ['service_id' => $serviceId, 'staff_id' => $staffId]);
+        if ($context instanceof Response) return $context;
+        $dates = TimeSlotCalculator::getAvailableDates($tenant, $year, $month, $serviceId ?: null, $staffId ?: null, $context['id'] ?? null);
 
         return Response::json(['dates' => $dates, 'year' => $year, 'month' => $month]);
     }
@@ -258,12 +309,16 @@ final class BookingApiController
 
             $guestCount = max(1, (int) ($request->string('guests') ?: 1));
 
+            $context = $this->availabilityBookingContext($request, $tenant, 'resource', ['resource_id' => $resourceId, 'party_size' => $guestCount]);
+            if ($context instanceof Response) return $context;
+
             $result = ResourceCalculator::checkAvailability(
                 $tenant,
                 $resourceId,
                 $checkIn,
                 $checkOut,
                 $guestCount,
+                $context['id'] ?? null,
             );
 
             return Response::json($result);
@@ -277,7 +332,9 @@ final class BookingApiController
             return Response::json(['error' => 'invalid_month'], 400);
         }
 
-        $result = ResourceCalculator::getAvailableDates($tenant, $resourceId, $year, $month);
+        $context = $this->availabilityBookingContext($request, $tenant, 'resource', ['resource_id' => $resourceId]);
+        if ($context instanceof Response) return $context;
+        $result = ResourceCalculator::getAvailableDates($tenant, $resourceId, $year, $month, $context['id'] ?? null);
 
         return Response::json($result);
     }
@@ -429,10 +486,14 @@ final class BookingApiController
             if (!$stillAvailable) {
                 $pdo->rollBack();
 
-                $alternatives = array_slice(
-                    array_map(fn($s) => ['time' => $s['time'], 'end_time' => $s['end_time'], 'staff_id' => $s['staff_id']], $availResult['slots']),
-                    0,
-                    3
+                $alternatives = array_map(
+                    fn($slot) => [
+                        'time' => $slot['time'],
+                        'end_time' => $slot['end_time'],
+                        'staff_id' => $slot['staff_id'],
+                        ...VenueDateTime::utcRange($date . ' ' . $slot['time'], $date . ' ' . $slot['end_time'], $tenant['timezone'] ?? 'UTC'),
+                    ],
+                    array_slice($availResult['slots'], 0, 3)
                 );
 
                 return Response::json([
@@ -459,11 +520,7 @@ final class BookingApiController
                     [$customerId]
                 );
 
-                $countRows = Database::query(
-                    'SELECT COUNT(*) AS `cnt` FROM `bookings` WHERE `customer_id` = ? AND `tenant_id` = ? AND DATE(`start_datetime`) = ? AND `status` IN (?, ?)',
-                    [$customerId, $tenant['id'], $startDt->format('Y-m-d'), 'confirmed', 'rescheduled']
-                );
-                $existingCount = (int) ($countRows[0]['cnt'] ?? 0);
+                $existingCount = $this->customerBookingCountForDate($customerId, $tenant['id'], $startDt->format('Y-m-d'));
 
                 if ($existingCount >= $maxPerDay) {
                     $pdo->rollBack();
@@ -624,6 +681,7 @@ final class BookingApiController
                     'duration'         => $serviceDuration,
                     'consent_recorded' => $result['consent_recorded'],
                     'email_sent'       => $emailSent,
+                    ...VenueDateTime::utcRange($bookingData['start_datetime'], $bookingData['end_datetime'], $tenant['timezone'] ?? 'UTC'),
                 ],
             ], 201);
 
@@ -872,6 +930,7 @@ final class BookingApiController
                     'total'            => $availability['total'],
                     'consent_recorded' => $result['consent_recorded'],
                     'email_sent'       => $emailSent,
+                    ...VenueDateTime::utcRange($bookingData['start_datetime'], $bookingData['end_datetime'], $tenant['timezone'] ?? 'UTC'),
                 ],
             ], 201);
 
@@ -914,7 +973,9 @@ final class BookingApiController
         }
 
         $monthStr = sprintf('%04d-%02d', $year, $month);
-        $result = CapacityCalculator::getAvailableDates($tenant, $monthStr, $partySize);
+        $context = $this->availabilityBookingContext($request, $tenant, 'capacity', ['party_size' => $partySize]);
+        if ($context instanceof Response) return $context;
+        $result = CapacityCalculator::getAvailableDates($tenant, $monthStr, $partySize, $context['id'] ?? null);
 
         return Response::json($result);
     }
@@ -937,7 +998,13 @@ final class BookingApiController
             return Response::json(['error' => 'invalid_date'], 400);
         }
 
-        $result = CapacityCalculator::getAvailableSlots($tenant, $date, $partySize);
+        $context = $this->availabilityBookingContext($request, $tenant, 'capacity', ['party_size' => $partySize]);
+        if ($context instanceof Response) return $context;
+        $result = CapacityCalculator::getAvailableSlots($tenant, $date, $partySize, $context['id'] ?? null);
+        foreach ($result['slots'] as &$slot) {
+            $slot += VenueDateTime::utcRange($date . ' ' . $slot['time'], $date . ' ' . $slot['end_time'], $tenant['timezone'] ?? 'UTC');
+        }
+        unset($slot);
 
         return Response::json($result);
     }
@@ -1161,6 +1228,7 @@ final class BookingApiController
                     'party_size'       => $partySize,
                     'consent_recorded' => $result['consent_recorded'],
                     'email_sent'       => $emailSent,
+                    ...VenueDateTime::utcRange($bookingData['start_datetime'], $bookingData['end_datetime'], $tenant['timezone'] ?? 'UTC'),
                 ],
             ], 201);
 
@@ -1200,6 +1268,10 @@ final class BookingApiController
         $this->resolveLocale($tenant, $request);
 
         $result = EventCalculator::getUpcomingEvents($tenant);
+        foreach ($result['events'] as &$event) {
+            $event += VenueDateTime::utcRange($event['start_datetime'], $event['end_datetime'], $tenant['timezone'] ?? 'UTC');
+        }
+        unset($event);
 
         return Response::json($result);
     }
@@ -1228,6 +1300,8 @@ final class BookingApiController
         if (!$result['event']) {
             return Response::json(['error' => 'event_not_found'], 404);
         }
+
+        $result['event'] += VenueDateTime::utcRange($result['event']['start_datetime'], $result['event']['end_datetime'], $tenant['timezone'] ?? 'UTC');
 
         return Response::json($result);
     }
@@ -1295,8 +1369,9 @@ final class BookingApiController
         $tz = new \DateTimeZone($tenant['timezone'] ?? 'UTC');
         $origStart = new \DateTimeImmutable($event['start_datetime'], $tz);
         $origEnd = new \DateTimeImmutable($event['end_datetime'], $tz);
-        $startDt = $date . ' ' . $origStart->format('H:i:s');
-        $endDt = $date . ' ' . $origEnd->format('H:i:s');
+        $range = VenueDateTime::eventRange($event['start_datetime'], $event['end_datetime'], $date, $tz);
+        $startDt = $range['start']->format('Y-m-d H:i:s');
+        $endDt = $range['end']->format('Y-m-d H:i:s');
 
         // Double-booking prevention: transaction + FOR UPDATE lock
         $pdo = Database::connect();
@@ -1486,6 +1561,7 @@ final class BookingApiController
                     'waitlisted'       => $isWaitlisted,
                     'consent_recorded' => $result['consent_recorded'],
                     'email_sent'       => $emailSent,
+                    ...VenueDateTime::utcRange($bookingData['start_datetime'], $bookingData['end_datetime'], $tenant['timezone'] ?? 'UTC'),
                 ],
             ], 201);
 
@@ -1531,6 +1607,29 @@ final class BookingApiController
             return Response::json(['error' => 'booking_not_found', 'message' => __('booking.manage.not_found')], 404);
         }
 
+        // Existing bookings retain their service's time-display mode even when
+        // the service no longer appears in the active booking catalog.
+        $isVirtual = false;
+        if (!empty($booking['service_id'])) {
+            $service = Database::query(
+                'SELECT `is_virtual` FROM `services` WHERE `id` = ? AND `tenant_id` = ? LIMIT 1',
+                [$booking['service_id'], $tenant['id']]
+            );
+            $isVirtual = (bool) ($service[0]['is_virtual'] ?? false);
+        }
+
+        // The replacement ID grants access to another manage page, so verify
+        // the relationship before exposing that existing bearer capability.
+        $replacementId = null;
+        $linkedId = $booking['rescheduled_to_id'] ?? null;
+        if (is_string($linkedId) && $linkedId !== '' && $linkedId !== $booking['id'] && !empty($booking['customer_id'])) {
+            $replacement = Database::query(
+                'SELECT `id` FROM `bookings` WHERE `id` = ? AND `tenant_id` = ? AND `customer_id` = ? LIMIT 1',
+                [$linkedId, $tenant['id'], $booking['customer_id']]
+            );
+            $replacementId = $replacement[0]['id'] ?? null;
+        }
+
         // Compute permission flags
         $canCancel = BookingService::canCancel($booking, $tenant);
         $canReschedule = BookingService::canReschedule($booking, $tenant);
@@ -1559,8 +1658,10 @@ final class BookingApiController
                 'end_time'        => $endDt->format('H:i'),
                 'start_datetime'  => $booking['start_datetime'],
                 'end_datetime'    => $booking['end_datetime'],
+                ...VenueDateTime::utcRange($booking['start_datetime'], $booking['end_datetime'], $tenant['timezone'] ?? 'UTC'),
                 'party_size'      => (int) $booking['party_size'],
                 'service_id'      => $booking['service_id'] ?? null,
+                'is_virtual'      => $isVirtual,
                 'staff_id'        => $booking['staff_id'] ?? null,
                 'resource_id'     => $booking['resource_id'] ?? null,
                 'event_id'        => $booking['event_id'] ?? null,
@@ -1572,6 +1673,8 @@ final class BookingApiController
                 'customer_id'     => $booking['customer_id'] ?? null,
                 'customer_name'   => $booking['customer_name'] ?? null,
                 'customer_email'  => $booking['customer_email'] ?? null,
+                'customer_timezone' => $booking['customer_timezone'] ?? null,
+                'rescheduled_to_id' => $replacementId,
                 'cancelled_at'    => $booking['cancelled_at'] ?? null,
                 'cancellation_reason' => $booking['cancellation_reason'] ?? null,
                 'check_in'        => $checkIn,
@@ -1895,6 +1998,7 @@ final class BookingApiController
             'date'     => $result['new_date'],
             'time'     => $result['new_time'],
             'end_time' => (new \DateTimeImmutable($result['new_end']))->format('H:i'),
+            ...VenueDateTime::utcRange($result['new_start'], $result['new_end'], $tenant['timezone'] ?? 'UTC'),
         ];
 
         // Enrich with pattern-specific fields
