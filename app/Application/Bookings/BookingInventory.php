@@ -45,7 +45,9 @@ final class BookingInventory
                         break;
                     }
                 }
-                if (!$eligible) throw new OperationException('inventory_conflict', 409);
+                if (!$eligible) {
+                    throw new OperationException('inventory_conflict', 409);
+                }
 
                 $buffer = max(0, (int) ($tenant['buffer_minutes'] ?? 0));
                 $conflict = Database::query(
@@ -60,7 +62,9 @@ final class BookingInventory
                         $booking['start_datetime']
                     ]
                 );
-                if ($conflict) throw new OperationException('inventory_conflict', 409);
+                if ($conflict) {
+                    throw new OperationException('inventory_conflict', 409);
+                }
                 break;
 
             case 'resource':
@@ -73,12 +77,16 @@ final class BookingInventory
                     $booking['id'],
                     true
                 );
-                if (!$availability['available']) throw new OperationException('inventory_conflict', 409);
+                if (!$availability['available']) {
+                    throw new OperationException('inventory_conflict', 409);
+                }
 
                 if (Database::query(
                     "SELECT id FROM bookings WHERE $where AND resource_id = ? AND start_datetime < ? AND end_datetime > ? LIMIT 1",
                     [...$bindings, $booking['resource_id'], $booking['end_datetime'], $booking['start_datetime']]
-                )) throw new OperationException('inventory_conflict', 409);
+                )) {
+                    throw new OperationException('inventory_conflict', 409);
+                }
                 break;
 
             case 'capacity':
@@ -109,7 +117,9 @@ final class BookingInventory
                         [$tenant['id'], substr($booking['start_datetime'], 0, 10), substr($booking['start_datetime'], 0, 10)]
                     )
                     || (int) $used + (int) $booking['party_size'] > (int) $slot['max_capacity']
-                ) throw new OperationException('inventory_conflict', 409);
+                ) {
+                    throw new OperationException('inventory_conflict', 409);
+                }
                 break;
 
             case 'event':
@@ -122,7 +132,9 @@ final class BookingInventory
                     $occurrence === null
                     || $occurrence['start_datetime'] !== $booking['start_datetime']
                     || $occurrence['end_datetime'] !== $booking['end_datetime']
-                ) throw new OperationException('inventory_conflict', 409);
+                ) {
+                    throw new OperationException('inventory_conflict', 409);
+                }
 
                 $availability = \App\Engine\EventCalculator::checkAvailability(
                     $tenant,
@@ -131,7 +143,9 @@ final class BookingInventory
                     (int) $booking['party_size'],
                     $booking['id']
                 );
-                if (!$availability['available'] || $availability['waitlisted']) throw new OperationException('inventory_conflict', 409);
+                if (!$availability['available'] || $availability['waitlisted']) {
+                    throw new OperationException('inventory_conflict', 409);
+                }
 
                 $event = Database::query(
                     'SELECT max_participants FROM events WHERE id = ? AND tenant_id = ? AND is_active = 1',
@@ -144,7 +158,9 @@ final class BookingInventory
                 if (
                     $event === null
                     || (int) $used + (int) $booking['party_size'] > (int) $event['max_participants']
-                ) throw new OperationException('inventory_conflict', 409);
+                ) {
+                    throw new OperationException('inventory_conflict', 409);
+                }
                 break;
 
             default:

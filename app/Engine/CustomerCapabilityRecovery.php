@@ -31,7 +31,9 @@ final class CustomerCapabilityRecovery
     public static function request(string $tenantId, string $purpose, string $subjectId, string $email): void
     {
         $customer = self::customer($tenantId, $purpose, $subjectId);
-        if ($customer === null || !hash_equals(mb_strtolower($customer['email']), $email)) return;
+        if ($customer === null || !hash_equals(mb_strtolower($customer['email']), $email)) {
+            return;
+        }
         $payload = [
             'tenant_id' => $tenantId,
             'purpose' => $purpose,
@@ -63,7 +65,9 @@ final class CustomerCapabilityRecovery
             'SELECT * FROM `tenants` WHERE `id` = ? AND `status` = ? LIMIT 1',
             [$tenantId, 'active']
         )[0] ?? null;
-        if ($tenant === null) return ['sent' => true, 'error' => null, 'suppressed' => true];
+        if ($tenant === null) {
+            return ['sent' => true, 'error' => null, 'suppressed' => true];
+        }
         Locale::resolveForBooking($tenant, null);
         $token = $purpose === CustomerCapability::MANAGE
             ? CustomerCapability::issueManage($tenantId, $subjectId)
@@ -86,7 +90,9 @@ final class CustomerCapabilityRecovery
                 [$subjectId, $tenantId, 'active']
             )[0] ?? null;
         }
-        if ($purpose !== CustomerCapability::PRIVACY) return null;
+        if ($purpose !== CustomerCapability::PRIVACY) {
+            return null;
+        }
         return Database::query(
             'SELECT c.`id`, c.`email` FROM `customers` c JOIN `tenants` t ON t.`id` = c.`tenant_id`
              WHERE c.`id` = ? AND c.`tenant_id` = ? AND c.`is_anonymized` = 0 AND t.`status` = ? LIMIT 1',

@@ -12,7 +12,7 @@ use App\Engine\Response;
 use App\Engine\Version;
 use App\Engine\View;
 use App\Middleware\CsrfMiddleware;
-use App\Application\Bookings\{BookingCommands,BookingQueries};
+use App\Application\Bookings\{BookingCommands, BookingQueries};
 
 /**
  * Calendar controller (tenant-scoped).
@@ -263,8 +263,9 @@ final class CalendarController
     private function calendar(string $tenantId, string $from, string $to): array
     {
         $actor = BookingCommands::sessionActor($tenantId);
-        $input = ['business_id'=>$tenantId, 'from'=>$from, 'to'=>$to, 'limit'=>100];
-        $result = null; $bookings = [];
+        $input = ['business_id' => $tenantId, 'from' => $from, 'to' => $to, 'limit' => 100];
+        $result = null;
+        $bookings = [];
         do {
             $page = BookingQueries::calendar($actor, $input);
             $result ??= $page;
@@ -275,11 +276,14 @@ final class CalendarController
             }
             $input['cursor'] = $page['next_cursor'];
         } while ($input['cursor'] !== null);
-        usort($bookings, static fn($a, $b)=>[$a['start_datetime'],$a['id']] <=> [$b['start_datetime'],$b['id']]);
+        usort($bookings, static fn($a, $b) => [$a['start_datetime'], $a['id']] <=> [$b['start_datetime'], $b['id']]);
         $result['bookings'] = $bookings;
         $blocked = [];
         foreach ($result['blocked_dates'] as $range) {
-            if ($range['staff_id'] !== null || $range['resource_id'] !== null) continue;
+            // Only whole-business closures block a day; staff and resource blocks leave it open.
+            if ($range['staff_id'] !== null || $range['resource_id'] !== null) {
+                continue;
+            }
             $day = new \DateTimeImmutable(max($from, $range['start_date']));
             $end = min($to, $range['end_date']);
             while ($day->format('Y-m-d') <= $end) {

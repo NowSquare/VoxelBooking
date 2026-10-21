@@ -34,29 +34,33 @@ final class SettingsController
 
     public function general(Request $request): Response
     {
-        $record = \App\Application\System\SystemSettings::get(\App\Application\System\SystemUi::actor(), ['section'=>'general']);
+        $record = \App\Application\System\SystemSettings::get(\App\Application\System\SystemUi::actor(), ['section' => 'general']);
         $values = $record['values'];
         $values['enable_applications'] = $values['enable_applications'] ? '1' : '0';
         return $this->render('admin.settings.general', __('admin.settings.title'), [
-            'settings'=>$values, 'recordVersion'=>$record['version'], 'flash'=>FormState::getToast(),
-            'localeOptions'=>\App\Engine\Locale::localeOptions(), 'currencyOptions'=>get_supported_currencies(),
+            'settings' => $values, 'recordVersion' => $record['version'], 'flash' => FormState::getToast(),
+            'localeOptions' => \App\Engine\Locale::localeOptions(), 'currencyOptions' => get_supported_currencies(),
         ]);
     }
+
     public function saveGeneral(Request $request): Response
     {
         return \App\Application\System\SystemUi::save($request, 'general');
     }
+
     public function email(Request $request): Response
     {
-        $record = \App\Application\System\SystemSettings::get(\App\Application\System\SystemUi::actor(), ['section'=>'mail']);
+        $record = \App\Application\System\SystemSettings::get(\App\Application\System\SystemUi::actor(), ['section' => 'mail']);
         return $this->render('admin.settings.email', __('admin.email.smtp_title'), [
-            'settings'=>$record['values'], 'recordVersion'=>$record['version'], 'flash'=>FormState::getToast(),
+            'settings' => $record['values'], 'recordVersion' => $record['version'], 'flash' => FormState::getToast(),
         ]);
     }
+
     public function saveEmail(Request $request): Response
     {
         return \App\Application\System\SystemUi::save($request, 'mail');
     }
+
     public function cron(Request $request): Response
     {
         $cronToken = $this->getSetting('cron_token');
@@ -66,9 +70,13 @@ final class SettingsController
         }
         $status = \App\Application\System\JobCoordinator::status(\App\Application\System\SystemUi::actor());
         return $this->render('admin.settings.cron', __('agent-system.title'), [
-            'cronToken'=>$cronToken ?: 'demo-mode-token-not-persisted', 'lastRun'=>$status['last_run_at'], 'jobStatus'=>$status, 'flash'=>FormState::getToast(),
+            'cronToken' => $cronToken ?: 'demo-mode-token-not-persisted',
+            'lastRun' => $status['last_run_at'],
+            'jobStatus' => $status,
+            'flash' => FormState::getToast(),
         ]);
     }
+
     public function cronRunNow(Request $request): Response
     {
         return \App\Application\System\SystemUi::run();
@@ -102,7 +110,11 @@ final class SettingsController
         $perPage = 50;
         $actionFilter = $request->query('action');
 
-        $result = \App\Application\System\SystemAudit::browser(\App\Application\System\SystemUi::actor(), ['action'=>$actionFilter], $page);
+        $result = \App\Application\System\SystemAudit::browser(
+            \App\Application\System\SystemUi::actor(),
+            ['action' => $actionFilter],
+            $page,
+        );
 
         return $this->render('admin.settings.audit', 'Audit Log', [
             'entries'      => $result['entries'],
@@ -140,9 +152,17 @@ final class SettingsController
 
     public function auditExport(Request $request): Response
     {
-        $export = \App\Application\System\SystemAudit::export(\App\Application\System\SystemUi::actor(), ['action'=>$request->query('action')]);
-        return (new Response())->header('Content-Type', $export['content_type'])
-            ->header('Content-Disposition', 'attachment; filename="'.preg_replace('/^audit-/', 'audit-log-export-', $export['filename']).'"')
-            ->header('Cache-Control', 'no-store')->body($export['content']);
+        $export = \App\Application\System\SystemAudit::export(
+            \App\Application\System\SystemUi::actor(),
+            ['action' => $request->query('action')],
+        );
+        return (new Response())
+            ->header('Content-Type', $export['content_type'])
+            ->header(
+                'Content-Disposition',
+                'attachment; filename="' . preg_replace('/^audit-/', 'audit-log-export-', $export['filename']) . '"',
+            )
+            ->header('Cache-Control', 'no-store')
+            ->body($export['content']);
     }
 }

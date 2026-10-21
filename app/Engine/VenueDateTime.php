@@ -129,6 +129,9 @@ final class VenueDateTime
     {
         $calendar = new \DateTimeZone('UTC');
 
-        return max(0, (new \DateTimeImmutable($end, $calendar))->getTimestamp() - (new \DateTimeImmutable($start, $calendar))->getTimestamp());
+        return max(
+            0,
+            (new \DateTimeImmutable($end, $calendar))->getTimestamp() - (new \DateTimeImmutable($start, $calendar))->getTimestamp(),
+        );
     }
 }

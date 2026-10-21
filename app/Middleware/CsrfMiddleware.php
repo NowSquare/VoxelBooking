@@ -36,7 +36,7 @@ final class CsrfMiddleware
             return $next($request);
         }
         // These endpoints never accept browser cookies as authorization.
-        if ($request->path() === '/mcp' || $request->path()==='/mcp/public' || str_starts_with($request->path(), '/mcp/public/')
+        if ($request->path() === '/mcp' || $request->path() === '/mcp/public' || str_starts_with($request->path(), '/mcp/public/')
             || in_array($request->path(), ['/oauth/token', '/oauth/register', '/oauth/revoke'], true)) {
             return $next($request);
         }

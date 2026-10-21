@@ -27,7 +27,9 @@ final class DeletionOperations
             'business_receipt_payloads',
             'business_webhook_payloads',
             'active_bookings'
-        ] as $key) $effect[$key] = ['type' => 'integer'];
+        ] as $key) {
+            $effect[$key] = ['type' => 'integer'];
+        }
         $review = $o(
             [
                 'customer_id' => $s,
@@ -60,7 +62,9 @@ final class DeletionOperations
             'receipt_payloads_removed',
             'webhook_payloads_removed',
             'webhook_intents_suppressed'
-        ] as $key) $result[$key] = ['type' => 'integer'];
+        ] as $key) {
+            $result[$key] = ['type' => 'integer'];
+        }
         $item = $o(
             [
                 'id' => $s,

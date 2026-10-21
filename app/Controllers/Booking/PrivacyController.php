@@ -59,14 +59,18 @@ final class PrivacyController
         }
 
         $actor = CustomerCapability::actor($request, CustomerCapability::PRIVACY, $tenant['id'], $customerId);
-        $summary = \App\Application\Privacy\PrivacyService::summary($actor, ['business_id'=>$tenant['id']]);
-        $customer = $summary['customer'] + ['id'=>$customerId,'deletion_requested_at'=>$summary['deletion_requested_at']];
-        $bookings = []; $cursor = null;
+        $summary = \App\Application\Privacy\PrivacyService::summary($actor, ['business_id' => $tenant['id']]);
+        $customer = $summary['customer'] + ['id' => $customerId, 'deletion_requested_at' => $summary['deletion_requested_at']];
+        $bookings = [];
+        $cursor = null;
         do {
-            $input = ['business_id'=>$tenant['id'],'limit'=>100];
-            if ($cursor !== null) $input['cursor']=$cursor;
-            $page = \App\Application\Privacy\PrivacyService::records($actor,$input);
-            array_push($bookings,...$page['bookings']); $cursor=$page['next_cursor'];
+            $input = ['business_id' => $tenant['id'], 'limit' => 100];
+            if ($cursor !== null) {
+                $input['cursor'] = $cursor;
+            }
+            $page = \App\Application\Privacy\PrivacyService::records($actor, $input);
+            array_push($bookings, ...$page['bookings']);
+            $cursor = $page['next_cursor'];
         } while ($cursor !== null);
         $consentRecords = $this->extractConsentRecords($bookings);
 
@@ -126,7 +130,11 @@ final class PrivacyController
         }
 
         if ($actionType === 'export') {
-            return CustomerCapability::protect($this->handleExport($customer, $tenant, CustomerCapability::actor($request, CustomerCapability::PRIVACY, $tenant['id'], $customerId)));
+            return CustomerCapability::protect($this->handleExport(
+                $customer,
+                $tenant,
+                CustomerCapability::actor($request, CustomerCapability::PRIVACY, $tenant['id'], $customerId),
+            ));
         }
 
         if ($actionType === 'delete') {
@@ -134,7 +142,12 @@ final class PrivacyController
             if (\App\Engine\DemoMode::isActive()) {
                 return Response::redirect("/book/{$slug}/privacy/{$customerId}");
             }
-            return CustomerCapability::protect($this->handleDeletionRequest($customer, $tenant, $slug, CustomerCapability::actor($request, CustomerCapability::PRIVACY, $tenant['id'], $customerId)));
+            return CustomerCapability::protect($this->handleDeletionRequest(
+                $customer,
+                $tenant,
+                $slug,
+                CustomerCapability::actor($request, CustomerCapability::PRIVACY, $tenant['id'], $customerId),
+            ));
         }
 
         return Response::redirect("/book/{$slug}/privacy/{$customerId}");
@@ -147,7 +160,8 @@ final class PrivacyController
     {
         try {
             $data = \App\Application\Privacy\PrivacyService::export($actor, ['business_id' => $tenant['id']]);
-            return Response::json($data)->header('Content-Disposition', 'attachment; filename="voxelbooking-data-' . gmdate('Y-m-d') . '.json"');
+            return Response::json($data)
+                ->header('Content-Disposition', 'attachment; filename="voxelbooking-data-' . gmdate('Y-m-d') . '.json"');
         } catch (\Throwable) {
             Logger::error('Customer data export unavailable', ['tenant_id' => $tenant['id']]);
             return Response::html(__('booking.privacy.export_failed'), 500);

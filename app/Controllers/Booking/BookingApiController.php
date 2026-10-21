@@ -61,23 +61,37 @@ final class BookingApiController
     }
 
     /** Adapt the existing browser response shape around the shared application reads. */
-    private function read(Request $request,callable $handler,?string $pattern=null):Response
+    private function read(Request $request, callable $handler, ?string $pattern = null): Response
     {
-        $tenant=$this->resolveTenant($request->getAttribute('slug'));
-        if($tenant===null)return Response::json(['error'=>'tenant_not_found'],404);
-        if($pattern!==null && $tenant['booking_pattern']!==$pattern)return Response::json(['error'=>'pattern_not_supported'],422);
-        $this->resolveLocale($tenant,$request);
-        $input=array_filter($request->all(),static fn($value)=>$value!=='');
-        $input['business_id']=$tenant['id'];
-        foreach(['party_size','guest_count','spot_count','limit'] as $key)if(isset($input[$key]))$input[$key]=(int)$input[$key];
-        $actor=AvailabilityService::publicActor($tenant);
-        if(!empty($input['reschedule_booking_id'])){
-            $actor=CustomerCapability::actor($request,CustomerCapability::MANAGE,$tenant['id'],$input['reschedule_booking_id']);
-            if($actor===null)return CustomerCapability::protect(Response::json(['error'=>'verification_required'],403));
+        $tenant = $this->resolveTenant($request->getAttribute('slug'));
+        if ($tenant === null) {
+            return Response::json(['error' => 'tenant_not_found'], 404);
         }
-        try{$response=Response::json($handler($actor,$input));}
-        catch(OperationException $error){$response=Response::json(['error'=>$error->problemCode],$error->status);}
-        return $actor->role==='verified_customer'?CustomerCapability::protect($response):$response;
+        if ($pattern !== null && $tenant['booking_pattern'] !== $pattern) {
+            return Response::json(['error' => 'pattern_not_supported'], 422);
+        }
+        $this->resolveLocale($tenant, $request);
+        $input = array_filter($request->all(), static fn($value) => $value !== '');
+        $input['business_id'] = $tenant['id'];
+        // Query strings arrive as text; the shared reads expect integer counts.
+        foreach (['party_size', 'guest_count', 'spot_count', 'limit'] as $key) {
+            if (isset($input[$key])) {
+                $input[$key] = (int) $input[$key];
+            }
+        }
+        $actor = AvailabilityService::publicActor($tenant);
+        if (!empty($input['reschedule_booking_id'])) {
+            $actor = CustomerCapability::actor($request, CustomerCapability::MANAGE, $tenant['id'], $input['reschedule_booking_id']);
+            if ($actor === null) {
+                return CustomerCapability::protect(Response::json(['error' => 'verification_required'], 403));
+            }
+        }
+        try {
+            $response = Response::json($handler($actor, $input));
+        } catch (OperationException $error) {
+            $response = Response::json(['error' => $error->problemCode], $error->status);
+        }
+        return $actor->role === 'verified_customer' ? CustomerCapability::protect($response) : $response;
     }
 
 
@@ -87,11 +101,26 @@ final class BookingApiController
      */
     public function services(Request $request): Response
     {
-        return $this->read($request, static function($actor,$input){
-            $input['kind']='services';$input['limit']=100;$items=[];
-            do{$page=AvailabilityService::catalog($actor,$input);$items=[...$items,...$page['items']];$input['cursor']=$page['next_cursor'];}while($input['cursor']!==null);
-            foreach($items as &$item)foreach(['cover_image_path','avatar_path'] as $key)if(!empty($item[$key]))$item[$key]='/'.ltrim($item[$key],'/');unset($item);
-            return ['services'=>$items];
+        return $this->read($request, static function ($actor, $input) {
+            $input['kind'] = 'services';
+            $input['limit'] = 100;
+            $items = [];
+            // The browser expects the whole catalog, so follow every page cursor.
+            do {
+                $page = AvailabilityService::catalog($actor, $input);
+                $items = [...$items, ...$page['items']];
+                $input['cursor'] = $page['next_cursor'];
+            } while ($input['cursor'] !== null);
+            // Stored paths are relative; the page needs root-relative URLs.
+            foreach ($items as &$item) {
+                foreach (['cover_image_path', 'avatar_path'] as $key) {
+                    if (!empty($item[$key])) {
+                        $item[$key] = '/' . ltrim($item[$key], '/');
+                    }
+                }
+            }
+            unset($item);
+            return ['services' => $items];
         });
     }
 
@@ -100,11 +129,26 @@ final class BookingApiController
      */
     public function staff(Request $request): Response
     {
-        return $this->read($request, static function($actor,$input){
-            $input['kind']='staff';$input['limit']=100;$items=[];
-            do{$page=AvailabilityService::catalog($actor,$input);$items=[...$items,...$page['items']];$input['cursor']=$page['next_cursor'];}while($input['cursor']!==null);
-            foreach($items as &$item)foreach(['cover_image_path','avatar_path'] as $key)if(!empty($item[$key]))$item[$key]='/'.ltrim($item[$key],'/');unset($item);
-            return ['staff'=>$items];
+        return $this->read($request, static function ($actor, $input) {
+            $input['kind'] = 'staff';
+            $input['limit'] = 100;
+            $items = [];
+            // The browser expects the whole catalog, so follow every page cursor.
+            do {
+                $page = AvailabilityService::catalog($actor, $input);
+                $items = [...$items, ...$page['items']];
+                $input['cursor'] = $page['next_cursor'];
+            } while ($input['cursor'] !== null);
+            // Stored paths are relative; the page needs root-relative URLs.
+            foreach ($items as &$item) {
+                foreach (['cover_image_path', 'avatar_path'] as $key) {
+                    if (!empty($item[$key])) {
+                        $item[$key] = '/' . ltrim($item[$key], '/');
+                    }
+                }
+            }
+            unset($item);
+            return ['staff' => $items];
         });
     }
 
@@ -113,11 +157,11 @@ final class BookingApiController
      */
     public function availability(Request $request): Response
     {
-        return $this->read($request, static function($actor,$input){
+        return $this->read($request, static function ($actor, $input) {
 
-            $result=AvailabilityService::search($actor,$input);
-            return ['slots'=>$result['choices'],'date'=>$input['date']??null,'timezone'=>$result['timezone']];
-        },'timeslot');
+            $result = AvailabilityService::search($actor, $input);
+            return ['slots' => $result['choices'], 'date' => $input['date'] ?? null, 'timezone' => $result['timezone']];
+        }, 'timeslot');
     }
 
     /**
@@ -125,11 +169,16 @@ final class BookingApiController
      */
     public function availableDates(Request $request): Response
     {
-        return $this->read($request, static function($actor,$input){
-            $input['month']=sprintf('%04d-%02d',(int)($input['year']??gmdate('Y')),(int)($input['month']??gmdate('n')));unset($input['year']);
-            $result=AvailabilityService::search($actor,$input);
-            return ['dates'=>$result['dates'],'year'=>(int)substr($input['month'],0,4),'month'=>(int)substr($input['month'],5,2)];
-        },'timeslot');
+        return $this->read($request, static function ($actor, $input) {
+            $input['month'] = sprintf('%04d-%02d', (int) ($input['year'] ?? gmdate('Y')), (int) ($input['month'] ?? gmdate('n')));
+            unset($input['year']);
+            $result = AvailabilityService::search($actor, $input);
+            return [
+                'dates' => $result['dates'],
+                'year' => (int) substr($input['month'], 0, 4),
+                'month' => (int) substr($input['month'], 5, 2),
+            ];
+        }, 'timeslot');
     }
 
     // ── Resource-pattern endpoints ──
@@ -139,11 +188,26 @@ final class BookingApiController
      */
     public function resources(Request $request): Response
     {
-        return $this->read($request, static function($actor,$input){
-            $input['kind']='resources';$input['limit']=100;$items=[];
-            do{$page=AvailabilityService::catalog($actor,$input);$items=[...$items,...$page['items']];$input['cursor']=$page['next_cursor'];}while($input['cursor']!==null);
-            foreach($items as &$item)foreach(['cover_image_path','avatar_path'] as $key)if(!empty($item[$key]))$item[$key]='/'.ltrim($item[$key],'/');unset($item);
-            return ['resources'=>$items];
+        return $this->read($request, static function ($actor, $input) {
+            $input['kind'] = 'resources';
+            $input['limit'] = 100;
+            $items = [];
+            // The browser expects the whole catalog, so follow every page cursor.
+            do {
+                $page = AvailabilityService::catalog($actor, $input);
+                $items = [...$items, ...$page['items']];
+                $input['cursor'] = $page['next_cursor'];
+            } while ($input['cursor'] !== null);
+            // Stored paths are relative; the page needs root-relative URLs.
+            foreach ($items as &$item) {
+                foreach (['cover_image_path', 'avatar_path'] as $key) {
+                    if (!empty($item[$key])) {
+                        $item[$key] = '/' . ltrim($item[$key], '/');
+                    }
+                }
+            }
+            unset($item);
+            return ['resources' => $items];
         });
     }
 
@@ -152,16 +216,24 @@ final class BookingApiController
      */
     public function resourceAvailability(Request $request): Response
     {
-        return $this->read($request, static function($actor,$input)use($request){
-            $input['resource_id']=$request->getAttribute('id');
-            if(isset($input['check_in'],$input['check_out'])){
-                $input['guest_count']=(int)($input['guests']??$input['guest_count']??1);unset($input['guests']);
-                $result=AvailabilityService::search($actor,$input);return $result['quote'];
+        return $this->read($request, static function ($actor, $input) use ($request) {
+            $input['resource_id'] = $request->getAttribute('id');
+            // A full stay range asks for a quote; otherwise the month calendar is wanted.
+            if (isset($input['check_in'], $input['check_out'])) {
+                $input['guest_count'] = (int) ($input['guests'] ?? $input['guest_count'] ?? 1);
+                unset($input['guests']);
+                $result = AvailabilityService::search($actor, $input);
+                return $result['quote'];
             }
-            $input['month']=sprintf('%04d-%02d',(int)($input['year']??gmdate('Y')),(int)($input['month']??gmdate('n')));unset($input['year']);
-            $result=AvailabilityService::search($actor,$input);
-            return ['dates'=>$result['dates'],'year'=>(int)substr($input['month'],0,4),'month'=>(int)substr($input['month'],5,2)]+$result['date_rules'];
-        },'resource');
+            $input['month'] = sprintf('%04d-%02d', (int) ($input['year'] ?? gmdate('Y')), (int) ($input['month'] ?? gmdate('n')));
+            unset($input['year']);
+            $result = AvailabilityService::search($actor, $input);
+            return [
+                'dates' => $result['dates'],
+                'year' => (int) substr($input['month'], 0, 4),
+                'month' => (int) substr($input['month'], 5, 2),
+            ] + $result['date_rules'];
+        }, 'resource');
     }
 
     // ── Booking creation ──
@@ -216,10 +288,23 @@ final class BookingApiController
         try {
             $principalId = Ulid::generate();
             if (session_status() === PHP_SESSION_ACTIVE) {
-                if (!is_string($_SESSION['public_actor_id'] ?? null) || !preg_match('/^[0-9A-HJKMNP-TV-Z]{26}$/D', $_SESSION['public_actor_id'])) $_SESSION['public_actor_id'] = $principalId;
+                // Reuse one anonymous principal for the whole browser session.
+                if (
+                    !is_string($_SESSION['public_actor_id'] ?? null)
+                    || !preg_match('/^[0-9A-HJKMNP-TV-Z]{26}$/D', $_SESSION['public_actor_id'])
+                ) {
+                    $_SESSION['public_actor_id'] = $principalId;
+                }
                 $principalId = $_SESSION['public_actor_id'];
             }
-            $actor = new ActorContext('anonymous', $principalId, 'prospective_customer', [$tenant['id']], ['public:read','public:book'], authMode: 'public');
+            $actor = new ActorContext(
+                'anonymous',
+                $principalId,
+                'prospective_customer',
+                [$tenant['id']],
+                ['public:read', 'public:book'],
+                authMode: 'public',
+            );
             $booking = BookingCommands::create($actor, array_replace($input, ['business_id' => $tenant['id']]));
             $booking = array_replace($booking, BookingNotifications::deliverQueued());
 
@@ -233,7 +318,9 @@ final class BookingApiController
             return CustomerCapability::protect(Response::json($problem['body'], $problem['status']));
         } catch (\Throwable) {
             Logger::error('Booking creation failed', ['tenant_id' => $tenant['id']]);
-            return CustomerCapability::protect(Response::json(['error' => 'booking_failed', 'message' => __('booking.api.booking_failed')], 500));
+            return CustomerCapability::protect(
+                Response::json(['error' => 'booking_failed', 'message' => __('booking.api.booking_failed')], 500)
+            );
         }
     }
 
@@ -263,11 +350,16 @@ final class BookingApiController
      */
     public function capacityAvailableDates(Request $request): Response
     {
-        return $this->read($request, static function($actor,$input){
-            $input['month']=sprintf('%04d-%02d',(int)($input['year']??gmdate('Y')),(int)($input['month']??gmdate('n')));unset($input['year']);
-            $result=AvailabilityService::search($actor,$input);
-            return ['dates'=>$result['dates'],'year'=>(int)substr($input['month'],0,4),'month'=>(int)substr($input['month'],5,2)];
-        },'capacity');
+        return $this->read($request, static function ($actor, $input) {
+            $input['month'] = sprintf('%04d-%02d', (int) ($input['year'] ?? gmdate('Y')), (int) ($input['month'] ?? gmdate('n')));
+            unset($input['year']);
+            $result = AvailabilityService::search($actor, $input);
+            return [
+                'dates' => $result['dates'],
+                'year' => (int) substr($input['month'], 0, 4),
+                'month' => (int) substr($input['month'], 5, 2),
+            ];
+        }, 'capacity');
     }
 
     /**
@@ -275,11 +367,11 @@ final class BookingApiController
      */
     public function capacitySlots(Request $request): Response
     {
-        return $this->read($request, static function($actor,$input){
+        return $this->read($request, static function ($actor, $input) {
 
-            $result=AvailabilityService::search($actor,$input);
-            return ['slots'=>$result['choices'],'date'=>$input['date']??null,'timezone'=>$result['timezone']];
-        },'capacity');
+            $result = AvailabilityService::search($actor, $input);
+            return ['slots' => $result['choices'], 'date' => $input['date'] ?? null, 'timezone' => $result['timezone']];
+        }, 'capacity');
     }
 
     // ── Event-pattern read endpoints ──
@@ -292,11 +384,16 @@ final class BookingApiController
      */
     public function events(Request $request): Response
     {
-        return $this->read($request, static function($actor,$input){
-            $input['limit']=100;$events=[];
-            do{$page=AvailabilityService::eventOccurrences($actor,$input);$events=[...$events,...$page['events']];$input['cursor']=$page['next_cursor'];}while($input['cursor']!==null);
-            return ['events'=>$events];
-        },'event');
+        return $this->read($request, static function ($actor, $input) {
+            $input['limit'] = 100;
+            $events = [];
+            do {
+                $page = AvailabilityService::eventOccurrences($actor, $input);
+                $events = [...$events, ...$page['events']];
+                $input['cursor'] = $page['next_cursor'];
+            } while ($input['cursor'] !== null);
+            return ['events' => $events];
+        }, 'event');
     }
 
     /**
@@ -307,7 +404,14 @@ final class BookingApiController
      */
     public function eventDetail(Request $request): Response
     {
-        return $this->read($request,static fn($actor,$input)=>AvailabilityService::eventDetail($actor,array_replace($input,['event_id'=>$request->getAttribute('id')])),'event');
+        return $this->read(
+            $request,
+            static fn($actor, $input) => AvailabilityService::eventDetail(
+                $actor,
+                array_replace($input, ['event_id' => $request->getAttribute('id')]),
+            ),
+            'event',
+        );
     }
 
     // ── Self-service booking management ──
@@ -329,12 +433,16 @@ final class BookingApiController
 
         $bookingId = $request->getAttribute('id');
         if (!CustomerCapability::requestAuthorized($request, CustomerCapability::MANAGE, $tenant['id'], $bookingId)) {
-            return CustomerCapability::protect(Response::json(['error' => 'verification_required', 'message' => __('booking.access.expired')], 403));
+            return CustomerCapability::protect(
+                Response::json(['error' => 'verification_required', 'message' => __('booking.access.expired')], 403)
+            );
         }
         $booking = BookingService::findByIdWithDetails($bookingId, $tenant['id']);
 
         if (!$booking) {
-            return CustomerCapability::protect(Response::json(['error' => 'booking_not_found', 'message' => __('booking.manage.not_found')], 404));
+            return CustomerCapability::protect(
+                Response::json(['error' => 'booking_not_found', 'message' => __('booking.manage.not_found')], 404)
+            );
         }
 
         // Existing bookings retain their service's time-display mode even when
@@ -388,7 +496,12 @@ final class BookingApiController
                 'start_datetime'  => $booking['start_datetime'],
                 'end_datetime'    => $booking['end_datetime'],
                 // A stay publishes local dates (check-in, check-out, nights); timed bookings publish UTC instants.
-                ...VenueDateTime::presentRange($pattern, $booking['start_datetime'], $booking['end_datetime'], $tenant['timezone'] ?? 'UTC'),
+                ...VenueDateTime::presentRange(
+                    $pattern,
+                    $booking['start_datetime'],
+                    $booking['end_datetime'],
+                    $tenant['timezone'] ?? 'UTC',
+                ),
                 'party_size'      => (int) $booking['party_size'],
                 'service_id'      => $booking['service_id'] ?? null,
                 'is_virtual'      => $isVirtual,
@@ -434,14 +547,20 @@ final class BookingApiController
         $this->resolveLocale($tenant, $request);
 
         // Browser session grants require CSRF; explicit capability headers are nonambient.
-        if ($request->header('X-Customer-Capability') === null) \App\Engine\Auth::startSession();
+        if ($request->header('X-Customer-Capability') === null) {
+            \App\Engine\Auth::startSession();
+        }
         if ($request->header('X-Customer-Capability') === null && !CsrfMiddleware::tokenMatches($request)) {
             return Response::json(['error' => 'csrf_mismatch', 'message' => __('booking.api.csrf_mismatch')], 403);
         }
 
         $bookingId = (string) $request->getAttribute('id');
         $actor = CustomerCapability::actor($request, CustomerCapability::MANAGE, $tenant['id'], $bookingId);
-        if ($actor === null) return CustomerCapability::protect(Response::json(['error' => 'verification_required', 'message' => __('booking.access.expired')], 403));
+        if ($actor === null) {
+            return CustomerCapability::protect(
+                Response::json(['error' => 'verification_required', 'message' => __('booking.access.expired')], 403)
+            );
+        }
         try {
             BookingCommands::cancel($actor, array_replace($request->json(), ['business_id' => $tenant['id'], 'booking_id' => $bookingId]));
 
@@ -474,16 +593,25 @@ final class BookingApiController
         $this->resolveLocale($tenant, $request);
 
         // Browser session grants require CSRF; explicit capability headers are nonambient.
-        if ($request->header('X-Customer-Capability') === null) \App\Engine\Auth::startSession();
+        if ($request->header('X-Customer-Capability') === null) {
+            \App\Engine\Auth::startSession();
+        }
         if ($request->header('X-Customer-Capability') === null && !CsrfMiddleware::tokenMatches($request)) {
             return Response::json(['error' => 'csrf_mismatch', 'message' => __('booking.api.csrf_mismatch')], 403);
         }
 
         $bookingId = (string) $request->getAttribute('id');
         $actor = CustomerCapability::actor($request, CustomerCapability::MANAGE, $tenant['id'], $bookingId);
-        if ($actor === null) return CustomerCapability::protect(Response::json(['error' => 'verification_required', 'message' => __('booking.access.expired')], 403));
+        if ($actor === null) {
+            return CustomerCapability::protect(
+                Response::json(['error' => 'verification_required', 'message' => __('booking.access.expired')], 403)
+            );
+        }
         try {
-            $result = BookingCommands::reschedule($actor, array_replace($request->json(), ['business_id' => $tenant['id'], 'booking_id' => $bookingId]));
+            $result = BookingCommands::reschedule(
+                $actor,
+                array_replace($request->json(), ['business_id' => $tenant['id'], 'booking_id' => $bookingId]),
+            );
             $replacement = [
                 'id' => $result['new_booking_id'],
                 'manage_url' => $result['manage_url'],
@@ -493,7 +621,9 @@ final class BookingApiController
                 // A moved stay is new local dates; a moved timed booking is new UTC instants.
                 ...VenueDateTime::presentRange($result['pattern'], $result['new_start'], $result['new_end'], $tenant['timezone'])
             ];
-            if ($result['pattern'] === 'event') $replacement['event_name'] = BookingService::findByIdWithDetails($result['new_booking_id'], $tenant['id'])['event_name'];
+            if ($result['pattern'] === 'event') {
+                $replacement['event_name'] = BookingService::findByIdWithDetails($result['new_booking_id'], $tenant['id'])['event_name'];
+            }
             return CustomerCapability::protect(Response::json(
                 ['rescheduled' => true, 'new_booking_id' => $result['new_booking_id'], 'new_booking' => $replacement]
                     + BookingNotifications::deliverQueued()

@@ -55,18 +55,24 @@ final class AccountController
         try {
             $actor = \App\Agent\SessionActor::resolve(\App\Agent\Operations::registry());
             $profile = \App\Application\Identity\AccountService::update($actor, [
-                'name'=>$request->string('name'), 'expected_version'=>$request->string('expected_version'),
+                'name' => $request->string('name'), 'expected_version' => $request->string('expected_version'),
             ], $request->string('email'));
             $_SESSION['auth_name'] = $profile['name'];
             $_SESSION['auth_email'] = $profile['email'];
             FormState::toast('success', __('admin.flash.profile_updated'));
         } catch (\App\Agent\OperationException $error) {
-            $fields=[];
-            if(isset($error->fieldErrors['name'])) { $fields['name']=__('admin.flash.profile_name_required'); }
-            if(isset($error->fieldErrors['email'])) { $fields['email']=__('admin.flash.profile_email_invalid'); }
-            if($error->problemCode==='identity_unavailable') { $fields['email']=__('admin.flash.profile_email_taken'); }
-            FormState::flash(['name'=>$request->string('name'),'email'=>$request->string('email')],$fields);
-            FormState::toast('error', $fields!==[]?reset($fields):__('agent.errors.'.$error->problemCode));
+            $fields = [];
+            if (isset($error->fieldErrors['name'])) {
+                $fields['name'] = __('admin.flash.profile_name_required');
+            }
+            if (isset($error->fieldErrors['email'])) {
+                $fields['email'] = __('admin.flash.profile_email_invalid');
+            }
+            if ($error->problemCode === 'identity_unavailable') {
+                $fields['email'] = __('admin.flash.profile_email_taken');
+            }
+            FormState::flash(['name' => $request->string('name'), 'email' => $request->string('email')], $fields);
+            FormState::toast('error', $fields !== [] ? reset($fields) : __('agent.errors.' . $error->problemCode));
         }
         return Response::redirect('/admin/account');
     }

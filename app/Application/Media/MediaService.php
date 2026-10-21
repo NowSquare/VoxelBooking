@@ -85,8 +85,9 @@ final class MediaService
                 };
                 $fileId = Ulid::generate();
                 $extension = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION));
-                if (!in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true))
+                if (!in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
                     throw new OperationException('upload_invalid', 422);
+                }
                 $path = 'uploads/' . preg_replace('/[^a-z0-9\-]/', '', strtolower($tenant['slug'])) . '/' . $type . '/'
                     . $fileId . '.' . $extension;
                 // Persist before moving bytes. A crash or ambiguous commit is
@@ -110,7 +111,9 @@ final class MediaService
 
                 return ['media_id' => $id, 'state' => 'ready', 'purpose' => $row['purpose']];
             });
-            if (!Database::pdo()->inTransaction()) $journal?->finish();
+            if (!Database::pdo()->inTransaction()) {
+                $journal?->finish();
+            }
             return $response;
         } finally {
             $journal?->release();

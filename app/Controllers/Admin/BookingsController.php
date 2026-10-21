@@ -11,7 +11,7 @@ use App\Engine\BookingService;
 use App\Engine\CustomerService;
 use App\Engine\Database;
 use App\Application\Bookings\{BookingCommands, BookingNotifications, BookingQueries};
-use App\Agent\{Operations,SessionActor};
+use App\Agent\{Operations, SessionActor};
 use App\Agent\OperationException;
 use App\Engine\Locale;
 use App\Engine\Logger;
@@ -62,8 +62,13 @@ final class BookingsController
         $page   = max(1, (int) ($request->string('page') ?: 1));
         $offset = ($page - 1) * self::PER_PAGE;
 
-        $result=BookingQueries::browserPage(SessionActor::resolve(Operations::registry()),compact('status','from','to','search','sort','direction','page'),true);
-        $bookings=$result['bookings'];$total=$result['total'];
+        $result = BookingQueries::browserPage(
+            SessionActor::resolve(Operations::registry()),
+            compact('status', 'from', 'to', 'search', 'sort', 'direction', 'page'),
+            true,
+        );
+        $bookings = $result['bookings'];
+        $total = $result['total'];
 
         return $this->render('admin.bookings.index', __('admin.bookings.title'), [
             'bookings'         => $bookings,
@@ -85,7 +90,7 @@ final class BookingsController
             return $this->forbidden($request);
         }
 
-        $booking = $this->bookingDetail((string)$request->getAttribute('id'),$request->getAttribute('tenant_id'));
+        $booking = $this->bookingDetail((string) $request->getAttribute('id'), $request->getAttribute('tenant_id'));
         if ($booking === null) {
             return Response::redirect('/admin/bookings');
         }
@@ -95,7 +100,7 @@ final class BookingsController
         // Reverse lookup: find the original booking that was rescheduled into this one
         $rescheduledFrom = Database::query(
             "SELECT `id` FROM `bookings` WHERE `rescheduled_to_id` = ? AND tenant_id=? LIMIT 1",
-            [$booking['id'],$booking['tenant_id']]
+            [$booking['id'], $booking['tenant_id']]
         );
 
         return $this->render('admin.bookings.show', __('admin.bookings.title'), [
@@ -132,8 +137,12 @@ final class BookingsController
         $page   = max(1, (int) ($request->string('page') ?: 1));
         $offset = ($page - 1) * self::PER_PAGE;
 
-        $result=BookingQueries::browserPage(SessionActor::resolve(Operations::registry()),compact('status','from','to','sort','direction','page')+['business_id'=>$tenantId]);
-        $bookings=$result['bookings'];$total=$result['total'];
+        $result = BookingQueries::browserPage(
+            SessionActor::resolve(Operations::registry()),
+            compact('status', 'from', 'to', 'sort', 'direction', 'page') + ['business_id' => $tenantId],
+        );
+        $bookings = $result['bookings'];
+        $total = $result['total'];
 
         return $this->render('admin.bookings.index', __('admin.bookings.title'), [
             'bookings'         => $bookings,
@@ -153,7 +162,7 @@ final class BookingsController
     public function tenantShow(Request $request): Response
     {
         $tenantId = $request->getAttribute('tenant_id');
-        $booking = $this->bookingDetail((string)$request->getAttribute('id'),$request->getAttribute('tenant_id'));
+        $booking = $this->bookingDetail((string) $request->getAttribute('id'), $request->getAttribute('tenant_id'));
 
         if ($booking === null || $booking['tenant_id'] !== $tenantId) {
             return Response::redirect("/admin/tenants/{$tenantId}/bookings");
@@ -164,7 +173,7 @@ final class BookingsController
         // Reverse lookup: find the original booking that was rescheduled into this one
         $rescheduledFrom = Database::query(
             "SELECT `id` FROM `bookings` WHERE `rescheduled_to_id` = ? AND tenant_id=? LIMIT 1",
-            [$booking['id'],$booking['tenant_id']]
+            [$booking['id'], $booking['tenant_id']]
         );
 
         return $this->render('admin.bookings.show', __('admin.bookings.title'), [
@@ -227,7 +236,9 @@ final class BookingsController
     {
         $id = (string) $request->getAttribute('id');
         $booking = Booking::find($id);
-        if ($booking === null) return Response::redirect($redirectBase);
+        if ($booking === null) {
+            return Response::redirect($redirectBase);
+        }
         try {
             $result = BookingCommands::reschedule(
                 BookingCommands::sessionActor($booking['tenant_id']),
@@ -430,7 +441,9 @@ final class BookingsController
     {
         $id = (string) $request->getAttribute('id');
         $booking = Booking::find($id);
-        if ($booking === null) return Response::redirect($redirectBase);
+        if ($booking === null) {
+            return Response::redirect($redirectBase);
+        }
         try {
             BookingCommands::changeStatus(
                 BookingCommands::sessionActor($booking['tenant_id']),
@@ -509,11 +522,17 @@ final class BookingsController
      */
     public function export(Request $request): Response
     {
-        if(!Auth::isOperator())return $this->forbidden($request);
-        $input=array_intersect_key($request->all(),array_flip(['status','from','to','search','sort','direction']));
+        if (!Auth::isOperator()) {
+            return $this->forbidden($request);
+        }
+        $input = array_intersect_key($request->all(), array_flip(['status', 'from', 'to', 'search', 'sort', 'direction']));
 
-        $data=BookingQueries::export(SessionActor::resolve(Operations::registry()),$input,true);
-        return (new Response())->header('Content-Type','text/csv; charset=UTF-8')->header('Content-Disposition','attachment; filename="'.$data['filename'].'"')->header('Cache-Control','no-store')->body($data['content']);
+        $data = BookingQueries::export(SessionActor::resolve(Operations::registry()), $input, true);
+        return (new Response())
+            ->header('Content-Type', 'text/csv; charset=UTF-8')
+            ->header('Content-Disposition', 'attachment; filename="' . $data['filename'] . '"')
+            ->header('Cache-Control', 'no-store')
+            ->body($data['content']);
     }
 
     /**
@@ -522,22 +541,37 @@ final class BookingsController
     public function tenantExport(Request $request): Response
     {
 
-        $input=array_intersect_key($request->all(),array_flip(['status','from','to','search','sort','direction']));
-        $input['business_id']=$request->getAttribute('tenant_id');
-        $data=BookingQueries::export(SessionActor::resolve(Operations::registry()),$input,false);
-        return (new Response())->header('Content-Type','text/csv; charset=UTF-8')->header('Content-Disposition','attachment; filename="'.$data['filename'].'"')->header('Cache-Control','no-store')->body($data['content']);
+        $input = array_intersect_key($request->all(), array_flip(['status', 'from', 'to', 'search', 'sort', 'direction']));
+        $input['business_id'] = $request->getAttribute('tenant_id');
+        $data = BookingQueries::export(SessionActor::resolve(Operations::registry()), $input, false);
+        return (new Response())
+            ->header('Content-Type', 'text/csv; charset=UTF-8')
+            ->header('Content-Disposition', 'attachment; filename="' . $data['filename'] . '"')
+            ->header('Cache-Control', 'no-store')
+            ->body($data['content']);
     }
 
-    private function bookingDetail(string $id,?string $businessId):?array
+    private function bookingDetail(string $id, ?string $businessId): ?array
     {
-        $actor=SessionActor::resolve(Operations::registry());
-        if($businessId===null){
-            if($actor->role!=='operator')throw new OperationException('forbidden',403);
-            $businessId=Database::query('SELECT tenant_id FROM bookings WHERE id=?',[$id])[0]['tenant_id']??null;
+        $actor = SessionActor::resolve(Operations::registry());
+        // Only the operator may open a booking without naming its business first.
+        if ($businessId === null) {
+            if ($actor->role !== 'operator') {
+                throw new OperationException('forbidden', 403);
+            }
+            $businessId = Database::query('SELECT tenant_id FROM bookings WHERE id=?', [$id])[0]['tenant_id'] ?? null;
         }
-        if($businessId===null)return null;
-        try{return BookingQueries::browserProjection(BookingQueries::get($actor,['business_id'=>$businessId,'booking_id'=>$id]));}
-        catch(OperationException $error){if($error->status===404)return null;throw $error;}
+        if ($businessId === null) {
+            return null;
+        }
+        try {
+            return BookingQueries::browserProjection(BookingQueries::get($actor, ['business_id' => $businessId, 'booking_id' => $id]));
+        } catch (OperationException $error) {
+            if ($error->status === 404) {
+                return null;
+            }
+            throw $error;
+        }
     }
 
 }

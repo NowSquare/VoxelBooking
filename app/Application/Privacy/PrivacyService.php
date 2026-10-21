@@ -17,7 +17,9 @@ final class PrivacyService
             $actor->role !== 'verified_customer'
             || $actor->bookingId !== null
             || $actor->customerId !== $actor->principalId
-        ) throw new OperationException('forbidden', 403);
+        ) {
+            throw new OperationException('forbidden', 403);
+        }
         $business = $actor->business($input['business_id'] ?? null);
         return Database::query(
             "SELECT c.* FROM customers c JOIN tenants t ON t.id=c.tenant_id WHERE c.id=? AND c.tenant_id=? AND c.is_anonymized=0 AND t.status='active'",
@@ -28,14 +30,18 @@ final class PrivacyService
     public static function summary(ActorContext $actor, array $input): array
     {
         $actor = BookingCommands::currentActor($actor);
-        if (!in_array('privacy:read', $actor->scopes, true)) throw new OperationException('forbidden', 403);
+        if (!in_array('privacy:read', $actor->scopes, true)) {
+            throw new OperationException('forbidden', 403);
+        }
         return self::snapshot($actor, $input);
     }
 
     public static function records(ActorContext $actor, array $input): array
     {
         $actor = BookingCommands::currentActor($actor);
-        if (!in_array('privacy:read', $actor->scopes, true)) throw new OperationException('forbidden', 403);
+        if (!in_array('privacy:read', $actor->scopes, true)) {
+            throw new OperationException('forbidden', 403);
+        }
         $customer = self::customer($actor, $input);
         $limit = max(1, min(100, (int) ($input['limit'] ?? 50)));
         $binding = CanonicalJson::hash([
@@ -56,8 +62,9 @@ final class PrivacyService
                 throw new OperationException('invalid_cursor', 422);
             }
 
-            if (($cursor['binding'] ?? null) !== $binding || ($cursor['expires'] ?? 0) < time())
+            if (($cursor['binding'] ?? null) !== $binding || ($cursor['expires'] ?? 0) < time()) {
                 throw new OperationException('invalid_cursor', 422);
+            }
             $snapshot = $cursor['snapshot'];
             $after = $cursor['after'];
         }
@@ -121,13 +128,17 @@ final class PrivacyService
     public static function export(ActorContext $actor, array $input): array
     {
         $actor = BookingCommands::currentActor($actor);
-        if (!in_array('privacy:export', $actor->scopes, true)) throw new OperationException('forbidden', 403);
+        if (!in_array('privacy:export', $actor->scopes, true)) {
+            throw new OperationException('forbidden', 403);
+        }
         return BookingTransaction::run($actor->business($input['business_id'] ?? null), static function ($tenant) use (
             $actor,
             $input
         ) {
             $actor = BookingCommands::currentActor($actor);
-            if (!in_array('privacy:export', $actor->scopes, true)) throw new OperationException('forbidden', 403);
+            if (!in_array('privacy:export', $actor->scopes, true)) {
+                throw new OperationException('forbidden', 403);
+            }
             $c = self::customer($actor, $input);
             $data = DataExporter::export($c['id']);
             AuditLog::log(
@@ -152,14 +163,20 @@ final class PrivacyService
     public static function requestDeletion(ActorContext $actor, array $input): array
     {
         $actor = BookingCommands::currentActor($actor);
-        if (!in_array('privacy:request', $actor->scopes, true)) throw new OperationException('forbidden', 403);
-        if (DemoMode::isActive()) throw new OperationException('demo_restricted', 403);
+        if (!in_array('privacy:request', $actor->scopes, true)) {
+            throw new OperationException('forbidden', 403);
+        }
+        if (DemoMode::isActive()) {
+            throw new OperationException('demo_restricted', 403);
+        }
         return BookingTransaction::run($actor->business($input['business_id'] ?? null), static function ($tenant) use (
             $actor,
             $input
         ) {
             $actor = BookingCommands::currentActor($actor);
-            if (!in_array('privacy:request', $actor->scopes, true)) throw new OperationException('forbidden', 403);
+            if (!in_array('privacy:request', $actor->scopes, true)) {
+                throw new OperationException('forbidden', 403);
+            }
             $c = self::customer($actor, $input);
             $changed = Database::execute(
                 'UPDATE customers SET deletion_requested_at=UTC_TIMESTAMP(),updated_at=UTC_TIMESTAMP() WHERE id=? AND tenant_id=? AND deletion_requested_at IS NULL',
@@ -176,7 +193,7 @@ final class PrivacyService
                     actorId: $c['id']
                 );
                 $event = Ulid::generate();
-                foreach (['customer', 'operator'] as $audience)
+                foreach (['customer', 'operator'] as $audience) {
                     Outbox::enqueue(
                         'customer.privacy_notification',
                         [
@@ -188,6 +205,7 @@ final class PrivacyService
                         $tenant['id'],
                         $event . ':' . $audience
                     );
+                }
             }
 
             return self::snapshot($actor, $input);
@@ -218,11 +236,16 @@ final class PrivacyService
             "SELECT * FROM tenants WHERE id=? AND status!='archived'",
             [$payload['tenant_id'] ?? '']
         )[0] ?? null;
-        if ($c === null || $t === null) return ['sent' => true, 'suppressed' => true];
-        if (($payload['kind'] ?? '') === 'export')
+        if ($c === null || $t === null) {
+            return ['sent' => true, 'suppressed' => true];
+        }
+        if (($payload['kind'] ?? '') === 'export') {
             return Mailer::sendExportAcknowledgment($c['email'], $t['name'], $t['id']);
-        if ($c['deletion_requested_at'] === null) return ['sent' => true, 'suppressed' => true];
-        if (($payload['audience'] ?? '') === 'operator')
+        }
+        if ($c['deletion_requested_at'] === null) {
+            return ['sent' => true, 'suppressed' => true];
+        }
+        if (($payload['audience'] ?? '') === 'operator') {
             return Mailer::notifyOperatorDeletionRequest(
                 $t['notification_email'] ?: $t['email'],
                 $c['name'],
@@ -230,6 +253,7 @@ final class PrivacyService
                 $t['name'],
                 $t['id']
             );
+        }
         return Mailer::sendDeletionAcknowledgment($c['email'], $t['name'], $t['id']);
     }
 }

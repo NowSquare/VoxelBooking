@@ -71,11 +71,13 @@ final class BookingQueries
             ...VenueDateTime::presentRange($row['booking_pattern'], $row['start_datetime'], $row['end_datetime'], $tenant['timezone'])
         ];
         // Internal fields are staff-only; customers and public agents never see them.
-        if ($actor->isStaff()) $result += [
-            'customer_id' => $row['customer_id'],
-            'internal_notes' => $row['internal_notes'],
-            'source' => $row['source']
-        ];
+        if ($actor->isStaff()) {
+            $result += [
+                'customer_id' => $row['customer_id'],
+                'internal_notes' => $row['internal_notes'],
+                'source' => $row['source']
+            ];
+        }
 
         return $result;
     }
@@ -88,7 +90,9 @@ final class BookingQueries
     public static function operatorListing(ActorContext $actor, array $input): array
     {
         $actor = BookingCommands::currentActor($actor);
-        if ($actor->role !== 'operator') throw new OperationException('forbidden', 403);
+        if ($actor->role !== 'operator') {
+            throw new OperationException('forbidden', 403);
+        }
 
         return self::page($actor, $input, true);
     }
@@ -96,7 +100,9 @@ final class BookingQueries
     private static function page(ActorContext $actor, array $input, bool $crossBusiness): array
     {
         $actor = BookingCommands::currentActor($actor);
-        if (!$actor->isStaff()) throw new OperationException('forbidden', 403);
+        if (!$actor->isStaff()) {
+            throw new OperationException('forbidden', 403);
+        }
 
         // Every tenant passes through self::tenant(), so authorization runs per business even cross-business.
         if ($crossBusiness) {
@@ -109,7 +115,9 @@ final class BookingQueries
             $tenant = self::tenant($actor, $input);
             $tenants = [$tenant['id'] => $tenant];
         }
-        if ($tenants === []) return ['bookings' => [], 'next_cursor' => null, 'total' => 0, 'timezone' => null];
+        if ($tenants === []) {
+            return ['bookings' => [], 'next_cursor' => null, 'total' => 0, 'timezone' => null];
+        }
 
         // filters() builds a single-tenant clause; widen it to the full tenant set.
         [$where, $bindings] = self::filters(['id' => array_key_first($tenants)], $input);
@@ -156,7 +164,9 @@ final class BookingQueries
             if (
                 ($cursor['binding'] ?? null) !== $binding
                 || ($cursor['expires'] ?? 0) < time()
-            ) throw new OperationException('invalid_cursor', 422);
+            ) {
+                throw new OperationException('invalid_cursor', 422);
+            }
             $snapshot = $cursor['snapshot'];
             $after = $cursor['after'];
         }
@@ -227,7 +237,9 @@ final class BookingQueries
         if (
             $to < $from
             || (new \DateTimeImmutable($from))->diff(new \DateTimeImmutable($to))->days > 93
-        ) throw new OperationException('invalid_interval', 422);
+        ) {
+            throw new OperationException('invalid_interval', 422);
+        }
 
         $tenant = self::tenant($actor, $input);
         $result = self::listing($actor, $input + ['_calendar' => true]);
@@ -247,10 +259,12 @@ final class BookingQueries
 
         // Capacity businesses open on the days they have slots, not on their weekly hours.
         $days = array_column(array_filter($result['hours'], static fn ($hour) => $hour['is_available']), 'day_of_week');
-        if ($tenant['booking_pattern'] === 'capacity') $days = array_column(
-            Database::query('SELECT DISTINCT day_of_week FROM capacity_slots WHERE tenant_id=? AND is_active=1', [$tenant['id']]),
-            'day_of_week'
-        );
+        if ($tenant['booking_pattern'] === 'capacity') {
+            $days = array_column(
+                Database::query('SELECT DISTINCT day_of_week FROM capacity_slots WHERE tenant_id=? AND is_active=1', [$tenant['id']]),
+                'day_of_week'
+            );
+        }
         $result['available_weekdays'] = array_values(array_unique(array_map('intval', $days)));
         sort($result['available_weekdays']);
 
@@ -260,7 +274,9 @@ final class BookingQueries
     public static function export(ActorContext $actor, array $input, bool $crossBusiness = false): array
     {
         $actor = BookingCommands::currentActor($actor);
-        if (!$actor->isStaff() || !in_array('bookings:export', $actor->scopes, true)) throw new OperationException('forbidden', 403);
+        if (!$actor->isStaff() || !in_array('bookings:export', $actor->scopes, true)) {
+            throw new OperationException('forbidden', 403);
+        }
 
         // Exports bypass cursor paging and read one capped block; the total reports truncation.
         $input['_export_limit'] = true;
@@ -268,7 +284,9 @@ final class BookingQueries
         $page = $crossBusiness ? self::operatorListing($actor, $input) : self::listing($actor, $input);
         $rows = array_slice($page['bookings'], 0, 10000);
         $headers = ['Date', 'Time', 'End Time', 'Customer', 'Email', 'Service', 'Status'];
-        if ($crossBusiness) $headers[] = 'Business';
+        if ($crossBusiness) {
+            $headers[] = 'Business';
+        }
 
         // The BOM makes Excel open the UTF-8 file with the right encoding.
         $stream = fopen('php://temp', 'r+');
@@ -284,7 +302,9 @@ final class BookingQueries
                 $booking['service_name'] ?? $booking['resource_name'] ?? $booking['event_name'] ?? '',
                 $booking['status']
             ];
-            if ($crossBusiness) $row[] = $booking['business_name'];
+            if ($crossBusiness) {
+                $row[] = $booking['business_name'];
+            }
             // Prefix formula-like cells so spreadsheets treat customer input as text (CSV injection).
             fputcsv(
                 $stream,
@@ -310,10 +330,14 @@ final class BookingQueries
     {
         $where = ['b.tenant_id = ?'];
         $bindings = [$tenant['id']];
-        if (!empty($input['_calendar'])) $where[] = "b.status != 'cancelled' AND (b.status != 'rescheduled' OR NULLIF(b.rescheduled_to_id,'') IS NULL)";
-        foreach (['status', 'staff_id', 'customer_id', 'event_id'] as $key) if (!empty($input[$key])) {
-            $where[] = "b.$key = ?";
-            $bindings[] = $input[$key];
+        if (!empty($input['_calendar'])) {
+            $where[] = "b.status != 'cancelled' AND (b.status != 'rescheduled' OR NULLIF(b.rescheduled_to_id,'') IS NULL)";
+        }
+        foreach (['status', 'staff_id', 'customer_id', 'event_id'] as $key) {
+            if (!empty($input[$key])) {
+                $where[] = "b.$key = ?";
+                $bindings[] = $input[$key];
+            }
         }
         // The calendar wants anything overlapping the range; the list wants bookings starting in it.
         if (!empty($input['from'])) {

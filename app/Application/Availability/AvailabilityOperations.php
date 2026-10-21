@@ -22,14 +22,22 @@ final class AvailabilityOperations
         $business = [];
         foreach ([
             'business_id', 'name', 'slug', 'booking_pattern', 'timezone', 'currency', 'locale', 'consent_text', 'booking_url'
-        ] as $key) $business[$key] = $string;
-        foreach (['description', 'confirmation_message', 'privacy_policy_url', 'cancellation_policy'] as $key) $business[$key] = $nullable;
+        ] as $key) {
+            $business[$key] = $string;
+        }
+        foreach (['description', 'confirmation_message', 'privacy_policy_url', 'cancellation_policy'] as $key) {
+            $business[$key] = $nullable;
+        }
         foreach ([
             'require_phone', 'requires_consent', 'allow_cancellation', 'allow_rescheduling', 'requires_approval'
-        ] as $key) $business[$key] = ['type' => 'boolean'];
+        ] as $key) {
+            $business[$key] = ['type' => 'boolean'];
+        }
         foreach ([
             'cancellation_hours_before', 'rescheduling_hours_before', 'min_advance_hours', 'max_advance_days'
-        ] as $key) $business[$key] = ['type' => 'integer'];
+        ] as $key) {
+            $business[$key] = ['type' => 'integer'];
+        }
         $business['custom_fields'] = [
             'type' => 'array',
             'items' => [
@@ -51,18 +59,28 @@ final class AvailabilityOperations
 
         // One catalog item shape covers services, staff, resources, capacity slots and events.
         $item = [];
-        foreach (['id', 'name', 'start_time', 'end_time', 'start_datetime', 'end_datetime'] as $key) $item[$key] = $string;
+        foreach (['id', 'name', 'start_time', 'end_time', 'start_datetime', 'end_datetime'] as $key) {
+            $item[$key] = $string;
+        }
         foreach ([
             'description', 'title', 'price', 'price_per_night', 'price_label', 'category', 'preparation_text',
             'cover_image_path', 'color', 'avatar_path', 'label', 'location', 'rrule'
-        ] as $key) $item[$key] = $nullable;
+        ] as $key) {
+            $item[$key] = $nullable;
+        }
         foreach ([
             'sort_order', 'capacity', 'duration_minutes', 'min_stay_nights', 'max_stay_nights', 'day_of_week', 'max_capacity',
             'min_party_size', 'max_party_size', 'max_participants', 'min_spot_count', 'waitlist_max'
-        ] as $key) $item[$key] = ['type' => 'integer'];
+        ] as $key) {
+            $item[$key] = ['type' => 'integer'];
+        }
         $item['max_spot_count'] = ['type' => ['integer', 'null']];
-        foreach (['is_virtual', 'requires_staff', 'allow_waitlist', 'is_recurring'] as $key) $item[$key] = ['type' => 'boolean'];
-        foreach (['amenities', 'check_in_days', 'check_out_days', 'exception_dates'] as $key) $item[$key] = ['type' => ['array', 'null']];
+        foreach (['is_virtual', 'requires_staff', 'allow_waitlist', 'is_recurring'] as $key) {
+            $item[$key] = ['type' => 'boolean'];
+        }
+        foreach (['amenities', 'check_in_days', 'check_out_days', 'exception_dates'] as $key) {
+            $item[$key] = ['type' => ['array', 'null']];
+        }
         $catalog = $o(
             [
                 'kind' => $string,
@@ -77,9 +95,15 @@ final class AvailabilityOperations
         );
 
         $choice = [];
-        foreach (['id', 'name', 'date', 'time', 'end_time', 'start_utc', 'end_utc'] as $key) $choice[$key] = $string;
-        foreach (['staff_id', 'label', 'price'] as $key) $choice[$key] = $nullable;
-        foreach (['remaining', 'max', 'min_party_size', 'max_party_size'] as $key) $choice[$key] = ['type' => 'integer'];
+        foreach (['id', 'name', 'date', 'time', 'end_time', 'start_utc', 'end_utc'] as $key) {
+            $choice[$key] = $string;
+        }
+        foreach (['staff_id', 'label', 'price'] as $key) {
+            $choice[$key] = $nullable;
+        }
+        foreach (['remaining', 'max', 'min_party_size', 'max_party_size'] as $key) {
+            $choice[$key] = ['type' => 'integer'];
+        }
         $choice['waitlisted'] = ['type' => 'boolean'];
 
         // Only a resource search with check-in and check-out dates returns a quote; otherwise it is null.
@@ -100,7 +124,10 @@ final class AvailabilityOperations
                     'required' => ['id', 'name', 'capacity']
                 ],
                 // A night without a base rate or season has no price; it is null, never "0.00".
-                'pricing' => ['type' => 'array', 'items' => $o(['date' => $string, 'price' => $nullable, 'label' => $nullable], ['date', 'price', 'label'])]
+                'pricing' => [
+                    'type' => 'array',
+                    'items' => $o(['date' => $string, 'price' => $nullable, 'label' => $nullable], ['date', 'price', 'label']),
+                ]
             ],
             'required' => ['available', 'error', 'nights', 'total', 'check_in', 'check_out']
         ];
@@ -141,7 +168,9 @@ final class AvailabilityOperations
             'check_in' => ['type' => 'string', 'format' => 'date'],
             'check_out' => ['type' => 'string', 'format' => 'date']
         ];
-        foreach (['party_size', 'guest_count', 'spot_count'] as $key) $input[$key] = ['type' => 'integer', 'minimum' => 1, 'maximum' => 10000];
+        foreach (['party_size', 'guest_count', 'spot_count'] as $key) {
+            $input[$key] = ['type' => 'integer', 'minimum' => 1, 'maximum' => 10000];
+        }
 
         return [
             new OperationDefinition(

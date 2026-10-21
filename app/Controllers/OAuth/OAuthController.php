@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Controllers\OAuth;
 
 use App\Agent\ConnectionService;
@@ -32,7 +33,10 @@ final class OAuthController
         return $this->guard($request, 'authorize', function () use ($request): Response {
             Auth::startSession();
             $pending = &$_SESSION['oauth_pending'];
-            $pending = is_array($pending) ? array_filter($pending, static fn ($entry) => is_array($entry) && ($entry['expires_at'] ?? 0) > time()) : [];
+            // Drop expired authorization requests before looking up this one.
+            $pending = is_array($pending)
+                ? array_filter($pending, static fn ($entry) => is_array($entry) && ($entry['expires_at'] ?? 0) > time())
+                : [];
             $handle = $request->query('request');
             if ($handle === '') {
                 $query = $this->queryParameters();
@@ -82,10 +86,20 @@ final class OAuthController
             $pending[$handle]['principal'] = $this->principalBinding($actor);
             $businesses = [];
             if ($actor->businessIds !== []) {
-                $businesses = Database::query('SELECT id, name FROM tenants WHERE id IN (' . implode(',', array_fill(0, count($actor->businessIds), '?')) . ') ORDER BY name, id', $actor->businessIds);
+                $businesses = Database::query(
+                    'SELECT id, name FROM tenants WHERE id IN ('
+                        . implode(',', array_fill(0, count($actor->businessIds), '?'))
+                        . ') ORDER BY name, id',
+                    $actor->businessIds,
+                );
             }
             Locale::resolveForAdmin(null);
-            $user = $customer === null ? Auth::user() : Database::query('SELECT name, email FROM customers WHERE id = ? AND tenant_id = ?', [$actor->principalId, $actor->business()])[0];
+            $user = $customer === null
+                ? Auth::user()
+                : Database::query(
+                    'SELECT name, email FROM customers WHERE id = ? AND tenant_id = ?',
+                    [$actor->principalId, $actor->business()],
+                )[0];
             $expiresAt = $customer === null ? gmdate('c', time() + 90 * 86400) : gmdate('c', $this->customerExpiry($actor));
             return View::response('admin.connections.oauth-consent', [
                 'user' => $user, 'version' => Version::get(), 'pageTitle' => __('oauth.title'),
@@ -157,12 +171,38 @@ final class OAuthController
                 $_SESSION['oauth_pending'][$handle]['error'] = 'choose_business';
                 return Response::redirect('/oauth/authorize?request=' . $handle);
             }
-            $response = Database::transaction(function () use ($registry, $actor, $client, $scopes, $businesses, $query, $factory): ResponseInterface {
+            $response = Database::transaction(function () use (
+                $registry,
+                $actor,
+                $client,
+                $scopes,
+                $businesses,
+                $query,
+                $factory,
+            ): ResponseInterface {
                 $service = new ConnectionService($registry);
                 $connection = $actor->principalType === 'customer'
-                    ? $service->createCustomerGrant($actor, $client->getName(), $scopes, gmdate('Y-m-d H:i:s', $this->customerExpiry($actor)), __('oauth.connection_purpose'), $client->getIdentifier())
-                    : $service->createGrant($actor, $client->getName(), $scopes, $businesses, gmdate('Y-m-d H:i:s', time() + 90 * 86400), __('oauth.connection_purpose'), $client->getIdentifier());
-                Database::execute('INSERT INTO oauth_grants (connection_id, audience) VALUES (?, ?)', [$connection['id'], $query['resource']]);
+                    ? $service->createCustomerGrant(
+                        $actor,
+                        $client->getName(),
+                        $scopes,
+                        gmdate('Y-m-d H:i:s', $this->customerExpiry($actor)),
+                        __('oauth.connection_purpose'),
+                        $client->getIdentifier(),
+                    )
+                    : $service->createGrant(
+                        $actor,
+                        $client->getName(),
+                        $scopes,
+                        $businesses,
+                        gmdate('Y-m-d H:i:s', time() + 90 * 86400),
+                        __('oauth.connection_purpose'),
+                        $client->getIdentifier(),
+                    );
+                Database::execute(
+                    'INSERT INTO oauth_grants (connection_id, audience) VALUES (?, ?)',
+                    [$connection['id'], $query['resource']],
+                );
                 return $factory->authorization->authorize($query, $connection['id'], true);
             });
             unset($_SESSION['oauth_pending'][$handle]);
@@ -196,7 +236,8 @@ final class OAuthController
                 return $this->jsonError('invalid_client_metadata', 400);
             }
             $factory = new Factory(Operations::registry());
-            return Response::json($factory->registration->register($metadata, 'dynamic', $request->ip()), 201)->header('Cache-Control', 'no-store');
+            return Response::json($factory->registration->register($metadata, 'dynamic', $request->ip()), 201)
+                ->header('Cache-Control', 'no-store');
         });
     }
 
@@ -212,13 +253,24 @@ final class OAuthController
 
     public function metadata(Request $request): Response
     {
-        return $this->guard($request, 'metadata', fn (): Response => Response::json((new Factory(Operations::registry()))->authorization->metadata())->header('Cache-Control', 'no-store'));
+        return $this->guard(
+            $request,
+            'metadata',
+            fn (): Response => Response::json((new Factory(Operations::registry()))->authorization->metadata())
+                ->header('Cache-Control', 'no-store'),
+        );
     }
 
     public function resourceMetadata(Request $request): Response
     {
         $suffix = str_ends_with($request->path(), '/api/agent/v2') ? '/api/agent/v2' : '/mcp';
-        return $this->guard($request, 'metadata', fn (): Response => Response::json((new Factory(Operations::registry()))->authorization->resourceMetadata(Endpoints::baseUrl() . $suffix))->header('Cache-Control', 'no-store'));
+        return $this->guard(
+            $request,
+            'metadata',
+            fn (): Response => Response::json(
+                (new Factory(Operations::registry()))->authorization->resourceMetadata(Endpoints::baseUrl() . $suffix)
+            )->header('Cache-Control', 'no-store'),
+        );
     }
 
     private function guard(Request $request, string $group, \Closure $handler): Response
@@ -339,7 +391,10 @@ final class OAuthController
 
     private function customerExpiry(ActorContext $actor): int
     {
-        $row = Database::query('SELECT expires_at FROM customer_capabilities WHERE id = ? AND revoked_at IS NULL', [$actor->credentialId])[0] ?? null;
+        $row = Database::query(
+            'SELECT expires_at FROM customer_capabilities WHERE id = ? AND revoked_at IS NULL',
+            [$actor->credentialId],
+        )[0] ?? null;
         $expiry = $row === null ? false : strtotime($row['expires_at'] . ' UTC');
         if ($expiry === false || $expiry <= time()) {
             throw new OperationException('unauthorized', 401);
@@ -354,7 +409,13 @@ final class OAuthController
         if ($tenant === null) {
             return $this->browserError('invalid_request');
         }
-        $_SESSION['oauth_customer_return'] = ['handle' => $handle, 'purpose' => $purpose, 'tenant_id' => $tenantId, 'subject_id' => $subjectId, 'expires_at' => $_SESSION['oauth_pending'][$handle]['expires_at']];
+        $_SESSION['oauth_customer_return'] = [
+            'handle' => $handle,
+            'purpose' => $purpose,
+            'tenant_id' => $tenantId,
+            'subject_id' => $subjectId,
+            'expires_at' => $_SESSION['oauth_pending'][$handle]['expires_at'],
+        ];
         Locale::resolveForAdmin(null);
         return View::response('admin.connections.oauth-customer-handoff', [
             'pageTitle' => __('oauth.verify_title'), 'handle' => $handle,

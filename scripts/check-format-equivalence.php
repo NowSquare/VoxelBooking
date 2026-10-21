@@ -10,16 +10,28 @@ declare(strict_types=1);
  * reordered array key or an extracted variable, fails the check. Use it when a
  * change claims to be formatting only, then run the test suite as usual.
  *
- * Usage: php scripts/check-format-equivalence.php <git-revision> <file>...
+ * Usage: php scripts/check-format-equivalence.php [--ast] <git-revision> <file>...
+ *
+ * --ast compares syntax trees instead of tokens, so it also accepts changes
+ * that only alter how the same program is written, such as braces around a
+ * single-statement body or a trailing comma. The trees ignore whitespace,
+ * comments and positions; any change to what the code does still fails.
  */
 
-if ($argc < 3) {
-    fwrite(STDERR, "Usage: php scripts/check-format-equivalence.php <git-revision> <file>...\n");
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+$arguments = array_slice($argv, 1);
+$ast = ($arguments[0] ?? '') === '--ast';
+if ($ast) {
+    array_shift($arguments);
+}
+if (count($arguments) < 2) {
+    fwrite(STDERR, "Usage: php scripts/check-format-equivalence.php [--ast] <git-revision> <file>...\n");
     exit(2);
 }
 
-$revision = $argv[1];
-$files = array_slice($argv, 2);
+$revision = $arguments[0];
+$files = array_slice($arguments, 1);
 $failures = 0;
 
 foreach ($files as $file) {
@@ -37,6 +49,13 @@ foreach ($files as $file) {
         continue;
     }
 
+    if ($ast) {
+        $same = syntaxTree($baseline) === syntaxTree($current);
+        fwrite(STDOUT, ($same ? 'same' : 'CHANGED') . ": {$file}\n");
+        $failures += $same ? 0 : 1;
+        continue;
+    }
+
     $difference = firstDifference(significantTokens($baseline), significantTokens($current));
     if ($difference === null) {
         fwrite(STDOUT, "same: {$file}\n");
@@ -49,6 +68,14 @@ foreach ($files as $file) {
 }
 
 exit($failures === 0 ? 0 : 1);
+
+/** The program's syntax tree, without positions, formatting or comments. */
+function syntaxTree(string $source): string
+{
+    $parser = (new PhpParser\ParserFactory())->createForNewestSupportedVersion();
+
+    return (new PhpParser\NodeDumper(['dumpComments' => false]))->dump($parser->parse($source) ?? []);
+}
 
 /**
  * @return list<array{0: string, 1: int}> token text and current line

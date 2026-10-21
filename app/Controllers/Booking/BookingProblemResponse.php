@@ -99,7 +99,8 @@ final class BookingProblemResponse
             $code === 'not_found' => ['booking_not_found', __('booking.manage.not_found')],
             in_array($code, ['not_confirmed', 'invalid_transition'], true)
                 => ['not_confirmed', __('booking.manage.already_cancelled')],
-            $code === 'too_late' => ['time_gate', __($action === 'cancel' ? 'booking.manage.time_gate_cancel' : 'booking.manage.time_gate_reschedule')],
+            $code === 'too_late'
+                => ['time_gate', __($action === 'cancel' ? 'booking.manage.time_gate_cancel' : 'booking.manage.time_gate_reschedule')],
             in_array($code, ['cancellation_disabled', 'cancellation_unavailable'], true)
                 => ['cancellation_disabled', __('booking.manage.cancellation_disabled')],
             in_array($code, ['rescheduling_disabled', 'rescheduling_unavailable', 'pattern_not_supported'], true)
@@ -111,7 +112,15 @@ final class BookingProblemResponse
                 => [$code, __('booking.resource.error_' . $code)],
             in_array($code, ['party_too_small'], true) => [$code, __('booking.api.party_too_small')],
             in_array($code, ['party_too_large', 'too_many_guests'], true) => [$code, __('booking.api.capacity_exceeded')],
-            in_array($code, ['slot_unavailable', 'capacity_exceeded', 'event_full', 'date_blocked', 'outside_booking_window', 'resource_unavailable', 'inventory_conflict'], true)
+            in_array($code, [
+                'slot_unavailable',
+                'capacity_exceeded',
+                'event_full',
+                'date_blocked',
+                'outside_booking_window',
+                'resource_unavailable',
+                'inventory_conflict',
+            ], true)
                 => [$code === 'inventory_conflict' ? 'slot_unavailable' : $code, __('booking.api.slot_unavailable')],
             $code === 'too_soon' => [$code, __('booking.api.too_soon')],
             in_array($code, ['invalid_date', 'invalid_slot', 'invalid_event'], true) => [$code, __('booking.api.date_unavailable')],

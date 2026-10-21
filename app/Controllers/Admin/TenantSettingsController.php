@@ -273,25 +273,25 @@ final class TenantSettingsController
 
     public function saveEmails(Request $request): Response
     {
-        $tenantId = (string)$request->getAttribute('tenant_id');
+        $tenantId = (string) $request->getAttribute('tenant_id');
         try {
             $actor = \App\Agent\SessionActor::resolve(\App\Agent\Operations::registry());
             $templates = [];
             foreach (\App\Application\Settings\EmailTemplates::TYPES as $type) {
-                $values = ['type'=>$type, 'is_enabled'=>$request->string($type.'_is_enabled')==='1'];
+                $values = ['type' => $type, 'is_enabled' => $request->string($type . '_is_enabled') === '1'];
                 foreach (\App\Application\Settings\EmailTemplates::FIELDS as $field) {
-                    $values[$field] = $request->string($type.'_'.$field) ?: null;
+                    $values[$field] = $request->string($type . '_' . $field) ?: null;
                 }
                 $templates[] = $values;
             }
             \App\Application\Settings\EmailTemplates::update($actor, [
-                'business_id'=>$tenantId, 'expected_version'=>$request->string('expected_version'), 'templates'=>$templates,
+                'business_id' => $tenantId, 'expected_version' => $request->string('expected_version'), 'templates' => $templates,
             ]);
             FormState::toast('success', __('admin.tenant_settings.emails_saved'));
         } catch (\App\Agent\OperationException $error) {
-            FormState::toast('error', __('agent.errors.'.$error->problemCode));
+            FormState::toast('error', __('agent.errors.' . $error->problemCode));
         }
-        return Response::redirect('/admin/tenants/'.$tenantId.'/settings/emails');
+        return Response::redirect('/admin/tenants/' . $tenantId . '/settings/emails');
     }
 
 }

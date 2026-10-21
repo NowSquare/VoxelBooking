@@ -19,7 +19,7 @@
     },
     "GET /oauth/authorize": {
       "handler": "App\\Controllers\\OAuth\\OAuthController::authorize",
-      "source_hash": "4c4dddf6eb2895423dcb8e118102a938d25b51418bf94af83394e274603b2ab8",
+      "source_hash": "554cbd642e33b1ec037cf3f22a7c08aa0333ebfe06b1657202826f9a13e142bd",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Protocol authentication or explicit browser consent. Never expose credentials as an application tool.",
@@ -30,7 +30,7 @@
     },
     "POST /oauth/authorize": {
       "handler": "App\\Controllers\\OAuth\\OAuthController::approve",
-      "source_hash": "e28191b19510ab4f2837963ad30d36685bf1666fb235c6533ecb0b2b11963fbe",
+      "source_hash": "309d459f9dc757e3df51d3adbf2ca19ab1e2eb224d6d35cebb14967992f8405a",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Protocol authentication or explicit browser consent. Never expose credentials as an application tool.",
@@ -52,7 +52,7 @@
     },
     "POST /oauth/register": {
       "handler": "App\\Controllers\\OAuth\\OAuthController::register",
-      "source_hash": "a59bc11def57e95ee9e74376ccd3e0a07570982bcda4895d80394bdfb71de897",
+      "source_hash": "08264a0742fa09e12c23fc301a310ba043cb8909501b609238a0381e2da61ec6",
       "disposition": "transport",
       "operations": [],
       "rationale": "Protocol authentication or explicit browser consent. Never expose credentials as an application tool.",
@@ -74,7 +74,7 @@
     },
     "GET /agent-reviews/{id}": {
       "handler": "App\\Controllers\\AgentReviewController::show",
-      "source_hash": "8cdcf94b6146304900a0c91824a0750f7977405b30a944fb72bb27a2da554c02",
+      "source_hash": "e89d0bc6079711bbcbea0b3915f58d2bd278cf1a1265787b599a850add7e7ee4",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Independent, CSRF-protected review of an exact server preview; an agent cannot approve its own consequential command.",
@@ -85,7 +85,7 @@
     },
     "POST /agent-reviews/{id}": {
       "handler": "App\\Controllers\\AgentReviewController::approve",
-      "source_hash": "da5d90fccd2068976731b9e7558d71102a87a9066e531300e429029d8c57018c",
+      "source_hash": "b744319bb91a3a95fe57fbdb700f2c3d5ef1b56044c93e4847ec56440928352e",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Independent, CSRF-protected review of an exact server preview; an agent cannot approve its own consequential command.",
@@ -96,7 +96,7 @@
     },
     "POST /agent-reviews/{id}/exchange": {
       "handler": "App\\Controllers\\AgentReviewController::exchange",
-      "source_hash": "9006d3f5c9b35fd6a4249f224c34a14fc72cd6eca295902a5a601d89443b9746",
+      "source_hash": "01b9bb6bd9dba1ff68008201720aa7cca135b12d33c5fba76a5817b57e278efd",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Independent, CSRF-protected review of an exact server preview; an agent cannot approve its own consequential command.",
@@ -372,7 +372,7 @@
     },
     "GET /admin": {
       "handler": "App\\Controllers\\Admin\\DashboardController::index",
-      "source_hash": "6e1494da15b42ec89fe7eefef965cd78795bb9a0f1a8626a86fad024f197f5a1",
+      "source_hash": "8463ef12a204e2fd25518dda02ddf103063dd48ffda223ffa7707a196f918ae2",
       "disposition": "operation",
       "operations": [
         "operator_dashboard",
@@ -386,7 +386,7 @@
     },
     "GET /admin/connections": {
       "handler": "App\\Controllers\\Admin\\ConnectionsController::index",
-      "source_hash": "7cd940a6d103d7e9af452737ee55648b065e5af44fd72da013e771011ab1e4d9",
+      "source_hash": "676169859de99bd32fac7bc720a52c833c8502fbab56a4f6036da9d88d9c1dfd",
       "disposition": "trusted_browser",
       "operations": [
         "connection_get",
@@ -404,7 +404,7 @@
     },
     "GET /admin/connections/{id}/activity": {
       "handler": "App\\Controllers\\Admin\\ConnectionsController::activity",
-      "source_hash": "8fedc43ea647898003d0a0407a6667660a9da982426667bfdef9640b5d4a7943",
+      "source_hash": "d9fbb62b4476a6c9ec1eac640ba46410db201b76b4d5bb2bb24b324989721aad",
       "disposition": "trusted_browser",
       "operations": [
         "connection_activity",
@@ -421,7 +421,7 @@
     },
     "POST /admin/connections": {
       "handler": "App\\Controllers\\Admin\\ConnectionsController::create",
-      "source_hash": "d50b9204c941e3b039fc5b2c4920b2627262a772ed401d0755dc985f5911a60b",
+      "source_hash": "fe84cd2b032db4a6c7ea1c4e9bfb7d83d6880109e8ca5892f551438e7a638b0e",
       "disposition": "trusted_browser",
       "operations": [
         "connection_setup"
@@ -437,7 +437,7 @@
     },
     "POST /admin/connections/{id}/revoke": {
       "handler": "App\\Controllers\\Admin\\ConnectionsController::revoke",
-      "source_hash": "c27907d1e4853f8da2398aab05053b028372c6fafa9387306121485169e87126",
+      "source_hash": "f6f8a7268672c15789c5a472efadcc3e42210d45d851d6ca9eef0e2e426da9df",
       "disposition": "trusted_browser",
       "operations": [
         "connection_revoke"
@@ -453,7 +453,7 @@
     },
     "POST /admin/connections/{id}/rotate": {
       "handler": "App\\Controllers\\Admin\\ConnectionsController::rotate",
-      "source_hash": "f74f11423e6d71ebd2ab0ac0679ba68ad12cbe560ce895abd8811ffb7ebb9433",
+      "source_hash": "603916eba85eb22777202e6792d7c913133d2e1139e86f732f2917e23b27dbb8",
       "disposition": "trusted_browser",
       "operations": [
         "connection_setup"
@@ -469,7 +469,7 @@
     },
     "GET /admin/agent-reviews/{id}": {
       "handler": "App\\Controllers\\AgentReviewController::show",
-      "source_hash": "8cdcf94b6146304900a0c91824a0750f7977405b30a944fb72bb27a2da554c02",
+      "source_hash": "e89d0bc6079711bbcbea0b3915f58d2bd278cf1a1265787b599a850add7e7ee4",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Independent, CSRF-protected review of an exact server preview; an agent cannot approve its own consequential command.",
@@ -480,7 +480,7 @@
     },
     "POST /admin/agent-reviews/{id}": {
       "handler": "App\\Controllers\\AgentReviewController::approve",
-      "source_hash": "da5d90fccd2068976731b9e7558d71102a87a9066e531300e429029d8c57018c",
+      "source_hash": "b744319bb91a3a95fe57fbdb700f2c3d5ef1b56044c93e4847ec56440928352e",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Independent, CSRF-protected review of an exact server preview; an agent cannot approve its own consequential command.",
@@ -491,7 +491,7 @@
     },
     "GET /admin/tenants/{tenant_id}/webhooks": {
       "handler": "App\\Controllers\\Admin\\WebhooksController::index",
-      "source_hash": "f1e9f5f89e203eeda1a9fde07e4f9f77ec91446558452525d0c32f4ac2f1d0a7",
+      "source_hash": "329384936a577003d554afe8b698e7319f1f41645e923e92a1f381dfc2a23d23",
       "disposition": "operation",
       "operations": [
         "webhooks_list"
@@ -504,7 +504,7 @@
     },
     "POST /admin/tenants/{tenant_id}/webhooks": {
       "handler": "App\\Controllers\\Admin\\WebhooksController::create",
-      "source_hash": "fc0c0ab46987ca5e1b25bf2e1ec4ded4132a40801d0d65c775370b42beefa142",
+      "source_hash": "0a57e5200d2e4c6d8a6357dcac3f76f6060a064e4723d2dc2816cc9dbbe795ff",
       "disposition": "operation",
       "operations": [
         "webhook_create"
@@ -517,7 +517,7 @@
     },
     "POST /admin/tenants/{tenant_id}/webhooks/{id}": {
       "handler": "App\\Controllers\\Admin\\WebhooksController::update",
-      "source_hash": "149ea5f1d708fb93d92c3ddb533d19356dee23dfa5a4b475bdf366d0a6fa77ef",
+      "source_hash": "cd2e2ebc08432bb38f8aa51f58778b66353188ab61b47c646c51ab0dc01fcbf4",
       "disposition": "operation",
       "operations": [
         "webhook_update"
@@ -530,7 +530,7 @@
     },
     "GET /admin/tenants/{tenant_id}/webhooks/{id}/secret": {
       "handler": "App\\Controllers\\Admin\\WebhooksController::secret",
-      "source_hash": "5ff033a0d63c256ddb83c1d6cea7b793a34da90a1f387b8345eba02713aa7196",
+      "source_hash": "b3d28fbc48670fab8b07ac4c69057e5ce3bde0243c09ceab2c60abca2fa24aa7",
       "disposition": "trusted_browser",
       "operations": [
         "webhook_get"
@@ -543,7 +543,7 @@
     },
     "POST /admin/tenants/{tenant_id}/webhooks/{id}/secret": {
       "handler": "App\\Controllers\\Admin\\WebhooksController::secret",
-      "source_hash": "5ff033a0d63c256ddb83c1d6cea7b793a34da90a1f387b8345eba02713aa7196",
+      "source_hash": "b3d28fbc48670fab8b07ac4c69057e5ce3bde0243c09ceab2c60abca2fa24aa7",
       "disposition": "trusted_browser",
       "operations": [
         "webhook_get"
@@ -556,7 +556,7 @@
     },
     "POST /admin/tenants/{tenant_id}/webhooks/{id}/rotate": {
       "handler": "App\\Controllers\\Admin\\WebhooksController::rotate",
-      "source_hash": "8c58e0657bc89a0c1b9c236946fe048ea421b0f0719dc97c4a5ac680c470b37c",
+      "source_hash": "feab83a41d3abe516956c95a2f316e9f6b0e4fa4752bd44f4b85d085da9d7e65",
       "disposition": "operation",
       "operations": [
         "webhook_secret_rotate"
@@ -569,7 +569,7 @@
     },
     "GET /admin/tenants/{tenant_id}/webhooks/{id}/deliveries": {
       "handler": "App\\Controllers\\Admin\\WebhooksController::deliveries",
-      "source_hash": "9f627751e5c9b0daf2713b56376f38ffb869c2e079b4ed57e8dfab5bd5d0bd9a",
+      "source_hash": "4cf063fb7044a01c7e53df0e2c1af14c669bc3c931c3a494884c0d6b74f7592e",
       "disposition": "operation",
       "operations": [
         "webhook_deliveries_list"
@@ -582,7 +582,7 @@
     },
     "POST /admin/tenants/{tenant_id}/webhook-deliveries/{id}/retry": {
       "handler": "App\\Controllers\\Admin\\WebhooksController::retry",
-      "source_hash": "e90db39ecd7abb2c6dee108453023b4bf10c96e3c348ad23287261f06a40c439",
+      "source_hash": "ac40af3935f802f3b3d20e151b94f1a0be14c7f5037d1a064b8da8deac6dc520",
       "disposition": "operation",
       "operations": [
         "webhook_delivery_retry"
@@ -595,7 +595,7 @@
     },
     "GET /admin/settings": {
       "handler": "App\\Controllers\\Admin\\SettingsController::general",
-      "source_hash": "51eaf6c22cc93803f96b95e39355c7b8eb8ca372535d98c2a6ef1be3cb16d54a",
+      "source_hash": "2d1ff8e0abb0e350d32e208b75f4698e53470b27be57d58300e6583bd8981a6a",
       "disposition": "operation",
       "operations": [
         "system_settings_get"
@@ -653,7 +653,7 @@
     },
     "GET /admin/settings/email": {
       "handler": "App\\Controllers\\Admin\\SettingsController::email",
-      "source_hash": "2bc164132aa4d4dff507e66823134ef773c1d63a203367917b27f65e8897f1d1",
+      "source_hash": "67d12cfac43de3144ff42f8b8be58541605b64a09632e46224ca263a48428169",
       "disposition": "operation",
       "operations": [
         "system_settings_get",
@@ -687,7 +687,7 @@
     },
     "GET /admin/settings/cron": {
       "handler": "App\\Controllers\\Admin\\SettingsController::cron",
-      "source_hash": "834963d0da002edf7df504af17bdd97b8d79c10b352942c11447aa5a9e9dbdb6",
+      "source_hash": "299688e5668e6bf64fe424dcb8de54e1e230c3dac4eeb2e521d9b51a7f99f165",
       "disposition": "operation",
       "operations": [
         "jobs_status"
@@ -731,7 +731,7 @@
     },
     "GET /admin/settings/audit": {
       "handler": "App\\Controllers\\Admin\\SettingsController::audit",
-      "source_hash": "4386c394f9893545783a8910f687592e25ee6ce82b8bba915151abe3ecc6b9ac",
+      "source_hash": "d7ebcf7a7d8436602bfb572b53adb77dedcacc523b4dd9509f3727a3924db06b",
       "disposition": "operation",
       "operations": [
         "audit_list"
@@ -744,7 +744,7 @@
     },
     "GET /admin/settings/audit/export": {
       "handler": "App\\Controllers\\Admin\\SettingsController::auditExport",
-      "source_hash": "156ce5267eb0815a208f7e404acd475e3438ca1e2762fc0059b251ba1abe43df",
+      "source_hash": "2308dcd2773d828f0746665348c45e960a84abd5e56c0bc861d8cabd6e834664",
       "disposition": "operation",
       "operations": [
         "audit_export"
@@ -757,7 +757,7 @@
     },
     "GET /admin/deletion-queue": {
       "handler": "App\\Controllers\\Admin\\DeletionQueueController::index",
-      "source_hash": "f9766618dab0017221ed804c974c1c9a56a174dab1b9dc9557016a7a0a396a92",
+      "source_hash": "6c51476ba7f9da222f01cc8a1bbf2f1fad3f6e18c8bbc104d591f6b5c6c036e5",
       "disposition": "operation",
       "operations": [
         "deletion_queue_list",
@@ -772,7 +772,7 @@
     },
     "POST /admin/deletion-queue/confirm": {
       "handler": "App\\Controllers\\Admin\\DeletionQueueController::confirm",
-      "source_hash": "d0348932f8d441e8a2f5b004825aa693398efdfaaa126801942ba8d75243f8ac",
+      "source_hash": "97a0795fadf70dcc45eba94536ca7702bb2da11e1bb177c5e6e97507f95e2c78",
       "disposition": "operation",
       "operations": [
         "deletion_confirm"
@@ -786,7 +786,7 @@
     },
     "POST /admin/deletion-queue/dismiss": {
       "handler": "App\\Controllers\\Admin\\DeletionQueueController::dismiss",
-      "source_hash": "39d0589222be512d9cf5647515fbc2099a9139a4ca8411172e9c3d2bafe0c517",
+      "source_hash": "62842c7567a1c2806ced37c95aae0e36c5e7f28f7dd8ac3fd7c1da87b42feee7",
       "disposition": "operation",
       "operations": [
         "deletion_dismiss"
@@ -800,7 +800,7 @@
     },
     "GET /admin/applications": {
       "handler": "App\\Controllers\\Admin\\ApplicationsController::index",
-      "source_hash": "52fa7003e31bbbb06b18e0e55a13dab3f9205c6dbb4ec302f4456438fe32e6ed",
+      "source_hash": "64f47d9ce79f53bb65528955272a9bc1ff82bd8c770c8d6588bf35130d7c45ce",
       "disposition": "operation",
       "operations": [
         "applications_list",
@@ -933,7 +933,7 @@
     },
     "GET /admin/tenants": {
       "handler": "App\\Controllers\\Admin\\TenantsController::index",
-      "source_hash": "6ce1fd94e4a7d50a84f04e9bc137295ff119d01f4d414f18447bdd2749c75f5b",
+      "source_hash": "faaca48ca1b4e89a06d4c07ff23a2c54364ea412ae28a859903e100486bfe559",
       "disposition": "operation",
       "operations": [
         "businesses_list"
@@ -947,7 +947,7 @@
     },
     "GET /admin/tenants/export": {
       "handler": "App\\Controllers\\Admin\\TenantsController::export",
-      "source_hash": "0d6e559c2fde2a2b994e59ff2448d15ca5b7348eb80b2616751291cba8db8bc2",
+      "source_hash": "84ee95da04b8ebcba387056f55bbd00aa9a8699147190cb883576d79612e79bf",
       "disposition": "operation",
       "operations": [
         "businesses_export"
@@ -1045,7 +1045,7 @@
     },
     "GET /admin/bookings": {
       "handler": "App\\Controllers\\Admin\\BookingsController::index",
-      "source_hash": "ebbeeab774679c2d066a8a8e473213489d1edbe139d049c392e3c29e46433ef3",
+      "source_hash": "399796fe73eeed4fec12ca81e6c19ab7f15d7b949e6eaf6a69087672c741c721",
       "disposition": "operation",
       "operations": [
         "operator_bookings_list"
@@ -1061,7 +1061,7 @@
     },
     "GET /admin/bookings/export": {
       "handler": "App\\Controllers\\Admin\\BookingsController::export",
-      "source_hash": "aeb5259b3372d391d9d9c38a50fa847d64ca3e5a99cac366bc52feca140e0d36",
+      "source_hash": "530ffe8574687b284ef765dbd6844da80f6345e1cbb7852d4c9f5f8fa5bca612",
       "disposition": "operation",
       "operations": [
         "operator_bookings_export"
@@ -1077,7 +1077,7 @@
     },
     "GET /admin/bookings/{id}": {
       "handler": "App\\Controllers\\Admin\\BookingsController::show",
-      "source_hash": "84d99c60eb85b44b1f00c4f177731d8403d7cf8fe52e290f028a32c2249bb460",
+      "source_hash": "fca2a244f95074a34316b87511fe8947e9ee83377b209ff99319992af2897604",
       "disposition": "operation",
       "operations": [
         "booking_get"
@@ -1124,7 +1124,7 @@
     },
     "GET /admin/tenants/{tenant_id}": {
       "handler": "App\\Controllers\\Admin\\DashboardController::tenantDashboard",
-      "source_hash": "320013f36d729aa44869e30e47b11797132301bd460589f76b3abcd66098d27e",
+      "source_hash": "bbdb58a5f9f0b91a988cd472c537fed8fe10e2c021ffb5ba794243d4aa2994cb",
       "disposition": "operation",
       "operations": [
         "business_dashboard"
@@ -1137,7 +1137,7 @@
     },
     "GET /admin/tenants/{tenant_id}/bookings": {
       "handler": "App\\Controllers\\Admin\\BookingsController::tenantIndex",
-      "source_hash": "8fdaecfaf41f76e957eb3910e9334a092c4fa8e265884ae560972c80d33b750b",
+      "source_hash": "8ba2253f0bdbacf9e56f6c37ac785e9f9614dbb117bae003b2c865cd53589e6e",
       "disposition": "operation",
       "operations": [
         "bookings_list"
@@ -1174,7 +1174,7 @@
     },
     "GET /admin/tenants/{tenant_id}/bookings/export": {
       "handler": "App\\Controllers\\Admin\\BookingsController::tenantExport",
-      "source_hash": "8257824eb7b68dd1fdc7be215c02e1e5b9783203e15a68a78363cfaa1b579e9d",
+      "source_hash": "fd96d25d86b017bd8e2812d82a49836c54931ce57c0de5f3a7398a28d7e580d5",
       "disposition": "operation",
       "operations": [
         "bookings_export"
@@ -1209,7 +1209,7 @@
     },
     "GET /admin/tenants/{tenant_id}/bookings/{id}": {
       "handler": "App\\Controllers\\Admin\\BookingsController::tenantShow",
-      "source_hash": "5910a4c1bd645efc002f63efe6ef4783b19deadee2d1691e3c6c3783dcbdc876",
+      "source_hash": "9c9a98f0e32566a0b5f33bf17beb45b0e9560dcd42c51d8cd6a9f0c9753602a7",
       "disposition": "operation",
       "operations": [
         "booking_get"
@@ -1507,7 +1507,7 @@
     },
     "POST /admin/tenants/{tenant_id}/settings/emails": {
       "handler": "App\\Controllers\\Admin\\TenantSettingsController::saveEmails",
-      "source_hash": "973d90e146e23a227ad6cb8d7545e4e96ab6081c9b8c61956d6360860a4d4100",
+      "source_hash": "f9c60c6830b7ad0953705248c3c307a6c6ba6ee9317ad371f8bb339d9501447c",
       "disposition": "operation",
       "operations": [
         "email_templates_update"
@@ -1546,7 +1546,7 @@
     },
     "GET /admin/tenants/{tenant_id}/customers": {
       "handler": "App\\Controllers\\Admin\\CustomersController::index",
-      "source_hash": "ceab49c4ccba98c69e3c61441c327c0452f2473bae26134f3af009844d02349c",
+      "source_hash": "80747a44874c3555d6a48454dea408097b2e75390ea9b70827c66d8ab694668e",
       "disposition": "operation",
       "operations": [
         "customer_list"
@@ -1559,7 +1559,7 @@
     },
     "GET /admin/tenants/{tenant_id}/customers/export": {
       "handler": "App\\Controllers\\Admin\\CustomersController::export",
-      "source_hash": "d7dcd47bd46ada3a8fbc8beda3fab7900648ef68048347119d6b51dbd97f7a38",
+      "source_hash": "059a6d4e197930f2dc71b86277bfc80722bf99548a13593f711ab66b954c280e",
       "disposition": "operation",
       "operations": [
         "customer_export"
@@ -1572,7 +1572,7 @@
     },
     "GET /admin/tenants/{tenant_id}/customers/{id}": {
       "handler": "App\\Controllers\\Admin\\CustomersController::show",
-      "source_hash": "d212db64a7e0d1672ed3e83210fbd2bd7eda532c912e8b77cae7b9e061f1c6a9",
+      "source_hash": "ca862e2cb1660390e840275749f4496be79ce66193941a83275143b814a46e9d",
       "disposition": "operation",
       "operations": [
         "customer_get",
@@ -2266,7 +2266,7 @@
     },
     "GET /book/{slug}": {
       "handler": "App\\Controllers\\Booking\\BookingPageController::show",
-      "source_hash": "8cf729bc5b2d994cbf620eb5756a3cdf7eb549b1f2a6163159f43db9fc71e02c",
+      "source_hash": "5dabd4ef2787105aca4ef5b8dc452f60127478a1e4c35c975929dd06e39294dc",
       "disposition": "operation",
       "operations": [
         "public_business_get",
@@ -2308,7 +2308,7 @@
     },
     "GET /api/{slug}/services": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::services",
-      "source_hash": "0936d9a048db8a44e25d009101667822b2b3767b5046675bf508ee86d95b1568",
+      "source_hash": "76f5f39147f031d6ef0bca0ebe696cca407b373d6fa3a8dfedecf45107a088af",
       "disposition": "operation",
       "operations": [
         "public_catalog_list"
@@ -2322,7 +2322,7 @@
     },
     "GET /api/{slug}/staff": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::staff",
-      "source_hash": "cd5901b1d54da29358e23e523a0ff24fa3888de022da2d8e14d4b83578ebc710",
+      "source_hash": "e4cc7732828f16c4f10743f91df4386ef0190df31dc0b88f59097d9c534a2070",
       "disposition": "operation",
       "operations": [
         "public_catalog_list"
@@ -2336,7 +2336,7 @@
     },
     "GET /api/{slug}/availability": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::availability",
-      "source_hash": "e8e406b44c93a2d79f3c27b18800cc051ba878041ebb48ec011d1561bfae5be2",
+      "source_hash": "449fbd9d3e75944530a226a2eafe00a67da536b3cf53d54b1dbaffbad493c5d8",
       "disposition": "operation",
       "operations": [
         "availability_search",
@@ -2359,7 +2359,7 @@
     },
     "GET /api/{slug}/available-dates": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::availableDates",
-      "source_hash": "40200956bc11ca4fa7c6e6687ea9ca97c694734a49dd47973b5ef2bc4e17fc9b",
+      "source_hash": "a9058dd3a9fb4e7e9e2d1abd84a003af5848e80e38c1d964919bca7c3545ff9d",
       "disposition": "operation",
       "operations": [
         "availability_search"
@@ -2378,7 +2378,7 @@
     },
     "POST /api/{slug}/bookings": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::createBooking",
-      "source_hash": "3e96d413c2c7f44c5caef8503caa65fc3a48ecb9734bc3fe1d72ddfe69462259",
+      "source_hash": "f9e05bec95ee00134727e7503a29efae7ef771fbf769ab8747d0f1e32fe7c4a5",
       "disposition": "operation",
       "operations": [
         "public_booking_create"
@@ -2394,7 +2394,7 @@
     },
     "GET /api/{slug}/resources": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::resources",
-      "source_hash": "3e2446782f615e6b725bf18712551cddec9f2f125529f5b8bffdddd1957e802a",
+      "source_hash": "f96f1e2df225b450c6193f4cee880adafb4431e9362381e22e3b05df9b4da040",
       "disposition": "operation",
       "operations": [
         "public_catalog_list"
@@ -2408,7 +2408,7 @@
     },
     "GET /api/{slug}/resources/{id}/availability": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::resourceAvailability",
-      "source_hash": "efec92c357b304b6811212d44026f30dbe27169cffe80f0124948806117102d8",
+      "source_hash": "9eac30356cb5179d4228243a25b0622aa945a7ba2a1ef83b377fc6f1502f3e9c",
       "disposition": "operation",
       "operations": [
         "availability_search"
@@ -2427,7 +2427,7 @@
     },
     "GET /api/{slug}/capacity/available-dates": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::capacityAvailableDates",
-      "source_hash": "711d8ae87c22278035fea78a72d5a96c45cefb37cad9b85fcc9ffaa682f0998c",
+      "source_hash": "82375c37c20fab73b3f18eb11dddb8c7f42cca846f4dbde7f0029f76211c4661",
       "disposition": "operation",
       "operations": [
         "availability_search"
@@ -2446,7 +2446,7 @@
     },
     "GET /api/{slug}/capacity/slots": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::capacitySlots",
-      "source_hash": "f1ed6dfea5f582aeaecf171ef371e699b54a89093f991b98bf8f0797efe8aaa9",
+      "source_hash": "3e337402307ca5997cc21f985929ee2455d034743733cb4a8277e6cc1a4d193e",
       "disposition": "operation",
       "operations": [
         "availability_search"
@@ -2465,7 +2465,7 @@
     },
     "GET /api/{slug}/events": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::events",
-      "source_hash": "75cc041e6e51fab38480d80cba04af5bd073d3fa97de4e5e77c87e21153d8f1a",
+      "source_hash": "b6de44028c42347d37812379c50ffb1edf3b8ce6b3de1f269b5a161d0f4bde35",
       "disposition": "operation",
       "operations": [
         "public_catalog_list"
@@ -2479,7 +2479,7 @@
     },
     "GET /api/{slug}/events/{id}": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::eventDetail",
-      "source_hash": "c345d8af5b869c9d1546f6bf1b4c94be3c217534f02308e49b3f20f43f3ac871",
+      "source_hash": "a6f3ac1cccce3ff4c5d323a20dea7e6b1f33d4f06997c4e9d0496c8de8dc9574",
       "disposition": "operation",
       "operations": [
         "public_catalog_list"
@@ -2493,7 +2493,7 @@
     },
     "POST /api/{slug}/customer-access": {
       "handler": "App\\Controllers\\Booking\\CustomerAccessController::exchange",
-      "source_hash": "87177f858e66eff22c2d987593940064c20481966a9affdbca468effbd5d1bea",
+      "source_hash": "cb1d7a8158b9b1e1d2c4c42122932a790d721d1fd534e45ae2a73459e0d309db",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Proof of mailbox access is exchanged into a purpose-bound browser session; identifiers and email knowledge never grant authority.",
@@ -2513,7 +2513,7 @@
     },
     "GET /book/{slug}/privacy/{customer_id}": {
       "handler": "App\\Controllers\\Booking\\PrivacyController::show",
-      "source_hash": "1a2d800372b84a61c00f9267b76df3cf6f6ce6772a0b06f660647339cb19988f",
+      "source_hash": "19da037f0584a1ee022026af78f3de3497a82d1248cb588b47bda5afbad38c8a",
       "disposition": "operation",
       "operations": [
         "customer_privacy_get",
@@ -2529,7 +2529,7 @@
     },
     "POST /book/{slug}/privacy/{customer_id}": {
       "handler": "App\\Controllers\\Booking\\PrivacyController::action",
-      "source_hash": "82bb35238cde2718cb6f159993814dbef9b4a742efc70036d097056ed6b4ac2c",
+      "source_hash": "f8bd225a437fa528182908e8d06882c51f1f5c230a4118f37c82feaf041b3034",
       "disposition": "operation",
       "operations": [
         "customer_privacy_export",
@@ -2560,7 +2560,7 @@
     },
     "GET /api/{slug}/bookings/{id}": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::bookingDetail",
-      "source_hash": "bf8ebc4f116b4dab1f4ce13e33d3b02db6daf199ebfaef20c0414c1bcea4acc8",
+      "source_hash": "60905bf318d6da65d8d2e260d316fd3bf65b00fc15b723d714da7a6309c61bcc",
       "disposition": "operation",
       "operations": [
         "customer_booking_get"
@@ -2575,7 +2575,7 @@
     },
     "POST /api/{slug}/bookings/{id}/cancel": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::cancelBookingAction",
-      "source_hash": "f96036aeb591cb7d4bf4cd779cc3d98825d6f953a59255e7e2b3929ece971c9a",
+      "source_hash": "4d3a33d9e59aeea5e9e541618e6231e5a3c484710825a05377fd33e554bf2697",
       "disposition": "operation",
       "operations": [
         "customer_booking_cancel"
@@ -2590,7 +2590,7 @@
     },
     "POST /api/{slug}/bookings/{id}/reschedule": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::rescheduleBookingAction",
-      "source_hash": "9150a4a35846ba7d8e37ee7a1ff3b6d9845b026ecbde2b4701af16a5faa77dbe",
+      "source_hash": "ae798e716b8949eb934137caa08a08e8d4266824a5c1f7b77a04f3446daf4d3c",
       "disposition": "operation",
       "operations": [
         "customer_booking_reschedule"
@@ -2606,7 +2606,7 @@
     },
     "GET /cron/run": {
       "handler": "App\\Controllers\\CronController::run",
-      "source_hash": "6936ba5855ecc947a2bcf78b3b732e9dae6fcb68d9fa6a6cc8396ff8cbacc628",
+      "source_hash": "35e163218fcf2e29e4e91eaf62377ad482e30be6f3001361bfa5e02a6bf069ba",
       "disposition": "transport",
       "operations": [
         "jobs_run"
@@ -2620,7 +2620,7 @@
     },
     "GET /cron/retention": {
       "handler": "App\\Controllers\\CronController::run",
-      "source_hash": "6936ba5855ecc947a2bcf78b3b732e9dae6fcb68d9fa6a6cc8396ff8cbacc628",
+      "source_hash": "35e163218fcf2e29e4e91eaf62377ad482e30be6f3001361bfa5e02a6bf069ba",
       "disposition": "transport",
       "operations": [
         "jobs_run"
@@ -2634,7 +2634,7 @@
     },
     "GET /api/agent/v1/schema": {
       "handler": "App\\Controllers\\AgentApi\\SchemaController::index",
-      "source_hash": "7351a2c989709889f2aae47039d8de556d43e5bf0a650b97c3bfdb994db42428",
+      "source_hash": "1ab3342d6d579003a9bd179e5a85b6abb54eefd08187a115afc50086452562e7",
       "disposition": "operation",
       "operations": [
         "capabilities_get"
@@ -2662,7 +2662,7 @@
     },
     "GET /api/agent/v1/bookings": {
       "handler": "App\\Controllers\\AgentApi\\ResourceController::bookings",
-      "source_hash": "4a3f3bdfe22b048c8abebe64494493551a7cae3c17888eba1d420dc569cdfd10",
+      "source_hash": "4ab80f3fee76fc4d5975aab64cac8db4222727e69870479ddc2d24db4ae94a1c",
       "disposition": "transport",
       "operations": [
         "bookings_list"

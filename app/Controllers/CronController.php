@@ -33,8 +33,8 @@ final class CronController
             return Response::json(['error' => 'Forbidden'], 403);
         }
 
-        $result = \App\Application\System\JobCoordinator::dispatch(scheduled:true);
-        return Response::json($result, $result['status']==='partial' ? 207 : 200);
+        $result = \App\Application\System\JobCoordinator::dispatch(scheduled: true);
+        return Response::json($result, $result['status'] === 'partial' ? 207 : 200);
     }
 
     /**

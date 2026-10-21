@@ -53,7 +53,7 @@ final class BookingPageController
         $acceptLang = $request->header('Accept-Language');
         $resolvedLocale = Locale::resolveForBooking($tenant, $acceptLang);
 
-        $publicBusiness=AvailabilityService::business(AvailabilityService::publicActor($tenant),[]);
+        $publicBusiness = AvailabilityService::business(AvailabilityService::publicActor($tenant), []);
 
         // Build tenant config for the JavaScript app
         $tenantConfig = [

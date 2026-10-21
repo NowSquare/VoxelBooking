@@ -41,7 +41,15 @@ final class CustomerAccessController
         if ($tenant === null || !CustomerCapability::remember($token, $purpose, $tenant['id'], $subjectId)) {
             return CustomerCapability::protect(Response::json(['error' => 'verification_required'], 403));
         }
-        AuditLog::log('customer.access_verified', 'customer_capability', null, ['purpose' => $purpose, 'subject_id' => $subjectId], $tenant['id'], actorType: 'customer', actorId: null);
+        AuditLog::log(
+            'customer.access_verified',
+            'customer_capability',
+            null,
+            ['purpose' => $purpose, 'subject_id' => $subjectId],
+            $tenant['id'],
+            actorType: 'customer',
+            actorId: null,
+        );
         return CustomerCapability::protect(Response::json(['verified' => true]));
     }
 

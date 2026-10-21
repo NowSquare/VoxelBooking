@@ -43,7 +43,10 @@ final class TenantsController
         $search = trim($request->string('search'));
         $status = trim($request->string('status'));
 
-        $tenants = \App\Application\Business\BusinessUi::all(\App\Application\Business\BusinessService::list(...), ['search' => $search, 'status' => $status ?: 'all']);
+        $tenants = \App\Application\Business\BusinessUi::all(
+            \App\Application\Business\BusinessService::list(...),
+            ['search' => $search, 'status' => $status ?: 'all'],
+        );
 
         foreach ($tenants as &$t) {
             $t['booking_count'] = Tenant::bookingCount($t['id']);
@@ -124,7 +127,15 @@ final class TenantsController
      *
      * All other regional settings: read from settings table or fall back to sensible defaults.
      *
-     * @return array{timezone: string, currency: string, locale: string, date_format: string, number_format: string, time_format: string, week_start: string}
+     * @return array{
+     *     timezone: string,
+     *     currency: string,
+     *     locale: string,
+     *     date_format: string,
+     *     number_format: string,
+     *     time_format: string,
+     *     week_start: string,
+     * }
      */
     private function resolveSystemDefaults(): array
     {
@@ -213,10 +224,22 @@ final class TenantsController
      */
     public function export(Request $request): Response
     {
-        if (!Auth::isOperator()) { return $this->forbidden($request); }
+        if (!Auth::isOperator()) {
+            return $this->forbidden($request);
+        }
         try {
-            $export = \App\Application\Business\BusinessService::export(\App\Application\Business\BusinessUi::actor(), ['search' => $request->string('search'), 'status' => $request->string('status') ?: 'all']);
-            return (new Response())->header('Content-Type', $export['content_type'])->header('Content-Disposition', 'attachment; filename="' . preg_replace('/^businesses-/', 'tenants-export-', $export['filename']) . '"')->header('Cache-Control', 'no-store')->body($export['content']);
+            $export = \App\Application\Business\BusinessService::export(
+                \App\Application\Business\BusinessUi::actor(),
+                ['search' => $request->string('search'), 'status' => $request->string('status') ?: 'all'],
+            );
+            return (new Response())
+                ->header('Content-Type', $export['content_type'])
+                ->header(
+                    'Content-Disposition',
+                    'attachment; filename="' . preg_replace('/^businesses-/', 'tenants-export-', $export['filename']) . '"',
+                )
+                ->header('Cache-Control', 'no-store')
+                ->body($export['content']);
         } catch (\App\Agent\OperationException $error) {
             FormState::toast('error', __('agent-business.errors.' . $error->problemCode));
             return Response::redirect('/admin/tenants');

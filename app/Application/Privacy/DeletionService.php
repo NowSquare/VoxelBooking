@@ -17,7 +17,9 @@ final class DeletionService
             $actor->role !== 'operator'
             || !in_array($scope, $actor->scopes, true)
             || !Database::query('SELECT id FROM operators WHERE id=?', [$actor->principalId])
-        ) throw new OperationException('forbidden', 403);
+        ) {
+            throw new OperationException('forbidden', 403);
+        }
         return $actor;
     }
 
@@ -26,8 +28,9 @@ final class DeletionService
         $actor = self::authorize($actor, 'privacy-review:read');
         $business = $actor->business($input['business_id'] ?? null);
         $state = $input['state'] ?? 'pending';
-        if (!in_array($state, ['pending', 'processed'], true))
+        if (!in_array($state, ['pending', 'processed'], true)) {
             throw new OperationException('validation_failed', 422, ['state' => 'invalid']);
+        }
         $limit = max(1, min(100, (int) ($input['limit'] ?? 50)));
         $binding = CanonicalJson::hash([
             $actor->principalType,
@@ -49,8 +52,9 @@ final class DeletionService
                 throw new OperationException('invalid_cursor', 422);
             }
 
-            if (($cursor['binding'] ?? null) !== $binding || ($cursor['expires'] ?? 0) < time())
+            if (($cursor['binding'] ?? null) !== $binding || ($cursor['expires'] ?? 0) < time()) {
                 throw new OperationException('invalid_cursor', 422);
+            }
             $snapshot = $cursor['snapshot'];
             $after = $cursor['after'];
         }
@@ -75,7 +79,9 @@ final class DeletionService
         );
         $more = count($rows) > $limit;
         $rows = array_slice($rows, 0, $limit);
-        foreach ($rows as &$row) $row['booking_count'] = (int) $row['booking_count'];
+        foreach ($rows as &$row) {
+            $row['booking_count'] = (int) $row['booking_count'];
+        }
         unset($row);
         $last = $rows ? end($rows) : null;
         $next = $more
@@ -92,8 +98,9 @@ final class DeletionService
     private static function customer(ActorContext $actor, array $input, bool $lock = false): array
     {
         $business = $actor->business($input['business_id'] ?? null);
-        if (!Database::query('SELECT id FROM tenants WHERE id=?' . ($lock ? ' FOR UPDATE' : ''), [$business]))
+        if (!Database::query('SELECT id FROM tenants WHERE id=?' . ($lock ? ' FOR UPDATE' : ''), [$business])) {
             throw new OperationException('not_found', 404);
+        }
         return Database::query(
             'SELECT * FROM customers WHERE id=? AND tenant_id=?' . ($lock ? ' FOR UPDATE' : ''),
             [$input['customer_id'] ?? '', $business]
@@ -104,8 +111,9 @@ final class DeletionService
     {
         $actor = self::authorize($actor, 'privacy-review:read');
         $c = self::customer($actor, $input);
-        if ((bool) $c['is_anonymized'] || $c['deletion_requested_at'] === null)
+        if ((bool) $c['is_anonymized'] || $c['deletion_requested_at'] === null) {
             throw new OperationException('request_not_pending', 409);
+        }
         $bookings = Database::query(
             'SELECT id,status,notes,custom_field_data,customer_name_snapshot,customer_email_snapshot,customer_phone_snapshot,consent_given_at,consent_text_shown,internal_notes,updated_at FROM bookings WHERE customer_id=? AND tenant_id=? ORDER BY id',
             [$c['id'], $c['tenant_id']]
@@ -178,14 +186,17 @@ final class DeletionService
     public static function confirm(ActorContext $actor, array $input): array
     {
         $actor = self::authorize($actor, 'privacy-review:manage');
-        if (DemoMode::isActive()) throw new OperationException('demo_restricted', 403);
+        if (DemoMode::isActive()) {
+            throw new OperationException('demo_restricted', 403);
+        }
         return Access::transaction(static function () use ($actor, $input) {
             $c = self::customer($actor, $input, true);
             $actor = self::authorize($actor, 'privacy-review:manage');
             $actor->business($c['tenant_id']);
             $review = self::preview($actor, $input);
-            if (isset($input['expected_version']) && !hash_equals($review['version'], $input['expected_version']))
+            if (isset($input['expected_version']) && !hash_equals($review['version'], $input['expected_version'])) {
                 throw new OperationException('preview_changed', 409);
+            }
             return CustomerAnonymizer::anonymize($c['id'], 'operator_review', $actor);
         });
     }
@@ -193,20 +204,29 @@ final class DeletionService
     public static function dismiss(ActorContext $actor, array $input): array
     {
         $actor = self::authorize($actor, 'privacy-review:manage');
-        if (DemoMode::isActive()) throw new OperationException('demo_restricted', 403);
+        if (DemoMode::isActive()) {
+            throw new OperationException('demo_restricted', 403);
+        }
         return Access::transaction(static function () use ($actor, $input) {
             $reason = trim((string) ($input['reason'] ?? ''));
-            if (mb_strlen($reason) > 1000)
+            if (mb_strlen($reason) > 1000) {
                 throw new OperationException('validation_failed', 422, ['reason' => 'too_long']);
+            }
             $c = self::customer($actor, $input, true);
             $actor = self::authorize($actor, 'privacy-review:manage');
             $actor->business($c['tenant_id']);
-            if ((bool) $c['is_anonymized']) throw new OperationException('request_not_pending', 409);
-            if ($c['deletion_requested_at'] === null) return ['customer_id' => $c['id'], 'dismissed' => true];
+            if ((bool) $c['is_anonymized']) {
+                throw new OperationException('request_not_pending', 409);
+            }
+            if ($c['deletion_requested_at'] === null) {
+                return ['customer_id' => $c['id'], 'dismissed' => true];
+            }
             if (
                 isset($input['expected_version'])
                 && !hash_equals(self::preview($actor, $input)['version'], $input['expected_version'])
-            ) throw new OperationException('preview_changed', 409);
+            ) {
+                throw new OperationException('preview_changed', 409);
+            }
             Database::execute(
                 'UPDATE customers SET deletion_requested_at=NULL,updated_at=UTC_TIMESTAMP() WHERE id=? AND tenant_id=?',
                 [$c['id'], $c['tenant_id']]

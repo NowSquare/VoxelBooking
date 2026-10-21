@@ -141,7 +141,10 @@ final class Outbox
             // An expired lease means the previous worker died mid-delivery, so the row is claimable again.
             $due = "((status = 'pending' AND available_at <= ?) OR (status = 'sending' AND lease_until < ?))";
             $rows = $id === null
-                ? Database::query("SELECT * FROM delivery_outbox WHERE {$due} ORDER BY available_at, id LIMIT 1 FOR UPDATE SKIP LOCKED", [$now, $now])
+                ? Database::query(
+                    "SELECT * FROM delivery_outbox WHERE {$due} ORDER BY available_at, id LIMIT 1 FOR UPDATE SKIP LOCKED",
+                    [$now, $now],
+                )
                 : Database::query("SELECT * FROM delivery_outbox WHERE id = ? AND {$due} FOR UPDATE SKIP LOCKED", [$id, $now, $now]);
             if (!$rows) {
                 return null;

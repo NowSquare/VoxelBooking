@@ -73,7 +73,10 @@ final class BookingOperations
                 ['day_of_week', 'start_time', 'end_time', 'is_available']
             )
         ];
-        $calendar['properties']['available_weekdays'] = ['type' => 'array', 'items' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 6]];
+        $calendar['properties']['available_weekdays'] = [
+            'type' => 'array',
+            'items' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 6],
+        ];
         array_push($calendar['required'], 'blocked_dates', 'hours', 'available_weekdays');
 
         // Read operations: [name, title, policy, scopes, path, input properties, required, output schema, handler, capability].
@@ -266,7 +269,9 @@ final class BookingOperations
                 static function ($a, $i) use ($public) {
                     $a = BookingCommands::currentActor($a);
                     // The public endpoint is for customers; staff book through booking_create.
-                    if ($public && $a->isStaff()) throw new OperationException('forbidden', 403);
+                    if ($public && $a->isStaff()) {
+                        throw new OperationException('forbidden', 403);
+                    }
 
                     return BookingCommands::create($a, $i);
                 },
@@ -328,7 +333,11 @@ final class BookingOperations
                     $result = BookingCommands::reschedule($a, $i);
 
                     // Return the replacement booking; the original stays behind with status rescheduled.
-                    return BookingQueries::project(BookingService::findByIdWithDetails($result['new_booking_id'], $tenant['id']), $tenant, $a);
+                    return BookingQueries::project(
+                        BookingService::findByIdWithDetails($result['new_booking_id'], $tenant['id']),
+                        $tenant,
+                        $a
+                    );
                 },
                 sideEffects: ['booking.notification'],
                 demoAllowed: true,
@@ -469,14 +478,20 @@ final class BookingOperations
         if (
             $status !== $booking['status']
             && !in_array($status, BookingCommands::transitions($booking['status']), true)
-        ) throw new OperationException('invalid_transition', 409);
+        ) {
+            throw new OperationException('invalid_transition', 409);
+        }
         if (
             !$actor->isStaff()
             && $status === 'cancelled'
             && $booking['status'] !== 'cancelled'
             && !BookingService::canCancel($booking, $tenant)['allowed']
-        ) throw new OperationException('cancellation_unavailable', 409);
-        if ($status === 'confirmed') BookingInventory::assertAvailable($tenant, $booking);
+        ) {
+            throw new OperationException('cancellation_unavailable', 409);
+        }
+        if ($status === 'confirmed') {
+            BookingInventory::assertAvailable($tenant, $booking);
+        }
 
         return [
             'booking_id' => $booking['id'],
@@ -551,15 +566,33 @@ final class BookingOperations
         foreach ([
             'id', 'business_id', 'booking_pattern', 'status', 'timezone', 'notification_state', 'date', 'time', 'end_time',
             'start_utc', 'end_utc', 'manage_url', 'service', 'resource', 'check_in', 'check_out', 'event_name'
-        ] as $field) $properties[$field] = ['type' => 'string'];
-        foreach (['staff', 'total', 'label'] as $field) $properties[$field] = ['type' => ['string', 'null']];
-        foreach (['duration', 'nights', 'guest_count', 'party_size', 'spot_count'] as $field) $properties[$field] = ['type' => 'integer'];
-        foreach (['consent_recorded', 'email_sent', 'waitlisted'] as $field) $properties[$field] = ['type' => 'boolean'];
+        ] as $field) {
+            $properties[$field] = ['type' => 'string'];
+        }
+        foreach (['staff', 'total', 'label'] as $field) {
+            $properties[$field] = ['type' => ['string', 'null']];
+        }
+        foreach (['duration', 'nights', 'guest_count', 'party_size', 'spot_count'] as $field) {
+            $properties[$field] = ['type' => 'integer'];
+        }
+        foreach (['consent_recorded', 'email_sent', 'waitlisted'] as $field) {
+            $properties[$field] = ['type' => 'boolean'];
+        }
 
         return self::periodRequired(
             self::object(
                 $properties,
-                ['id', 'business_id', 'booking_pattern', 'status', 'timezone', 'notification_state', 'date', 'consent_recorded', 'email_sent']
+                [
+                    'id',
+                    'business_id',
+                    'booking_pattern',
+                    'status',
+                    'timezone',
+                    'notification_state',
+                    'date',
+                    'consent_recorded',
+                    'email_sent',
+                ]
             ),
             ['check_in', 'check_out', 'nights'],
             ['time', 'end_time', 'start_utc', 'end_utc']
@@ -585,7 +618,9 @@ final class BookingOperations
         foreach ([
             'id', 'business_id', 'business_name', 'business_slug', 'created_at', 'updated_at', 'booking_pattern', 'status',
             'start_datetime', 'end_datetime', 'timezone', 'start_utc', 'end_utc'
-        ] as $field) $properties[$field] = ['type' => 'string'];
+        ] as $field) {
+            $properties[$field] = ['type' => 'string'];
+        }
         $properties['check_in'] = ['type' => 'string', 'format' => 'date'];
         $properties['check_out'] = ['type' => 'string', 'format' => 'date'];
         $properties['nights'] = ['type' => 'integer'];
@@ -593,14 +628,21 @@ final class BookingOperations
             'service_name', 'service_color', 'staff_name', 'resource_name', 'event_name', 'price_total', 'price_currency',
             'service_id', 'staff_id', 'resource_id', 'event_id', 'notes', 'customer_timezone', 'rescheduled_to_id',
             'customer_id', 'internal_notes', 'source'
-        ] as $field) $properties[$field] = ['type' => ['string', 'null']];
+        ] as $field) {
+            $properties[$field] = ['type' => ['string', 'null']];
+        }
         $properties['party_size'] = ['type' => 'integer'];
-        $properties['customer'] = self::object(['name' => ['type' => ['string', 'null']], 'email' => ['type' => ['string', 'null']]], ['name', 'email']);
-        $properties['custom_fields'] = ['type' => ['object', 'array', 'null']];
-        foreach (['cancellation', 'rescheduling'] as $field) $properties[$field] = self::object(
-            ['allowed' => ['type' => 'boolean'], 'reason' => ['type' => ['string', 'null']]],
-            ['allowed', 'reason']
+        $properties['customer'] = self::object(
+            ['name' => ['type' => ['string', 'null']], 'email' => ['type' => ['string', 'null']]],
+            ['name', 'email']
         );
+        $properties['custom_fields'] = ['type' => ['object', 'array', 'null']];
+        foreach (['cancellation', 'rescheduling'] as $field) {
+            $properties[$field] = self::object(
+                ['allowed' => ['type' => 'boolean'], 'reason' => ['type' => ['string', 'null']]],
+                ['allowed', 'reason']
+            );
+        }
         $properties['allowed_statuses'] = ['type' => 'array', 'items' => ['type' => 'string']];
 
         return self::periodRequired(

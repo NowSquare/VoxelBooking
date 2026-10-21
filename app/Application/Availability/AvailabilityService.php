@@ -16,7 +16,8 @@ final class AvailabilityService
         $id = $actor->business($input['business_id'] ?? null);
 
         // Availability is a public surface: only active businesses are visible.
-        return Database::query("SELECT * FROM tenants WHERE id=? AND status='active'", [$id])[0] ?? throw new OperationException('not_found', 404);
+        return Database::query("SELECT * FROM tenants WHERE id=? AND status='active'", [$id])[0]
+            ?? throw new OperationException('not_found', 404);
     }
 
     public static function business(ActorContext $actor, array $input): array
@@ -73,7 +74,9 @@ final class AvailabilityService
             default => throw new OperationException('validation_failed', 422, ['kind' => 'unsupported']),
         };
         $sort = $kind === 'capacity_slots' ? 'day_of_week' : 'sort_order';
-        if ($kind !== 'capacity_slots') $columns .= ',sort_order';
+        if ($kind !== 'capacity_slots') {
+            $columns .= ',sort_order';
+        }
 
         $where = 'tenant_id=? AND is_active=1';
         $params = [$t['id']];
@@ -104,7 +107,9 @@ final class AvailabilityService
             if (
                 ($cursor['binding'] ?? null) !== $binding
                 || ($cursor['expires'] ?? 0) < time()
-            ) throw new OperationException('invalid_cursor', 422);
+            ) {
+                throw new OperationException('invalid_cursor', 422);
+            }
             $snapshot = $cursor['snapshot'];
             $after = $cursor['after'];
         }
@@ -130,12 +135,28 @@ final class AvailabilityService
             foreach ([
                 'sort_order', 'capacity', 'duration_minutes', 'min_stay_nights', 'max_stay_nights', 'day_of_week', 'max_capacity',
                 'min_party_size', 'max_party_size', 'max_participants', 'min_spot_count', 'max_spot_count', 'waitlist_max'
-            ] as $key) if (isset($row[$key])) $row[$key] = (int) $row[$key];
-            foreach (['is_virtual', 'requires_staff', 'allow_waitlist', 'is_recurring'] as $key) if (isset($row[$key])) $row[$key] = (bool) $row[$key];
+            ] as $key) {
+                if (isset($row[$key])) {
+                    $row[$key] = (int) $row[$key];
+                }
+            }
+            foreach (['is_virtual', 'requires_staff', 'allow_waitlist', 'is_recurring'] as $key) {
+                if (isset($row[$key])) {
+                    $row[$key] = (bool) $row[$key];
+                }
+            }
             foreach ([
                 'amenities', 'check_in_days', 'check_out_days', 'exception_dates'
-            ] as $key) if (array_key_exists($key, $row)) $row[$key] = $row[$key] !== null ? json_decode($row[$key], true) : null;
-            foreach (['price', 'price_per_night'] as $key) if (isset($row[$key])) $row[$key] = (string) $row[$key];
+            ] as $key) {
+                if (array_key_exists($key, $row)) {
+                    $row[$key] = $row[$key] !== null ? json_decode($row[$key], true) : null;
+                }
+            }
+            foreach (['price', 'price_per_night'] as $key) {
+                if (isset($row[$key])) {
+                    $row[$key] = (string) $row[$key];
+                }
+            }
         }
         unset($row);
 
@@ -167,22 +188,38 @@ final class AvailabilityService
                 if (
                     !BookingService::canReschedule($booking, $t)['allowed']
                     && !$actor->isStaff()
-                ) throw new OperationException('rescheduling_unavailable', 409);
-                if ($booking['booking_pattern'] !== $pattern) throw new OperationException('pattern_not_supported', 422);
-                $exclude = $id;
-                if ($pattern === 'timeslot') $duration = (int) ((strtotime($booking['end_datetime']) - strtotime($booking['start_datetime'])) / 60);
-                foreach (['service_id', 'staff_id', 'resource_id', 'event_id'] as $key) if (!empty($booking[$key])) {
-                    if (
-                        isset($input[$key])
-                        && $input[$key] !== $booking[$key]
-                        && !$actor->isStaff()
-                    ) throw new OperationException('reschedule_context_mismatch', 422);
-                    $input[$key] ??= $booking[$key];
+                ) {
+                    throw new OperationException('rescheduling_unavailable', 409);
                 }
-                if (!$actor->isStaff()) foreach (['party_size', 'guest_count', 'spot_count'] as $key) if (
-                    isset($input[$key])
-                    && (int) $input[$key] !== (int) $booking['party_size']
-                ) throw new OperationException('reschedule_context_mismatch', 422);
+                if ($booking['booking_pattern'] !== $pattern) {
+                    throw new OperationException('pattern_not_supported', 422);
+                }
+                $exclude = $id;
+                if ($pattern === 'timeslot') {
+                    $duration = (int) ((strtotime($booking['end_datetime']) - strtotime($booking['start_datetime'])) / 60);
+                }
+                foreach (['service_id', 'staff_id', 'resource_id', 'event_id'] as $key) {
+                    if (!empty($booking[$key])) {
+                        if (
+                            isset($input[$key])
+                            && $input[$key] !== $booking[$key]
+                            && !$actor->isStaff()
+                        ) {
+                            throw new OperationException('reschedule_context_mismatch', 422);
+                        }
+                        $input[$key] ??= $booking[$key];
+                    }
+                }
+                if (!$actor->isStaff()) {
+                    foreach (['party_size', 'guest_count', 'spot_count'] as $key) {
+                        if (
+                            isset($input[$key])
+                            && (int) $input[$key] !== (int) $booking['party_size']
+                        ) {
+                            throw new OperationException('reschedule_context_mismatch', 422);
+                        }
+                    }
+                }
                 $input['party_size'] ??= (int) $booking['party_size'];
                 $input['guest_count'] ??= (int) $booking['party_size'];
                 $input['spot_count'] ??= (int) $booking['party_size'];
@@ -191,13 +228,19 @@ final class AvailabilityService
 
         $date = isset($input['date']) ? BookingDraft::date($input['date']) : null;
         $month = $input['month'] ?? null;
-        if ($month !== null && $date !== null) throw new OperationException('validation_failed', 422, ['date' => 'choose_date_or_month']);
+        if ($month !== null && $date !== null) {
+            throw new OperationException('validation_failed', 422, ['date' => 'choose_date_or_month']);
+        }
         // Only event searches page; other patterns return one bounded day or month.
-        if ($pattern !== 'event' && isset($input['cursor'])) throw new OperationException('invalid_cursor', 422);
+        if ($pattern !== 'event' && isset($input['cursor'])) {
+            throw new OperationException('invalid_cursor', 422);
+        }
         if (
             $month !== null
             && (!is_string($month) || !preg_match('/^(20\d{2})-(0[1-9]|1[012])$/D', $month, $parts))
-        ) throw new OperationException('invalid_month', 422);
+        ) {
+            throw new OperationException('invalid_month', 422);
+        }
 
         $result = [
             'business_id' => $t['id'],
@@ -216,30 +259,37 @@ final class AvailabilityService
             case 'timeslot':
                 $service = $input['service_id'] ?? null;
                 $staff = $input['staff_id'] ?? null;
-                if ($service !== null) self::reference($t, 'services', $service);
+                if ($service !== null) {
+                    self::reference($t, 'services', $service);
+                }
                 if ($staff !== null) {
                     self::reference($t, 'staff', $staff);
                     if ($service !== null && !TimeSlotCalculator::staffCanPerform($t['id'], $service, $staff)) {
                         throw new OperationException('staff_invalid', 422);
                     }
                 }
-                if ($month !== null) $result['dates'] = TimeSlotCalculator::getAvailableDates(
-                    $t,
-                    (int) $parts[1],
-                    (int) $parts[2],
-                    $service,
-                    $staff,
-                    $exclude,
-                    $duration
-                );
-                elseif ($date !== null) {
+                if ($month !== null) {
+                    $result['dates'] = TimeSlotCalculator::getAvailableDates(
+                        $t,
+                        (int) $parts[1],
+                        (int) $parts[2],
+                        $service,
+                        $staff,
+                        $exclude,
+                        $duration
+                    );
+                } elseif ($date !== null) {
                     foreach (
                         TimeSlotCalculator::getAvailableSlots($t, $date, $service, $staff, $exclude, $duration)['slots'] as $slot
-                    ) $result['choices'][] = $slot + [
-                        'date' => $date,
-                        ...VenueDateTime::utcRange($date . ' ' . $slot['time'], $date . ' ' . $slot['end_time'], $t['timezone'])
-                    ];
-                } else throw new OperationException('validation_failed', 422, ['date' => 'required']);
+                    ) {
+                        $result['choices'][] = $slot + [
+                            'date' => $date,
+                            ...VenueDateTime::utcRange($date . ' ' . $slot['time'], $date . ' ' . $slot['end_time'], $t['timezone'])
+                        ];
+                    }
+                } else {
+                    throw new OperationException('validation_failed', 422, ['date' => 'required']);
+                }
                 break;
 
             case 'resource':
@@ -249,8 +299,9 @@ final class AvailabilityService
                     'check_in_days' => json_decode($resource['check_in_days'] ?? 'null', true),
                     'check_out_days' => json_decode($resource['check_out_days'] ?? 'null', true)
                 ];
-                if ($month !== null) $result['dates'] = ResourceCalculator::getAvailableDates($t, $id, (int) $parts[1], (int) $parts[2], $exclude)['dates'];
-                else {
+                if ($month !== null) {
+                    $result['dates'] = ResourceCalculator::getAvailableDates($t, $id, (int) $parts[1], (int) $parts[2], $exclude)['dates'];
+                } else {
                     $in = BookingDraft::date($input['check_in'] ?? null);
                     $out = BookingDraft::date($input['check_out'] ?? null);
                     $quote = ResourceCalculator::checkAvailability(
@@ -280,15 +331,20 @@ final class AvailabilityService
 
             case 'capacity':
                 $size = self::size($input['party_size'] ?? 1);
-                if ($month !== null) $result['dates'] = CapacityCalculator::getAvailableDates($t, $month, $size, $exclude)['dates'];
-                elseif ($date !== null) {
-                    foreach (CapacityCalculator::getAvailableSlots($t, $date, $size, $exclude)['slots'] as $slot) if (
-                        self::inHorizon($t, $date . ' ' . $slot['time'])
-                    ) $result['choices'][] = $slot + [
-                        'date' => $date,
-                        ...VenueDateTime::utcRange($date . ' ' . $slot['time'], $date . ' ' . $slot['end_time'], $t['timezone'])
-                    ];
-                } else throw new OperationException('validation_failed', 422, ['date' => 'required']);
+                if ($month !== null) {
+                    $result['dates'] = CapacityCalculator::getAvailableDates($t, $month, $size, $exclude)['dates'];
+                } elseif ($date !== null) {
+                    foreach (CapacityCalculator::getAvailableSlots($t, $date, $size, $exclude)['slots'] as $slot) {
+                        if (self::inHorizon($t, $date . ' ' . $slot['time'])) {
+                            $result['choices'][] = $slot + [
+                                'date' => $date,
+                                ...VenueDateTime::utcRange($date . ' ' . $slot['time'], $date . ' ' . $slot['end_time'], $t['timezone'])
+                            ];
+                        }
+                    }
+                } else {
+                    throw new OperationException('validation_failed', 422, ['date' => 'required']);
+                }
                 break;
 
             case 'event':
@@ -297,11 +353,17 @@ final class AvailabilityService
                 $events = $page['events'];
                 $result['next_cursor'] = $page['next_cursor'];
                 foreach ($events as $event) {
-                    if ($event === null || !self::inHorizon($t, $event['start_datetime'])) continue;
+                    if ($event === null || !self::inHorizon($t, $event['start_datetime'])) {
+                        continue;
+                    }
                     $availability = EventCalculator::checkAvailability($t, $event['id'], $event['date'], $size, $exclude);
-                    if (!$availability['available']) continue;
+                    if (!$availability['available']) {
+                        continue;
+                    }
                     // A confirmed booking cannot be rescheduled onto a waitlist.
-                    if ($exclude !== null && $availability['waitlisted']) continue;
+                    if ($exclude !== null && $availability['waitlisted']) {
+                        continue;
+                    }
                     $result['choices'][] = [
                         'id' => $event['id'],
                         'name' => $event['name'],
@@ -325,20 +387,28 @@ final class AvailabilityService
     {
         $actor = BookingCommands::currentActor($actor);
         $tenant = self::tenant($actor, $input);
-        if ($tenant['booking_pattern'] !== 'event') throw new OperationException('pattern_not_supported', 422);
+        if ($tenant['booking_pattern'] !== 'event') {
+            throw new OperationException('pattern_not_supported', 422);
+        }
 
         $window = [];
         if (!empty($input['event_id'])) {
             self::reference($tenant, 'events', $input['event_id']);
             $window['event_id'] = $input['event_id'];
         }
-        if (isset($input['date']) && isset($input['month'])) throw new OperationException('validation_failed', 422, ['date' => 'choose_date_or_month']);
-        if (isset($input['date'])) $window['from'] = $window['to'] = BookingDraft::date($input['date']);
+        if (isset($input['date']) && isset($input['month'])) {
+            throw new OperationException('validation_failed', 422, ['date' => 'choose_date_or_month']);
+        }
+        if (isset($input['date'])) {
+            $window['from'] = $window['to'] = BookingDraft::date($input['date']);
+        }
         if (isset($input['month'])) {
             if (
                 !is_string($input['month'])
                 || !preg_match('/^20[0-9]{2}-(0[1-9]|1[012])$/D', $input['month'])
-            ) throw new OperationException('invalid_month', 422);
+            ) {
+                throw new OperationException('invalid_month', 422);
+            }
             $window['from'] = $input['month'] . '-01';
             $window['to'] = (new \DateTimeImmutable($window['from']))->format('Y-m-t');
         }
@@ -364,7 +434,9 @@ final class AvailabilityService
             if (
                 ($cursor['binding'] ?? null) !== $binding
                 || ($cursor['expires'] ?? 0) < time()
-            ) throw new OperationException('invalid_cursor', 422);
+            ) {
+                throw new OperationException('invalid_cursor', 422);
+            }
             $window['snapshot'] = $cursor['snapshot'];
             $window['after'] = $cursor['after'];
         }
@@ -380,7 +452,9 @@ final class AvailabilityService
             'after' => [$last['start_datetime'], $last['id']],
             'expires' => time() + 3600
         ]) : null;
-        foreach ($events as &$event) $event += VenueDateTime::utcRange($event['start_datetime'], $event['end_datetime'], $tenant['timezone']);
+        foreach ($events as &$event) {
+            $event += VenueDateTime::utcRange($event['start_datetime'], $event['end_datetime'], $tenant['timezone']);
+        }
         unset($event);
 
         return ['events' => $events, 'next_cursor' => $next];
@@ -391,7 +465,8 @@ final class AvailabilityService
         $actor = BookingCommands::currentActor($actor);
         $tenant = self::tenant($actor, $input);
         $date = isset($input['date']) ? BookingDraft::date($input['date']) : null;
-        $event = EventCalculator::getEventDetail($tenant, $input['event_id'], $date)['event'] ?? throw new OperationException('event_not_found', 404);
+        $event = EventCalculator::getEventDetail($tenant, $input['event_id'], $date)['event']
+            ?? throw new OperationException('event_not_found', 404);
 
         return ['event' => $event + VenueDateTime::utcRange($event['start_datetime'], $event['end_datetime'], $tenant['timezone'])];
     }
@@ -423,7 +498,9 @@ final class AvailabilityService
             filter_var($size, FILTER_VALIDATE_INT) === false
             || (int) $size < 1
             || (int) $size > 10000
-        ) throw new OperationException('invalid_party_size', 422);
+        ) {
+            throw new OperationException('invalid_party_size', 422);
+        }
 
         return (int) $size;
     }

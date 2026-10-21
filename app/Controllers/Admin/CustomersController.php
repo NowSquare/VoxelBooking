@@ -11,7 +11,7 @@ use App\Engine\Version;
 use App\Engine\View;
 use App\Middleware\CsrfMiddleware;
 use App\Models\Customer;
-use App\Agent\{Operations,SessionActor,OperationException};
+use App\Agent\{Operations, SessionActor, OperationException};
 use App\Application\Customers\CustomerDirectory;
 
 /**
@@ -46,8 +46,11 @@ final class CustomersController
         $page   = max(1, (int) ($request->string('page') ?: 1));
         $offset = ($page - 1) * self::PER_PAGE;
 
-        $result = CustomerDirectory::search(SessionActor::resolve(Operations::registry()),
-            ['business_id'=>$tenantId,'search'=>$search,'limit'=>self::PER_PAGE],$offset);
+        $result = CustomerDirectory::search(
+            SessionActor::resolve(Operations::registry()),
+            ['business_id' => $tenantId, 'search' => $search, 'limit' => self::PER_PAGE],
+            $offset,
+        );
         $customers = $result['items'];
         $total = $result['total'];
 
@@ -78,14 +81,19 @@ final class CustomersController
             return Response::redirect('/admin/tenants');
         }
 
-        $actor=SessionActor::resolve(Operations::registry());
-        try { $customer=CustomerDirectory::detail($actor,$tenantId,$customerId); }
-        catch(OperationException) {
+        $actor = SessionActor::resolve(Operations::registry());
+        try {
+            $customer = CustomerDirectory::detail($actor, $tenantId, $customerId);
+        } catch (OperationException) {
             return Response::redirect("/admin/tenants/{$tenantId}/customers");
         }
 
-        $history=CustomerDirectory::history($actor,['business_id'=>$tenantId,'customer_id'=>$customerId,'cursor'=>$request->string('cursor')]);
-        $bookings=$history['items'];
+        $history = CustomerDirectory::history($actor, [
+            'business_id' => $tenantId,
+            'customer_id' => $customerId,
+            'cursor' => $request->string('cursor'),
+        ]);
+        $bookings = $history['items'];
 
         // Derive stats from live bookings so the stat cards and the
         // history table below them are always self-consistent.
@@ -143,6 +151,7 @@ final class CustomersController
             'csrfToken' => CsrfMiddleware::generateToken(),
         ], 403);
     }
+
     // ── CSV Export ──
 
     /**
@@ -156,22 +165,30 @@ final class CustomersController
             return $this->forbidden($request);
         }
 
-        $actor=SessionActor::resolve(Operations::registry());
-        $cursor=$request->string('cursor')?:null;$csv='';
+        $actor = SessionActor::resolve(Operations::registry());
+        $cursor = $request->string('cursor') ?: null;
+        $csv = '';
         // Keep the existing browser export bound while sharing query/projection/CSV safety.
-        for($page=0;$page<10;$page++) {
-            $chunk=CustomerDirectory::export($actor,['business_id'=>$tenantId,'search'=>$request->string('search'),'cursor'=>$cursor]);
-            $csv.=$page===0?$chunk['content']:substr($chunk['content'],strpos($chunk['content'],"\n")+1);
-            $cursor=$chunk['next_cursor'];if($cursor===null) { break; }
+        for ($page = 0; $page < 10; $page++) {
+            $chunk = CustomerDirectory::export($actor, [
+                'business_id' => $tenantId,
+                'search' => $request->string('search'),
+                'cursor' => $cursor,
+            ]);
+            $csv .= $page === 0 ? $chunk['content'] : substr($chunk['content'], strpos($chunk['content'], "\n") + 1);
+            $cursor = $chunk['next_cursor'];
+            if ($cursor === null) {
+                break;
+            }
         }
-        $filename='customers-export-'.gmdate('Y-m-d').'.csv';
+        $filename = 'customers-export-' . gmdate('Y-m-d') . '.csv';
 
         $response = new Response();
         return $response
             ->header('Content-Type', 'text/csv; charset=UTF-8')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
             ->header('Cache-Control', 'no-store')
-            ->header('X-Next-Cursor', $cursor??'')
+            ->header('X-Next-Cursor', $cursor ?? '')
             ->body($csv);
     }
 

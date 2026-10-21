@@ -28,24 +28,38 @@ final class BookingCommands
             if (
                 !$actor->isStaff()
                 && !in_array($actor->role, ['prospective_customer', 'verified_customer'], true)
-            ) throw new OperationException('forbidden', 403);
+            ) {
+                throw new OperationException('forbidden', 403);
+            }
 
             // Trusted fields are set server side; a client that sends them is probing, not booking.
             foreach (['source', 'status', '_skip_consent_enforcement', 'customer_id', 'internal_notes'] as $field) {
-                if (array_key_exists($field, $input)) throw new OperationException('validation_failed', 422, [$field => 'unsupported']);
+                if (array_key_exists($field, $input)) {
+                    throw new OperationException('validation_failed', 422, [$field => 'unsupported']);
+                }
             }
 
             $customer = $input['customer'] ?? [];
-            if (!is_array($customer)) throw new OperationException('validation_failed', 422, ['customer' => 'invalid']);
+            if (!is_array($customer)) {
+                throw new OperationException('validation_failed', 422, ['customer' => 'invalid']);
+            }
             $name = self::text($customer, 'name', 255);
             $email = mb_strtolower(self::text($customer, 'email', 255));
             $phone = self::text($customer, 'phone', 50);
 
             $errors = [];
-            if ($name === '') $errors['customer.name'] = 'required';
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors['customer.email'] = 'invalid';
-            if ((bool) $tenant['require_phone'] && $phone === '') $errors['customer.phone'] = 'required';
-            if ($errors) throw new OperationException('validation_failed', 422, $errors);
+            if ($name === '') {
+                $errors['customer.name'] = 'required';
+            }
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors['customer.email'] = 'invalid';
+            }
+            if ((bool) $tenant['require_phone'] && $phone === '') {
+                $errors['customer.phone'] = 'required';
+            }
+            if ($errors) {
+                throw new OperationException('validation_failed', 422, $errors);
+            }
 
             // Consent is the customer's own act. Staff and their agents never record it, and an
             // agent's customer booking carries it only from the review page (see Executor).
@@ -54,7 +68,9 @@ final class BookingCommands
                 !$actor->isStaff()
                 && (bool) $tenant['requires_consent']
                 && !$consent
-            ) throw new OperationException('consent_required', 422, ['consent' => 'required']);
+            ) {
+                throw new OperationException('consent_required', 422, ['consent' => 'required']);
+            }
 
             $draft = BookingDraft::prepare($tenant, $input);
             $data = $draft['data'];
@@ -63,7 +79,9 @@ final class BookingCommands
                 $count = self::customerBookingCountForDate($customerId, $tenant['id'], substr($data['start_datetime'], 0, 10));
                 if (
                     (int) $count >= (int) $tenant['max_bookings_per_customer_per_day']
-                ) throw new OperationException('max_bookings_exceeded', 422);
+                ) {
+                    throw new OperationException('max_bookings_exceeded', 422);
+                }
             }
 
             $data += ['customer_id' => $customerId, 'source' => self::channel($actor)];
@@ -77,16 +95,24 @@ final class BookingCommands
                 $timezone !== ''
                 && !in_array($timezone, timezone_identifiers_list(), true)
                 && $timezone !== 'UTC'
-            ) throw new OperationException('validation_failed', 422, ['customer_timezone' => 'invalid']);
+            ) {
+                throw new OperationException('validation_failed', 422, ['customer_timezone' => 'invalid']);
+            }
             $data['customer_timezone'] = $timezone ?: null;
-            $data['custom_field_data'] = BookingFields::answers($tenant, $input['custom_fields'] ?? null, requireAnswers: !$actor->isStaff());
+            $data['custom_field_data'] = BookingFields::answers(
+                $tenant,
+                $input['custom_fields'] ?? null,
+                requireAnswers: !$actor->isStaff()
+            );
 
             // A waitlisted booking waits for a seat, not for approval; promotion handles it later.
             if (
                 !$actor->isStaff()
                 && (bool) $tenant['booking_requires_approval']
                 && ($data['status'] ?? 'confirmed') !== 'waitlisted'
-            ) $data['status'] = 'pending';
+            ) {
+                $data['status'] = 'pending';
+            }
 
             $result = BookingService::createBooking($data, $tenant, $consent, $actor);
             Database::execute(
@@ -108,9 +134,16 @@ final class BookingCommands
                 // Nothing has left at commit time. Adapters that deliver at once report the outcome.
                 'email_sent' => false,
                 'notification_state' => $customerNotified ? 'queued' : 'none',
-                ...VenueDateTime::presentRange($tenant['booking_pattern'], $data['start_datetime'], $data['end_datetime'], $tenant['timezone'])
+                ...VenueDateTime::presentRange(
+                    $tenant['booking_pattern'],
+                    $data['start_datetime'],
+                    $data['end_datetime'],
+                    $tenant['timezone']
+                )
             ];
-            if (!$actor->isStaff()) $receipt['manage_url'] = CustomerCapability::manageLink($tenant, $result['id']);
+            if (!$actor->isStaff()) {
+                $receipt['manage_url'] = CustomerCapability::manageLink($tenant, $result['id']);
+            }
 
             return $receipt;
         });
@@ -134,11 +167,15 @@ final class BookingCommands
 
     public static function scheduleReminder(array $tenant, string $bookingId, string $start, string $status): void
     {
-        if (DemoMode::isActive() || !(bool) $tenant['send_reminders'] || $status !== 'confirmed') return;
+        if (DemoMode::isActive() || !(bool) $tenant['send_reminders'] || $status !== 'confirmed') {
+            return;
+        }
 
         $tz = new \DateTimeZone($tenant['timezone']);
         $at = (new \DateTimeImmutable($start, $tz))->modify('-' . max(1, (int) $tenant['reminder_hours_before']) . ' hours');
-        if ($at <= new \DateTimeImmutable('now', $tz)) return;
+        if ($at <= new \DateTimeImmutable('now', $tz)) {
+            return;
+        }
 
         // Status changes can call this repeatedly; keep a single pending reminder per booking.
         if (!Database::query('SELECT id FROM reminders WHERE booking_id = ? AND sent_at IS NULL', [$bookingId])) {
@@ -163,12 +200,16 @@ final class BookingCommands
                 $actor->isStaff() ? 'bookings:write' : 'bookings:cancel'
             );
             // Cancelling twice is a no-op so retried requests stay idempotent.
-            if ($booking['status'] === 'cancelled') return $booking;
+            if ($booking['status'] === 'cancelled') {
+                return $booking;
+            }
 
             // Customers are bound by the cancellation policy; staff only by the state machine.
             if (!$actor->isStaff()) {
                 $permission = BookingService::canCancel($booking, $tenant);
-                if (!$permission['allowed']) throw new OperationException($permission['reason'], 409);
+                if (!$permission['allowed']) {
+                    throw new OperationException($permission['reason'], 409);
+                }
             } elseif (!in_array($booking['status'], ['pending', 'confirmed', 'waitlisted'], true)) {
                 throw new OperationException('invalid_transition', 409);
             }
@@ -204,7 +245,9 @@ final class BookingCommands
                 $actor->isStaff() ? 'bookings:write' : 'bookings:reschedule'
             );
             $target = $input['target'] ?? $input;
-            if (!is_array($target)) throw new OperationException('validation_failed', 422, ['target' => 'invalid']);
+            if (!is_array($target)) {
+                throw new OperationException('validation_failed', 422, ['target' => 'invalid']);
+            }
             BookingService::previewReschedule($booking, $tenant, $target, $actor->isStaff());
 
             try {
@@ -254,31 +297,45 @@ final class BookingCommands
     public static function changeStatus(ActorContext $actor, array $input): array
     {
         $actor = self::currentActor($actor);
-        if (!$actor->isStaff()) throw new OperationException('forbidden', 403);
+        if (!$actor->isStaff()) {
+            throw new OperationException('forbidden', 403);
+        }
         $businessId = $actor->business($input['business_id'] ?? null);
 
         return BookingTransaction::run($businessId, static function (array $tenant) use ($actor, $input): array {
             $booking = self::booking($actor, $tenant, (string) ($input['booking_id'] ?? ''), true);
             $target = self::text($input, 'status', 20);
-            if ($target === $booking['status']) return $booking;
-            if (!in_array($target, self::transitions($booking['status']), true)) throw new OperationException('invalid_transition', 409);
-            if ($target === 'cancelled') return self::cancel($actor, $input);
+            if ($target === $booking['status']) {
+                return $booking;
+            }
+            if (!in_array($target, self::transitions($booking['status']), true)) {
+                throw new OperationException('invalid_transition', 409);
+            }
+            if ($target === 'cancelled') {
+                return self::cancel($actor, $input);
+            }
 
             // Confirming re-occupies inventory, so the slot must still be free.
-            if ($target === 'confirmed') BookingInventory::assertAvailable($tenant, $booking);
+            if ($target === 'confirmed') {
+                BookingInventory::assertAvailable($tenant, $booking);
+            }
 
             Database::execute(
                 'UPDATE bookings SET status = ?, cancelled_at = NULL, cancellation_reason = NULL, updated_at = UTC_TIMESTAMP() WHERE id = ? AND tenant_id = ?',
                 [$target, $booking['id'], $tenant['id']]
             );
-            if ($booking['status'] === 'cancelled') Database::execute(
-                'UPDATE customers SET booking_count = booking_count + 1 WHERE id = ? AND tenant_id = ?',
-                [$booking['customer_id'], $tenant['id']]
-            );
-            if ($target !== 'confirmed') Database::execute(
-                'UPDATE reminders SET sent_at = UTC_TIMESTAMP() WHERE booking_id = ? AND sent_at IS NULL',
-                [$booking['id']]
-            );
+            if ($booking['status'] === 'cancelled') {
+                Database::execute(
+                    'UPDATE customers SET booking_count = booking_count + 1 WHERE id = ? AND tenant_id = ?',
+                    [$booking['customer_id'], $tenant['id']]
+                );
+            }
+            if ($target !== 'confirmed') {
+                Database::execute(
+                    'UPDATE reminders SET sent_at = UTC_TIMESTAMP() WHERE booking_id = ? AND sent_at IS NULL',
+                    [$booking['id']]
+                );
+            }
             self::scheduleReminder($tenant, $booking['id'], $booking['start_datetime'], $target);
             self::audit(
                 $actor,
@@ -289,7 +346,12 @@ final class BookingCommands
             );
             self::publish($tenant, $booking['id'], 'booking.status_changed', $actor);
             if ($target === 'confirmed' && in_array($booking['status'], ['pending', 'waitlisted'], true)) {
-                BookingNotifications::queue($tenant, $booking['id'], $booking['status'] === 'pending' ? 'approval_confirmed' : 'promotion', $actor);
+                BookingNotifications::queue(
+                    $tenant,
+                    $booking['id'],
+                    $booking['status'] === 'pending' ? 'approval_confirmed' : 'promotion',
+                    $actor
+                );
             }
 
             return BookingService::findById($booking['id']);
@@ -355,7 +417,9 @@ final class BookingCommands
         $scope ??= $actor->isStaff()
             ? 'bookings:' . ($write ? 'write' : 'read')
             : ($actor->role === 'verified_customer' ? 'bookings:read' : 'public:' . ($write ? 'book' : 'read'));
-        if (!in_array($scope, $actor->scopes, true)) throw new OperationException('forbidden', 403);
+        if (!in_array($scope, $actor->scopes, true)) {
+            throw new OperationException('forbidden', 403);
+        }
 
         // Scopes live on the token; re-check that the principal behind it still exists and is active.
         if ($actor->isStaff()) {
@@ -367,7 +431,9 @@ final class BookingCommands
                     [$actor->principalId, $tenant['id']]
                 );
             }
-            if (!$exists) throw new OperationException('forbidden', 403);
+            if (!$exists) {
+                throw new OperationException('forbidden', 403);
+            }
         } elseif ($tenant['status'] !== 'active') {
             throw new OperationException('not_found', 404);
         }
@@ -394,7 +460,9 @@ final class BookingCommands
             $actor->principalType === 'customer'
             && $actor->authMode !== 'customer'
             && $actor->connectionId === null
-        ) throw new OperationException('unauthorized', 401);
+        ) {
+            throw new OperationException('unauthorized', 401);
+        }
 
         return $actor;
     }
@@ -402,7 +470,9 @@ final class BookingCommands
     public static function text(array $input, string $field, int $max): string
     {
         $value = $input[$field] ?? '';
-        if (!is_string($value) || mb_strlen($value) > $max) throw new OperationException('validation_failed', 422, [$field => 'invalid']);
+        if (!is_string($value) || mb_strlen($value) > $max) {
+            throw new OperationException('validation_failed', 422, [$field => 'invalid']);
+        }
 
         return trim($value);
     }

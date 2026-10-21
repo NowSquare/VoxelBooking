@@ -24,7 +24,9 @@ final class DashboardController
 {
     public function index(Request $request): Response
     {
-        if (!Auth::isOperator()) { return Response::redirect('/admin/login'); }
+        if (!Auth::isOperator()) {
+            return Response::redirect('/admin/login');
+        }
         $data = \App\Application\Business\DashboardService::operator(\App\Application\Business\BusinessUi::actor());
         return View::response('admin.dashboard', ['user' => Auth::user(), 'version' => Version::get(), ...$data]);
     }
@@ -37,13 +39,24 @@ final class DashboardController
      */
     public function tenantDashboard(Request $request): Response
     {
-        $tenantId = (string)$request->getAttribute('tenant_id');
+        $tenantId = (string) $request->getAttribute('tenant_id');
         try {
-            $data = \App\Application\Business\DashboardService::business(\App\Application\Business\BusinessUi::actor(), ['business_id' => $tenantId]);
-            return View::response('admin.dashboard-business', ['user' => Auth::user(), 'version' => Version::get(),
-                'pageTitle' => $data['tenant']['name'], 'activePage' => 'dashboard', 'csrfToken' => \App\Middleware\CsrfMiddleware::generateToken(), ...$data]);
+            $data = \App\Application\Business\DashboardService::business(
+                \App\Application\Business\BusinessUi::actor(),
+                ['business_id' => $tenantId],
+            );
+            return View::response('admin.dashboard-business', [
+                'user' => Auth::user(),
+                'version' => Version::get(),
+                'pageTitle' => $data['tenant']['name'],
+                'activePage' => 'dashboard',
+                'csrfToken' => \App\Middleware\CsrfMiddleware::generateToken(),
+                ...$data,
+            ]);
         } catch (\App\Agent\OperationException $error) {
-            return $error->status === 404 ? Response::redirect('/admin') : \App\Application\Business\BusinessUi::forbidden($request, $error);
+            return $error->status === 404
+                ? Response::redirect('/admin')
+                : \App\Application\Business\BusinessUi::forbidden($request, $error);
         }
     }
 

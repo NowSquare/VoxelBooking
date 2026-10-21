@@ -42,7 +42,9 @@ final class BookingDraft
                     if (!preg_match(
                         '/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})?$/D',
                         $raw
-                    )) throw new OperationException('invalid_date', 422);
+                    )) {
+                        throw new OperationException('invalid_date', 422);
+                    }
                     $start = (new \DateTimeImmutable($raw, $tz))->setTimezone($tz);
                     $date = $start->format('Y-m-d');
                     $time = $start->format('H:i');
@@ -50,7 +52,9 @@ final class BookingDraft
                     if (
                         !preg_match('/(?:Z|[+-]\d{2}:\d{2})$/', $raw)
                         && substr(str_replace('T', ' ', $raw), 0, 16) !== "$date $time"
-                    ) throw new OperationException('invalid_date', 422);
+                    ) {
+                        throw new OperationException('invalid_date', 422);
+                    }
                 }
 
                 $date = self::date($date);
@@ -58,13 +62,17 @@ final class BookingDraft
                     !is_string($time)
                     || !preg_match('/^([01]\d|2[0-3]):[0-5]\d$/D', $time)
                     || !VenueDateTime::wallTimeExists($date, $time, $tz)
-                ) throw new OperationException('invalid_time', 422);
+                ) {
+                    throw new OperationException('invalid_time', 422);
+                }
 
                 $slots = TimeSlotCalculator::getAvailableSlots($tenant, $date, $serviceId, $staffId)['slots'];
                 $slot = null;
-                foreach ($slots as $candidate) if ($candidate['time'] === $time) {
-                    $slot = $candidate;
-                    break;
+                foreach ($slots as $candidate) {
+                    if ($candidate['time'] === $time) {
+                        $slot = $candidate;
+                        break;
+                    }
                 }
                 if ($slot === null) {
                     // The calculator offers no times outside the booking window; name that limit
@@ -115,7 +123,9 @@ final class BookingDraft
                 self::available(CapacityCalculator::checkSlotAvailability($tenant, $id, $date, $size));
                 $start = new \DateTimeImmutable($date . ' ' . $slot['start_time'], $tz);
                 $end = new \DateTimeImmutable($date . ' ' . $slot['end_time'], $tz);
-                if ($end <= $start) throw new OperationException('invalid_time', 422);
+                if ($end <= $start) {
+                    throw new OperationException('invalid_time', 422);
+                }
                 $data['capacity_slot_id'] = $id;
                 $data['party_size'] = $size;
                 $display = ['label' => $slot['label'], 'party_size' => $size];
@@ -131,7 +141,9 @@ final class BookingDraft
                 $range = VenueDateTime::eventRange($event['start_datetime'], $event['end_datetime'], $date, $tz);
                 $start = $range['start'];
                 $end = $range['end'];
-                if ($end <= $start) throw new OperationException('invalid_time', 422);
+                if ($end <= $start) {
+                    throw new OperationException('invalid_time', 422);
+                }
                 $data += ['event_id' => $id, 'status' => $availability['waitlisted'] ? 'waitlisted' : 'confirmed'];
                 $data['party_size'] = $size;
                 $display = [
@@ -198,7 +210,9 @@ final class BookingDraft
             !is_string($value)
             || !preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $value, $parts)
             || !checkdate((int) $parts[2], (int) $parts[3], (int) $parts[1])
-        ) throw new OperationException('invalid_date', 422);
+        ) {
+            throw new OperationException('invalid_date', 422);
+        }
 
         return $value;
     }
@@ -209,7 +223,9 @@ final class BookingDraft
             filter_var($value, FILTER_VALIDATE_INT) === false
             || (int) $value < 1
             || (int) $value > 10000
-        ) throw new OperationException('invalid_party_size', 422);
+        ) {
+            throw new OperationException('invalid_party_size', 422);
+        }
 
         return (int) $value;
     }
@@ -224,6 +240,8 @@ final class BookingDraft
 
     private static function available(array $result): void
     {
-        if (!$result['available']) throw new OperationException($result['error'] ?: 'slot_unavailable', 409);
+        if (!$result['available']) {
+            throw new OperationException($result['error'] ?: 'slot_unavailable', 409);
+        }
     }
 }

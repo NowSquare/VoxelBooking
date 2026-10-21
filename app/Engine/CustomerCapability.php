@@ -99,17 +99,27 @@ final class CustomerCapability
     private static function requestGrant(Request $request, string $purpose, string $tenantId, string $subjectId): ?array
     {
         $token = $request->header('X-Customer-Capability');
-        if ($token !== null) return self::verify($token, $purpose, $tenantId, $subjectId);
-        if (session_status() !== PHP_SESSION_ACTIVE) Auth::startSession();
+        if ($token !== null) {
+            return self::verify($token, $purpose, $tenantId, $subjectId);
+        }
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            Auth::startSession();
+        }
         $hash = $_SESSION['customer_capabilities'][self::sessionKey($purpose, $tenantId, $subjectId)] ?? null;
-        if (is_string($hash)) return self::verifyHash($hash, $purpose, $tenantId, $subjectId);
+        if (is_string($hash)) {
+            return self::verifyHash($hash, $purpose, $tenantId, $subjectId);
+        }
         // A native reschedule can move this exact grant while the browser is idle.
         // Its bounded session still holds proof, but under the predecessor's index.
         // Reindex only after verifying the stored hash against the current full scope.
         foreach (array_slice($_SESSION['customer_capabilities'] ?? [], -30, null, true) as $key => $candidate) {
-            if (!is_string($candidate)) continue;
+            if (!is_string($candidate)) {
+                continue;
+            }
             $grant = self::verifyHash($candidate, $purpose, $tenantId, $subjectId);
-            if ($grant === null) continue;
+            if ($grant === null) {
+                continue;
+            }
             unset($_SESSION['customer_capabilities'][$key]);
             $_SESSION['customer_capabilities'][self::sessionKey($purpose, $tenantId, $subjectId)] = $candidate;
             return $grant;
@@ -149,8 +159,9 @@ final class CustomerCapability
             [$id, gmdate('Y-m-d H:i:s')]
         )[0] ?? null;
         if ($grant === null
-            || self::currentCustomer($grant['purpose'], $grant['tenant_id'], $grant['subject_id']) !== $grant['customer_id'])
+            || self::currentCustomer($grant['purpose'], $grant['tenant_id'], $grant['subject_id']) !== $grant['customer_id']) {
             return null;
+        }
         return self::actorForGrant($grant);
     }
 
@@ -164,8 +175,9 @@ final class CustomerCapability
             || ($return['subject_id'] ?? null) !== $subjectId
             || ($return['expires_at'] ?? 0) <= time()
             || !preg_match('/^[a-f0-9]{64}$/D', $return['handle'] ?? '')
-            || ($_SESSION['oauth_pending'][$return['handle']]['expires_at'] ?? 0) <= time())
+            || ($_SESSION['oauth_pending'][$return['handle']]['expires_at'] ?? 0) <= time()) {
             return null;
+        }
         unset($_SESSION['oauth_customer_return']);
         return '/oauth/authorize?request=' . $return['handle'];
     }
@@ -173,7 +185,9 @@ final class CustomerCapability
     /** Move only the executing verified grant; unrelated historic links keep their original scope. */
     public static function followReplacement(\App\Agent\ActorContext $actor, string $originalId, string $replacementId): void
     {
-        if ($actor->role !== 'verified_customer' || $actor->bookingId !== $originalId) return;
+        if ($actor->role !== 'verified_customer' || $actor->bookingId !== $originalId) {
+            return;
+        }
         // A delegated connection acts through the capability it was granted from.
         $id = $actor->authMode === 'customer' ? $actor->credentialId : (Database::query(
             "SELECT customer_capability_id FROM agent_connections WHERE id = ? AND principal_type = 'customer' AND principal_id = ?",
@@ -209,8 +223,12 @@ final class CustomerCapability
     public static function remember(string $token, string $purpose, string $tenantId, string $subjectId): bool
     {
         $grant = self::verify($token, $purpose, $tenantId, $subjectId);
-        if ($grant === null) return false;
-        if (session_status() !== PHP_SESSION_ACTIVE) Auth::startSession();
+        if ($grant === null) {
+            return false;
+        }
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            Auth::startSession();
+        }
         $_SESSION['customer_capabilities'][self::sessionKey($purpose, $tenantId, $subjectId)] = $grant['token_hash'];
         // Bound session growth for shared devices that access many bookings.
         $_SESSION['customer_capabilities'] = array_slice($_SESSION['customer_capabilities'], -30, null, true);
@@ -232,8 +250,9 @@ final class CustomerCapability
 
     public static function link(string $slug, string $purpose, string $subjectId, string $token = ''): string
     {
-        if (!in_array($purpose, [self::MANAGE, self::PRIVACY], true))
+        if (!in_array($purpose, [self::MANAGE, self::PRIVACY], true)) {
             throw new \InvalidArgumentException('Unsupported customer capability purpose.');
+        }
         $url = '/book/' . rawurlencode($slug) . '/' . ($purpose === self::MANAGE ? 'manage' : 'privacy') . '/' . rawurlencode($subjectId);
         return $token === '' ? $url : $url . '#access=' . rawurlencode($token);
     }

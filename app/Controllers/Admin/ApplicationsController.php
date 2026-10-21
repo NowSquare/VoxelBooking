@@ -38,7 +38,10 @@ final class ApplicationsController
             $statusFilter = 'pending';
         }
 
-        $applications = \App\Application\Business\BusinessUi::all(\App\Application\Business\ApplicationService::list(...), ['status' => $statusFilter]);
+        $applications = \App\Application\Business\BusinessUi::all(
+            \App\Application\Business\ApplicationService::list(...),
+            ['status' => $statusFilter],
+        );
 
         // Pending count for badge
         $pendingCount = Database::query(

@@ -59,9 +59,27 @@ final class SchemaController
                         'x-required-scope' => 'bookings:read',
                         'parameters'  => [
                             ['name' => 'tenant_id', 'in' => 'query', 'required' => true, 'schema' => ['type' => 'string']],
-                            ['name' => 'status', 'in' => 'query', 'required' => false, 'schema' => ['type' => 'string', 'enum' => ['pending', 'confirmed', 'waitlisted', 'completed', 'cancelled', 'no_show', 'rescheduled']]],
-                            ['name' => 'limit', 'in' => 'query', 'required' => false, 'schema' => ['type' => 'integer', 'default' => 50, 'minimum' => 1, 'maximum' => 100]],
-                            ['name' => 'offset', 'in' => 'query', 'required' => false, 'schema' => ['type' => 'integer', 'default' => 0, 'minimum' => 0, 'maximum' => 100000]],
+                            [
+                                'name' => 'status',
+                                'in' => 'query',
+                                'required' => false,
+                                'schema' => [
+                                    'type' => 'string',
+                                    'enum' => ['pending', 'confirmed', 'waitlisted', 'completed', 'cancelled', 'no_show', 'rescheduled'],
+                                ],
+                            ],
+                            [
+                                'name' => 'limit',
+                                'in' => 'query',
+                                'required' => false,
+                                'schema' => ['type' => 'integer', 'default' => 50, 'minimum' => 1, 'maximum' => 100],
+                            ],
+                            [
+                                'name' => 'offset',
+                                'in' => 'query',
+                                'required' => false,
+                                'schema' => ['type' => 'integer', 'default' => 0, 'minimum' => 0, 'maximum' => 100000],
+                            ],
                         ],
                         'responses' => [
                             '200' => [

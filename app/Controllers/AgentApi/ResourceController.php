@@ -61,7 +61,10 @@ final class ResourceController
             || (int) $limitInput < 1 || (int) $limitInput > 100 || (int) $offsetInput > 100000) {
             return Response::json(['error' => 'validation', 'message' => 'limit must be 1–100 and offset must be 0–100000.'], 422);
         }
-        if ($status !== '' && !in_array($status, ['pending', 'confirmed', 'waitlisted', 'completed', 'cancelled', 'no_show', 'rescheduled'], true)) {
+        if (
+            $status !== ''
+            && !in_array($status, ['pending', 'confirmed', 'waitlisted', 'completed', 'cancelled', 'no_show', 'rescheduled'], true)
+        ) {
             return Response::json(['error' => 'validation', 'message' => 'Unknown booking status.'], 422);
         }
         $limit = (int) $limitInput;

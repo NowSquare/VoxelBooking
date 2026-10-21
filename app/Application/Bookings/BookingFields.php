@@ -25,14 +25,18 @@ final class BookingFields
         if (
             !is_array($answers)
             || strlen(json_encode($answers, JSON_THROW_ON_ERROR)) > 20000
-        ) throw new OperationException('validation_failed', 422, ['custom_fields' => 'invalid']);
+        ) {
+            throw new OperationException('validation_failed', 422, ['custom_fields' => 'invalid']);
+        }
 
         $allowed = [];
         $errors = [];
 
         foreach ($definitions as $field) {
             $key = $field['name'] ?? $field['key'] ?? '';
-            if ($key === '') continue;
+            if ($key === '') {
+                continue;
+            }
 
             $value = $answers[$key] ?? null;
             $type = $field['type'] ?? 'text';
@@ -43,7 +47,9 @@ final class BookingFields
                 $errors['custom_fields.' . $key] = 'required';
                 continue;
             }
-            if ($value === null || $value === '') continue;
+            if ($value === null || $value === '') {
+                continue;
+            }
 
             $valid = match ($type) {
                 'checkbox' => is_bool($value),
@@ -65,14 +71,21 @@ final class BookingFields
                 default => is_string($value) && mb_strlen($value) <= 2000,
             };
 
-            if (!$valid) $errors['custom_fields.' . $key] = 'invalid';
-            else $allowed[$key] = $value;
+            if (!$valid) {
+                $errors['custom_fields.' . $key] = 'invalid';
+            } else {
+                $allowed[$key] = $value;
+            }
         }
 
         $keys = array_map(static fn ($field) => $field['name'] ?? $field['key'] ?? '', $definitions);
-        foreach (array_diff(array_keys($answers), $keys) as $key) $errors['custom_fields.' . $key] = 'unsupported';
+        foreach (array_diff(array_keys($answers), $keys) as $key) {
+            $errors['custom_fields.' . $key] = 'unsupported';
+        }
 
-        if ($errors) throw new OperationException('validation_failed', 422, $errors);
+        if ($errors) {
+            throw new OperationException('validation_failed', 422, $errors);
+        }
 
         return $allowed;
     }

@@ -20,7 +20,9 @@ final class UploadJournal
 
     public static function begin(string $businessId, string $mediaId, string $path): self
     {
-        if (!self::validPath($path)) throw new OperationException('upload_grant_invalid', 422);
+        if (!self::validPath($path)) {
+            throw new OperationException('upload_grant_invalid', 422);
+        }
         $directory = self::directory();
         if (!is_dir($directory) && !@mkdir($directory, 0700, true) && !is_dir($directory)) {
             throw new OperationException('image_processing_unavailable', 503);
@@ -28,10 +30,13 @@ final class UploadJournal
 
         $file = $directory . '/' . Ulid::generate() . '.json';
         $handle = @fopen($file, 'x+b');
-        if ($handle === false) throw new OperationException('image_processing_unavailable', 503);
+        if ($handle === false) {
+            throw new OperationException('image_processing_unavailable', 503);
+        }
         try {
-            if (!chmod($file, 0600) || !flock($handle, LOCK_EX))
+            if (!chmod($file, 0600) || !flock($handle, LOCK_EX)) {
                 throw new \RuntimeException('Cannot protect upload intent');
+            }
             $json = json_encode(
                 [
                     'version' => 1,
@@ -81,7 +86,9 @@ final class UploadJournal
     {
         $counts = ['preserved' => 0, 'removed' => 0, 'deferred' => 0];
         $directory = self::directory();
-        if (!is_dir($directory)) return $counts;
+        if (!is_dir($directory)) {
+            return $counts;
+        }
         $examined = 0;
         foreach (new \DirectoryIterator($directory) as $entry) {
             if (
@@ -89,14 +96,24 @@ final class UploadJournal
                 || $entry->isLink()
                 || $entry->getExtension() !== 'json'
                 || $entry->getMTime() > time() - max(0, $minimumAgeSeconds)
-            ) continue;
-            if (++$examined > 100) break;
+            ) {
+                continue;
+            }
+            if (++$examined > 100) {
+                break;
+            }
             $handle = @fopen($entry->getPathname(), 'r+b');
-            if ($handle === false) continue;
+            if ($handle === false) {
+                continue;
+            }
             try {
-                if (!flock($handle, LOCK_EX | LOCK_NB)) continue;
+                if (!flock($handle, LOCK_EX | LOCK_NB)) {
+                    continue;
+                }
                 $raw = stream_get_contents($handle, 4097);
-                if (strlen($raw) > 4096) throw new \RuntimeException('Invalid upload intent');
+                if (strlen($raw) > 4096) {
+                    throw new \RuntimeException('Invalid upload intent');
+                }
                 $intent = json_decode($raw, true, flags: JSON_THROW_ON_ERROR);
                 if (
                     ($intent['version'] ?? null) !== 1
@@ -116,13 +133,18 @@ final class UploadJournal
                         'SELECT path FROM agent_media_grants WHERE id=? FOR UPDATE',
                         [$intent['media_id']]
                     )[0] ?? null;
-                    if (($grant['path'] ?? null) === $intent['path'] || self::referenced($intent['path']))
+                    if (($grant['path'] ?? null) === $intent['path'] || self::referenced($intent['path'])) {
                         return 'preserved';
+                    }
                     ImageUpload::delete($intent['path']);
-                    if (is_file(self::absolute($intent['path']))) throw new \RuntimeException('Upload cleanup failed');
+                    if (is_file(self::absolute($intent['path']))) {
+                        throw new \RuntimeException('Upload cleanup failed');
+                    }
                     return 'removed';
                 });
-                if (!@unlink($entry->getPathname())) throw new \RuntimeException('Upload intent cleanup failed');
+                if (!@unlink($entry->getPathname())) {
+                    throw new \RuntimeException('Upload intent cleanup failed');
+                }
                 $counts[$outcome]++;
             } catch (\Throwable) {
                 // Database/storage unavailable or malformed intent: keep both
@@ -146,7 +168,9 @@ final class UploadJournal
             'resources' => 'cover_image_path',
             'events' => 'cover_image_path'
         ] as $table => $column) {
-            if (Database::query("SELECT id FROM `$table` WHERE `$column`=? LIMIT 1", [$path]) !== []) return true;
+            if (Database::query("SELECT id FROM `$table` WHERE `$column`=? LIMIT 1", [$path]) !== []) {
+                return true;
+            }
         }
 
         return false;

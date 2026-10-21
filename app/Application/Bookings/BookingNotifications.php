@@ -119,27 +119,37 @@ final class BookingNotifications
     public static function deliver(array $payload): array
     {
         // Suppressed rows report success so the outbox stops retrying them.
-        if (!empty($payload['demo_suppressed']) || \App\Engine\DemoMode::isActive()) return ['sent' => true, 'suppressed' => true];
+        if (!empty($payload['demo_suppressed']) || \App\Engine\DemoMode::isActive()) {
+            return ['sent' => true, 'suppressed' => true];
+        }
 
         $tenantId = (string) ($payload['tenant_id'] ?? '');
         $bookingId = (string) ($payload['booking_id'] ?? '');
         $tenant = Database::query("SELECT * FROM tenants WHERE id = ? AND status != 'archived'", [$tenantId])[0] ?? null;
         $booking = BookingService::findByIdWithDetails($bookingId, $tenantId);
-        if ($tenant === null || $booking === null) return ['sent' => true, 'suppressed' => true];
+        if ($tenant === null || $booking === null) {
+            return ['sent' => true, 'suppressed' => true];
+        }
 
         $customer = Database::query(
             'SELECT is_anonymized FROM customers WHERE id = ? AND tenant_id = ?',
             [$booking['customer_id'], $tenantId]
         )[0] ?? null;
-        if ($customer === null || (bool) $customer['is_anonymized']) return ['sent' => true, 'suppressed' => true];
+        if ($customer === null || (bool) $customer['is_anonymized']) {
+            return ['sent' => true, 'suppressed' => true];
+        }
 
         $kind = $payload['kind'] ?? '';
         $status = $booking['status'];
-        if (isset($payload['expected_status']) && $payload['expected_status'] !== $status) return ['sent' => true, 'suppressed' => true];
+        if (isset($payload['expected_status']) && $payload['expected_status'] !== $status) {
+            return ['sent' => true, 'suppressed' => true];
+        }
         if (
             ($kind === 'cancellation' && $status !== 'cancelled')
             || ($kind !== 'cancellation' && !in_array($status, ['confirmed', 'pending', 'waitlisted'], true))
-        ) return ['sent' => true, 'suppressed' => true];
+        ) {
+            return ['sent' => true, 'suppressed' => true];
+        }
 
         Locale::resolveForBooking($tenant, null);
         $tz = new \DateTimeZone($tenant['timezone']);
@@ -162,30 +172,40 @@ final class BookingNotifications
             // Re-check the preference at delivery time; the owner may have opted out since queueing.
             if (
                 !(bool) ($tenant[$kind === 'cancellation' ? 'notify_on_cancellation' : 'notify_on_booking'] ?? false)
-            ) return ['sent' => true, 'suppressed' => true];
-            if ($kind === 'cancellation') return Mailer::sendStaffCancellationNotification(
-                $data,
-                $service,
-                $staff,
-                $name,
-                $tenant['name'],
-                $tenantId,
-                $bookingId,
-                $brand
-            );
+            ) {
+                return ['sent' => true, 'suppressed' => true];
+            }
+            if ($kind === 'cancellation') {
+                return Mailer::sendStaffCancellationNotification(
+                    $data,
+                    $service,
+                    $staff,
+                    $name,
+                    $tenant['name'],
+                    $tenantId,
+                    $bookingId,
+                    $brand
+                );
+            }
 
             return Mailer::sendStaffBookingNotification($data, $service, $staff, $name, $tenant['name'], $tenantId, $bookingId, $brand);
         }
 
         $args = [$email, $name, $data, $service, $staff, $tenant['name'], $tenantId, $bookingId, $brand, $tenant['slug']];
-        if ($kind === 'cancellation') return Mailer::sendCancellationConfirmation(...$args);
+        if ($kind === 'cancellation') {
+            return Mailer::sendCancellationConfirmation(...$args);
+        }
         if ($kind === 'rescheduled') {
             $original = BookingService::findByIdWithDetails((string) ($payload['original_booking_id'] ?? ''), $tenantId);
-            if ($original === null || $original['rescheduled_to_id'] !== $bookingId) return ['sent' => true, 'suppressed' => true];
+            if ($original === null || $original['rescheduled_to_id'] !== $bookingId) {
+                return ['sent' => true, 'suppressed' => true];
+            }
 
             return Mailer::sendRescheduleConfirmation(...$args);
         }
-        if ($kind === 'approval_confirmed') return Mailer::sendApprovalConfirmed(...$args);
+        if ($kind === 'approval_confirmed') {
+            return Mailer::sendApprovalConfirmed(...$args);
+        }
 
         // Non-timeslot patterns carry their own detail rows; timeslot mails use the default layout.
         $details = null;
@@ -210,24 +230,30 @@ final class BookingNotifications
                 __('email.common.guests') => (string) $booking['party_size']
             ];
         }
-        if ($details !== null && $booking['price_total'] !== null) $details[__('email.common.total')] = __c(
-            (float) $booking['price_total'],
-            $booking['price_currency'] ?? $tenant['currency']
-        );
+        if ($details !== null && $booking['price_total'] !== null) {
+            $details[__('email.common.total')] = __c(
+                (float) $booking['price_total'],
+                $booking['price_currency'] ?? $tenant['currency']
+            );
+        }
 
         $args = [$email, $name, $data, $service, $staff, $tenant['name'], $tenantId, $bookingId, $brand, $details, $tenant['slug']];
-        if ($status === 'pending') return Mailer::sendApprovalRequest(...$args);
-        if ($status === 'waitlisted') return Mailer::sendWaitlistConfirmation(
-            $email,
-            $name,
-            $data,
-            $booking['event_name'] ?? '',
-            $tenant['name'],
-            $tenantId,
-            $bookingId,
-            $tenant['brand_color'] ?? '#2563EB',
-            $tenant['slug']
-        );
+        if ($status === 'pending') {
+            return Mailer::sendApprovalRequest(...$args);
+        }
+        if ($status === 'waitlisted') {
+            return Mailer::sendWaitlistConfirmation(
+                $email,
+                $name,
+                $data,
+                $booking['event_name'] ?? '',
+                $tenant['name'],
+                $tenantId,
+                $bookingId,
+                $tenant['brand_color'] ?? '#2563EB',
+                $tenant['slug']
+            );
+        }
 
         return Mailer::sendBookingConfirmation(...$args);
     }
