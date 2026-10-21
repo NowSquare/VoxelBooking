@@ -31,8 +31,8 @@ final class RescheduleAvailabilityTest extends TestCase
         $pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
         $this->connection->setValue(null, $pdo);
         foreach ([
-            'tenants (id TEXT, slug TEXT, status TEXT, booking_pattern TEXT, timezone TEXT, min_advance_hours INT, max_advance_days INT, slot_duration_minutes INT, allow_rescheduling INT, rescheduling_hours_before INT)',
-            'services (id TEXT, tenant_id TEXT, duration_minutes INT, is_active INT)',
+            'tenants (id TEXT, slug TEXT, status TEXT, booking_pattern TEXT, timezone TEXT, min_advance_hours INT, max_advance_days INT, slot_duration_minutes INT, allow_rescheduling INT, rescheduling_hours_before INT, currency TEXT)',
+            'services (id TEXT, tenant_id TEXT, duration_minutes INT, is_active INT, requires_staff INT)',
             'staff (id TEXT, tenant_id TEXT, is_active INT, sort_order INT)',
             'service_staff (service_id TEXT, staff_id TEXT)',
             'availability (tenant_id TEXT, staff_id TEXT, day_of_week INT, start_time TEXT, end_time TEXT, is_available INT)',
@@ -44,6 +44,9 @@ final class RescheduleAvailabilityTest extends TestCase
             'bookings (id TEXT, tenant_id TEXT, booking_pattern TEXT, service_id TEXT, staff_id TEXT, resource_id TEXT, event_id TEXT, start_datetime TEXT, end_datetime TEXT, status TEXT, party_size INT, rescheduled_to_id TEXT, customer_id TEXT)',
         ] as $table) $pdo->exec('CREATE TABLE ' . $table);
 
+        \Tests\Support\CustomerAccessTest::createSqliteCapabilities($pdo);
+        $pdo->exec("CREATE TABLE customers (id TEXT, tenant_id TEXT, is_anonymized INT)");
+        $pdo->exec("INSERT INTO customers VALUES ('customer','ours',0)");
         $this->originalLocale = [];
         foreach ((new \ReflectionClass(Locale::class))->getProperties(\ReflectionProperty::IS_STATIC) as $property) {
             $this->originalLocale[$property->getName()] = $property->getValue();
@@ -54,9 +57,9 @@ final class RescheduleAvailabilityTest extends TestCase
 
         $this->date = (new \DateTimeImmutable('+14 days', new \DateTimeZone('UTC')))->format('Y-m-d');
         $dow = (int) (new \DateTimeImmutable($this->date))->format('N') - 1;
-        Database::execute("INSERT INTO tenants VALUES ('ours', 'ours', 'active', 'timeslot', 'UTC', 0, 365, 30, 1, 0)");
+        Database::execute("INSERT INTO tenants VALUES ('ours', 'ours', 'active', 'timeslot', 'UTC', 0, 365, 30, 1, 0, 'EUR')");
         $this->tenant = Database::query('SELECT * FROM tenants')[0];
-        Database::execute("INSERT INTO services VALUES ('service', 'ours', 60, 1)");
+        Database::execute("INSERT INTO services VALUES ('service', 'ours', 60, 1, 1)");
         Database::execute("INSERT INTO staff VALUES ('staff', 'ours', 1, 0)");
         Database::execute("INSERT INTO service_staff VALUES ('service', 'staff')");
         Database::execute("INSERT INTO availability VALUES ('ours', NULL, ?, '10:00:00', '12:00:00', 1)", [$dow]);
@@ -127,12 +130,10 @@ final class RescheduleAvailabilityTest extends TestCase
     {
         $this->booking('original', 'timeslot', $status, $replacement);
         Database::execute("UPDATE bookings SET customer_id = 'customer'");
-        $this->assertTrue(method_exists(BookingApiController::class, 'customerBookingCountForDate'));
-        $method = new \ReflectionMethod(BookingApiController::class, 'customerBookingCountForDate');
-        $this->assertSame($available ? 0 : 1, $method->invoke(new BookingApiController(), 'customer', 'ours', $this->date));
-        $this->assertSame(0, $method->invoke(new BookingApiController(), 'other', 'ours', $this->date));
-        $this->assertSame(0, $method->invoke(new BookingApiController(), 'customer', 'theirs', $this->date));
-        $this->assertSame(0, $method->invoke(new BookingApiController(), 'customer', 'ours', $this->day(1)));
+        $this->assertSame($available ? 0 : 1, \App\Application\Bookings\BookingCommands::customerBookingCountForDate( 'customer', 'ours', $this->date));
+        $this->assertSame(0, \App\Application\Bookings\BookingCommands::customerBookingCountForDate( 'other', 'ours', $this->date));
+        $this->assertSame(0, \App\Application\Bookings\BookingCommands::customerBookingCountForDate( 'customer', 'theirs', $this->date));
+        $this->assertSame(0, \App\Application\Bookings\BookingCommands::customerBookingCountForDate( 'customer', 'ours', $this->day(1)));
     }
 
     public function test_only_the_new_timeslot_in_a_reschedule_chain_consumes_inventory(): void
@@ -206,9 +207,9 @@ final class RescheduleAvailabilityTest extends TestCase
     {
         $this->booking('original', $pattern);
         $query = $this->month() + ['date' => $this->date, 'party_size' => 4, 'service_id' => 'service', 'staff_id' => 'staff'];
-        $this->read($method, $query + ['reschedule_booking_id' => 'unknown'], $resource, 404);
+        $this->read($method, $query + ['reschedule_booking_id' => 'unknown'], $resource, 403);
         Database::execute("UPDATE bookings SET tenant_id = 'theirs' WHERE id = 'original'");
-        $this->read($method, $query + ['reschedule_booking_id' => 'original'], $resource, 404);
+        $this->read($method, $query + ['reschedule_booking_id' => 'original'], $resource, 403);
     }
 
     #[DataProvider('contextEndpoints')]
@@ -217,27 +218,27 @@ final class RescheduleAvailabilityTest extends TestCase
         $this->booking('original', $pattern);
         Database::execute("UPDATE tenants SET allow_rescheduling = 0");
         $query = $this->month() + ['date' => $this->date, 'party_size' => 4, 'service_id' => 'service', 'staff_id' => 'staff', 'reschedule_booking_id' => 'original'];
-        $this->read($method, $query, $resource, 403);
+        $this->read($method, $query, $resource, 409);
         Database::execute("UPDATE tenants SET allow_rescheduling = 1");
         Database::execute("UPDATE tenants SET rescheduling_hours_before = 10000");
-        $this->read($method, $query, $resource, 403);
+        $this->read($method, $query, $resource, 409);
         Database::execute("UPDATE tenants SET rescheduling_hours_before = 0");
         Database::execute("UPDATE bookings SET status = 'cancelled'");
-        $this->read($method, $query, $resource, 403);
+        $this->read($method, $query, $resource, 409);
     }
 
     public function test_preview_rejects_mismatched_pattern_service_staff_resource_and_party_size(): void
     {
         $this->booking('original', 'timeslot');
         $query = ['date' => $this->date, 'reschedule_booking_id' => 'original', 'service_id' => 'service', 'staff_id' => 'staff'];
-        $this->read('availability', array_replace($query, ['service_id' => 'other']), status: 400);
-        $this->read('availability', array_replace($query, ['staff_id' => 'other']), status: 400);
-        $this->read('resourceAvailability', $this->month() + ['reschedule_booking_id' => 'original'], 'room', 400);
+        $this->read('availability', array_replace($query, ['service_id' => 'other']), status: 422);
+        $this->read('availability', array_replace($query, ['staff_id' => 'other']), status: 422);
+        $this->read('resourceAvailability', $this->month() + ['reschedule_booking_id' => 'original'], 'room', 422);
         Database::execute("UPDATE bookings SET booking_pattern = 'resource', resource_id = 'room'");
-        $this->read('resourceAvailability', $this->month() + ['reschedule_booking_id' => 'original'], 'other-room', 400);
-        $this->read('resourceAvailability', ['check_in' => $this->date, 'check_out' => $this->day(3), 'guests' => 4, 'reschedule_booking_id' => 'original'], 'room', 400);
+        $this->read('resourceAvailability', $this->month() + ['reschedule_booking_id' => 'original'], 'other-room', 422);
+        $this->read('resourceAvailability', ['check_in' => $this->date, 'check_out' => $this->day(3), 'guests' => 4, 'reschedule_booking_id' => 'original'], 'room', 422);
         Database::execute("UPDATE bookings SET booking_pattern = 'capacity', party_size = 4");
-        $this->read('capacitySlots', ['date' => $this->date, 'party_size' => 1, 'reschedule_booking_id' => 'original'], status: 400);
+        $this->read('capacitySlots', ['date' => $this->date, 'party_size' => 1, 'reschedule_booking_id' => 'original'], status: 422);
     }
 
     public function test_arbitrary_exclusion_parameter_does_not_change_ordinary_reads(): void
@@ -356,9 +357,21 @@ final class RescheduleAvailabilityTest extends TestCase
 
     private function read(string $method, array $query, ?string $resource = null, int $status = 200): array
     {
+        $pattern = match ($method) {
+            'resourceAvailability' => 'resource', 'capacitySlots', 'capacityAvailableDates' => 'capacity',
+            'events', 'eventDetail' => 'event', default => 'timeslot',
+        };
+        Database::execute('UPDATE tenants SET booking_pattern = ? WHERE id = ?', [$pattern, 'ours']);
         $before = $_GET;
         $_GET = $query;
+        $server = $_SERVER;
+        $_SERVER['HTTP_X_CUSTOMER_CAPABILITY'] = '';
+        $id = $query['reschedule_booking_id'] ?? null;
+        if (is_string($id) && Database::query('SELECT id FROM bookings WHERE id = ? AND tenant_id = ?', [$id, 'ours'])) {
+            $_SERVER['HTTP_X_CUSTOMER_CAPABILITY'] = \App\Engine\CustomerCapability::issueManage('ours', $id);
+        }
         $request = new Request();
+        $_SERVER = $server;
         $_GET = $before;
         $request->setAttribute('slug', 'ours');
         if ($resource !== null) $request->setAttribute('id', $resource);
@@ -371,10 +384,10 @@ final class RescheduleAvailabilityTest extends TestCase
     {
         $start = $this->date . ($pattern === 'resource' ? ' 00:00:00' : ($pattern === 'timeslot' ? ' 10:00:00' : ' 18:00:00'));
         $end = $pattern === 'resource' ? $this->day(3) . ' 00:00:00' : $this->date . ($pattern === 'timeslot' ? ' 11:00:00' : ' 19:00:00');
-        Database::execute('INSERT INTO bookings (id, tenant_id, booking_pattern, service_id, staff_id, resource_id, event_id, start_datetime, end_datetime, status, party_size, rescheduled_to_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+        Database::execute('INSERT INTO bookings (id, tenant_id, booking_pattern, service_id, staff_id, resource_id, event_id, start_datetime, end_datetime, status, party_size, rescheduled_to_id, customer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
             $id, 'ours', $pattern, $pattern === 'timeslot' ? 'service' : null, $pattern === 'timeslot' ? 'staff' : null,
             $pattern === 'resource' ? 'room' : null, $pattern === 'event' ? 'event' : null,
-            $start, $end, $status, in_array($pattern, ['capacity', 'event'], true) ? 4 : 1, $replacement,
+            $start, $end, $status, in_array($pattern, ['capacity', 'event'], true) ? 4 : 1, $replacement, 'customer',
         ]);
     }
 

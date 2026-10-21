@@ -26,6 +26,7 @@ final class DashboardUpcomingTest extends TestCase
         $this->previousTimezone = date_default_timezone_get();
         date_default_timezone_set('UTC');
         $this->sessionState = $_SESSION ?? [];
+        \App\Engine\Auth::startSession();
         $_SESSION = ['auth_type' => 'operator', 'auth_id' => 'operator'];
         foreach ((new \ReflectionClass(Locale::class))->getProperties(\ReflectionProperty::IS_STATIC) as $property) {
             $this->localeState[$property->getName()] = $property->getValue();
@@ -40,9 +41,11 @@ final class DashboardUpcomingTest extends TestCase
         $pdo = new \PDO('sqlite::memory:');
         $pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
         $this->connection->setValue(null, $pdo);
+        $pdo->exec("CREATE TABLE operators (id TEXT, name TEXT, email TEXT, force_password_change INTEGER DEFAULT 0)");
+        $pdo->exec("INSERT INTO operators (id,name,email) VALUES ('operator','Operator','operator@example.test')");
         $pdo->exec("CREATE TABLE tenants (id TEXT, name TEXT, slug TEXT, timezone TEXT, status TEXT DEFAULT 'active', booking_pattern TEXT DEFAULT 'resource')");
-        $pdo->exec('CREATE TABLE bookings (id TEXT, tenant_id TEXT, customer_id TEXT, service_id TEXT, resource_id TEXT, event_id TEXT, staff_id TEXT, booking_pattern TEXT, status TEXT, start_datetime TEXT, end_datetime TEXT)');
-        foreach (['customers (id TEXT, tenant_id TEXT, name TEXT, email TEXT, is_anonymized INT DEFAULT 0)', 'services (id TEXT, name TEXT, color TEXT)', 'resources (id TEXT, name TEXT, tenant_id TEXT, is_active INT)', 'events (id TEXT, name TEXT)', 'staff (id TEXT, name TEXT)', 'settings (`key` TEXT, value TEXT)'] as $table) {
+        $pdo->exec('CREATE TABLE bookings (id TEXT, tenant_id TEXT, customer_id TEXT, service_id TEXT, resource_id TEXT, event_id TEXT, staff_id TEXT, booking_pattern TEXT, status TEXT, start_datetime TEXT, end_datetime TEXT, customer_name_snapshot TEXT, customer_email_snapshot TEXT)');
+        foreach (['customers (id TEXT, tenant_id TEXT, name TEXT, email TEXT, is_anonymized INT DEFAULT 0)', 'services (id TEXT, tenant_id TEXT, name TEXT, color TEXT)', 'resources (id TEXT, name TEXT, tenant_id TEXT, is_active INT)', 'events (id TEXT, tenant_id TEXT, name TEXT)', 'staff (id TEXT, tenant_id TEXT, name TEXT)', 'settings (`key` TEXT, value TEXT)'] as $table) {
             $pdo->exec('CREATE TABLE ' . $table);
         }
         foreach (['ams' => 'Europe/Amsterdam', 'ny' => 'America/New_York', 'utc' => 'UTC', 'tokyo' => 'Asia/Tokyo'] as $id => $timezone) {

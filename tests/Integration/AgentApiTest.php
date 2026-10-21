@@ -38,7 +38,7 @@ final class AgentApiTest extends TestCase
         curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_SSL_VERIFYPEER => false, CURLOPT_TIMEOUT => 5]);
         curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
 
         if ($code === 0) {
             return;
@@ -49,7 +49,7 @@ final class AgentApiTest extends TestCase
         // Bootstrap database and seed test API keys
         try {
             require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-            EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
 
@@ -421,7 +421,7 @@ final class AgentApiTest extends TestCase
 
         $body = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
 
         return ['code' => $code, 'body' => $body];
     }

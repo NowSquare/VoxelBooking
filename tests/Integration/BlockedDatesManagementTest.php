@@ -58,7 +58,7 @@ final class BlockedDatesManagementTest extends TestCase
         ]);
         $result = curl_exec($ch);
         $code = ($result !== false) ? curl_getinfo($ch, CURLINFO_HTTP_CODE) : 0;
-        curl_close($ch);
+        unset($ch);
 
         if ($code === 0) {
             self::$setupError = 'App not reachable at ' . self::$baseUrl;
@@ -69,7 +69,7 @@ final class BlockedDatesManagementTest extends TestCase
 
         try {
             require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-            EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
             self::$dbReady = true;
@@ -450,15 +450,14 @@ final class BlockedDatesManagementTest extends TestCase
     // Tests: Non-timeslot tenant
     // ════════════════════════════════════════════════════════════════
 
-    public function testNonTimeslotTenantRedirects(): void
+    public function testCapacityTenantCanManageGlobalBlockedDates(): void
     {
         $res = self::httpGet("/admin/tenants/" . self::$nonTimeslotTenantId . "/blocked-dates", 'operator');
 
-        $this->assertSame(302, $res['code'], 'Non-timeslot tenant must redirect');
-        $this->assertStringNotContainsString('/blocked-dates', $res['headers']);
+        $this->assertSame(200, $res['code'], 'Capacity calendars consume global blocked dates and must expose their management');
     }
 
-    public function testNonTimeslotTenantCannotCreate(): void
+    public function testCapacityTenantCanCreateGlobalBlockedDate(): void
     {
         $page = self::httpGet("/admin/tenants/" . self::$tenantId . "/blocked-dates", 'operator');
         self::extractCsrf($page['body'], 'operator');
@@ -475,7 +474,7 @@ final class BlockedDatesManagementTest extends TestCase
             'SELECT COUNT(*) as cnt FROM `blocked_dates` WHERE `tenant_id` = ?',
             [self::$nonTimeslotTenantId]
         );
-        $this->assertSame(0, (int) $rows[0]['cnt']);
+        $this->assertSame(1, (int) $rows[0]['cnt']);
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -693,13 +692,14 @@ final class BlockedDatesManagementTest extends TestCase
 
         if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
+            $data = TestFixtures::withCatalogVersion($path, $data, $cookie);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
         }
 
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $responseHeaders = substr($response, 0, $headerSize);
 

@@ -32,7 +32,7 @@ final class SeoEndpointTest extends TestCase
         curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_SSL_VERIFYPEER => false, CURLOPT_TIMEOUT => 5]);
         curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
 
         self::$appReachable = ($code !== 0);
     }
@@ -204,6 +204,7 @@ final class SeoEndpointTest extends TestCase
     private function findTestBooking(): ?array
     {
         try {
+            \Tests\Support\TestEnvironment::assertDatabase();
             $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
             $port = $_ENV['DB_PORT'] ?? '3309';
             $name = $_ENV['DB_DATABASE'] ?? 'voxelbooking';
@@ -246,7 +247,7 @@ final class SeoEndpointTest extends TestCase
         $body = curl_exec($ch);
         $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE) ?: '';
-        curl_close($ch);
+        unset($ch);
 
         return ['code' => $code, 'body' => $body ?: '', 'content_type' => $contentType];
     }

@@ -42,7 +42,7 @@ final class BusinessUserCrudTest extends TestCase
         ]);
         $result = curl_exec($ch);
         $code = ($result !== false) ? curl_getinfo($ch, CURLINFO_HTTP_CODE) : 0;
-        curl_close($ch);
+        unset($ch);
 
         if ($code === 0) {
             return;
@@ -52,7 +52,7 @@ final class BusinessUserCrudTest extends TestCase
 
         try {
             require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-            EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
             self::$dbReady = true;
@@ -143,7 +143,7 @@ final class BusinessUserCrudTest extends TestCase
         $res = self::postForm("/admin/tenants/" . self::$tenantId . "/users/invite", [
             'name'       => 'Lifecycle User',
             'email'      => $email,
-            'role'       => 'owner',
+            'role'       => 'manager',
             'password'   => $password,
             'send_email' => '0',
         ]);
@@ -158,7 +158,7 @@ final class BusinessUserCrudTest extends TestCase
         $userId = $users[0]['id'];
         self::$userCleanupIds[] = $userId;
 
-        $this->assertSame('owner', $users[0]['role']);
+        $this->assertSame('manager', $users[0]['role']);
         $this->assertEquals(1, $users[0]['is_active']);
         $this->assertEquals(1, $users[0]['force_password_change']);
 
@@ -389,13 +389,14 @@ final class BusinessUserCrudTest extends TestCase
 
         if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
+            $data = TestFixtures::withCatalogVersion($path, $data, self::$sessionCookie);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
         }
 
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $responseHeaders = substr($response, 0, $headerSize);
 

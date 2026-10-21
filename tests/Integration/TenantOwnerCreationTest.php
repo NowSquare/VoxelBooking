@@ -44,7 +44,7 @@ final class TenantOwnerCreationTest extends TestCase
         ]);
         curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
 
         if ($code === 0) {
             return;
@@ -54,7 +54,7 @@ final class TenantOwnerCreationTest extends TestCase
 
         try {
             require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-            EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
             self::$dbReady = true;
@@ -512,7 +512,7 @@ final class TenantOwnerCreationTest extends TestCase
     }
 
     /**
-     * A tampered timezone POST falls back to the operator default.
+     * An explicit invalid timezone is rejected instead of silently changing the requested outcome.
      */
     public function testTamperedTimezonePostIsRejected(): void
     {
@@ -527,24 +527,17 @@ final class TenantOwnerCreationTest extends TestCase
             'brand_color'     => '#2563EB',
         ]);
 
-        $this->assertRedirect($res, '/admin/tenants');
+        $this->assertRedirect($res, '/admin/tenants/create');
 
         $tenants = Database::query(
             'SELECT `id`, `timezone` FROM `tenants` WHERE `slug` = ?',
             [$slug]
         );
-        $this->assertCount(1, $tenants);
-        $this->cleanupIds[] = ['tenants', $tenants[0]['id']];
-
-        $this->assertNotSame(
-            'Invalid/Fake_Zone',
-            $tenants[0]['timezone'],
-            'Tampered timezone must not be persisted'
-        );
+        $this->assertSame([], $tenants, 'Invalid timezone must not create a business');
     }
 
     /**
-     * A tampered currency POST falls back to the operator default.
+     * An explicit invalid currency is rejected instead of silently changing the requested outcome.
      */
     public function testTamperedCurrencyPostIsRejected(): void
     {
@@ -559,20 +552,13 @@ final class TenantOwnerCreationTest extends TestCase
             'brand_color'     => '#2563EB',
         ]);
 
-        $this->assertRedirect($res, '/admin/tenants');
+        $this->assertRedirect($res, '/admin/tenants/create');
 
         $tenants = Database::query(
             'SELECT `id`, `currency` FROM `tenants` WHERE `slug` = ?',
             [$slug]
         );
-        $this->assertCount(1, $tenants);
-        $this->cleanupIds[] = ['tenants', $tenants[0]['id']];
-
-        $this->assertNotSame(
-            'ZZZ',
-            $tenants[0]['currency'],
-            'Tampered currency must not be persisted'
-        );
+        $this->assertSame([], $tenants, 'Invalid currency must not create a business');
     }
 
     /**
@@ -731,7 +717,7 @@ final class TenantOwnerCreationTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $responseHeaders = substr($response, 0, $headerSize);
 

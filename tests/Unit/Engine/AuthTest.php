@@ -382,7 +382,7 @@ final class AuthTest extends TestCase
     private function ensureDb(): void
     {
         try {
-            \App\Engine\EnvLoader::load(dirname(__DIR__, 3) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             \App\Engine\Database::connect();
             \App\Engine\Database::query('SELECT 1');
         } catch (\Throwable) {

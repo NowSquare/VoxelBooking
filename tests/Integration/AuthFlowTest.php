@@ -31,7 +31,7 @@ final class AuthFlowTest extends TestCase
         curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_SSL_VERIFYPEER => false, CURLOPT_TIMEOUT => 5]);
         curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
 
         if ($code === 0) {
             return;
@@ -213,7 +213,7 @@ final class AuthFlowTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $headers = substr($response, 0, $headerSize);
         $body = substr($response, $headerSize);
@@ -248,7 +248,7 @@ final class AuthFlowTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $headers = substr($response, 0, $headerSize);
         $body = substr($response, $headerSize);
@@ -334,7 +334,7 @@ final class AuthFlowTest extends TestCase
         ]);
         $rawResponse = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
 
         @unlink($freshJar);
 
@@ -361,7 +361,7 @@ final class AuthFlowTest extends TestCase
         ]);
         $response = (string) curl_exec($ch);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $headers = substr($response, 0, $headerSize);
 
@@ -550,7 +550,7 @@ final class AuthFlowTest extends TestCase
         ]);
         curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
         return $code;
     }
 
@@ -1045,6 +1045,7 @@ final class AuthFlowTest extends TestCase
     public function testForgotPasswordSmtpFailurePreservesExistingToken(): void
     {
         $this->requireDbAccess();
+        \Tests\Support\TestEnvironment::failMail('Synthetic SMTP delivery failure');
         // This test guards the controller's call ordering in forgotPassword():
         // create token → send email → if send fails, delete new token.
         // If someone reorders those calls or stops checking $sendResult['sent'],
@@ -1111,6 +1112,7 @@ final class AuthFlowTest extends TestCase
             $this->assertSame(1, (int) $tokenCount[0]['cnt'],
                 'Only the original token should remain — failed attempt token must be cleaned up');
         } finally {
+            \Tests\Support\TestEnvironment::failMail(null);
             // Restore SMTP settings
             foreach ($savedSettings as $key => $prior) {
                 if ($prior['had'] && $prior['value'] !== null) {

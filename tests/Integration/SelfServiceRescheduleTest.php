@@ -47,7 +47,7 @@ final class SelfServiceRescheduleTest extends TestCase
         curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_SSL_VERIFYPEER => false, CURLOPT_TIMEOUT => 5]);
         curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
 
         if ($code === 0) {
             return;
@@ -115,12 +115,8 @@ final class SelfServiceRescheduleTest extends TestCase
         $this->assertSame('csrf_mismatch', $data['error'] ?? null);
     }
 
-    /**
-     * The embed iframe runs cross-site, so browsers withhold its cookies.
-     * It has no session and no token. The browser still attaches an Origin
-     * header to the POST, and a matching Origin is proof enough.
-     */
-    public function test_reschedule_with_same_origin_and_no_session_succeeds(): void
+    /** Same-origin requests still need independent customer authority. */
+    public function test_reschedule_with_same_origin_and_no_session_is_denied(): void
     {
         $targetTs = strtotime('+3 days');
         while (date('N', $targetTs) >= 6) {
@@ -146,12 +142,12 @@ final class SelfServiceRescheduleTest extends TestCase
             'new_time' => '15:00',
         ], '', ['Origin: ' . $this->baseUrl]);
 
-        $this->assertSame(200, $r['code'], 'Embedded reschedule must succeed without a session. Body: ' . $r['body']);
+        $this->assertSame(403, $r['code'], 'Origin is not customer authority. Body: ' . $r['body']);
         $data = json_decode($r['body'], true);
-        $this->assertTrue($data['rescheduled'] ?? false);
+        $this->assertFalse($data['rescheduled'] ?? false);
 
         $original = Database::query("SELECT `status` FROM `bookings` WHERE `id` = ?", [self::EMBED_BOOKING_ID]);
-        $this->assertSame('rescheduled', $original[0]['status'] ?? null);
+        $this->assertSame('confirmed', $original[0]['status'] ?? null);
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -245,7 +241,7 @@ final class SelfServiceRescheduleTest extends TestCase
 
         $this->assertSame(409, $r['code']);
         $data = json_decode($r['body'], true);
-        $this->assertSame('time_gate', $data['error'] ?? null);
+        $this->assertSame('too_late', $data['error'] ?? null);
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -717,8 +713,8 @@ final class SelfServiceRescheduleTest extends TestCase
 
         // Service (30-minute duration)
         Database::execute(
-            "INSERT INTO `services` (`id`, `tenant_id`, `name`, `duration_minutes`, `is_active`, `sort_order`)
-             VALUES (?, ?, 'SS Reschedule Service', 30, 1, 99)",
+            "INSERT INTO `services` (`id`, `tenant_id`, `name`, `duration_minutes`, `is_active`, `sort_order`, `requires_staff`)
+             VALUES (?, ?, 'SS Reschedule Service', 30, 1, 99, 0)",
             [self::SERVICE_ID, $tenantId]
         );
 
@@ -837,11 +833,7 @@ final class SelfServiceRescheduleTest extends TestCase
      */
     private function getCsrfForBooking(string $bookingId): string
     {
-        $r = $this->get("/book/test-fixture/manage/{$bookingId}");
-        if (preg_match('/window\.\x5f\x5fVB_CSRF\x5f\x5f\s*=\s*"([a-f0-9]+)"/', $r['body'], $m)) {
-            return $m[1];
-        }
-        return '';
+        return \Tests\Support\CustomerAccessTest::verifyBrowser(self::TENANT_ID, 'test-fixture', $bookingId, \App\Engine\CustomerCapability::MANAGE, $this->cookieJar);
     }
 
     /**
@@ -849,7 +841,8 @@ final class SelfServiceRescheduleTest extends TestCase
      */
     private function postJsonWithCsrf(string $path, array $data): array
     {
-        $csrf = $this->getCsrfToken();
+        preg_match('#/bookings/([^/]+)/reschedule$#', $path, $match);
+        $csrf = $this->getCsrfForBooking($match[1]);
         return $this->postJson($path, $data, $csrf);
     }
 
@@ -885,7 +878,7 @@ final class SelfServiceRescheduleTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $body = substr($response, $headerSize);
         return compact('code', 'body');
@@ -908,7 +901,7 @@ final class SelfServiceRescheduleTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $body = substr($response, $headerSize);
         return compact('code', 'body');

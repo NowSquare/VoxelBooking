@@ -42,6 +42,7 @@ final class SelfServiceCancelTest extends TestCase
 
         try {
             TestFixtures::provision();
+            \Tests\Support\CustomerFixtureState::restore();
             self::$appReachable = true;
         } catch (\Throwable) {
             // Database unavailable: tests skip in setUp
@@ -120,19 +121,15 @@ final class SelfServiceCancelTest extends TestCase
         $this->assertSame('cancelled', $this->bookingStatus());
     }
 
-    /**
-     * The embed iframe runs cross-site, so browsers withhold its cookies.
-     * It has no session and no token. The browser still attaches an Origin
-     * header to the POST, and a matching Origin is proof enough.
-     */
-    public function test_cancel_with_same_origin_and_no_session_succeeds(): void
+    /** Same-origin requests still need independent customer authority. */
+    public function test_cancel_with_same_origin_and_no_session_is_denied(): void
     {
         $r = $this->postJson($this->cancelPath(), ['reason' => 'Embedded page'], '', ['Origin: ' . $this->baseUrl]);
 
-        $this->assertSame(200, $r['code'], 'Embedded cancel must succeed without a session. Body: ' . $r['body']);
+        $this->assertSame(403, $r['code'], 'Origin is not customer authority. Body: ' . $r['body']);
         $data = json_decode($r['body'], true);
-        $this->assertTrue($data['cancelled'] ?? false);
-        $this->assertSame('cancelled', $this->bookingStatus());
+        $this->assertFalse($data['cancelled'] ?? false);
+        $this->assertSame('confirmed', $this->bookingStatus());
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -189,12 +186,7 @@ final class SelfServiceCancelTest extends TestCase
      */
     private function getCsrfFromManagePage(): string
     {
-        $r = $this->get('/book/test-fixture/manage/' . self::BOOKING_ID);
-        if (preg_match('/window\.__VB_CSRF__\s*=\s*"([a-f0-9]+)"/', $r['body'], $m)) {
-            return $m[1];
-        }
-
-        return '';
+        return \Tests\Support\CustomerAccessTest::verifyBrowser(self::TENANT_ID, 'test-fixture', self::BOOKING_ID, \App\Engine\CustomerCapability::MANAGE, $this->cookieJar);
     }
 
     /**

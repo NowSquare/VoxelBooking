@@ -15,6 +15,7 @@ final class PublicBookingUtcContractTest extends TestCase
     private string $baseUrl;
     private string $tenantId;
     private string $slug;
+    private array $capabilities = [];
 
     protected function setUp(): void
     {
@@ -156,14 +157,18 @@ final class PublicBookingUtcContractTest extends TestCase
 
     private function request(string $method, string $path, ?array $payload = null, int $status = 200): array
     {
+        $headers=['Content-Type: application/json','Origin: '.$this->baseUrl];
+        if(preg_match('~/bookings/([^/?]+)~',$path,$match)&&isset($this->capabilities[$match[1]]))$headers[]='X-Customer-Capability: '.$this->capabilities[$match[1]];
         $curl = curl_init($this->baseUrl . $path);
         curl_setopt_array($curl, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15, CURLOPT_SSL_VERIFYPEER => false, CURLOPT_CUSTOMREQUEST => $method,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Origin: ' . $this->baseUrl]]);
+            CURLOPT_HTTPHEADER => $headers]);
         if ($payload !== null) curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($payload, JSON_THROW_ON_ERROR));
         $body = (string) curl_exec($curl);
         $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        curl_close($curl);
         $this->assertSame($status, $code, $body);
-        return json_decode($body, true, flags: JSON_THROW_ON_ERROR);
+        $decoded=json_decode($body,true,flags:JSON_THROW_ON_ERROR);
+        $booking=$decoded['booking']??$decoded['new_booking']??null;
+        if(is_array($booking)&&isset($booking['manage_url'])){parse_str(parse_url($booking['manage_url'],PHP_URL_FRAGMENT)??'',$fragment);$this->capabilities[$booking['id']]=$fragment['access'];}
+        return $decoded;
     }
 }

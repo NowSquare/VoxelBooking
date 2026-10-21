@@ -23,7 +23,7 @@ final class TablePartialsOutputTest extends TestCase
         require_once $root . '/vendor/autoload.php';
 
         if (file_exists($root . '/.env')) {
-            \App\Engine\EnvLoader::load($root . '/.env');
+            \Tests\Support\TestEnvironment::boot();
         }
 
         // Initialize locale so __() and __p() resolve translation keys

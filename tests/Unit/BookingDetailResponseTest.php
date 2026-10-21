@@ -103,12 +103,12 @@ final class BookingDetailResponseTest extends TestCase
         $this->assertNotEmpty($methodBody, 'rescheduleBookingAction method should exist');
 
         $this->assertStringContainsString(
-            "['check_in']",
+            "'check_in'",
             $methodBody,
             'Reschedule response should include check_in for resource pattern'
         );
         $this->assertStringContainsString(
-            "['check_out']",
+            "'check_out'",
             $methodBody,
             'Reschedule response should include check_out for resource pattern'
         );

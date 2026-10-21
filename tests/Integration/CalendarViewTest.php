@@ -36,7 +36,7 @@ final class CalendarViewTest extends TestCase
         curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_SSL_VERIFYPEER => false, CURLOPT_TIMEOUT => 5]);
         curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+
 
         if ($code === 0) {
             return;
@@ -538,6 +538,34 @@ final class CalendarViewTest extends TestCase
 
     // ── Helpers ──
 
+    public function testBookingTableDetailAndCsvUseTheSharedProjection():void
+    {
+        $this->doLoginOperator();$tenant=TestFixtures::BUSINESS_TENANT_ID;$customer=Ulid::generate();$booking=Ulid::generate();
+        Database::execute("INSERT INTO customers(id,tenant_id,name,email) VALUES(?,?,'Profile name','read-equivalence@example.test')",[$customer,$tenant]);
+        Database::execute("INSERT INTO bookings(id,tenant_id,customer_id,booking_pattern,start_datetime,end_datetime,status,source,customer_name_snapshot,customer_email_snapshot) VALUES(?,?,?,'timeslot','2030-02-01 09:00:00','2030-02-01 09:30:00','confirmed','admin','=Snapshot customer','read-equivalence@example.test')",[$booking,$tenant,$customer]);
+        try{
+            $actor=new \App\Agent\ActorContext('operator',TestFixtures::OPERATOR_ID,'operator',[$tenant],['bookings:read','bookings:export']);
+            $list=$this->get('/admin/bookings?search='.$booking);self::assertSame(200,$list['code']);self::assertStringContainsString('=Snapshot customer',$list['body']);
+            $detail=$this->get('/admin/tenants/'.$tenant.'/bookings/'.$booking);self::assertSame(200,$detail['code']);self::assertStringContainsString('=Snapshot customer',$detail['body']);
+            $expected=\App\Application\Bookings\BookingQueries::export($actor,['business_id'=>$tenant,'search'=>$booking]);
+            $csv=$this->get('/admin/tenants/'.$tenant.'/bookings/export?search='.$booking);self::assertSame(200,$csv['code']);self::assertSame($expected['content'],$csv['body']);self::assertStringContainsString("'=Snapshot customer",$csv['body']);
+        }finally{Database::execute('DELETE FROM bookings WHERE id=?',[$booking]);Database::execute('DELETE FROM customers WHERE id=?',[$customer]);}
+    }
+    public function testResourceStayRendersOnEveryOccupiedCalendarDay():void
+    {
+        $this->doLoginOperator();$tenant=TestFixtures::BUSINESS_TENANT_ID;$customer=Ulid::generate();$booking=Ulid::generate();
+        Database::execute("INSERT INTO customers(id,tenant_id,name,email) VALUES(?,?,'Occupied multi-day stay','calendar-stay@example.test')",[$customer,$tenant]);
+        Database::execute("INSERT INTO bookings(id,tenant_id,customer_id,booking_pattern,start_datetime,end_datetime,status,source) VALUES(?,?,?,'resource','2030-02-01 15:00:00','2030-02-05 11:00:00','confirmed','admin')",[$booking,$tenant,$customer]);
+        try{
+            foreach(['day','week',''] as $view){
+                $response=$this->get('/admin/tenants/'.$tenant.'/calendar'.($view!==''?'/'.$view:'').'?date=2030-02-03');
+                self::assertSame(200,$response['code']);self::assertStringContainsString('Occupied multi-day stay',$response['body']);
+                if($view==='day')self::assertStringContainsString('top: 0%; height: 100%',$response['body']);
+                if($view==='')self::assertStringContainsString('Occupied multi-day stay',$this->extractMonthCellByDate($response['body'],'2030-02-03'));
+            }
+        }finally{Database::execute('DELETE FROM bookings WHERE id=?',[$booking]);Database::execute('DELETE FROM customers WHERE id=?',[$customer]);}
+    }
+
     private function doLoginOperator(): void
     {
         $r = $this->get('/admin/login');
@@ -568,7 +596,7 @@ final class CalendarViewTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+
 
         $body = substr($response, $headerSize);
         $headers = substr($response, 0, $headerSize);
@@ -596,7 +624,7 @@ final class CalendarViewTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+
 
         $body = substr($response, $headerSize);
         $headers = substr($response, 0, $headerSize);

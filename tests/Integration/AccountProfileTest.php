@@ -35,7 +35,7 @@ final class AccountProfileTest extends TestCase
         curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_SSL_VERIFYPEER => false, CURLOPT_TIMEOUT => 5]);
         curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
 
         if ($code === 0) {
             return;
@@ -435,7 +435,7 @@ final class AccountProfileTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $body = substr($response, $headerSize);
         $headers = substr($response, 0, $headerSize);
@@ -449,6 +449,10 @@ final class AccountProfileTest extends TestCase
 
     private function post(string $path, array $data): array
     {
+        if($path==='/admin/account'&&($data['_action']??'profile')==='profile'&&!isset($data['expected_version'])) {
+            $form=$this->get($path);
+            if(preg_match('/name="expected_version"\s+value="([^"]+)"/',$form['body'],$match)) { $data['expected_version']=$match[1]; }
+        }
         $ch = curl_init($this->baseUrl . $path);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -463,7 +467,7 @@ final class AccountProfileTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $body = substr($response, $headerSize);
         $headers = substr($response, 0, $headerSize);

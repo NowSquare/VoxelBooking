@@ -35,10 +35,8 @@ final class WelcomeEmailRenderTest extends TestCase
         $rc = new \ReflectionClass(\App\Engine\Mailer::class);
 
         self::$renderHtml = $rc->getMethod('renderWelcomeEmail');
-        self::$renderHtml->setAccessible(true);
 
         self::$renderPlain = $rc->getMethod('renderWelcomePlainText');
-        self::$renderPlain->setAccessible(true);
 
         self::$ready = true;
     }

@@ -21,7 +21,7 @@ final class AvailabilityOutputTest extends TestCase
     private function requireDatabaseForTemplates(): void
     {
         try {
-            \App\Engine\EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             \App\Engine\Database::connect();
             \App\Engine\Database::query('SELECT 1');
         } catch (\Throwable) {

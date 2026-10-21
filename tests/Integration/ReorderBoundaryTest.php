@@ -39,7 +39,7 @@ final class ReorderBoundaryTest extends TestCase
         ]);
         $result = curl_exec($ch);
         $code = ($result !== false) ? curl_getinfo($ch, CURLINFO_HTTP_CODE) : 0;
-        curl_close($ch);
+        unset($ch);
 
         if ($code === 0) {
             self::$setupError = 'App not reachable at ' . self::$baseUrl;
@@ -50,7 +50,7 @@ final class ReorderBoundaryTest extends TestCase
 
         try {
             require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-            EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
             self::$dbReady = true;
@@ -269,6 +269,42 @@ final class ReorderBoundaryTest extends TestCase
     // Service cover upload: create must not leave orphan on failure
     // ════════════════════════════════════════════════════════════════
 
+    public function testServiceCreateWithValidImageUsesNativeMediaPermission(): void
+    {
+        $page = self::httpGet('/admin/tenants/' . self::$tenantId . '/services/create', 'operator');
+        self::extractCsrf($page['body']);
+        $tmpFile = tempnam(sys_get_temp_dir(), 'vb_image_');
+        $image = imagecreatetruecolor(2, 2);
+        imagepng($image, $tmpFile);
+        $name = 'Native upload ' . Ulid::generate();
+        $storedPath = null;
+        try {
+            $response = self::httpMultipart('/admin/tenants/' . self::$tenantId . '/services', [
+                '_csrf_token' => self::$operatorCsrf,
+                'name' => $name,
+                'duration_minutes' => '30',
+                'cover_image' => new \CURLFile($tmpFile, 'image/png', 'cover.png'),
+            ]);
+            $this->assertSame(302, $response['code']);
+            $this->assertMatchesRegularExpression(
+                '#Location: [^\r\n]*/admin/tenants/' . self::$tenantId . '/services\r?\n#i',
+                $response['headers'],
+            );
+            $row = Database::query('SELECT cover_image_path FROM services WHERE tenant_id = ? AND name = ?', [self::$tenantId, $name])[0] ?? null;
+            $this->assertNotNull($row, 'The native form must commit the service with its uploaded cover.');
+            $this->assertNotEmpty($row['cover_image_path']);
+            $storedPath = dirname(__DIR__, 2) . '/public/' . $row['cover_image_path'];
+            $this->assertFileExists($storedPath);
+            $this->assertSame('image/png', getimagesize($storedPath)['mime']);
+        } finally {
+            @unlink($tmpFile);
+            if ($storedPath !== null) {
+                @unlink($storedPath);
+            }
+            Database::execute('DELETE FROM services WHERE tenant_id = ? AND name = ?', [self::$tenantId, $name]);
+        }
+    }
+
     public function testServiceCreateWithInvalidImageDoesNotCreateService(): void
     {
         $page = self::httpGet("/admin/tenants/" . self::$tenantId . "/services/create", 'operator');
@@ -413,13 +449,14 @@ final class ReorderBoundaryTest extends TestCase
 
         if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
+            $data = TestFixtures::withCatalogVersion($path, $data, self::$operatorCookie);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
         }
 
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $responseHeaders = substr($response, 0, $headerSize);
 
@@ -440,6 +477,7 @@ final class ReorderBoundaryTest extends TestCase
      */
     private static function httpMultipart(string $path, array $data): array
     {
+        $data = TestFixtures::withCatalogVersion($path, $data, self::$operatorCookie);
         $ch = curl_init(self::$baseUrl . $path);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -458,7 +496,7 @@ final class ReorderBoundaryTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $responseHeaders = substr($response, 0, $headerSize);
 

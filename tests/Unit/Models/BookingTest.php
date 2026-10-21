@@ -32,7 +32,7 @@ final class BookingTest extends TestCase
     {
         try {
             require_once dirname(__DIR__, 3) . '/vendor/autoload.php';
-            EnvLoader::load(dirname(__DIR__, 3) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
             self::$dbReady = true;

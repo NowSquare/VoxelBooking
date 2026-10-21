@@ -42,7 +42,7 @@ final class RescheduleEndpointTest extends TestCase
         curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_SSL_VERIFYPEER => false, CURLOPT_TIMEOUT => 5]);
         curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+
 
         if ($code === 0) {
             return;
@@ -254,6 +254,8 @@ final class RescheduleEndpointTest extends TestCase
     {
         $completedId = '01TESTRESCHEDCMPRECOV000';
         $this->insertBooking($completedId, 'completed', 'timeslot');
+        $date=(new \DateTimeImmutable('+30 days'))->modify('next Monday')->format('Y-m-d');
+        Database::execute('UPDATE bookings SET service_id=?,start_datetime=?,end_datetime=? WHERE id=?',[self::RESCHEDULE_SERVICE_ID,$date.' 10:00:00',$date.' 10:30:00',$completedId]);
 
         $this->doLoginOperator();
         $r = $this->postWithCsrf('/admin/bookings/' . $completedId . '/status', [
@@ -281,6 +283,8 @@ final class RescheduleEndpointTest extends TestCase
     {
         $completedId = '01TESTRESCHEDCMPUI00000';
         $this->insertBooking($completedId, 'completed', 'timeslot');
+        $date=(new \DateTimeImmutable('+30 days'))->modify('next Monday')->format('Y-m-d');
+        Database::execute('UPDATE bookings SET service_id=?,start_datetime=?,end_datetime=? WHERE id=?',[self::RESCHEDULE_SERVICE_ID,$date.' 10:00:00',$date.' 10:30:00',$completedId]);
 
         $this->doLoginOperator();
         $r = $this->get('/admin/bookings/' . $completedId);
@@ -589,6 +593,7 @@ final class RescheduleEndpointTest extends TestCase
             );
         }
 
+        \Tests\Support\CustomerFixtureState::restore();
         // Clean prior reschedule test bookings
         Database::execute("DELETE FROM `bookings` WHERE `id` LIKE '01TESTRESCHED%'");
         Database::execute("DELETE FROM `customers` WHERE `id` = ?", [self::RESCHEDULE_CUSTOMER_ID]);
@@ -603,8 +608,8 @@ final class RescheduleEndpointTest extends TestCase
 
         // Service (30-minute duration for slot calculation)
         Database::execute(
-            "INSERT INTO `services` (`id`, `tenant_id`, `name`, `duration_minutes`, `is_active`, `sort_order`)
-             VALUES (?, ?, 'Reschedule Test Service', 30, 1, 99)",
+            "INSERT INTO `services` (`id`, `tenant_id`, `name`, `duration_minutes`, `is_active`, `sort_order`, `requires_staff`)
+             VALUES (?, ?, 'Reschedule Test Service', 30, 1, 99, 0)",
             [self::RESCHEDULE_SERVICE_ID, $tenantId]
         );
 
@@ -861,7 +866,7 @@ final class RescheduleEndpointTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+
 
         $body = substr($response, $headerSize);
         $headers = substr($response, 0, $headerSize);
@@ -889,7 +894,7 @@ final class RescheduleEndpointTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+
 
         $body = substr($response, $headerSize);
         $headers = substr($response, 0, $headerSize);

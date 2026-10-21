@@ -31,7 +31,7 @@ final class ConsentRecordingTest extends TestCase
         if (!self::$dbConnected) {
             try {
                 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-                EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+                \Tests\Support\TestEnvironment::boot();
                 Database::connect();
             Database::query('SELECT 1');
                 self::$dbConnected = true;

@@ -6,14 +6,14 @@ namespace Tests\Unit\Engine;
 
 use App\Engine\TimeSlotCalculator;
 use App\Engine\Database;
-use App\Engine\EnvLoader;
+use App\Engine\Ulid;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Integration tests for TimeSlotCalculator.
  *
- * These tests use the real database with the seeded "Salon Bella" tenant.
+ * These tests create a private salon fixture in the disposable database.
  * They verify availability calculation, blocked date enforcement,
  * the lunch break gap, and buffer time handling.
  */
@@ -23,23 +23,28 @@ class TimeSlotCalculatorTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        try {
-            EnvLoader::load(__DIR__ . '/../../../.env');
-
-            $rows = Database::query(
-                'SELECT * FROM tenants WHERE slug = ? LIMIT 1',
-                ['salon-bella']
-            );
-        } catch (\Throwable) {
-            self::markTestSkipped('Database not available');
-            return;
+        \Tests\Support\TestEnvironment::boot();
+        \Tests\Support\TestEnvironment::assertDatabase();
+        $tenant = Ulid::generate();
+        Database::execute("INSERT INTO tenants (id,name,slug,email,booking_pattern,timezone,status,min_advance_hours,max_advance_days,slot_duration_minutes,buffer_minutes) VALUES (?,'Test salon',?,'salon@example.test','timeslot','Europe/Amsterdam','active',0,90,30,0)",[$tenant,'test-salon-'.strtolower($tenant)]);
+        $staff = Ulid::generate();
+        Database::execute("INSERT INTO staff (id,tenant_id,name,email,is_active) VALUES (?,?,'Test stylist','stylist@example.test',1)",[$staff,$tenant]);
+        foreach ([30,90] as $duration) {
+            $service = Ulid::generate();
+            Database::execute("INSERT INTO services (id,tenant_id,name,duration_minutes,requires_staff,is_active) VALUES (?,?,?, ?,1,1)",[$service,$tenant,'Service '.$duration,$duration]);
+            Database::execute('INSERT INTO service_staff (service_id,staff_id) VALUES (?,?)',[$service,$staff]);
         }
-
-        if (empty($rows)) {
-            self::markTestSkipped('Salon Bella tenant not seeded.');
+        for ($day=0;$day<5;$day++) {
+            foreach ([['09:00','12:30'],['13:30','18:00']] as [$start,$end]) {
+                Database::execute('INSERT INTO availability (id,tenant_id,day_of_week,start_time,end_time,is_available) VALUES (?,?,?,?,?,1)',[Ulid::generate(),$tenant,$day,$start,$end]);
+            }
         }
+        self::$tenant = Database::query('SELECT * FROM tenants WHERE id=?',[$tenant])[0];
+    }
 
-        self::$tenant = $rows[0];
+    public static function tearDownAfterClass(): void
+    {
+        if (isset(self::$tenant)) Database::execute('DELETE FROM tenants WHERE id=?',[self::$tenant['id']]);
     }
 
     #[Test]
@@ -122,9 +127,7 @@ class TimeSlotCalculatorTest extends TestCase
             [self::$tenant['id']]
         );
 
-        if (empty($services)) {
-            $this->markTestSkipped('No 90-minute service found.');
-        }
+        self::assertNotEmpty($services,'The isolated long-duration service fixture must exist.');
 
         $slotsLong = TimeSlotCalculator::getAvailableSlots(
             self::$tenant,
@@ -181,9 +184,7 @@ class TimeSlotCalculatorTest extends TestCase
             [self::$tenant['id']]
         );
 
-        if (empty($staff)) {
-            $this->markTestSkipped('No active staff found.');
-        }
+        self::assertNotEmpty($staff,'The isolated staff fixture must exist.');
 
         $result = TimeSlotCalculator::getAvailableSlots(
             self::$tenant,

@@ -69,7 +69,7 @@ final class ManualBookingCreationTest extends TestCase
         ]);
         $result = curl_exec($ch);
         $code = ($result !== false) ? curl_getinfo($ch, CURLINFO_HTTP_CODE) : 0;
-        curl_close($ch);
+
 
         if ($code === 0) {
             self::$setupError = 'App not reachable at ' . self::$baseUrl;
@@ -80,7 +80,7 @@ final class ManualBookingCreationTest extends TestCase
 
         try {
             require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-            EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
             self::$dbReady = true;
@@ -373,12 +373,14 @@ final class ManualBookingCreationTest extends TestCase
         );
         $this->assertSame(1, (int) $count2[0]['cnt'], 'Second booking must reuse existing customer');
 
-        // Name should be updated
+        // Booking submissions preserve existing identity; the submitted name belongs to this booking.
         $customer = Database::query(
             "SELECT `name` FROM `customers` WHERE `tenant_id` = ? AND `email` = ?",
             [self::$tenantId, $email]
         );
-        $this->assertSame('Updated Name', $customer[0]['name']);
+        $this->assertSame('First Name', $customer[0]['name']);
+        $snapshots=Database::query('SELECT b.customer_name_snapshot FROM bookings b JOIN customers c ON c.id=b.customer_id WHERE b.tenant_id=? AND c.email=? ORDER BY b.id',[self::$tenantId,$email]);
+        $this->assertSame(['First Name','Updated Name'],array_column($snapshots,'customer_name_snapshot'));
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -628,7 +630,7 @@ final class ManualBookingCreationTest extends TestCase
         ]);
         $body = curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+
 
         $this->assertSame(200, $code, "Availability for {$relativeDay} must return 200");
         $data = json_decode($body, true);
@@ -852,7 +854,7 @@ final class ManualBookingCreationTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+
 
         $responseHeaders = substr($response, 0, $headerSize);
 
@@ -898,7 +900,7 @@ final class ManualBookingCreationTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+
 
         return [
             'code'    => $code,

@@ -24,7 +24,6 @@ final class TenantSlugValidationTest extends TestCase
 
         $rc = new \ReflectionClass(\App\Controllers\Admin\TenantsController::class);
         self::$isValidSlug = $rc->getMethod('isValidSlug');
-        self::$isValidSlug->setAccessible(true);
     }
 
     private function assertSlugValid(string $slug, string $message = ''): void

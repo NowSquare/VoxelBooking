@@ -27,7 +27,6 @@ final class WelcomeEmailSenderTest extends TestCase
 
         $rc = new \ReflectionClass(\App\Engine\Mailer::class);
         self::$resolve = $rc->getMethod('resolveWelcomeReplyTo');
-        self::$resolve->setAccessible(true);
     }
 
     private function resolve(?string $email, ?string $name, string $appName = 'VoxelBooking'): array

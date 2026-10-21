@@ -23,7 +23,7 @@ final class PrivacyPageOutputTest extends TestCase
         require_once $root . '/vendor/autoload.php';
 
         if (file_exists($root . '/.env')) {
-            \App\Engine\EnvLoader::load($root . '/.env');
+            \Tests\Support\TestEnvironment::boot();
         }
 
         self::$helpersReady = function_exists('__') && function_exists('app_name');

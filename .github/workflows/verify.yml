@@ -1,0 +1,53 @@
+name: Verify application and agent parity
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  contracts-and-assets:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: curl, fileinfo, gd, mbstring, openssl, pdo_mysql, sodium, zip
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: composer install --no-interaction --prefer-dist
+      - name: Require a reviewed parity decision for every human action
+        run: php scripts/check-agent-parity.php
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Require committed production assets
+        run: git diff --exit-code -- public/assets
+  disposable-database:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.3'
+            mysql: '8.0'
+          - php: '8.5'
+            mysql: '8.4'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, fileinfo, gd, mbstring, openssl, pcntl, pdo_mysql, pdo_sqlite, posix, sodium, zip
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - name: Rehearse version 28 upgrade, interrupted DDL and backup recovery
+        run: php scripts/test-isolated.php --upgrade-check --mysql-image=mysql:${{ matrix.mysql }}
+      - name: Run only against a disposable database and isolated application
+        run: php scripts/test-isolated.php --mysql-image=mysql:${{ matrix.mysql }}

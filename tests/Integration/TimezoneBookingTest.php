@@ -46,7 +46,7 @@ final class TimezoneBookingTest extends TestCase
         ]);
         curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+
 
         if ($code === 0) {
             return;
@@ -56,7 +56,7 @@ final class TimezoneBookingTest extends TestCase
 
         try {
             require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-            EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
             self::$dbReady = true;
@@ -224,30 +224,15 @@ final class TimezoneBookingTest extends TestCase
     /**
      * An invalid timezone string should be silently ignored (not stored).
      */
-    public function testInvalidTimezoneIsIgnored(): void
+    public function testInvalidTimezoneIsRejectedWithoutCreatingBooking(): void
     {
         $slot = $this->getFirstAvailableSlot('next Thursday');
-
-        $payload = $this->buildPayload($slot, [
-            'customer_timezone' => 'Not/A_Real_Zone',
-        ]);
-
-        $csrf = $this->fetchCsrfContext();
-        $res = $this->httpPostJsonWithCsrf('/api/' . self::$seed['slug'] . '/bookings', $payload, $csrf);
-        $this->assertSame(201, $res['code'], 'Booking with invalid TZ must still succeed. Body: ' . $res['body']);
-
-        $data = json_decode($res['body'], true);
-        $bookingId = $data['booking']['id'];
-        $this->cleanupIds[] = ['bookings', $bookingId];
-
-        $rows = Database::query(
-            'SELECT `customer_timezone` FROM `bookings` WHERE `id` = ?',
-            [$bookingId]
-        );
-
-        $this->assertCount(1, $rows);
-        $this->assertNull($rows[0]['customer_timezone'],
-            'Invalid timezone must not be stored (should be NULL)');
+        $payload = $this->buildPayload($slot, ['customer_timezone'=>'Not/A_Real_Zone']);
+        $before=(int)Database::query('SELECT COUNT(*) AS n FROM bookings WHERE tenant_id=?',[self::$seed['tenant_id']])[0]['n'];
+        $res = $this->httpPostJsonWithCsrf('/api/' . self::$seed['slug'] . '/bookings', $payload, $this->fetchCsrfContext());
+        $this->assertSame(422,$res['code']);
+        $this->assertArrayHasKey('customer_timezone',json_decode($res['body'],true)['errors']);
+        $this->assertSame($before,(int)Database::query('SELECT COUNT(*) AS n FROM bookings WHERE tenant_id=?',[self::$seed['tenant_id']])[0]['n']);
     }
 
     /**
@@ -500,7 +485,7 @@ final class TimezoneBookingTest extends TestCase
             CURLOPT_COOKIEFILE     => $cookieFile,
         ]);
         $body = (string) curl_exec($ch);
-        curl_close($ch);
+
 
         preg_match('/window\.__VB_CSRF__\s*=\s*"([^"]+)"/', $body, $m);
         $token = $m[1] ?? '';
@@ -544,7 +529,7 @@ final class TimezoneBookingTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+
 
         return [
             'code'    => $code,

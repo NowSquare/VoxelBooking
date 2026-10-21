@@ -31,7 +31,7 @@ final class PrivacyEndpointTest extends TestCase
         curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_SSL_VERIFYPEER => false, CURLOPT_TIMEOUT => 5]);
         curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
 
         if ($code === 0) {
             return;
@@ -42,7 +42,7 @@ final class PrivacyEndpointTest extends TestCase
         // Clear rate limit records for test IP
         try {
             require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-            EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
             Database::execute('TRUNCATE TABLE `rate_limits`');
@@ -111,6 +111,7 @@ final class PrivacyEndpointTest extends TestCase
         }
 
         $cookieJar = tempnam(sys_get_temp_dir(), 'vb_csrf_');
+        \Tests\Support\CustomerAccessTest::verifyBrowser($ids['tenant_id'], $ids['slug'], $ids['customer_id'], \App\Engine\CustomerCapability::PRIVACY, $cookieJar);
 
         // Step 1: GET the privacy page — should return 200 with customer data
         $getResponse = $this->request('GET', "/book/{$ids['slug']}/privacy/{$ids['customer_id']}", [], $cookieJar);
@@ -152,6 +153,7 @@ final class PrivacyEndpointTest extends TestCase
         }
 
         $cookieJar = tempnam(sys_get_temp_dir(), 'vb_csrf_');
+        \Tests\Support\CustomerAccessTest::verifyBrowser($ids['tenant_id'], $ids['slug'], $ids['customer_id'], \App\Engine\CustomerCapability::PRIVACY, $cookieJar);
 
         // Step 1: GET to establish session + CSRF
         $getResponse = $this->request('GET', "/book/{$ids['slug']}/privacy/{$ids['customer_id']}", [], $cookieJar);
@@ -219,7 +221,7 @@ final class PrivacyEndpointTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         return [
             'code'    => $code,
@@ -237,7 +239,7 @@ final class PrivacyEndpointTest extends TestCase
     {
         try {
             require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-            \App\Engine\EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             \App\Engine\Database::connect();
             \App\Engine\Database::query('SELECT 1');
             $tenantId = \App\Engine\Ulid::generate();

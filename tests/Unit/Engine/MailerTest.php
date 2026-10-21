@@ -787,10 +787,9 @@ final class MailerTest extends TestCase
     }
 
     /**
-     * sendBookingConfirmation with tenantSlug produces an email containing
-     * the manage-booking URL in the expected format.
+     * A tenant slug or booking ID cannot mint authority for a missing subject.
      */
-    public function testSendBookingConfirmationIncludesManageUrl(): void
+    public function testBookingIdWithoutTenantAuthorityDoesNotProduceManageCredential(): void
     {
         $this->setMailerConfig(['mail_transport' => 'log']);
 
@@ -798,21 +797,10 @@ final class MailerTest extends TestCase
         $buildMethod = new \ReflectionMethod(Mailer::class, 'buildManageUrl');
 
         $url = $buildMethod->invoke(null, 'test-salon', 'BOOKING_01');
-        $this->assertStringContainsString('/book/test-salon/manage/BOOKING_01', $url,
-            'buildManageUrl must construct the correct path');
+        $this->assertSame('', $url, 'A booking identifier alone must never mint a management credential.');
 
-        // Verify the full send path works with slug
-        $result = Mailer::sendBookingConfirmation(
-            'test@example.com', 'Jane Doe',
-            ['date' => '2026-04-17', 'formatted_date' => 'April 17, 2026', 'time' => '10:00', 'end_time' => '10:30'],
-            'Haircut', 'Emma',
-            'Test Salon', 'TENANT_ID', 'BOOKING_01',
-            '#2563EB',
-            null,           // patternDetails
-            'test-salon',   // tenantSlug
-        );
-
-        $this->assertTrue($result['sent'], 'Log transport must succeed with tenantSlug');
+        $this->expectException(\InvalidArgumentException::class);
+        $buildMethod->invoke(null, 'test-salon', 'BOOKING_01', 'TENANT_ID');
     }
 
     /**

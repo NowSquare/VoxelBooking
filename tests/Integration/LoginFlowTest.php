@@ -39,7 +39,7 @@ final class LoginFlowTest extends TestCase
                 CURLOPT_COOKIEFILE     => $cookieJar,
             ]);
             $loginPage = curl_exec($ch);
-            curl_close($ch);
+            unset($ch);
 
             if ($loginPage === false) {
                 $this->markTestSkipped('App not reachable (curl_exec failed)');
@@ -67,7 +67,7 @@ final class LoginFlowTest extends TestCase
             ]);
             $result = curl_exec($ch);
             $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
+            unset($ch);
 
             if ($result === false) {
                 $this->markTestSkipped('App not reachable (curl_exec failed on POST)');
@@ -98,7 +98,7 @@ final class LoginFlowTest extends TestCase
                 CURLOPT_COOKIEFILE     => $cookieJar,
             ]);
             $loginPage = curl_exec($ch);
-            curl_close($ch);
+            unset($ch);
 
             if ($loginPage === false) {
                 $this->markTestSkipped('App not reachable (curl_exec failed)');
@@ -122,7 +122,7 @@ final class LoginFlowTest extends TestCase
                 CURLOPT_FOLLOWLOCATION => true,
             ]);
             $result = curl_exec($ch);
-            curl_close($ch);
+            unset($ch);
 
             if ($result === false) {
                 $this->markTestSkipped('App not reachable (curl_exec failed on POST)');

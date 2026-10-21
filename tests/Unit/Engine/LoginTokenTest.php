@@ -23,7 +23,7 @@ final class LoginTokenTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         require_once dirname(__DIR__, 3) . '/vendor/autoload.php';
-        EnvLoader::load(dirname(__DIR__, 3) . '/.env');
+        \Tests\Support\TestEnvironment::boot();
 
         try {
             Database::connect();

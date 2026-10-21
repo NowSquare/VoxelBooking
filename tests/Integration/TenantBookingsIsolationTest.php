@@ -66,7 +66,7 @@ final class TenantBookingsIsolationTest extends TestCase
         curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_SSL_VERIFYPEER => false, CURLOPT_TIMEOUT => 5]);
         curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
 
         if ($code > 0) {
             self::$appReachable = true;
@@ -419,7 +419,7 @@ final class TenantBookingsIsolationTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $body = substr($response, $headerSize);
         $headers = substr($response, 0, $headerSize);
@@ -447,7 +447,7 @@ final class TenantBookingsIsolationTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $body = substr($response, $headerSize);
         $headers = substr($response, 0, $headerSize);

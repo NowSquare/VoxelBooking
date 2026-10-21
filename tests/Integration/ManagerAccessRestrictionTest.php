@@ -39,7 +39,7 @@ final class ManagerAccessRestrictionTest extends TestCase
         ]);
         $result = curl_exec($ch);
         $code = ($result !== false) ? curl_getinfo($ch, CURLINFO_HTTP_CODE) : 0;
-        curl_close($ch);
+        unset($ch);
 
         if ($code === 0) {
             return;
@@ -49,7 +49,7 @@ final class ManagerAccessRestrictionTest extends TestCase
 
         try {
             require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-            EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
             self::$dbReady = true;
@@ -228,7 +228,7 @@ final class ManagerAccessRestrictionTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $responseHeaders = substr($response, 0, $headerSize);
 

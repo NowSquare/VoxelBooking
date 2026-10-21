@@ -80,8 +80,8 @@ final class AdminDashboardSetupTest extends TestCase
 
     private function actions(string $pattern): array
     {
-        $this->assertTrue(method_exists(DashboardController::class, 'loadSetupActions'), 'Dashboard must distinguish required setup from a quiet day');
-        return (new \ReflectionMethod(DashboardController::class, 'loadSetupActions'))
-            ->invoke(new DashboardController(), 'ours', $pattern);
+        $this->assertTrue(method_exists(\App\Application\Business\DashboardService::class, 'loadSetupActions'), 'Dashboard must distinguish required setup from a quiet day');
+        return (new \ReflectionMethod(\App\Application\Business\DashboardService::class, 'loadSetupActions'))
+            ->invoke(null, 'ours', $pattern);
     }
 }

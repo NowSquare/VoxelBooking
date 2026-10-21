@@ -31,7 +31,7 @@ final class DeletionQueueTest extends TestCase
         if (!self::$dbConnected) {
             try {
                 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-                EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+                \Tests\Support\TestEnvironment::boot();
                 Database::connect();
             Database::query('SELECT 1');
                 self::$dbConnected = true;
@@ -157,7 +157,7 @@ final class DeletionQueueTest extends TestCase
         $code = 0;
         curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
 
         // Should redirect to login (302) when not authenticated
         $this->assertContains($code, [302, 303], 'Deletion queue should require authentication');

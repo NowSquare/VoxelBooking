@@ -27,7 +27,7 @@ class ResourceCalculatorTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         try {
-            EnvLoader::load(__DIR__ . '/../../../.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
         } catch (\Throwable) {

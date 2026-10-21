@@ -44,7 +44,7 @@ final class AuthMiddlewareTest extends TestCase
     private function requireDatabase(): void
     {
         try {
-            EnvLoader::load(dirname(__DIR__, 3) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
         } catch (\Throwable) {

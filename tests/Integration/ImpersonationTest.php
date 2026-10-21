@@ -34,7 +34,7 @@ final class ImpersonationTest extends TestCase
         curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_SSL_VERIFYPEER => false, CURLOPT_TIMEOUT => 5]);
         curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
 
         if ($code === 0) {
             return;
@@ -291,7 +291,7 @@ final class ImpersonationTest extends TestCase
     {
         // Clear old impersonation audit entries
         try {
-            EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
         } catch (\Throwable) {
@@ -407,7 +407,7 @@ final class ImpersonationTest extends TestCase
     public function test_impersonation_redirect_creates_audit_event(): void
     {
         try {
-            EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
         } catch (\Throwable) {
@@ -501,7 +501,7 @@ final class ImpersonationTest extends TestCase
     private function ensureTestBookingExists(): void
     {
         try {
-            EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
         } catch (\Throwable) {
             return; // DB unavailable — test will fail on its own assertions
@@ -596,7 +596,7 @@ final class ImpersonationTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $body = substr($response, $headerSize);
         $headers = substr($response, 0, $headerSize);
@@ -624,7 +624,7 @@ final class ImpersonationTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $body = substr($response, $headerSize);
         $headers = substr($response, 0, $headerSize);

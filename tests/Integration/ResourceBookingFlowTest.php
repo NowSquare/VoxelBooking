@@ -53,7 +53,7 @@ final class ResourceBookingFlowTest extends TestCase
         ]);
         $result = curl_exec($ch);
         $code = ($result !== false) ? curl_getinfo($ch, CURLINFO_HTTP_CODE) : 0;
-        curl_close($ch);
+        unset($ch);
 
         if ($code === 0) {
             self::$setupError = 'App not reachable at ' . self::$baseUrl;
@@ -64,7 +64,7 @@ final class ResourceBookingFlowTest extends TestCase
 
         try {
             require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-            EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
             self::$dbReady = true;
@@ -355,7 +355,7 @@ final class ResourceBookingFlowTest extends TestCase
             CURLOPT_COOKIEFILE     => $cookieFile,
         ]);
         $body = (string) curl_exec($ch);
-        curl_close($ch);
+        unset($ch);
 
         preg_match('/window\.__VB_CSRF__\s*=\s*"([^"]+)"/', $body, $m);
         $token = $m[1] ?? '';
@@ -388,7 +388,7 @@ final class ResourceBookingFlowTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         return [
             'code'    => $code,
@@ -441,13 +441,14 @@ final class ResourceBookingFlowTest extends TestCase
 
         if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
+            $data = TestFixtures::withCatalogVersion($path, $data, self::$operatorCookie);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
         }
 
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $responseHeaders = substr($response, 0, $headerSize);
 

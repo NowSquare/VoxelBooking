@@ -65,7 +65,7 @@ final class EventBookingFlowTest extends TestCase
         ]);
         $result = curl_exec($ch);
         $code = ($result !== false) ? curl_getinfo($ch, CURLINFO_HTTP_CODE) : 0;
-        curl_close($ch);
+
 
         if ($code === 0) {
             self::$setupError = 'App not reachable at ' . self::$baseUrl;
@@ -76,7 +76,7 @@ final class EventBookingFlowTest extends TestCase
 
         try {
             require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-            EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
             self::$dbReady = true;
@@ -631,7 +631,7 @@ final class EventBookingFlowTest extends TestCase
              `start_datetime`, `end_datetime`, `party_size`, `status`, `source`)
              VALUES (?, ?, ?, 'event', ?, ?, ?, 1, 'waitlisted', 'web')",
             [$bookingId, self::$tenantId, $customerId, self::$eventId,
-             "{$date} 09:00:00", "{$date} 13:00:00"]
+             $event['start_datetime'], $event['end_datetime']]
         );
 
         $showRes = self::httpGetWithCookie(
@@ -679,7 +679,7 @@ final class EventBookingFlowTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+
         return [
             'code'    => $code,
             'headers' => substr($response, 0, $headerSize),
@@ -710,7 +710,7 @@ final class EventBookingFlowTest extends TestCase
             CURLOPT_COOKIEFILE     => $cookieFile,
         ]);
         $body = (string) curl_exec($ch);
-        curl_close($ch);
+
 
         // Extract window.__VB_CSRF__ = "..."
         preg_match('/window\.__VB_CSRF__\s*=\s*"([^"]+)"/', $body, $m);
@@ -755,7 +755,7 @@ final class EventBookingFlowTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+
         return [
             'code'    => $code,
             'headers' => substr($response, 0, $headerSize),
@@ -787,7 +787,7 @@ final class EventBookingFlowTest extends TestCase
         ]);
         $body = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+
         return [
             'code'    => $code,
             'headers' => $responseHeaders,
@@ -798,6 +798,7 @@ final class EventBookingFlowTest extends TestCase
     /** @return array{code: int, headers: string, body: string} */
     private static function httpPostWithCookie(string $path, array $data, string $cookie): array
     {
+        $data = TestFixtures::withCatalogVersion($path, $data, $cookie);
         $ch = curl_init(self::$baseUrl . $path);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -815,7 +816,7 @@ final class EventBookingFlowTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+
         return [
             'code'    => $code,
             'headers' => substr($response, 0, $headerSize),
@@ -903,7 +904,7 @@ final class EventBookingFlowTest extends TestCase
         ]);
         $loginResponse = (string) curl_exec($ch);
         $loginHeaderSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+
 
         $loginBody = substr($loginResponse, $loginHeaderSize);
         if (preg_match('/name="_csrf_token"\s+value="([^"]+)"/', $loginBody, $m)) {
@@ -931,7 +932,7 @@ final class EventBookingFlowTest extends TestCase
         $loginRes = (string) curl_exec($ch);
         $loginResHeaderSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         $loginResHeaders = substr($loginRes, 0, $loginResHeaderSize);
-        curl_close($ch);
+
 
         // Extract session cookie from response headers
         if (preg_match('/vb_session=([^;]+)/', $loginResHeaders, $m)) {

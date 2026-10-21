@@ -62,7 +62,7 @@ final class BookingFlowTest extends TestCase
         ]);
         $r = curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
 
         // Accept 200 or 429 — the app is running either way
         if ($code === 0) {
@@ -74,7 +74,7 @@ final class BookingFlowTest extends TestCase
         // DB connection
         try {
             require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-            EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
             self::$dbReady = true;
@@ -335,7 +335,7 @@ final class BookingFlowTest extends TestCase
     {
         $res = $this->httpGetJson('/api/' . self::$seed['slug'] . '/availability?date=invalid');
 
-        $this->assertSame(400, $res['code']);
+        $this->assertSame(422, $res['code']);
     }
 
     public function testAvailableDatesEndpointReturnsDatesArray(): void
@@ -510,7 +510,7 @@ final class BookingFlowTest extends TestCase
         $this->assertSame(422, $res['code'], 'Missing customer must return 422. Body: ' . $res['body']);
 
         $data = json_decode($res['body'], true);
-        $this->assertSame('validation', $data['error'] ?? '');
+        $this->assertSame('validation_failed', $data['error'] ?? '');
     }
 
     public function testBookingRejectsInvalidEmail(): void
@@ -1099,7 +1099,11 @@ final class BookingFlowTest extends TestCase
             $this->assertFalse($data['booking']['email_sent'],
                 'email_sent must be false for log transport (no outbound delivery)');
 
-            // But email_log row exists — the email was recorded
+            $pending = Database::query("SELECT id FROM delivery_outbox WHERE tenant_id = ? AND topic = 'booking.notification' AND status = 'pending'", [self::$seed['tenant_id']]);
+            $this->assertNotEmpty($pending, 'Committed booking must have durable notification intents.');
+            \App\Engine\Outbox::dispatch(1000);
+
+            // The worker records the delivery; the booking request only queues it.
             $logs = Database::query(
                 'SELECT `type`, `status` FROM `email_log` WHERE `booking_id` = ?',
                 [$bookingId]
@@ -1245,7 +1249,7 @@ final class BookingFlowTest extends TestCase
             CURLOPT_COOKIEFILE     => $cookieFile,
         ]);
         $body = (string) curl_exec($ch);
-        curl_close($ch);
+        unset($ch);
 
         // Extract window.__VB_CSRF__ = "..."
         preg_match('/window\.__VB_CSRF__\s*=\s*"([^"]+)"/', $body, $m);
@@ -1291,7 +1295,7 @@ final class BookingFlowTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         return [
             'code'    => $code,

@@ -1,0 +1,3801 @@
+{
+  "version": 1,
+  "baseline_application_commit": "5ba99941c3c296716e7c9b7d49e3cb666de0d064",
+  "review_note": "Execution evidence is recorded separately. A mapped action is not by itself a passing test. Source and contract changes require a new parity review.",
+  "human_actions": {
+    "GET /health": {
+      "handler": "App\\Controllers\\HealthController::index",
+      "source_hash": "a5d47a9418646ff28a0da72ff0781a65a705af21b6b7f20290f00449c6be822c",
+      "disposition": "operation",
+      "operations": [
+        "jobs_status"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/TestIsolationTest.php"
+      ]
+    },
+    "GET /oauth/authorize": {
+      "handler": "App\\Controllers\\OAuth\\OAuthController::authorize",
+      "source_hash": "2f6b647c7f25d4cbe37e3ddd48b52f146c4c7d31bdd1e03983a9d59e36da998f",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Protocol authentication or explicit browser consent. Never expose credentials as an application tool.",
+      "tests": [
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php"
+      ]
+    },
+    "POST /oauth/authorize": {
+      "handler": "App\\Controllers\\OAuth\\OAuthController::approve",
+      "source_hash": "e28191b19510ab4f2837963ad30d36685bf1666fb235c6533ecb0b2b11963fbe",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Protocol authentication or explicit browser consent. Never expose credentials as an application tool.",
+      "tests": [
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php"
+      ]
+    },
+    "POST /oauth/token": {
+      "handler": "App\\Controllers\\OAuth\\OAuthController::token",
+      "source_hash": "10c93c3477953b6ced1f358242d5188af20b80af016c8520fae4eaec5f786786",
+      "disposition": "transport",
+      "operations": [],
+      "rationale": "Protocol authentication or explicit browser consent. Never expose credentials as an application tool.",
+      "tests": [
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php"
+      ]
+    },
+    "POST /oauth/register": {
+      "handler": "App\\Controllers\\OAuth\\OAuthController::register",
+      "source_hash": "fda8fbd15d4f736ba80c3b771341d6b928657143685360c96e9bdad83ccab035",
+      "disposition": "transport",
+      "operations": [],
+      "rationale": "Protocol authentication or explicit browser consent. Never expose credentials as an application tool.",
+      "tests": [
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php"
+      ]
+    },
+    "POST /oauth/revoke": {
+      "handler": "App\\Controllers\\OAuth\\OAuthController::revoke",
+      "source_hash": "88db5b9201b47c7202b8396a572a5c6514a0fc7d8927033e6ba93d9718ce860b",
+      "disposition": "transport",
+      "operations": [],
+      "rationale": "Protocol authentication or explicit browser consent. Never expose credentials as an application tool.",
+      "tests": [
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php"
+      ]
+    },
+    "GET /agent-reviews/{id}": {
+      "handler": "App\\Controllers\\AgentReviewController::show",
+      "source_hash": "8cdcf94b6146304900a0c91824a0750f7977405b30a944fb72bb27a2da554c02",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Independent, CSRF-protected review of an exact server preview; an agent cannot approve its own consequential command.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php"
+      ]
+    },
+    "POST /agent-reviews/{id}": {
+      "handler": "App\\Controllers\\AgentReviewController::approve",
+      "source_hash": "da5d90fccd2068976731b9e7558d71102a87a9066e531300e429029d8c57018c",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Independent, CSRF-protected review of an exact server preview; an agent cannot approve its own consequential command.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php"
+      ]
+    },
+    "POST /agent-reviews/{id}/exchange": {
+      "handler": "App\\Controllers\\AgentReviewController::exchange",
+      "source_hash": "9006d3f5c9b35fd6a4249f224c34a14fc72cd6eca295902a5a601d89443b9746",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Independent, CSRF-protected review of an exact server preview; an agent cannot approve its own consequential command.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php"
+      ]
+    },
+    "GET /robots.txt": {
+      "handler": "App\\Controllers\\SeoController::robots",
+      "source_hash": "d25fd7bca11eaf56e148334ba9937a5ca641c95764273e7d50e700d75255b926",
+      "disposition": "presentation",
+      "operations": [],
+      "rationale": "Robots and sitemap discovery remain ordinary web documents, with no business command.",
+      "tests": [
+        "tests/Integration/SeoEndpointTest.php"
+      ]
+    },
+    "GET /sitemap.xml": {
+      "handler": "App\\Controllers\\SeoController::sitemap",
+      "source_hash": "c78f1d7e647c233b2b2b144e93049c179ca4197c8860fe4ba7e922d8e10195c8",
+      "disposition": "presentation",
+      "operations": [],
+      "rationale": "Robots and sitemap discovery remain ordinary web documents, with no business command.",
+      "tests": [
+        "tests/Integration/SeoEndpointTest.php"
+      ]
+    },
+    "GET /": {
+      "handler": "App\\Controllers\\HomeController::index",
+      "source_hash": "3bded2e6fcecb6e5018370b529730cfb6214e844d4127d201a17d6a91ef954af",
+      "disposition": "presentation",
+      "operations": [
+        "public_business_get"
+      ],
+      "rationale": "The installation landing page offers booking discovery and access-request entry points; no cross-business public directory is added.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ConsentRecordingTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php"
+      ]
+    },
+    "POST /request-access": {
+      "handler": "App\\Controllers\\HomeController::submitRequest",
+      "source_hash": "b1dd3545aa428a4763050768c9af814acf5a292f1b04a865f8c31475f90091d2",
+      "disposition": "operation",
+      "operations": [
+        "application_submit"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessApplicationsTest.php",
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "GET /install": {
+      "handler": "App\\Controllers\\Install\\WizardController::show",
+      "source_hash": "0854739256bd79180c658a77ddee798a35c71c23eae5aeda154e1da43c1e9d5d",
+      "disposition": "trusted_browser",
+      "operations": [
+        "system_handoff"
+      ],
+      "rationale": "Host installation, database credentials and initial identity require the trusted setup browser; only sanitized status and handoff are agent-visible.",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/InstallReconnectTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/UpdateRecoveryUiTest.php"
+      ]
+    },
+    "POST /install/step/2": {
+      "handler": "App\\Controllers\\Install\\WizardController::stepTwo",
+      "source_hash": "dc5b35a99286e5fe4faa15c69b34667438069d7e133e864692a12b1e91026f34",
+      "disposition": "trusted_browser",
+      "operations": [
+        "system_handoff"
+      ],
+      "rationale": "Host installation, database credentials and initial identity require the trusted setup browser; only sanitized status and handoff are agent-visible.",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/InstallReconnectTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/UpdateRecoveryUiTest.php"
+      ]
+    },
+    "POST /install/step/3": {
+      "handler": "App\\Controllers\\Install\\WizardController::stepThree",
+      "source_hash": "4e6c9a03bad20e04c65ad1dc65cd33965cfd511e471a5f93e4a37374e68511ab",
+      "disposition": "trusted_browser",
+      "operations": [
+        "system_handoff"
+      ],
+      "rationale": "Host installation, database credentials and initial identity require the trusted setup browser; only sanitized status and handoff are agent-visible.",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/InstallReconnectTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/UpdateRecoveryUiTest.php"
+      ]
+    },
+    "POST /install/step/4": {
+      "handler": "App\\Controllers\\Install\\WizardController::stepFour",
+      "source_hash": "334a8e5618c8e203391d1649ec59666045eb6a1ce906787c5e195a6b16ba9643",
+      "disposition": "trusted_browser",
+      "operations": [
+        "system_handoff"
+      ],
+      "rationale": "Host installation, database credentials and initial identity require the trusted setup browser; only sanitized status and handoff are agent-visible.",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/InstallReconnectTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/UpdateRecoveryUiTest.php"
+      ]
+    },
+    "POST /install/step/5": {
+      "handler": "App\\Controllers\\Install\\WizardController::stepFive",
+      "source_hash": "605b6e2f0c7273fdcd5b24b1304b1759b4542896e8b6682849e95bf51000ce8d",
+      "disposition": "trusted_browser",
+      "operations": [
+        "system_handoff"
+      ],
+      "rationale": "Host installation, database credentials and initial identity require the trusted setup browser; only sanitized status and handoff are agent-visible.",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/InstallReconnectTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/UpdateRecoveryUiTest.php"
+      ]
+    },
+    "POST /install/complete": {
+      "handler": "App\\Controllers\\Install\\WizardController::complete",
+      "source_hash": "93892d680e515204f537ef3e31c727b26d0ea9db19612017ee136f00356601cd",
+      "disposition": "trusted_browser",
+      "operations": [
+        "system_handoff"
+      ],
+      "rationale": "Host installation, database credentials and initial identity require the trusted setup browser; only sanitized status and handoff are agent-visible.",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/InstallReconnectTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/UpdateRecoveryUiTest.php"
+      ]
+    },
+    "GET /admin/login": {
+      "handler": "App\\Controllers\\Auth\\AuthController::showLogin",
+      "source_hash": "0194bc5b6d7a9d15d523026b30e79923e90c129639e10d88947385366e9415f3",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
+      "tests": [
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/OAuthHttpTest.php"
+      ]
+    },
+    "POST /admin/login": {
+      "handler": "App\\Controllers\\Auth\\AuthController::login",
+      "source_hash": "58208d58a6bcd0d673d255fce30f697c2dd5b704d7eeab54974c206a3b27459f",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
+      "tests": [
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/OAuthHttpTest.php"
+      ]
+    },
+    "POST /auth/logout": {
+      "handler": "App\\Controllers\\Auth\\AuthController::logout",
+      "source_hash": "99f20b0e017a788770e7ea56cf88aa182ef17faeec0acbf4e2857a512384b7b5",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
+      "tests": [
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/OAuthHttpTest.php"
+      ]
+    },
+    "POST /admin/login/request-code": {
+      "handler": "App\\Controllers\\Auth\\AuthController::requestCode",
+      "source_hash": "c67be31b4837e4a31a50e5856e29ff2325c63a4737fffc9845410149ce4be403",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
+      "tests": [
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/OAuthHttpTest.php"
+      ]
+    },
+    "GET /admin/login/verify-code": {
+      "handler": "App\\Controllers\\Auth\\AuthController::showVerifyCode",
+      "source_hash": "432918cefcad312d9753a353ab85aa4b11f164e32589d3508bb4675aca9b25ac",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
+      "tests": [
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/OAuthHttpTest.php"
+      ]
+    },
+    "POST /admin/login/verify-code": {
+      "handler": "App\\Controllers\\Auth\\AuthController::verifyCode",
+      "source_hash": "226ba4ef5ea682e60ce892065be51d8ddb2fca19207e5903337411f4ae1050a7",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
+      "tests": [
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/OAuthHttpTest.php"
+      ]
+    },
+    "GET /admin/login/verify": {
+      "handler": "App\\Controllers\\Auth\\AuthController::verifyMagicLink",
+      "source_hash": "0c41ee82c67607bc6f461dd2bfbb0a5b743478dd00ae2e0e28b2888c0ef3ee67",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
+      "tests": [
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/OAuthHttpTest.php"
+      ]
+    },
+    "GET /admin/forgot-password": {
+      "handler": "App\\Controllers\\Auth\\AuthController::showForgotPassword",
+      "source_hash": "22f046507d3ca1220a47cbc84556e23c32b712790a66994bdef56d796f24cd48",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
+      "tests": [
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/OAuthHttpTest.php"
+      ]
+    },
+    "POST /admin/forgot-password": {
+      "handler": "App\\Controllers\\Auth\\AuthController::forgotPassword",
+      "source_hash": "67293b7e460093d9e0ad14d3d830cd69aa5192a6bcb532dcb746160460a32d6c",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
+      "tests": [
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/OAuthHttpTest.php"
+      ]
+    },
+    "GET /admin/reset-password": {
+      "handler": "App\\Controllers\\Auth\\AuthController::showResetPassword",
+      "source_hash": "1419ed78a03d4c08304243be418369a7503580695389baaf50057c0a18d268e7",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
+      "tests": [
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/OAuthHttpTest.php"
+      ]
+    },
+    "POST /admin/reset-password": {
+      "handler": "App\\Controllers\\Auth\\AuthController::resetPassword",
+      "source_hash": "dc9a26d7ec5ea8db05b22cce996ec11c554121141d259b45a3e6e7205412a2c6",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
+      "tests": [
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/OAuthHttpTest.php"
+      ]
+    },
+    "GET /admin": {
+      "handler": "App\\Controllers\\Admin\\DashboardController::index",
+      "source_hash": "6e1494da15b42ec89fe7eefef965cd78795bb9a0f1a8626a86fad024f197f5a1",
+      "disposition": "operation",
+      "operations": [
+        "operator_dashboard",
+        "business_dashboard"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "GET /admin/connections": {
+      "handler": "App\\Controllers\\Admin\\ConnectionsController::index",
+      "source_hash": "7cd940a6d103d7e9af452737ee55648b065e5af44fd72da013e771011ab1e4d9",
+      "disposition": "trusted_browser",
+      "operations": [
+        "connection_get",
+        "connection_activity",
+        "connection_setup"
+      ],
+      "rationale": "New grants, other connections and raw-token rotation require trusted account consent. The current connection has native inspection, activity and reviewed revocation.",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php"
+      ]
+    },
+    "GET /admin/connections/{id}/activity": {
+      "handler": "App\\Controllers\\Admin\\ConnectionsController::activity",
+      "source_hash": "8fedc43ea647898003d0a0407a6667660a9da982426667bfdef9640b5d4a7943",
+      "disposition": "trusted_browser",
+      "operations": [
+        "connection_activity",
+        "connection_setup"
+      ],
+      "rationale": "New grants, other connections and raw-token rotation require trusted account consent. The current connection has native inspection, activity and reviewed revocation.",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php"
+      ]
+    },
+    "POST /admin/connections": {
+      "handler": "App\\Controllers\\Admin\\ConnectionsController::create",
+      "source_hash": "d50b9204c941e3b039fc5b2c4920b2627262a772ed401d0755dc985f5911a60b",
+      "disposition": "trusted_browser",
+      "operations": [
+        "connection_setup"
+      ],
+      "rationale": "New grants, other connections and raw-token rotation require trusted account consent. The current connection has native inspection, activity and reviewed revocation.",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php"
+      ]
+    },
+    "POST /admin/connections/{id}/revoke": {
+      "handler": "App\\Controllers\\Admin\\ConnectionsController::revoke",
+      "source_hash": "c27907d1e4853f8da2398aab05053b028372c6fafa9387306121485169e87126",
+      "disposition": "trusted_browser",
+      "operations": [
+        "connection_revoke"
+      ],
+      "rationale": "New grants, other connections and raw-token rotation require trusted account consent. The current connection has native inspection, activity and reviewed revocation.",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php"
+      ]
+    },
+    "POST /admin/connections/{id}/rotate": {
+      "handler": "App\\Controllers\\Admin\\ConnectionsController::rotate",
+      "source_hash": "f74f11423e6d71ebd2ab0ac0679ba68ad12cbe560ce895abd8811ffb7ebb9433",
+      "disposition": "trusted_browser",
+      "operations": [
+        "connection_setup"
+      ],
+      "rationale": "New grants, other connections and raw-token rotation require trusted account consent. The current connection has native inspection, activity and reviewed revocation.",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php"
+      ]
+    },
+    "GET /admin/agent-reviews/{id}": {
+      "handler": "App\\Controllers\\AgentReviewController::show",
+      "source_hash": "8cdcf94b6146304900a0c91824a0750f7977405b30a944fb72bb27a2da554c02",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Independent, CSRF-protected review of an exact server preview; an agent cannot approve its own consequential command.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php"
+      ]
+    },
+    "POST /admin/agent-reviews/{id}": {
+      "handler": "App\\Controllers\\AgentReviewController::approve",
+      "source_hash": "da5d90fccd2068976731b9e7558d71102a87a9066e531300e429029d8c57018c",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Independent, CSRF-protected review of an exact server preview; an agent cannot approve its own consequential command.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/webhooks": {
+      "handler": "App\\Controllers\\Admin\\WebhooksController::index",
+      "source_hash": "f1e9f5f89e203eeda1a9fde07e4f9f77ec91446558452525d0c32f4ac2f1d0a7",
+      "disposition": "operation",
+      "operations": [
+        "webhooks_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/webhooks": {
+      "handler": "App\\Controllers\\Admin\\WebhooksController::create",
+      "source_hash": "fc0c0ab46987ca5e1b25bf2e1ec4ded4132a40801d0d65c775370b42beefa142",
+      "disposition": "operation",
+      "operations": [
+        "webhook_create"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/webhooks/{id}": {
+      "handler": "App\\Controllers\\Admin\\WebhooksController::update",
+      "source_hash": "149ea5f1d708fb93d92c3ddb533d19356dee23dfa5a4b475bdf366d0a6fa77ef",
+      "disposition": "operation",
+      "operations": [
+        "webhook_update"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/webhooks/{id}/secret": {
+      "handler": "App\\Controllers\\Admin\\WebhooksController::secret",
+      "source_hash": "5ff033a0d63c256ddb83c1d6cea7b793a34da90a1f387b8345eba02713aa7196",
+      "disposition": "trusted_browser",
+      "operations": [
+        "webhook_get"
+      ],
+      "rationale": "Signing secrets are displayed once to a current owner after CSRF-protected POST; tools only return the exact browser handoff.",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/webhooks/{id}/secret": {
+      "handler": "App\\Controllers\\Admin\\WebhooksController::secret",
+      "source_hash": "5ff033a0d63c256ddb83c1d6cea7b793a34da90a1f387b8345eba02713aa7196",
+      "disposition": "trusted_browser",
+      "operations": [
+        "webhook_get"
+      ],
+      "rationale": "Signing secrets are displayed once to a current owner after CSRF-protected POST; tools only return the exact browser handoff.",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/webhooks/{id}/rotate": {
+      "handler": "App\\Controllers\\Admin\\WebhooksController::rotate",
+      "source_hash": "8c58e0657bc89a0c1b9c236946fe048ea421b0f0719dc97c4a5ac680c470b37c",
+      "disposition": "operation",
+      "operations": [
+        "webhook_secret_rotate"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/webhooks/{id}/deliveries": {
+      "handler": "App\\Controllers\\Admin\\WebhooksController::deliveries",
+      "source_hash": "9f627751e5c9b0daf2713b56376f38ffb869c2e079b4ed57e8dfab5bd5d0bd9a",
+      "disposition": "operation",
+      "operations": [
+        "webhook_deliveries_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/webhook-deliveries/{id}/retry": {
+      "handler": "App\\Controllers\\Admin\\WebhooksController::retry",
+      "source_hash": "e90db39ecd7abb2c6dee108453023b4bf10c96e3c348ad23287261f06a40c439",
+      "disposition": "operation",
+      "operations": [
+        "webhook_delivery_retry"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "GET /admin/settings": {
+      "handler": "App\\Controllers\\Admin\\SettingsController::general",
+      "source_hash": "51eaf6c22cc93803f96b95e39355c7b8eb8ca372535d98c2a6ef1be3cb16d54a",
+      "disposition": "operation",
+      "operations": [
+        "system_settings_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php"
+      ]
+    },
+    "POST /admin/settings": {
+      "handler": "App\\Controllers\\Admin\\SettingsController::saveGeneral",
+      "source_hash": "8f309063cf6b5462e8cb3e635d571b0bb23d98b5cea6468afff7f4eb0a3d10e9",
+      "disposition": "operation",
+      "operations": [
+        "system_settings_update"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php"
+      ]
+    },
+    "GET /admin/account": {
+      "handler": "App\\Controllers\\Admin\\AccountController::show",
+      "source_hash": "6c8f25bf979d4ac512eb7dcc44a175498224fb5559c18fbba6bc9d08bf80fb4b",
+      "disposition": "operation",
+      "operations": [
+        "account_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php"
+      ]
+    },
+    "POST /admin/account": {
+      "handler": "App\\Controllers\\Admin\\AccountController::save",
+      "source_hash": "2e5ece62242203cac355331b1e5cdb1b57d8e7571c32b02fc3f53c439c2a17ce",
+      "disposition": "operation",
+      "operations": [
+        "account_update"
+      ],
+      "rationale": "Display-name changes use account_update. Email verification and password changes stay in the account browser; no tool accepts credentials.",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php"
+      ]
+    },
+    "GET /admin/settings/email": {
+      "handler": "App\\Controllers\\Admin\\SettingsController::email",
+      "source_hash": "2bc164132aa4d4dff507e66823134ef773c1d63a203367917b27f65e8897f1d1",
+      "disposition": "operation",
+      "operations": [
+        "system_settings_get",
+        "system_handoff"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/InstallReconnectTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/UpdateRecoveryUiTest.php"
+      ]
+    },
+    "POST /admin/settings/email": {
+      "handler": "App\\Controllers\\Admin\\SettingsController::saveEmail",
+      "source_hash": "9edea2352c2016a5e430af904e0fd8f1b344a9419b4cdc07585d2ff8a08ed9bc",
+      "disposition": "operation",
+      "operations": [
+        "system_settings_update",
+        "system_handoff"
+      ],
+      "rationale": "Non-secret mail configuration uses the shared settings command; credential input and test mail remain in the operator browser.",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/InstallReconnectTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/UpdateRecoveryUiTest.php"
+      ]
+    },
+    "GET /admin/settings/cron": {
+      "handler": "App\\Controllers\\Admin\\SettingsController::cron",
+      "source_hash": "834963d0da002edf7df504af17bdd97b8d79c10b352942c11447aa5a9e9dbdb6",
+      "disposition": "operation",
+      "operations": [
+        "jobs_status"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/TestIsolationTest.php"
+      ]
+    },
+    "POST /admin/settings/cron/run": {
+      "handler": "App\\Controllers\\Admin\\SettingsController::cronRunNow",
+      "source_hash": "5ba2de6e7257bd890275c90bd8ac171e0ff5694e3de2b7ddd2e66981a72f4d29",
+      "disposition": "operation",
+      "operations": [
+        "jobs_run"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/TestIsolationTest.php"
+      ]
+    },
+    "GET /admin/settings/logs": {
+      "handler": "App\\Controllers\\Admin\\SettingsController::logs",
+      "source_hash": "6633051298b849b15d44aa1ff23fa207f8c9c5e280ea490163373af523459503",
+      "disposition": "operation",
+      "operations": [
+        "system_handoff"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/InstallReconnectTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/UpdateRecoveryUiTest.php"
+      ]
+    },
+    "GET /admin/settings/audit": {
+      "handler": "App\\Controllers\\Admin\\SettingsController::audit",
+      "source_hash": "4386c394f9893545783a8910f687592e25ee6ce82b8bba915151abe3ecc6b9ac",
+      "disposition": "operation",
+      "operations": [
+        "audit_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php"
+      ]
+    },
+    "GET /admin/settings/audit/export": {
+      "handler": "App\\Controllers\\Admin\\SettingsController::auditExport",
+      "source_hash": "156ce5267eb0815a208f7e404acd475e3438ca1e2762fc0059b251ba1abe43df",
+      "disposition": "operation",
+      "operations": [
+        "audit_export"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php"
+      ]
+    },
+    "GET /admin/deletion-queue": {
+      "handler": "App\\Controllers\\Admin\\DeletionQueueController::index",
+      "source_hash": "f9766618dab0017221ed804c974c1c9a56a174dab1b9dc9557016a7a0a396a92",
+      "disposition": "operation",
+      "operations": [
+        "deletion_queue_list",
+        "deletion_review"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/DeletionApplicationTest.php",
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
+      ]
+    },
+    "POST /admin/deletion-queue/confirm": {
+      "handler": "App\\Controllers\\Admin\\DeletionQueueController::confirm",
+      "source_hash": "d0348932f8d441e8a2f5b004825aa693398efdfaaa126801942ba8d75243f8ac",
+      "disposition": "operation",
+      "operations": [
+        "deletion_confirm"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/DeletionApplicationTest.php",
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
+      ]
+    },
+    "POST /admin/deletion-queue/dismiss": {
+      "handler": "App\\Controllers\\Admin\\DeletionQueueController::dismiss",
+      "source_hash": "39d0589222be512d9cf5647515fbc2099a9139a4ca8411172e9c3d2bafe0c517",
+      "disposition": "operation",
+      "operations": [
+        "deletion_dismiss"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/DeletionApplicationTest.php",
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
+      ]
+    },
+    "GET /admin/applications": {
+      "handler": "App\\Controllers\\Admin\\ApplicationsController::index",
+      "source_hash": "52fa7003e31bbbb06b18e0e55a13dab3f9205c6dbb4ec302f4456438fe32e6ed",
+      "disposition": "operation",
+      "operations": [
+        "applications_list",
+        "application_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessApplicationsTest.php",
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/applications/{id}/approve": {
+      "handler": "App\\Controllers\\Admin\\ApplicationsController::approve",
+      "source_hash": "e6c6c774a03367848c5d9c0d5f3a0d5b36fa343e457ac45541ceee36e78a6df2",
+      "disposition": "operation",
+      "operations": [
+        "application_review"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessApplicationsTest.php",
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/applications/{id}/reject": {
+      "handler": "App\\Controllers\\Admin\\ApplicationsController::reject",
+      "source_hash": "ee4bb33f3f416a7e5ec358d169e13b07bffcc75bafeaad022333c2f5526f3a6c",
+      "disposition": "operation",
+      "operations": [
+        "application_review"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessApplicationsTest.php",
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "GET /admin/updates": {
+      "handler": "App\\Controllers\\Admin\\UpdateController::index",
+      "source_hash": "0a4d283eea23bbf9dbe6757b81a0269a5545047e5197f6fc500b9735af19bed0",
+      "disposition": "trusted_browser",
+      "operations": [
+        "system_status",
+        "system_handoff"
+      ],
+      "rationale": "Code uploads and software execution require operator browser or host control. Agents can inspect readiness and prepare the handoff.",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/InstallReconnectTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/UpdateRecoveryUiTest.php",
+        "tests/Unit/Engine/GitUpdaterTest.php"
+      ]
+    },
+    "POST /admin/updates/upload": {
+      "handler": "App\\Controllers\\Admin\\UpdateController::upload",
+      "source_hash": "d862bf661b3079e74c3f403b64a451debadfc9817ce7ef32357c4b44a32cc743",
+      "disposition": "trusted_browser",
+      "operations": [
+        "system_status",
+        "system_handoff"
+      ],
+      "rationale": "Code uploads and software execution require operator browser or host control. Agents can inspect readiness and prepare the handoff.",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/InstallReconnectTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/UpdateRecoveryUiTest.php",
+        "tests/Unit/Engine/GitUpdaterTest.php"
+      ]
+    },
+    "POST /admin/updates/apply": {
+      "handler": "App\\Controllers\\Admin\\UpdateController::applyLocal",
+      "source_hash": "5d2f6009407aa8e54619416eafcfacf86b3db4800d6539cbad1a23b4afea586a",
+      "disposition": "trusted_browser",
+      "operations": [
+        "system_status",
+        "system_handoff"
+      ],
+      "rationale": "Code uploads and software execution require operator browser or host control. Agents can inspect readiness and prepare the handoff.",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/InstallReconnectTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/UpdateRecoveryUiTest.php",
+        "tests/Unit/Engine/GitUpdaterTest.php"
+      ]
+    },
+    "GET /admin/updates/git-status": {
+      "handler": "App\\Controllers\\Admin\\UpdateController::gitStatus",
+      "source_hash": "1b6d273a1d68f48c483e6e98c5f91d32a348eae3e27440e210dd25c41e94c994",
+      "disposition": "trusted_browser",
+      "operations": [
+        "system_status",
+        "system_handoff"
+      ],
+      "rationale": "Code uploads and software execution require operator browser or host control. Agents can inspect readiness and prepare the handoff.",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/InstallReconnectTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/UpdateRecoveryUiTest.php",
+        "tests/Unit/Engine/GitUpdaterTest.php"
+      ]
+    },
+    "POST /admin/updates/git-update": {
+      "handler": "App\\Controllers\\Admin\\UpdateController::gitUpdate",
+      "source_hash": "ed1cc3e8895d0ad96c5519a0e7d624561f534432f8fe4bc565f60f82c262666d",
+      "disposition": "trusted_browser",
+      "operations": [
+        "system_status",
+        "system_handoff"
+      ],
+      "rationale": "Code uploads and software execution require operator browser or host control. Agents can inspect readiness and prepare the handoff.",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/InstallReconnectTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/UpdateRecoveryUiTest.php",
+        "tests/Unit/Engine/GitUpdaterTest.php"
+      ]
+    },
+    "GET /admin/tenants": {
+      "handler": "App\\Controllers\\Admin\\TenantsController::index",
+      "source_hash": "6ce1fd94e4a7d50a84f04e9bc137295ff119d01f4d414f18447bdd2749c75f5b",
+      "disposition": "operation",
+      "operations": [
+        "businesses_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/TenantOwnerCreationTest.php"
+      ]
+    },
+    "GET /admin/tenants/export": {
+      "handler": "App\\Controllers\\Admin\\TenantsController::export",
+      "source_hash": "0d6e559c2fde2a2b994e59ff2448d15ca5b7348eb80b2616751291cba8db8bc2",
+      "disposition": "operation",
+      "operations": [
+        "businesses_export"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/TenantOwnerCreationTest.php"
+      ]
+    },
+    "GET /admin/tenants/create": {
+      "handler": "App\\Controllers\\Admin\\TenantsController::create",
+      "source_hash": "5d13de4756a8bc86a4c266c9dfd31bbf6cf228ca2cffebbad67d4aa495d4cd40",
+      "disposition": "operation",
+      "operations": [
+        "business_create"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/TenantOwnerCreationTest.php"
+      ]
+    },
+    "POST /admin/tenants/create": {
+      "handler": "App\\Controllers\\Admin\\TenantsController::store",
+      "source_hash": "10e72c2dea4220b5d880fef1d8c8a869d445f069d606b6ab989b46d23899f112",
+      "disposition": "operation",
+      "operations": [
+        "business_create"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/TenantOwnerCreationTest.php"
+      ]
+    },
+    "GET /admin/tenants/{id}/edit": {
+      "handler": "App\\Controllers\\Admin\\TenantsController::edit",
+      "source_hash": "a485d0fa888cae6d1ec06e75705fc418ee2e5f5221be93a3d88d5e8cc0cca285",
+      "disposition": "operation",
+      "operations": [
+        "business_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/TenantOwnerCreationTest.php"
+      ]
+    },
+    "POST /admin/tenants/{id}/edit": {
+      "handler": "App\\Controllers\\Admin\\TenantsController::update",
+      "source_hash": "dc6e4051559169dfa4dd9ca219f3f9bcfa74f6d0c8ce7ba6f7d97375cbf932f0",
+      "disposition": "operation",
+      "operations": [
+        "business_update"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/TenantOwnerCreationTest.php"
+      ]
+    },
+    "POST /admin/tenants/{id}/archive": {
+      "handler": "App\\Controllers\\Admin\\TenantsController::archive",
+      "source_hash": "8db67e716486ab00ced1c25e592a11d56a74718be5dd94617c41b70cb6897b1b",
+      "disposition": "operation",
+      "operations": [
+        "business_set_status"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/TenantOwnerCreationTest.php"
+      ]
+    },
+    "POST /admin/tenants/{id}/activate": {
+      "handler": "App\\Controllers\\Admin\\TenantsController::activate",
+      "source_hash": "bb92b6461397a05dde46819e5a1fde9a663a3cf26cb71426596a1f50ca4f30d6",
+      "disposition": "operation",
+      "operations": [
+        "business_set_status"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/TenantOwnerCreationTest.php"
+      ]
+    },
+    "GET /admin/bookings": {
+      "handler": "App\\Controllers\\Admin\\BookingsController::index",
+      "source_hash": "ebbeeab774679c2d066a8a8e473213489d1edbe139d049c392e3c29e46433ef3",
+      "disposition": "operation",
+      "operations": [
+        "operator_bookings_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/SharedBookingReadTest.php"
+      ]
+    },
+    "GET /admin/bookings/export": {
+      "handler": "App\\Controllers\\Admin\\BookingsController::export",
+      "source_hash": "aeb5259b3372d391d9d9c38a50fa847d64ca3e5a99cac366bc52feca140e0d36",
+      "disposition": "operation",
+      "operations": [
+        "operator_bookings_export"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/SharedBookingReadTest.php"
+      ]
+    },
+    "GET /admin/bookings/{id}": {
+      "handler": "App\\Controllers\\Admin\\BookingsController::show",
+      "source_hash": "84d99c60eb85b44b1f00c4f177731d8403d7cf8fe52e290f028a32c2249bb460",
+      "disposition": "operation",
+      "operations": [
+        "booking_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/SharedBookingReadTest.php"
+      ]
+    },
+    "POST /admin/bookings/{id}/status": {
+      "handler": "App\\Controllers\\Admin\\BookingsController::updateStatus",
+      "source_hash": "200eefd7c777975e556516125d6fbf4d8a9a0e8ddb9a7dbc3495a0d667ddabcc",
+      "disposition": "operation",
+      "operations": [
+        "booking_status_set"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "POST /admin/bookings/{id}/reschedule": {
+      "handler": "App\\Controllers\\Admin\\BookingsController::reschedule",
+      "source_hash": "e0de9c72815f085aa99bf5f332cb93905ce936d87e7bef1f143d4745b7df8887",
+      "disposition": "operation",
+      "operations": [
+        "booking_reschedule"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ReschedulePatternTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}": {
+      "handler": "App\\Controllers\\Admin\\DashboardController::tenantDashboard",
+      "source_hash": "320013f36d729aa44869e30e47b11797132301bd460589f76b3abcd66098d27e",
+      "disposition": "operation",
+      "operations": [
+        "business_dashboard"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/bookings": {
+      "handler": "App\\Controllers\\Admin\\BookingsController::tenantIndex",
+      "source_hash": "8fdaecfaf41f76e957eb3910e9334a092c4fa8e265884ae560972c80d33b750b",
+      "disposition": "operation",
+      "operations": [
+        "bookings_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/SharedBookingReadTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/bookings/create": {
+      "handler": "App\\Controllers\\Admin\\BookingsController::tenantCreate",
+      "source_hash": "2b818f9cc63ae58d7378dca7adb0f77c18c9305484e34b85c314fa11c4033640",
+      "disposition": "operation",
+      "operations": [
+        "staff_availability_search",
+        "public_business_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ConsentRecordingTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/ManualBookingCreationTest.php",
+        "tests/Integration/ReschedulePatternTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/bookings/export": {
+      "handler": "App\\Controllers\\Admin\\BookingsController::tenantExport",
+      "source_hash": "8257824eb7b68dd1fdc7be215c02e1e5b9783203e15a68a78363cfaa1b579e9d",
+      "disposition": "operation",
+      "operations": [
+        "bookings_export"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/SharedBookingReadTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/bookings/create": {
+      "handler": "App\\Controllers\\Admin\\BookingsController::tenantStore",
+      "source_hash": "526a5cf502b7f86aac563761a0e67de6a7e51790d1f24558759b3708d71142b3",
+      "disposition": "operation",
+      "operations": [
+        "booking_create"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ConsentRecordingTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/ManualBookingCreationTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/bookings/{id}": {
+      "handler": "App\\Controllers\\Admin\\BookingsController::tenantShow",
+      "source_hash": "5910a4c1bd645efc002f63efe6ef4783b19deadee2d1691e3c6c3783dcbdc876",
+      "disposition": "operation",
+      "operations": [
+        "booking_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/SharedBookingReadTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/bookings/{id}/status": {
+      "handler": "App\\Controllers\\Admin\\BookingsController::tenantUpdateStatus",
+      "source_hash": "1667cda37716215c08640e8bbd9ab7d7b86e3ee29dc6a2a107a7748a9d1bf9a5",
+      "disposition": "operation",
+      "operations": [
+        "booking_status_set"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/bookings/{id}/reschedule": {
+      "handler": "App\\Controllers\\Admin\\BookingsController::tenantReschedule",
+      "source_hash": "4408351925a25a49420793cfec4e11305d98b7936270e134e20a7b01a8700d36",
+      "disposition": "operation",
+      "operations": [
+        "booking_reschedule"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ReschedulePatternTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/users": {
+      "handler": "App\\Controllers\\Admin\\BusinessUsersController::index",
+      "source_hash": "0d95ca722c7ffaed89edb2f4c233f40feb17eb45fe8d7555ba0c45e022cbe05c",
+      "disposition": "operation",
+      "operations": [
+        "team_list",
+        "team_member_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/BusinessUserCrudTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/users/invite": {
+      "handler": "App\\Controllers\\Admin\\BusinessUsersController::invite",
+      "source_hash": "92675c203c93a7946ec5e56cdb595ee4c9aa0cf89d432ff9ba683529618c0082",
+      "disposition": "operation",
+      "operations": [
+        "team_invite"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/BusinessUserCrudTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/users/invite": {
+      "handler": "App\\Controllers\\Admin\\BusinessUsersController::store",
+      "source_hash": "e5595b04cfb2a4b727bcf6bbac24d0d7c899f912dd4b6ef1bb61e47470fd9132",
+      "disposition": "operation",
+      "operations": [
+        "team_invite"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/BusinessUserCrudTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/users/{id}/deactivate": {
+      "handler": "App\\Controllers\\Admin\\BusinessUsersController::deactivate",
+      "source_hash": "c3f985eca8d254493274971001cfbd93d8b3e1043b3c32e09c4434ef069764a0",
+      "disposition": "operation",
+      "operations": [
+        "team_member_set_active"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/BusinessUserCrudTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/users/{id}/activate": {
+      "handler": "App\\Controllers\\Admin\\BusinessUsersController::activate",
+      "source_hash": "64d7c16f1ad164b963612e0ecf7f61195312f2ad0030630c5828f5cb921db912",
+      "disposition": "operation",
+      "operations": [
+        "team_member_set_active"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/BusinessUserCrudTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/settings": {
+      "handler": "App\\Controllers\\Admin\\TenantSettingsController::general",
+      "source_hash": "9164124688962842639e17c93a427f3f5888793acbc9e5e292c0b11c703c4fdb",
+      "disposition": "operation",
+      "operations": [
+        "business_general_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/settings": {
+      "handler": "App\\Controllers\\Admin\\TenantSettingsController::saveGeneral",
+      "source_hash": "a465da0af2280fcfe3f04683ee110c7353c92178da0e2b2d1a4ef28eb2c5016b",
+      "disposition": "operation",
+      "operations": [
+        "business_general_update"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/settings/branding": {
+      "handler": "App\\Controllers\\Admin\\TenantSettingsController::branding",
+      "source_hash": "51d75bc65583ee9b8ad934466c9076cf08ccd2a4fa4f9aeb1c02c7736900f5a3",
+      "disposition": "operation",
+      "operations": [
+        "business_branding_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/MediaGrantSecurityTest.php",
+        "tests/Integration/MediaUploadRecoveryTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/settings/branding": {
+      "handler": "App\\Controllers\\Admin\\TenantSettingsController::saveBranding",
+      "source_hash": "27cc7f055e23413d0e8208f0e9b82566f3a66aeb425f258004c87e117c55c160",
+      "disposition": "operation",
+      "operations": [
+        "business_branding_update"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/MediaGrantSecurityTest.php",
+        "tests/Integration/MediaUploadRecoveryTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/settings/bookingpage": {
+      "handler": "App\\Controllers\\Admin\\TenantSettingsController::bookingPage",
+      "source_hash": "0de1f51d77aa9fecf7f58724abda828b123ce4f2538de3e7bfba48ec58da835a",
+      "disposition": "operation",
+      "operations": [
+        "business_bookingpage_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/settings/bookingpage": {
+      "handler": "App\\Controllers\\Admin\\TenantSettingsController::saveBookingPage",
+      "source_hash": "5b90bb0a8b146cbd3274b86877e2b1da7d6d91ae814b3c22b9a7299279936dce",
+      "disposition": "operation",
+      "operations": [
+        "business_bookingpage_update"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/settings/booking": {
+      "handler": "App\\Controllers\\Admin\\TenantSettingsController::booking",
+      "source_hash": "4bb69a599f8d05cd25c833e5b3f9e507d1d1c20b4a31f2c9c28948238d2b3391",
+      "disposition": "operation",
+      "operations": [
+        "business_booking_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/settings/booking": {
+      "handler": "App\\Controllers\\Admin\\TenantSettingsController::saveBooking",
+      "source_hash": "7f469d877ebf556bb0074062b1ae2cfb9c26ac3a6975ebf849710bacb851a8f5",
+      "disposition": "operation",
+      "operations": [
+        "business_booking_update"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/settings/privacy": {
+      "handler": "App\\Controllers\\Admin\\TenantSettingsController::privacy",
+      "source_hash": "f4216c26a7ad493deceec86497ac97564db09bbda31a5a99ace57631b093f1de",
+      "disposition": "operation",
+      "operations": [
+        "business_privacy_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/settings/privacy": {
+      "handler": "App\\Controllers\\Admin\\TenantSettingsController::savePrivacy",
+      "source_hash": "67538502c21c3c64d5f9b85cd0483c8ea34d133cffb6683b4a46e41bd010cbf4",
+      "disposition": "operation",
+      "operations": [
+        "business_privacy_update"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/settings/notifications": {
+      "handler": "App\\Controllers\\Admin\\TenantSettingsController::notifications",
+      "source_hash": "98194c5668835e67a344bca7d546341ef8767814527969c5438acf2e32165c64",
+      "disposition": "operation",
+      "operations": [
+        "business_notifications_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/settings/notifications": {
+      "handler": "App\\Controllers\\Admin\\TenantSettingsController::saveNotifications",
+      "source_hash": "93338da388a0dce6716142071c65ecb2e7cb9d55f34b7dd6efba0244e0e4da95",
+      "disposition": "operation",
+      "operations": [
+        "business_notifications_update"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/settings/emails": {
+      "handler": "App\\Controllers\\Admin\\TenantSettingsController::emails",
+      "source_hash": "e1fa70bfe50fbc58a181149f6ba0083de25372a93e5ebb47b652cf526e44b2ee",
+      "disposition": "operation",
+      "operations": [
+        "email_templates_get",
+        "email_template_preview"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/settings/emails": {
+      "handler": "App\\Controllers\\Admin\\TenantSettingsController::saveEmails",
+      "source_hash": "973d90e146e23a227ad6cb8d7545e4e96ab6081c9b8c61956d6360860a4d4100",
+      "disposition": "operation",
+      "operations": [
+        "email_templates_update"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/settings/embed": {
+      "handler": "App\\Controllers\\Admin\\TenantSettingsController::embed",
+      "source_hash": "c7aca23368797c980bcfd71db2f0e10de81f73412b91892ccb7f4c47be1a7cb6",
+      "disposition": "operation",
+      "operations": [
+        "business_embed_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/settings/embed": {
+      "handler": "App\\Controllers\\Admin\\TenantSettingsController::saveEmbed",
+      "source_hash": "5c3d7758e527a4ed6928ec40bd692d5d0b9e00114d8e42a340d2ef8215e6d77d",
+      "disposition": "operation",
+      "operations": [
+        "business_embed_update"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/customers": {
+      "handler": "App\\Controllers\\Admin\\CustomersController::index",
+      "source_hash": "ceab49c4ccba98c69e3c61441c327c0452f2473bae26134f3af009844d02349c",
+      "disposition": "operation",
+      "operations": [
+        "customer_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerDirectoryOperationsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/customers/export": {
+      "handler": "App\\Controllers\\Admin\\CustomersController::export",
+      "source_hash": "d7dcd47bd46ada3a8fbc8beda3fab7900648ef68048347119d6b51dbd97f7a38",
+      "disposition": "operation",
+      "operations": [
+        "customer_export"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerDirectoryOperationsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/customers/{id}": {
+      "handler": "App\\Controllers\\Admin\\CustomersController::show",
+      "source_hash": "d212db64a7e0d1672ed3e83210fbd2bd7eda532c912e8b77cae7b9e061f1c6a9",
+      "disposition": "operation",
+      "operations": [
+        "customer_get",
+        "customer_history"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerDirectoryOperationsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/services": {
+      "handler": "App\\Controllers\\Admin\\ServiceController::index",
+      "source_hash": "6ea353e9ced7c1111e9aeeceb3ced78bd384c082d9a91d382a442a56c031f500",
+      "disposition": "operation",
+      "operations": [
+        "services_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ServiceManagementTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/services/create": {
+      "handler": "App\\Controllers\\Admin\\ServiceController::create",
+      "source_hash": "2252faeae720019e4c34bfd037936e513fc8575c5f1218e5e68a1f7147cf73d0",
+      "disposition": "operation",
+      "operations": [
+        "service_create"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ServiceManagementTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/services": {
+      "handler": "App\\Controllers\\Admin\\ServiceController::store",
+      "source_hash": "28a79af26a2c3609eb868caf1269f581754a7858178a03f8ab00884fd66aa384",
+      "disposition": "operation",
+      "operations": [
+        "service_create"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ServiceManagementTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/services/{id}/edit": {
+      "handler": "App\\Controllers\\Admin\\ServiceController::edit",
+      "source_hash": "648961a78bde4cf5a1b872db394b09e1be658395cf20005ae67ab38f66bdc607",
+      "disposition": "operation",
+      "operations": [
+        "service_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ServiceManagementTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/services/{id}": {
+      "handler": "App\\Controllers\\Admin\\ServiceController::update",
+      "source_hash": "f42895077dfb2799d9cbc09a6b1ebaa68ddb6204538089f680e0ee08daaea376",
+      "disposition": "operation",
+      "operations": [
+        "service_update"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ServiceManagementTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/services/{id}/activate": {
+      "handler": "App\\Controllers\\Admin\\ServiceController::activate",
+      "source_hash": "c2ea556ee2abe13b31c0e1fed978311b084a5bc395fd67b19d6175e6f6eb4b16",
+      "disposition": "operation",
+      "operations": [
+        "service_set_active"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ServiceManagementTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/services/{id}/deactivate": {
+      "handler": "App\\Controllers\\Admin\\ServiceController::deactivate",
+      "source_hash": "7aae5487704be859a787ae9b97e198857f2541d492a3ce3fd731a34f6aa14e44",
+      "disposition": "operation",
+      "operations": [
+        "service_set_active"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ServiceManagementTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/services/{id}/reorder": {
+      "handler": "App\\Controllers\\Admin\\ServiceController::reorder",
+      "source_hash": "af72164952edc7b566b13ef3104157bd7b8c190d71474a222373605cbd85cf59",
+      "disposition": "operation",
+      "operations": [
+        "service_reorder"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ServiceManagementTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/staff": {
+      "handler": "App\\Controllers\\Admin\\StaffController::index",
+      "source_hash": "d8fbbf1c5e823b3238c47c8aa2bf671f5306918f60fa8c763ed6086b9c0c819f",
+      "disposition": "operation",
+      "operations": [
+        "staff_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/StaffManagementTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/staff/create": {
+      "handler": "App\\Controllers\\Admin\\StaffController::create",
+      "source_hash": "d1b73f8f667cb5209245f76382c44c32d55352966201c1ac5202211399b6d9c1",
+      "disposition": "operation",
+      "operations": [
+        "staff_create"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/StaffManagementTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/staff/create": {
+      "handler": "App\\Controllers\\Admin\\StaffController::store",
+      "source_hash": "df8ec3c9f0dd42a775d6f831b25b38fb2dd407a190c806e56e51a7518c2706b7",
+      "disposition": "operation",
+      "operations": [
+        "staff_create"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/StaffManagementTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/staff/{id}/edit": {
+      "handler": "App\\Controllers\\Admin\\StaffController::edit",
+      "source_hash": "dd625b77027347398000e8dd1dbaee9c39542a6fe5a1aee4eccd1402e6daafbb",
+      "disposition": "operation",
+      "operations": [
+        "staff_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/StaffManagementTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/staff/{id}/edit": {
+      "handler": "App\\Controllers\\Admin\\StaffController::update",
+      "source_hash": "692e578e6e7d2429d4b86f69f85fea9c6f05301588aa083634592287d0014937",
+      "disposition": "operation",
+      "operations": [
+        "staff_update"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/StaffManagementTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/staff/{id}/activate": {
+      "handler": "App\\Controllers\\Admin\\StaffController::activate",
+      "source_hash": "32020355adcf523d4d8696a36262ab76219b8a7c515044e0b34ee454cc4e7245",
+      "disposition": "operation",
+      "operations": [
+        "staff_set_active"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/StaffManagementTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/staff/{id}/deactivate": {
+      "handler": "App\\Controllers\\Admin\\StaffController::deactivate",
+      "source_hash": "e2be8625b7c311c406c8b8fbc594ff65443c6d5f1c69296175d49812b0049be0",
+      "disposition": "operation",
+      "operations": [
+        "staff_set_active"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/StaffManagementTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/staff/{id}/reorder": {
+      "handler": "App\\Controllers\\Admin\\StaffController::reorder",
+      "source_hash": "03d58e388b2ca0e277baf5e885ebcdc85ca5e7ae950e7e067262f15fb7e17e14",
+      "disposition": "operation",
+      "operations": [
+        "staff_reorder"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/StaffManagementTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/availability": {
+      "handler": "App\\Controllers\\Admin\\AvailabilityController::index",
+      "source_hash": "e29ce41d9623c44f3c9739d3604cde5054ab71fc71963d7ffd35b8247273f5a1",
+      "disposition": "operation",
+      "operations": [
+        "schedule_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityManagementTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/availability": {
+      "handler": "App\\Controllers\\Admin\\AvailabilityController::save",
+      "source_hash": "938cf6736b682609aef66972c1ae326b96449de143f8a1633c3b8c19d635f333",
+      "disposition": "operation",
+      "operations": [
+        "schedule_replace"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityManagementTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/availability/staff/{id}": {
+      "handler": "App\\Controllers\\Admin\\AvailabilityController::staffOverride",
+      "source_hash": "d69713da959ef038774b969f519cc5c72562c9d16b163534b51d87c8aff44766",
+      "disposition": "operation",
+      "operations": [
+        "schedule_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityManagementTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/availability/staff/{id}": {
+      "handler": "App\\Controllers\\Admin\\AvailabilityController::saveStaffOverride",
+      "source_hash": "c286249448c7c6f5c8ec2ef348c9ac2ca2ddb78a12c2e3b002cabbe7fd24ec7b",
+      "disposition": "operation",
+      "operations": [
+        "schedule_replace"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityManagementTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/availability/staff/{id}/reset": {
+      "handler": "App\\Controllers\\Admin\\AvailabilityController::resetStaffOverride",
+      "source_hash": "590ebfc90b6a84d12a3630f792c4c506a3f1e6c72a3bf464ce0d0a3221bc4c27",
+      "disposition": "operation",
+      "operations": [
+        "schedule_reset_staff"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityManagementTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/blocked-dates": {
+      "handler": "App\\Controllers\\Admin\\BlockedDatesController::index",
+      "source_hash": "05b27064d206959b6b6f34e6a2bdeb46bc9af49f6887c950d2eee4442a309431",
+      "disposition": "operation",
+      "operations": [
+        "blocked_dates_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BlockedDatesManagementTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/blocked-dates": {
+      "handler": "App\\Controllers\\Admin\\BlockedDatesController::store",
+      "source_hash": "feb1bf78f1b11d3a337c64bbc7a479042cc38d171657b74f92b8d00eb4d3ea53",
+      "disposition": "operation",
+      "operations": [
+        "blocked_date_create"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BlockedDatesManagementTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/blocked-dates/{id}/delete": {
+      "handler": "App\\Controllers\\Admin\\BlockedDatesController::delete",
+      "source_hash": "09e3a822263be929ca48023320af3d16dd41c9cfbf1382ab9a33d06bbb9ed2df",
+      "disposition": "operation",
+      "operations": [
+        "blocked_date_delete"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BlockedDatesManagementTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/resources": {
+      "handler": "App\\Controllers\\Admin\\ResourceController::index",
+      "source_hash": "5b7eecaf64a5c92927aae7519f755ef70becd857a1f08b1f827bcf9475716185",
+      "disposition": "operation",
+      "operations": [
+        "resources_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/resources/create": {
+      "handler": "App\\Controllers\\Admin\\ResourceController::create",
+      "source_hash": "cc108df16049e8dcb29877fb3e605c2fb58729d574441cbf52fab5f63e2c0f7f",
+      "disposition": "operation",
+      "operations": [
+        "resource_create"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/resources": {
+      "handler": "App\\Controllers\\Admin\\ResourceController::store",
+      "source_hash": "df227e6b91032fe1fb922d3b63ac33cc91744569864669fe97011ced96e42a75",
+      "disposition": "operation",
+      "operations": [
+        "resource_create"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/resources/{id}/edit": {
+      "handler": "App\\Controllers\\Admin\\ResourceController::edit",
+      "source_hash": "98759a4483e2325ae1877ce396836d5c568216b9b68de6d02d4683105673ee40",
+      "disposition": "operation",
+      "operations": [
+        "resource_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/resources/{id}": {
+      "handler": "App\\Controllers\\Admin\\ResourceController::update",
+      "source_hash": "9029ca7640ab471366e4aa67884ded8e48533ba3937d13e6bb05c5a24099f1b8",
+      "disposition": "operation",
+      "operations": [
+        "resource_update"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/resources/{id}/activate": {
+      "handler": "App\\Controllers\\Admin\\ResourceController::activate",
+      "source_hash": "71cae411527b275f9c0c63fa1d92825aa2b841185ce02491010e71f89e2a5fa2",
+      "disposition": "operation",
+      "operations": [
+        "resource_set_active"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/resources/{id}/deactivate": {
+      "handler": "App\\Controllers\\Admin\\ResourceController::deactivate",
+      "source_hash": "2e817504922e1138e59e1c8d33f67096027d4158c486f81da1015b00b450da8c",
+      "disposition": "operation",
+      "operations": [
+        "resource_set_active"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/resources/{id}/reorder": {
+      "handler": "App\\Controllers\\Admin\\ResourceController::reorder",
+      "source_hash": "cbcece6b6e57409662540161772c8e258f35c55d4024255169364d42f52342b3",
+      "disposition": "operation",
+      "operations": [
+        "resource_reorder"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/capacity-slots": {
+      "handler": "App\\Controllers\\Admin\\CapacitySlotsController::index",
+      "source_hash": "8bdceea1311fe739dba03a0ce529f7f46b7b9e4a1d8def44f829c81b4b3dcd4f",
+      "disposition": "operation",
+      "operations": [
+        "capacity_slots_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CapacityBookingFlowTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/capacity-slots": {
+      "handler": "App\\Controllers\\Admin\\CapacitySlotsController::store",
+      "source_hash": "b0fe404b519678ec5dfbf69cfb61e8af7f9778f52e7097304ee0a0b1167dd666",
+      "disposition": "operation",
+      "operations": [
+        "capacity_slot_create"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CapacityBookingFlowTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/capacity-slots/{id}/toggle": {
+      "handler": "App\\Controllers\\Admin\\CapacitySlotsController::toggleActive",
+      "source_hash": "04d3b2b7b04ea62882d62498a300beb3d765690336c672936da5b8462ab56d4c",
+      "disposition": "operation",
+      "operations": [
+        "capacity_slot_set_active"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CapacityBookingFlowTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/capacity-slots/{id}/delete": {
+      "handler": "App\\Controllers\\Admin\\CapacitySlotsController::delete",
+      "source_hash": "5a7fc85fb1078c7884614bbca517624c3697dbd31e2947af2f71def3bd0e29d1",
+      "disposition": "operation",
+      "operations": [
+        "capacity_slot_delete"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/CapacityBookingFlowTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/events": {
+      "handler": "App\\Controllers\\Admin\\EventsController::index",
+      "source_hash": "62c9d00b132d01e3d2e774871910929da94cd134bb1d48f00fb05ee87fc3f416",
+      "disposition": "operation",
+      "operations": [
+        "events_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/events/create": {
+      "handler": "App\\Controllers\\Admin\\EventsController::create",
+      "source_hash": "6398dfc10bd3dab077ca1aacd8ae895a2dc35d8979d4ac19137e4536b2bc34e0",
+      "disposition": "operation",
+      "operations": [
+        "event_create"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/events": {
+      "handler": "App\\Controllers\\Admin\\EventsController::store",
+      "source_hash": "5ddb3a085ab0c3c7bfb4e5c288d2e80519e5664d0f4b72d3614510dfa7d42183",
+      "disposition": "operation",
+      "operations": [
+        "event_create"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/events/{id}/edit": {
+      "handler": "App\\Controllers\\Admin\\EventsController::edit",
+      "source_hash": "f887f92ee441a6e0d26523e659f8aa56852e1d7d2d2b1269fc0296a91dcb4b35",
+      "disposition": "operation",
+      "operations": [
+        "event_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/events/{id}": {
+      "handler": "App\\Controllers\\Admin\\EventsController::update",
+      "source_hash": "8552f29958f080f4b944d15b4121c82999dd2e17930d26cdf42af292c0383de2",
+      "disposition": "operation",
+      "operations": [
+        "event_update"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/events/{id}/toggle": {
+      "handler": "App\\Controllers\\Admin\\EventsController::toggleActive",
+      "source_hash": "0a0a3443f53f64ab334f00eff4a1b6a81fbe3717fa5eabd14b755b7d6cb8be9e",
+      "disposition": "operation",
+      "operations": [
+        "event_set_active"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/events/{id}/delete": {
+      "handler": "App\\Controllers\\Admin\\EventsController::delete",
+      "source_hash": "a6ed5c4cc2b2878ee2411af0b28bd87597ea5cf598d5efd83d1e630b26987f05",
+      "disposition": "operation",
+      "operations": [
+        "event_delete"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/calendar": {
+      "handler": "App\\Controllers\\Admin\\CalendarController::month",
+      "source_hash": "157ff7408dce9e2d0d6ab674e4c00fd7c9a80cd92979216fad2a640b8b1a4fae",
+      "disposition": "operation",
+      "operations": [
+        "calendar_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/calendar/day": {
+      "handler": "App\\Controllers\\Admin\\CalendarController::day",
+      "source_hash": "ff26cdb4b5787e8a6f5f9b421a5bed7c4f7ea407ede54435574cac3b99ba5e82",
+      "disposition": "operation",
+      "operations": [
+        "calendar_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "GET /admin/tenants/{tenant_id}/calendar/week": {
+      "handler": "App\\Controllers\\Admin\\CalendarController::week",
+      "source_hash": "3743a707a44e30b3d456e5362723eebe7dce2a6977df9e26d647d2e0189ac479",
+      "disposition": "operation",
+      "operations": [
+        "calendar_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "POST /admin/tenants/{tenant_id}/impersonate": {
+      "handler": "App\\Controllers\\Admin\\ImpersonationController::start",
+      "source_hash": "86429007a69ed63f22de69da774fa1ffc059c09d0d451f3991bd434005a48a0a",
+      "disposition": "operation",
+      "operations": [
+        "operator_business_context"
+      ],
+      "rationale": "Native operations retain original operator attribution and select an explicit business; no impersonation cookies are issued to clients.",
+      "tests": [
+        "tests/Integration/ImpersonationTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php"
+      ]
+    },
+    "POST /admin/impersonate/exit": {
+      "handler": "App\\Controllers\\Admin\\ImpersonationController::exit",
+      "source_hash": "8025462c45a053df3ed04d33b8c19f66405b566ba47bc0005738bb72c985c535",
+      "disposition": "operation",
+      "operations": [
+        "identity_get"
+      ],
+      "rationale": "Native operations retain original operator attribution and select an explicit business; no impersonation cookies are issued to clients.",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/ImpersonationTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/SystemOperationsTest.php"
+      ]
+    },
+    "GET /book/{slug}": {
+      "handler": "App\\Controllers\\Booking\\BookingPageController::show",
+      "source_hash": "8cf729bc5b2d994cbf620eb5756a3cdf7eb549b1f2a6163159f43db9fc71e02c",
+      "disposition": "operation",
+      "operations": [
+        "public_business_get",
+        "public_catalog_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ConsentRecordingTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php"
+      ]
+    },
+    "GET /embed/{slug}.js": {
+      "handler": "App\\Controllers\\Booking\\EmbedController::script",
+      "source_hash": "0eebe0795fd209443045d2e42a856aab360cf4d3a5e395486c06e7907d1662b2",
+      "disposition": "operation",
+      "operations": [
+        "business_embed_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "GET /api/{slug}/embed-config": {
+      "handler": "App\\Controllers\\Booking\\EmbedController::config",
+      "source_hash": "ad4cf9b38b4af01e1ddb09713febe76de009a73179b4ac19e5784c77667f4f96",
+      "disposition": "operation",
+      "operations": [
+        "public_business_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ConsentRecordingTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php"
+      ]
+    },
+    "GET /api/{slug}/services": {
+      "handler": "App\\Controllers\\Booking\\BookingApiController::services",
+      "source_hash": "0936d9a048db8a44e25d009101667822b2b3767b5046675bf508ee86d95b1568",
+      "disposition": "operation",
+      "operations": [
+        "public_catalog_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ConsentRecordingTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php"
+      ]
+    },
+    "GET /api/{slug}/staff": {
+      "handler": "App\\Controllers\\Booking\\BookingApiController::staff",
+      "source_hash": "cd5901b1d54da29358e23e523a0ff24fa3888de022da2d8e14d4b83578ebc710",
+      "disposition": "operation",
+      "operations": [
+        "public_catalog_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ConsentRecordingTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php"
+      ]
+    },
+    "GET /api/{slug}/availability": {
+      "handler": "App\\Controllers\\Booking\\BookingApiController::availability",
+      "source_hash": "e8e406b44c93a2d79f3c27b18800cc051ba878041ebb48ec011d1561bfae5be2",
+      "disposition": "operation",
+      "operations": [
+        "availability_search",
+        "customer_availability_search"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ReschedulePatternTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "GET /api/{slug}/available-dates": {
+      "handler": "App\\Controllers\\Booking\\BookingApiController::availableDates",
+      "source_hash": "40200956bc11ca4fa7c6e6687ea9ca97c694734a49dd47973b5ef2bc4e17fc9b",
+      "disposition": "operation",
+      "operations": [
+        "availability_search"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "POST /api/{slug}/bookings": {
+      "handler": "App\\Controllers\\Booking\\BookingApiController::createBooking",
+      "source_hash": "0fb6b5b457805ecb4baa24eaa02ff6f7e0bdccec5e59b52c03a786565628c3c9",
+      "disposition": "operation",
+      "operations": [
+        "public_booking_create"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ConsentRecordingTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "GET /api/{slug}/resources": {
+      "handler": "App\\Controllers\\Booking\\BookingApiController::resources",
+      "source_hash": "3e2446782f615e6b725bf18712551cddec9f2f125529f5b8bffdddd1957e802a",
+      "disposition": "operation",
+      "operations": [
+        "public_catalog_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ConsentRecordingTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php"
+      ]
+    },
+    "GET /api/{slug}/resources/{id}/availability": {
+      "handler": "App\\Controllers\\Booking\\BookingApiController::resourceAvailability",
+      "source_hash": "efec92c357b304b6811212d44026f30dbe27169cffe80f0124948806117102d8",
+      "disposition": "operation",
+      "operations": [
+        "availability_search"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "GET /api/{slug}/capacity/available-dates": {
+      "handler": "App\\Controllers\\Booking\\BookingApiController::capacityAvailableDates",
+      "source_hash": "711d8ae87c22278035fea78a72d5a96c45cefb37cad9b85fcc9ffaa682f0998c",
+      "disposition": "operation",
+      "operations": [
+        "availability_search"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "GET /api/{slug}/capacity/slots": {
+      "handler": "App\\Controllers\\Booking\\BookingApiController::capacitySlots",
+      "source_hash": "f1ed6dfea5f582aeaecf171ef371e699b54a89093f991b98bf8f0797efe8aaa9",
+      "disposition": "operation",
+      "operations": [
+        "availability_search"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "GET /api/{slug}/events": {
+      "handler": "App\\Controllers\\Booking\\BookingApiController::events",
+      "source_hash": "75cc041e6e51fab38480d80cba04af5bd073d3fa97de4e5e77c87e21153d8f1a",
+      "disposition": "operation",
+      "operations": [
+        "public_catalog_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ConsentRecordingTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php"
+      ]
+    },
+    "GET /api/{slug}/events/{id}": {
+      "handler": "App\\Controllers\\Booking\\BookingApiController::eventDetail",
+      "source_hash": "c345d8af5b869c9d1546f6bf1b4c94be3c217534f02308e49b3f20f43f3ac871",
+      "disposition": "operation",
+      "operations": [
+        "public_catalog_list"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ConsentRecordingTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php"
+      ]
+    },
+    "POST /api/{slug}/customer-access": {
+      "handler": "App\\Controllers\\Booking\\CustomerAccessController::exchange",
+      "source_hash": "87177f858e66eff22c2d987593940064c20481966a9affdbca468effbd5d1bea",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Proof of mailbox access is exchanged into a purpose-bound browser session; identifiers and email knowledge never grant authority.",
+      "tests": [
+        "tests/Integration/CustomerCapabilityBoundaryTest.php"
+      ]
+    },
+    "POST /book/{slug}/access-recovery": {
+      "handler": "App\\Controllers\\Booking\\CustomerAccessController::recover",
+      "source_hash": "39a5194ea0540492fb5da4b424b24a113fc24858756711efbe15156d449e83a1",
+      "disposition": "trusted_browser",
+      "operations": [],
+      "rationale": "Proof of mailbox access is exchanged into a purpose-bound browser session; identifiers and email knowledge never grant authority.",
+      "tests": [
+        "tests/Integration/CustomerCapabilityBoundaryTest.php"
+      ]
+    },
+    "GET /book/{slug}/privacy/{customer_id}": {
+      "handler": "App\\Controllers\\Booking\\PrivacyController::show",
+      "source_hash": "1a2d800372b84a61c00f9267b76df3cf6f6ce6772a0b06f660647339cb19988f",
+      "disposition": "operation",
+      "operations": [
+        "customer_privacy_get",
+        "customer_privacy_records"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/CustomerCapabilityBoundaryTest.php",
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
+      ]
+    },
+    "POST /book/{slug}/privacy/{customer_id}": {
+      "handler": "App\\Controllers\\Booking\\PrivacyController::action",
+      "source_hash": "82bb35238cde2718cb6f159993814dbef9b4a742efc70036d097056ed6b4ac2c",
+      "disposition": "operation",
+      "operations": [
+        "customer_privacy_export",
+        "customer_deletion_request"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/CustomerCapabilityBoundaryTest.php",
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
+      ]
+    },
+    "GET /book/{slug}/manage/{booking_id}": {
+      "handler": "App\\Controllers\\Booking\\BookingPageController::manage",
+      "source_hash": "5a7dc342b7448ca20b716a5a47243edbddf9d34b8262cc2f010f6cfee0357835",
+      "disposition": "operation",
+      "operations": [
+        "customer_booking_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerCapabilityBoundaryTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "GET /api/{slug}/bookings/{id}": {
+      "handler": "App\\Controllers\\Booking\\BookingApiController::bookingDetail",
+      "source_hash": "278701f4006483fa42b2d7e815660600e15e100540532e83f291511401218db2",
+      "disposition": "operation",
+      "operations": [
+        "customer_booking_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerCapabilityBoundaryTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "POST /api/{slug}/bookings/{id}/cancel": {
+      "handler": "App\\Controllers\\Booking\\BookingApiController::cancelBookingAction",
+      "source_hash": "457c29c3692088292014fc8c159a6787ed09dfb486865fab6a6445ea3f317532",
+      "disposition": "operation",
+      "operations": [
+        "customer_booking_cancel"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerCapabilityBoundaryTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "POST /api/{slug}/bookings/{id}/reschedule": {
+      "handler": "App\\Controllers\\Booking\\BookingApiController::rescheduleBookingAction",
+      "source_hash": "5b26c1d836572c8e37508b8aa1810a515f316b06aecc25905c0099b963b1f84b",
+      "disposition": "operation",
+      "operations": [
+        "customer_booking_reschedule"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ReschedulePatternTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "GET /cron/run": {
+      "handler": "App\\Controllers\\CronController::run",
+      "source_hash": "6936ba5855ecc947a2bcf78b3b732e9dae6fcb68d9fa6a6cc8396ff8cbacc628",
+      "disposition": "transport",
+      "operations": [
+        "jobs_run"
+      ],
+      "rationale": "Scheduled secret-bearing cron trigger and reviewed run-now operation share the durable dispatcher and overlap lock.",
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/TestIsolationTest.php"
+      ]
+    },
+    "GET /cron/retention": {
+      "handler": "App\\Controllers\\CronController::run",
+      "source_hash": "6936ba5855ecc947a2bcf78b3b732e9dae6fcb68d9fa6a6cc8396ff8cbacc628",
+      "disposition": "transport",
+      "operations": [
+        "jobs_run"
+      ],
+      "rationale": "Scheduled secret-bearing cron trigger and reviewed run-now operation share the durable dispatcher and overlap lock.",
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/TestIsolationTest.php"
+      ]
+    },
+    "GET /api/agent/v1/schema": {
+      "handler": "App\\Controllers\\AgentApi\\SchemaController::index",
+      "source_hash": "7351a2c989709889f2aae47039d8de556d43e5bf0a650b97c3bfdb994db42428",
+      "disposition": "operation",
+      "operations": [
+        "capabilities_get"
+      ],
+      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "tests": [
+        "tests/Integration/AgentV1ContractTest.php",
+        "tests/Integration/OAuthHttpTest.php"
+      ]
+    },
+    "GET /api/agent/v1/tenants": {
+      "handler": "App\\Controllers\\AgentApi\\ResourceController::tenants",
+      "source_hash": "76e1a801ef5efbe224b9b54ce30f7be6990d337964bc52412a2a9c2f0e2b93d8",
+      "disposition": "transport",
+      "operations": [
+        "businesses_list"
+      ],
+      "rationale": "Legacy v1 read projection remains bounded and read-only; v2 supplies the full shared operation.",
+      "tests": [
+        "tests/Integration/AgentV1ContractTest.php",
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/TenantOwnerCreationTest.php"
+      ]
+    },
+    "GET /api/agent/v1/bookings": {
+      "handler": "App\\Controllers\\AgentApi\\ResourceController::bookings",
+      "source_hash": "4a3f3bdfe22b048c8abebe64494493551a7cae3c17888eba1d420dc569cdfd10",
+      "disposition": "transport",
+      "operations": [
+        "bookings_list"
+      ],
+      "rationale": "Legacy v1 read projection remains bounded and read-only; v2 supplies the full shared operation.",
+      "tests": [
+        "tests/Integration/AgentV1ContractTest.php",
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/SharedBookingReadTest.php"
+      ]
+    },
+    "GET /api/agent/v1/services": {
+      "handler": "App\\Controllers\\AgentApi\\ResourceController::services",
+      "source_hash": "b8effef8fcde7e705cfc2ff777a0c1a22972f143a9a3c2d0f770046895c467cc",
+      "disposition": "transport",
+      "operations": [
+        "services_list"
+      ],
+      "rationale": "Legacy v1 read projection remains bounded and read-only; v2 supplies the full shared operation.",
+      "tests": [
+        "tests/Integration/AgentV1ContractTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ServiceManagementTest.php"
+      ]
+    },
+    "GET /api/agent/v1/availability": {
+      "handler": "App\\Controllers\\AgentApi\\ResourceController::availability",
+      "source_hash": "7f2d4b8dd1b5502fbca9e6eab939dece8e5a924c3a8a69cf6b77b8b39897e936",
+      "disposition": "transport",
+      "operations": [
+        "schedule_get"
+      ],
+      "rationale": "Legacy v1 read projection remains bounded and read-only; v2 supplies the full shared operation.",
+      "tests": [
+        "tests/Integration/AgentV1ContractTest.php",
+        "tests/Integration/AvailabilityManagementTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    }
+  },
+  "operations": {
+    "account_get": {
+      "contract_hash": "49961d3021cc3d95fa2d56e995134b175e9503904519625feff6042f199235f3",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php"
+      ]
+    },
+    "account_update": {
+      "contract_hash": "850203363564d0eb2276da8b3260cda19efe4f606b319e4384d9f2d67d6d1ba1",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php"
+      ]
+    },
+    "application_get": {
+      "contract_hash": "9718a28137bb5ff8f4f3044134bcbfae60c69f9f489b68eb4391999728bfc64f",
+      "tests": [
+        "tests/Integration/BusinessApplicationsTest.php",
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "application_review": {
+      "contract_hash": "d4140dfb0ed32af6cadc6ffc20b29335c4aa93ad5560457a459f25583b53c711",
+      "tests": [
+        "tests/Integration/BusinessApplicationsTest.php",
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "application_submit": {
+      "contract_hash": "b1b5eeda05728b7a1b010d8ca3f0d5c472b17ebe9a2ab1a6a6d5e14609e191dd",
+      "tests": [
+        "tests/Integration/BusinessApplicationsTest.php",
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "applications_list": {
+      "contract_hash": "9a1f107ea7503b184e058842a0e757fd1aedf1c85835fee4ebc86b614f842b94",
+      "tests": [
+        "tests/Integration/BusinessApplicationsTest.php",
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "audit_export": {
+      "contract_hash": "22c91f795c73570c616e86b76d854fdf39c13d88fe9ee2c4fbf660b4f5c75a4f",
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php"
+      ]
+    },
+    "audit_list": {
+      "contract_hash": "e9f1ed5b062686d872ecb66c4abc25069a8b9f226bb3d9101dcb2f2201473111",
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php"
+      ]
+    },
+    "availability_search": {
+      "contract_hash": "5ca82176b0f0daa0d76b6e8eef88111d6b94a3f0a762fe130dc1c66914abd4f2",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "blocked_date_create": {
+      "contract_hash": "6bc60afb2937c32ac8d718e882634756637a56186c067f16c20ebf92032ffd0b",
+      "tests": [
+        "tests/Integration/BlockedDatesManagementTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "blocked_date_delete": {
+      "contract_hash": "041ebba3960dbe67432e87935f979193cbd6f40300f08ae5c5a211ea4f0c83b5",
+      "tests": [
+        "tests/Integration/BlockedDatesManagementTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "blocked_date_get": {
+      "contract_hash": "55ad7b9df1ca4d034fd94fd9de93c136537e0eab39fc667eb9de67cef99928d5",
+      "tests": [
+        "tests/Integration/BlockedDatesManagementTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "blocked_dates_list": {
+      "contract_hash": "2c8aa355848ed141a83db4a96be95b8ec1f63119fb1a856c654cb4eea17a1c7f",
+      "tests": [
+        "tests/Integration/BlockedDatesManagementTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "booking_create": {
+      "contract_hash": "31c2f44a3bb85848fd5f8f45054ef6d110584006c62f7d647f7b360f5b346181",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ConsentRecordingTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/ManualBookingCreationTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "booking_get": {
+      "contract_hash": "260ee1d2680903af501627ae72f1f4ff541a932cf63e7cb9ac3859a58ba43393",
+      "tests": [
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/SharedBookingReadTest.php"
+      ]
+    },
+    "booking_reschedule": {
+      "contract_hash": "8980b6eecf0321d6931a393d7a6c8b04a62c013ce2500a31fcfa041a5014db86",
+      "tests": [
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ReschedulePatternTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "booking_status_set": {
+      "contract_hash": "1cf0481870dde3274aff44bd056cebf95b8505e96238f2c6bd223df1103eda3f",
+      "tests": [
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "bookings_export": {
+      "contract_hash": "4b2ec6e5c0102e1e720d4e31a5696f8401b7e540e9964cdde57833fe7cdcba8c",
+      "tests": [
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/SharedBookingReadTest.php"
+      ]
+    },
+    "bookings_list": {
+      "contract_hash": "e75e63ccd78125a138416b1cc978888093d53e1bd07f664b5e322004562b3f98",
+      "tests": [
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/SharedBookingReadTest.php"
+      ]
+    },
+    "business_booking_get": {
+      "contract_hash": "e81031375fb549c8121aef5c314ca066fb29b0f4fa554784dfa73d30e35ac9da",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "business_booking_update": {
+      "contract_hash": "514e36e71092582eede85f3d645e33255634ec9a37e7ef2a8f3fa59283072cf8",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "business_bookingpage_get": {
+      "contract_hash": "25f66889fa0d8c24c836d89bc5a559b33efa0062eb191de66579e67a6bb9d059",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "business_bookingpage_update": {
+      "contract_hash": "cda0ac12c647a91294e0654d7c0fec8e3bca79d427401e314b5bb7f511c5c129",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "business_branding_get": {
+      "contract_hash": "bfdf08230134f8a0b5702e1c8b36eb5e6df3b006d354e9bbc2e9d9191f470213",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/MediaGrantSecurityTest.php",
+        "tests/Integration/MediaUploadRecoveryTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "business_branding_update": {
+      "contract_hash": "9aa467d9984b844245775e91a6e0d79a2cdbc04f4c33c648808a1c13ee31ec34",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/MediaGrantSecurityTest.php",
+        "tests/Integration/MediaUploadRecoveryTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "business_create": {
+      "contract_hash": "b56b9a37096780d47849ac3524ab21c57c0585e4615404ea73e9abc024e71256",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/TenantOwnerCreationTest.php"
+      ]
+    },
+    "business_dashboard": {
+      "contract_hash": "6b3a74a69fde5708ca07eb419b6e5b7a5a431ca019ad7b5aef465ffd28235fbc",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "business_embed_get": {
+      "contract_hash": "939f63d5c26553a55fad047abf7f3a2b730250a74b96d4679ba72c785c98855b",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "business_embed_update": {
+      "contract_hash": "237169e25c5fac0b51f1fdcc7f851091a8f3a2c55dd308dd4bda15759e313595",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "business_general_get": {
+      "contract_hash": "65614dd8fe2820cdbfa9d24da66e35d09d853ee51b7d7475fd11ce5a843a9af0",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "business_general_update": {
+      "contract_hash": "aa44513381c8976936d1eea2a7cdd24158708a5863868d09b158c803967bd60d",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "business_get": {
+      "contract_hash": "737e39f7bf72c5492b8d25afa681316b370485a0675e803523d84d11398aad30",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/TenantOwnerCreationTest.php"
+      ]
+    },
+    "business_notifications_get": {
+      "contract_hash": "f277bfb8a7ac47b1883a420693af6dd3f37557e6eac06ed5a2d6664bcea13bdc",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "business_notifications_update": {
+      "contract_hash": "5bdc160b95595ddd044ade8f7b786ab9e1beacb148eeeaa126cd8243e55d116b",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "business_privacy_get": {
+      "contract_hash": "627ea76686549775f13725923895bcb406e00889745002b4f13791b2ab9aa057",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "business_privacy_update": {
+      "contract_hash": "f93a064d189d363c75144afb42091ca6b0fd1594f528b50ce2b87ecc99739d38",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "business_set_status": {
+      "contract_hash": "d9f64bb58d45cfbe43bacc25575ba6b66791576afff33448d8105f0df225bd3d",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/TenantOwnerCreationTest.php"
+      ]
+    },
+    "business_update": {
+      "contract_hash": "9e00cfeb7c4b3b5953d471e71387fa27e0037d132d11c58ef7420125e2b77f79",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/TenantOwnerCreationTest.php"
+      ]
+    },
+    "businesses_export": {
+      "contract_hash": "7b03ec49fa34e72f252b13b763e34982c10d6bb1194ceadff3b785b9af588247",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/TenantOwnerCreationTest.php"
+      ]
+    },
+    "businesses_list": {
+      "contract_hash": "c37b5c87ba3afdf9a3d0291725122cc40b92e4dee8272a7d929adfa09dc550b4",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/TenantOwnerCreationTest.php"
+      ]
+    },
+    "calendar_get": {
+      "contract_hash": "0b419ed6030576799f75d6ffa2eff456ac11479d2898995b10dc35274b3abad5",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "capabilities_get": {
+      "contract_hash": "3c5bbd16781db30bf5ae5ce4a1f17f6edd2e8ccfba84a9687be0594361030757",
+      "tests": [
+        "tests/Integration/AgentV1ContractTest.php",
+        "tests/Integration/OAuthHttpTest.php"
+      ]
+    },
+    "capacity_slot_create": {
+      "contract_hash": "835f2572739e0c72c933107924c5c6625b6e3f83e03714bf70be4d80ee412f27",
+      "tests": [
+        "tests/Integration/CapacityBookingFlowTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "capacity_slot_delete": {
+      "contract_hash": "b43e97ef9f0cbdf73a496b11c3c90c51ea49baa89fbecaf358c39e1e5c43944b",
+      "tests": [
+        "tests/Integration/CapacityBookingFlowTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "capacity_slot_get": {
+      "contract_hash": "a34ff2ecfdd0bcaab5bf7f0ae4ecb0185406c358d16b50d9d3ec23a6a80d0724",
+      "tests": [
+        "tests/Integration/CapacityBookingFlowTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "capacity_slot_set_active": {
+      "contract_hash": "91372ce26bf7f78b3b96ea8cb642cfd298274fbe449cbfbf316e943da857de51",
+      "tests": [
+        "tests/Integration/CapacityBookingFlowTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "capacity_slots_list": {
+      "contract_hash": "ae20c0b3db1abd2ad07c64c20ae51776e20c46704ff4205d6d3b3ddc43d294a8",
+      "tests": [
+        "tests/Integration/CapacityBookingFlowTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "connection_activity": {
+      "contract_hash": "ae4355e9ee12145ae4e6c27df214f330347f3e0fcce18423a765b1ed1ec09575",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php"
+      ]
+    },
+    "connection_get": {
+      "contract_hash": "e0d6a5a1168445943a4b8516cb16adaae6e9c535e3a60febe4ffc0977bd1daab",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php"
+      ]
+    },
+    "connection_revoke": {
+      "contract_hash": "896b084315a79eb211454354a95d8ca83e638fef9b225bffa02fcb139f227e6f",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php"
+      ]
+    },
+    "connection_setup": {
+      "contract_hash": "b9c5467c92de9b4682941229166c784f3071af28ede72cd53a97bbf1bb243e55",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php"
+      ]
+    },
+    "customer_availability_search": {
+      "contract_hash": "94aa52a56b789fcd5acf91bb4749ba9d2e6f01538810bc23e16224d7fd10195e",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/ReschedulePatternTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "customer_booking_cancel": {
+      "contract_hash": "f3cb1046a82c752098cba194d017bc6637c65a0c6381e2243f6725e4d9582c51",
+      "tests": [
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerCapabilityBoundaryTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "customer_booking_get": {
+      "contract_hash": "e83bba06057e727d5fd9a4ad57bbca7e5916ad2fdc06f329ecc3a6938875a671",
+      "tests": [
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerCapabilityBoundaryTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "customer_booking_reschedule": {
+      "contract_hash": "de0468fca908df15a0f1620a62e22b3b8253900bc1572675885362d37b99c753",
+      "tests": [
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ReschedulePatternTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "customer_deletion_request": {
+      "contract_hash": "ad1bd8ca61c77c4180c1c6d0d0d1ecd8c849f9b0cc559b196a5bb38c2db8b6b6",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/CustomerCapabilityBoundaryTest.php",
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
+      ]
+    },
+    "customer_export": {
+      "contract_hash": "c69de20ea42b05593bb3db1724b7802672b714b061a72f1e9f197177da12a429",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerDirectoryOperationsTest.php"
+      ]
+    },
+    "customer_get": {
+      "contract_hash": "618b741ce4a05f5f093d53d34057fc9e3d5e186548d61f60d384ec98d1123871",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerDirectoryOperationsTest.php"
+      ]
+    },
+    "customer_history": {
+      "contract_hash": "edd61731c02d1091e5ab19148edd322e7e6fed84fba6bb469130d603a18aa7c7",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerDirectoryOperationsTest.php"
+      ]
+    },
+    "customer_list": {
+      "contract_hash": "a7153d658ffeee729cc4dfa2721982cbc841580c4911c1472369da735fae85ff",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerDirectoryOperationsTest.php"
+      ]
+    },
+    "customer_privacy_export": {
+      "contract_hash": "c83eea3878ef9dcb521c4ad4f81823a443e8ee5fbf608f8f8ab64aabaffc1fbd",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/CustomerCapabilityBoundaryTest.php",
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
+      ]
+    },
+    "customer_privacy_get": {
+      "contract_hash": "7102a72d2a997dc1bbe01a2d458268f7855584198c927e2343d62bde344f566f",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/CustomerCapabilityBoundaryTest.php",
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
+      ]
+    },
+    "customer_privacy_records": {
+      "contract_hash": "42cc535351240fa2efd3a05c613bd079336402f360a521ca8726e6cc2cd8cced",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/CustomerCapabilityBoundaryTest.php",
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
+      ]
+    },
+    "deletion_confirm": {
+      "contract_hash": "d0b83ef593fb2f10672d14b229dd6ec7720c39361e24536e369b8b84e78647e4",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/DeletionApplicationTest.php",
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
+      ]
+    },
+    "deletion_dismiss": {
+      "contract_hash": "cf3f4ac2ac6bfdcdcb354afe9914abd1ada3c1a5cd36eb78d9195e7c6e7462cd",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/DeletionApplicationTest.php",
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
+      ]
+    },
+    "deletion_queue_list": {
+      "contract_hash": "57330b7447e5905cf0639692f6dc370a6cb951c0addf08d922ae669d8323ccca",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/DeletionApplicationTest.php",
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
+      ]
+    },
+    "deletion_review": {
+      "contract_hash": "72072089c4495216ffe429034128cc41f6b3f5a424d28493e683a0a86c4c7e07",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/DeletionApplicationTest.php",
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
+      ]
+    },
+    "email_template_preview": {
+      "contract_hash": "be269188a8367a460d326734c3539324fec036dcfbe2ca66704ceffbbae23558",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "email_templates_get": {
+      "contract_hash": "6abc2bf447a1f8684a0e5c27a2d99d0784504dbccdbe26471732ea2fd39696e5",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "email_templates_update": {
+      "contract_hash": "7752a591e913666ae4a5eeb9fd33c543b53feedbde11eafc8c09f11a288061c7",
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php"
+      ]
+    },
+    "event_create": {
+      "contract_hash": "5ebb27d9c0fd20877c85b78970eb63e364d85dd1d264a287b8cb0b28ac70b3d8",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "event_delete": {
+      "contract_hash": "13ddf2b8efe9afd755c253ef6386e10b8f3d3e9ee7f77d2bc54cd20d8090a1ed",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "event_get": {
+      "contract_hash": "81612078fc3bf17b5a2e820055282dcf4fa20d1a6670b3b67d4685431a736f69",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "event_set_active": {
+      "contract_hash": "70a2e7cc54671827383f96c5ba37becba39c7a61d12926946bc775f4ad790650",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "event_update": {
+      "contract_hash": "64c864a81fa964736e9c6fb3ea8ca8cce8126fbee348e2bf86ac5bf7a984b27d",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "events_list": {
+      "contract_hash": "1ef8e38bb63310ecb173d723ddfe4e60b09c49fc2fa1b46625e23478080370f8",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/EventBookingFlowTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "identity_get": {
+      "contract_hash": "9ffb7ca82176ce707674998f2de76aadab54c48de1d668a417d501de0f871dad",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/AuthFlowTest.php",
+        "tests/Integration/ImpersonationTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/SystemOperationsTest.php"
+      ]
+    },
+    "job_request_get": {
+      "contract_hash": "222fe5240d236bff5db49b7fb2ad88e760c69a2cdf88d3ff57c8a5f3ff5b2dd1",
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/TestIsolationTest.php"
+      ]
+    },
+    "jobs_run": {
+      "contract_hash": "3df9c5197f9c012e29124316080c2d126eb01ed1441e38ff43e67ef3f8ee76d5",
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/TestIsolationTest.php"
+      ]
+    },
+    "jobs_status": {
+      "contract_hash": "9b39d3e5aa3271031aaf9669bad127cf2a990334ce9b2afb0f9c292d5dceb56f",
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/TestIsolationTest.php"
+      ]
+    },
+    "media_upload_prepare": {
+      "contract_hash": "9faa1688d4890455691cf873e6bc0650f76343abe6031b18babff2b7b33c6b12",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/MediaGrantSecurityTest.php",
+        "tests/Integration/MediaUploadRecoveryTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/TenantSettingsTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "operation_get": {
+      "contract_hash": "ed22c3a1cddf23c782d4196f571d76ac586c0df246fa44f094d8886ca92abc08",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "operation_recover": {
+      "contract_hash": "ad15811e4756131e8276158a925d5330d6d3e6b05796197f3a2b994b10352db4",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "operator_bookings_export": {
+      "contract_hash": "93fd08a8bc2af87340f98501afc822d3b2e06835a54a0c3412b596cb73233829",
+      "tests": [
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/SharedBookingReadTest.php"
+      ]
+    },
+    "operator_bookings_list": {
+      "contract_hash": "535944e18ee2ddced170744d93d626d3e635e4f045c1d5e8be92d5c2e97164cd",
+      "tests": [
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/SharedBookingReadTest.php"
+      ]
+    },
+    "operator_business_context": {
+      "contract_hash": "0509f56f642d8e7098b157b8d8bfa372c300282628cfd41e93993402d72f0440",
+      "tests": [
+        "tests/Integration/ImpersonationTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php"
+      ]
+    },
+    "operator_dashboard": {
+      "contract_hash": "bf7b06a54dc5c354a6f8364ed4a71b1aa8991cfa46054b4e88fa8319d41dd5e2",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "public_booking_create": {
+      "contract_hash": "07070acfbdcc14a3fb298a4ae7d42d5e63aef5e601c4e2c843494e9a61c118b8",
+      "tests": [
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ConsentRecordingTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "public_business_get": {
+      "contract_hash": "b90467c00bf83f56458b95e128ab8316c86dfe795dfefa2fe53a5c993cfeecd2",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ConsentRecordingTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php"
+      ]
+    },
+    "public_catalog_list": {
+      "contract_hash": "fe3c191b0ec714bebadf74411b03d732429f9adcb27eaf8f42f8f410096f6b0d",
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/ConsentRecordingTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php"
+      ]
+    },
+    "public_operation_get": {
+      "contract_hash": "209554d8d95bd70bcc7ead58c36022e145de16315816161b157ba165c0bee4f0",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "public_operation_recover": {
+      "contract_hash": "3287679b8c361fd9d597f7922edb88c32ff477817cec7d41e2ca61c383f8ba85",
+      "tests": [
+        "tests/Integration/AgentAdmissionRecoveryTest.php",
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/OAuthIntegrationTest.php",
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "resource_create": {
+      "contract_hash": "6f0443ba95ad9c64926eb4cc3fc4227d78b1f47cad6630870653f9db08c324a0",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "resource_get": {
+      "contract_hash": "94270124d16baa59dc6a8a43458a4cf1d3d8aa01ac4fcc3aa040ee611b0973d8",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "resource_reorder": {
+      "contract_hash": "ab9747af4effd5517debb079c9a30ce55f7961a00894c82c9ccfc022eee8999f",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "resource_set_active": {
+      "contract_hash": "a4c354ed3192bd612c32c53fbe16f23c8357bf4229d11b5cdb5c691e45f0ce30",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "resource_update": {
+      "contract_hash": "35358ea998e71dcef75bb9a461d50856e9b2ad00633ea2ae96ad76054ea9ca1e",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "resources_list": {
+      "contract_hash": "377e64d059291039866ba8659e8bca2411e88ab3410e6e25a705529620e47557",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ResourceBookingFlowTest.php"
+      ]
+    },
+    "schedule_get": {
+      "contract_hash": "bdef0599eff07ae9bb7014290ecb514c456bf97a272e45716963345b2925b605",
+      "tests": [
+        "tests/Integration/AvailabilityManagementTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "schedule_replace": {
+      "contract_hash": "62b25cc026652a31b438b633ec0dbe8bbfe775309e775cf532715e52a4500c8e",
+      "tests": [
+        "tests/Integration/AvailabilityManagementTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "schedule_reset_staff": {
+      "contract_hash": "ae9c7b64ffdc56700408569cb3ff8c07aefbc0d0e996b1664f75136378d85381",
+      "tests": [
+        "tests/Integration/AvailabilityManagementTest.php",
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "service_create": {
+      "contract_hash": "7f7671399a4eeb6e1d62ee855b9df5ec021d036a664fb256a318fe02213cca24",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ServiceManagementTest.php"
+      ]
+    },
+    "service_get": {
+      "contract_hash": "f16b3b880b36f8eb36c5db6edc4370c00bf9ee0335c491c3905e544d059f2ca9",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ServiceManagementTest.php"
+      ]
+    },
+    "service_reorder": {
+      "contract_hash": "01e82c0caa2d334ff8089534fbd2d95a1f376a502d64085c5cb3e4bdab04fc80",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ServiceManagementTest.php"
+      ]
+    },
+    "service_set_active": {
+      "contract_hash": "f05d132a908d9edcb3c850bed335560a88a1debf751549e18f80c713e3cb7a3d",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ServiceManagementTest.php"
+      ]
+    },
+    "service_update": {
+      "contract_hash": "c428d254d62ab1046aebeaceb8773c766ad9f8fc0f0b4202a87e12369aa98a91",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ServiceManagementTest.php"
+      ]
+    },
+    "services_list": {
+      "contract_hash": "0fbdee12bbad5bcd64befc3c165d9bb3b708ec62bb1b62b8ecbfd38a5ca97a1b",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/ServiceManagementTest.php"
+      ]
+    },
+    "staff_availability_search": {
+      "contract_hash": "147a523d35af83a896eaa77581d6b698ebba04e0ff6c14a04d838ba3a7fb3d55",
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/BookingConcurrencyTest.php",
+        "tests/Integration/BookingDirectAuthorizationTest.php",
+        "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CustomerApplicationOperationsTest.php",
+        "tests/Integration/ManualBookingCreationTest.php",
+        "tests/Integration/ReschedulePatternTest.php",
+        "tests/Integration/SharedBookingOperationsTest.php"
+      ]
+    },
+    "staff_create": {
+      "contract_hash": "e85bfce5411d0e8ede13c5bfa9554750df348faddb763c435195d85852952c08",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/StaffManagementTest.php"
+      ]
+    },
+    "staff_get": {
+      "contract_hash": "d95661f11e8e4c18d81e26b02861629477b490de21028458dc7287a81f14a6b1",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/StaffManagementTest.php"
+      ]
+    },
+    "staff_list": {
+      "contract_hash": "f95f8dbbf4473c065767be74c90b6fee6dc1cde10df4e8e0ac72fb09af9a91e2",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/StaffManagementTest.php"
+      ]
+    },
+    "staff_reorder": {
+      "contract_hash": "aaa0d908c3a2f8fd17e710d589bda9d59ba0066f2ac517ab0aaac0fe21e6d333",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/StaffManagementTest.php"
+      ]
+    },
+    "staff_set_active": {
+      "contract_hash": "8815597095ebbf2f5ac6b9b5e39ed27e199f3bb75181c525eab47db756fe7b10",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/StaffManagementTest.php"
+      ]
+    },
+    "staff_update": {
+      "contract_hash": "dee9b69059a4a596b961b98e0cad7bc5fc49f9221fba87cf5134d64e610d0038",
+      "tests": [
+        "tests/Integration/CatalogOperationsTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/StaffManagementTest.php"
+      ]
+    },
+    "system_handoff": {
+      "contract_hash": "52a05e92989c46a419501ac9a75b32174d362506948197578773d6653635a119",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/InstallReconnectTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/UpdateRecoveryUiTest.php"
+      ]
+    },
+    "system_settings_get": {
+      "contract_hash": "f79c5e559d6d42630d72c8ff0911535656dffbcd94ed03910410312e6a71cd4f",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php"
+      ]
+    },
+    "system_settings_update": {
+      "contract_hash": "555ff621db752e1dc769ab365aa9a808e000ed717e76cbe0a718421cd93fd904",
+      "tests": [
+        "tests/Integration/EmailSettingsCredentialTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php"
+      ]
+    },
+    "system_status": {
+      "contract_hash": "bb1b9de1c3607de2314da61e51b323c2ac8ca3575323fcbc5329bb48348e2803",
+      "tests": [
+        "tests/Integration/InstallReconnectTest.php",
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/UpdateRecoveryUiTest.php"
+      ]
+    },
+    "team_invite": {
+      "contract_hash": "b81630f03507c6e6f5788fc7eaea56706ee03f3a69be382249d10fe1a5ddcf56",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/BusinessUserCrudTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "team_list": {
+      "contract_hash": "63bf83a99020127efb7e716930040169ba5f2cc491c6a8253b1f6bd36f6e63a1",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/BusinessUserCrudTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "team_member_get": {
+      "contract_hash": "95a7f98e506c7594451c5482739c5a3515ab757d8fe41979a807a703b4abd29a",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/BusinessUserCrudTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "team_member_set_active": {
+      "contract_hash": "a329ae45845620d8005535b392874a5bed480c68a6ad61a82e59598a1d09d825",
+      "tests": [
+        "tests/Integration/BusinessOperationsTest.php",
+        "tests/Integration/BusinessUserCrudTest.php",
+        "tests/Integration/OperationContractCoverageTest.php"
+      ]
+    },
+    "webhook_create": {
+      "contract_hash": "8b1eb1a1145e3632fad51354e741374c0f08e704343dafa125fc85a7224f6921",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "webhook_deliveries_list": {
+      "contract_hash": "81576bd6e91aada16421a0ee25675853e330856f8483c0f24fb8c37d38cb4b0b",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "webhook_delivery_retry": {
+      "contract_hash": "c46b11ea89209e1cc4aa07de98039ed61367bfa8f6fe367d1bae360ac73b2a3d",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "webhook_get": {
+      "contract_hash": "beacf51dcf53e4c8044c7e815b665ad88e2f7325ddce8f2585675fa73d1336d2",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "webhook_secret_rotate": {
+      "contract_hash": "68b00b7e04b1d9b74976a0ddeab8417576d94d5da002235fc4cdbaf0888d2046",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "webhook_update": {
+      "contract_hash": "7d70647933fe0f0f487ecc5ccd086c78d22345e805bde7869bbc431affa80adc",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    },
+    "webhooks_list": {
+      "contract_hash": "fdc2517624e131ffa14e3f3fdbbddbccd3bb11f6ba0916a9549011d00334864d",
+      "tests": [
+        "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/WebhookOperationsTest.php"
+      ]
+    }
+  }
+}

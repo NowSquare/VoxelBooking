@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Integration;
 
 use App\Engine\Database;
-use App\Engine\EnvLoader;
+use Tests\Support\TestEnvironment;
 
 /**
  * Shared test fixtures for integration tests.
@@ -23,6 +23,49 @@ use App\Engine\EnvLoader;
  */
 final class TestFixtures
 {
+    /** Submit the same optimistic version a person reads in a rendered catalog form. */
+    public static function withCatalogVersion(string $path, array $data, string $cookie): array
+    {
+        if (array_key_exists('_record_version', $data)) { return $data; }
+        if (preg_match('#^(/admin/tenants/[^/]+)/(edit|archive|activate)$#', $path, $match)) {
+            $readPath = $match[2] === 'edit' ? $path : '/admin/tenants?status=all';
+        } elseif (preg_match('#^/admin/applications/[^/]+/(approve|reject)$#', $path)) {
+            $readPath = '/admin/applications?status=all';
+        } elseif (preg_match('#^(/admin/tenants/[^/]+/users)/[^/]+/(activate|deactivate)$#', $path, $match)) {
+            $readPath = $match[1];
+        } elseif (preg_match('#^(/admin/tenants/[^/]+)/(services|staff|resources|events|capacity-slots|blocked-dates|availability)(.*)$#', $path, $parts)) {
+            if ($parts[2] !== 'availability' && in_array($parts[3], ['', '/create'], true)) { return $data; }
+            $readPath = $parts[1] . '/' . $parts[2];
+            if (preg_match('#^/([^/]+)$#', $parts[3]) && in_array($parts[2], ['services', 'staff', 'resources', 'events'], true)) {
+                $readPath .= $parts[3] . '/edit';
+            } elseif (preg_match('#^/[^/]+/edit$#', $parts[3])) {
+                $readPath .= $parts[3];
+            } elseif ($parts[2] === 'availability') {
+                $readPath .= preg_replace('#/reset$#', '', $parts[3]);
+            }
+        } else { return $data; }
+        $curl = curl_init(rtrim($_ENV['APP_TEST_URL'], '/') . $readPath);
+        curl_setopt_array($curl, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => ['Cookie: ' . $cookie], CURLOPT_TIMEOUT => 10]);
+        $html = curl_exec($curl);
+        if (!is_string($html) || $html === '') {
+            return $data;
+        }
+        $document = new \DOMDocument();
+        @$document->loadHTML($html);
+        foreach ($document->getElementsByTagName('form') as $form) {
+            if ($form->getAttribute('action') !== $path) {
+                continue;
+            }
+            foreach ($form->getElementsByTagName('input') as $field) {
+                if ($field->getAttribute('name') === '_record_version') {
+                    $data['_record_version'] = $field->getAttribute('value');
+                    return $data;
+                }
+            }
+        }
+        return $data;
+    }
+
     public const OPERATOR_EMAIL = 'operator@example.com';
     public const OPERATOR_PASSWORD = 'welcome3210';
     public const OPERATOR_ID = '01TESTOPERATOR0000000000';
@@ -64,7 +107,7 @@ final class TestFixtures
         // test classes don't inherit stale rate-limit or token rows from
         // earlier classes that share this process.
         require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-        EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+        TestEnvironment::assertDatabase();
 
         try {
             Database::connect();

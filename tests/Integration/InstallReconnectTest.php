@@ -78,6 +78,7 @@ final class InstallReconnectTest extends TestCase
     public static function tearDownAfterClass(): void
     {
         try {
+            \Tests\Support\TestEnvironment::assertDatabase();
             $host     = $_ENV['DB_HOST']     ?? '127.0.0.1';
             $port     = $_ENV['DB_PORT']     ?? '3309';
             $database = $_ENV['DB_DATABASE'] ?? 'voxelbooking';

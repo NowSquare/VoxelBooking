@@ -55,7 +55,7 @@ final class TenantSettingsTest extends TestCase
         ]);
         $result = curl_exec($ch);
         $code = ($result !== false) ? curl_getinfo($ch, CURLINFO_HTTP_CODE) : 0;
-        curl_close($ch);
+        unset($ch);
 
         if ($code === 0) {
             self::$setupError = 'App not reachable at ' . self::$baseUrl;
@@ -65,7 +65,7 @@ final class TenantSettingsTest extends TestCase
 
         try {
             require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-            EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+            \Tests\Support\TestEnvironment::boot();
             Database::connect();
             Database::query('SELECT 1');
             self::$dbReady = true;
@@ -633,7 +633,7 @@ final class TenantSettingsTest extends TestCase
         $this->assertSame($before[0], $after[0], 'Booking fields must be unchanged after manager POST');
     }
 
-    public function testBookingPostSavesSharedFieldsForResourceTenant(): void
+    public function testBookingPostRejectsTimeslotFieldsForResourceTenant(): void
     {
         $before = Database::query(
             'SELECT `slot_duration_minutes`, `buffer_minutes`, `min_advance_hours`, `max_advance_days` FROM `tenants` WHERE `id` = ?',
@@ -652,19 +652,18 @@ final class TenantSettingsTest extends TestCase
             'max_bookings_per_customer_per_day' => '5',
         ], 'operator');
 
-        $this->assertSame(302, $res['code']);
+        $this->assertSame(403, $res['code']);
 
         $after = Database::query(
             'SELECT `slot_duration_minutes`, `buffer_minutes`, `min_advance_hours`, `max_advance_days`, `max_bookings_per_customer_per_day` FROM `tenants` WHERE `id` = ?',
             [self::$resourceTenantId]
         );
 
-        // Shared fields must be updated
-        $this->assertSame(4, (int) $after[0]['min_advance_hours'], 'min_advance_hours must be saved for resource tenant');
-        $this->assertSame(120, (int) $after[0]['max_advance_days'], 'max_advance_days must be saved for resource tenant');
-        $this->assertSame(5, (int) $after[0]['max_bookings_per_customer_per_day'], 'max_bookings must be saved for resource tenant');
+        // Typed operations reject fields that this pattern does not support.
+        $this->assertSame($before[0]['min_advance_hours'], $after[0]['min_advance_hours']);
+        $this->assertSame($before[0]['max_advance_days'], $after[0]['max_advance_days']);
 
-        // Timeslot-specific fields must NOT be changed (controller skips them for non-timeslot)
+        // Pattern-incompatible input cannot partially update the business.
         $this->assertSame($before[0]['slot_duration_minutes'], $after[0]['slot_duration_minutes'], 'slot_duration must be unchanged for resource tenant');
         $this->assertSame($before[0]['buffer_minutes'], $after[0]['buffer_minutes'], 'buffer_minutes must be unchanged for resource tenant');
 
@@ -697,8 +696,9 @@ final class TenantSettingsTest extends TestCase
         $this->assertSame(60, (int) $row[0]['max_advance_days']);
     }
 
-    public function testSlotDurationClampedToMin5(): void
+    public function testInvalidSlotDurationIsRejectedWithoutSilentClamping(): void
     {
+        $before=Database::query('SELECT slot_duration_minutes,max_advance_days FROM tenants WHERE id=?',[self::$tenantId])[0];
         $page = self::httpGet("/admin/tenants/" . self::$tenantId . "/settings/booking", 'operator');
         self::extractCsrf($page['body'], 'operator');
 
@@ -713,8 +713,8 @@ final class TenantSettingsTest extends TestCase
         $this->assertSame(302, $res['code']);
 
         $row = Database::query('SELECT `slot_duration_minutes`, `max_advance_days` FROM `tenants` WHERE `id` = ?', [self::$tenantId]);
-        $this->assertSame(5, (int) $row[0]['slot_duration_minutes'], 'slot_duration must be clamped to min 5');
-        $this->assertSame(1, (int) $row[0]['max_advance_days'], 'max_advance must be clamped to min 1');
+        $this->assertSame($before['slot_duration_minutes'], $row[0]['slot_duration_minutes']);
+        $this->assertSame($before['max_advance_days'], $row[0]['max_advance_days']);
     }
 
     public function testBookingAuditLogCreated(): void
@@ -1046,8 +1046,9 @@ final class TenantSettingsTest extends TestCase
         $this->assertSame('example.com,shop.test.com,my-site.org', $row[0]['allowed_embed_domains']);
     }
 
-    public function testSaveEmbedInvalidPositionDefaultsToRight(): void
+    public function testSaveEmbedInvalidPositionPreservesCurrentValues(): void
     {
+        $before=Database::query('SELECT embed_button_position,allowed_embed_domains FROM tenants WHERE id=?',[self::$tenantId])[0];
         $page = self::httpGet("/admin/tenants/" . self::$tenantId . "/settings/embed", 'operator');
         self::extractCsrf($page['body'], 'operator');
 
@@ -1063,8 +1064,8 @@ final class TenantSettingsTest extends TestCase
             "SELECT `embed_button_position`, `allowed_embed_domains` FROM `tenants` WHERE `id` = ?",
             [self::$tenantId]
         );
-        $this->assertSame('bottom-right', $row[0]['embed_button_position'], 'Invalid position must default to bottom-right');
-        $this->assertNull($row[0]['allowed_embed_domains'], 'Empty domains must persist as NULL');
+        $this->assertSame($before['embed_button_position'], $row[0]['embed_button_position']);
+        $this->assertSame($before['allowed_embed_domains'], $row[0]['allowed_embed_domains']);
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -1208,7 +1209,7 @@ final class TenantSettingsTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $headers = substr($response, 0, $headerSize);
         $this->assertSame(200, $code);
@@ -1371,6 +1372,10 @@ final class TenantSettingsTest extends TestCase
     /** @return array{code: int, headers: string, body: string} */
     private static function httpPost(string $path, array $data, string $role = 'operator'): array
     {
+        if(str_contains($path,'/settings')&&!isset($data['expected_version'])) {
+            $form=self::httpGet($path,$role);
+            if(preg_match('/name="expected_version"\s+value="([^"]+)"/',$form['body'],$match)) { $data['expected_version']=$match[1]; }
+        }
         return self::http('POST', $path, $data, $role);
     }
 
@@ -1404,7 +1409,7 @@ final class TenantSettingsTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         $responseHeaders = substr($response, 0, $headerSize);
         if (preg_match('/vb_session=([^;]+)/', $responseHeaders, $m)) {
@@ -1437,7 +1442,7 @@ final class TenantSettingsTest extends TestCase
         $response = (string) curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         return [
             'code'    => $code,

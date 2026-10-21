@@ -34,7 +34,7 @@ final class ReschedulePatternTest extends TestCase
         require_once $root . '/vendor/autoload.php';
 
         if (file_exists($root . '/.env')) {
-            \App\Engine\EnvLoader::load($root . '/.env');
+            \Tests\Support\TestEnvironment::boot();
         }
 
         try {
