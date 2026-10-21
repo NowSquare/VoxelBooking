@@ -1,0 +1,15 @@
+{
+    "mysql": "8.4.11",
+    "php": "8.5.10",
+    "from": 28,
+    "to": 41,
+    "legacy_read_only": true,
+    "rate_schema_repaired": true,
+    "committed_ddl_replay": true,
+    "partial_booking_columns_recovery": true,
+    "partial_failure_recovery": true,
+    "backup_restore_and_reupgrade": true,
+    "existing_data_preserved": true
+}
+
+Disposable upgrade rehearsal: isolated-run

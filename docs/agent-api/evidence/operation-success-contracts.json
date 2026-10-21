@@ -1,0 +1,1846 @@
+{
+    "generated_at": "2026-10-20",
+    "operation_count": 129,
+    "acceptance_scenarios": [
+        "A41",
+        "A50"
+    ],
+    "interpretation": "A successful schema execution is distinct from cross-role, all-pattern, all-transports and branded client coverage. See each test and separate scenario ledger. Service-only schema tests are not recorded as Executor success.",
+    "unmapped_operations": [],
+    "operations": [
+        {
+            "operation_id": "account_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testIdentityAccountAndCurrentConnectionActivityNeverIncludeOtherConnections",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "account_update",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testIdentityAccountAndCurrentConnectionActivityNeverIncludeOtherConnections",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "application_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "application_review",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "application_submit",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "applications_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "audit_export",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "audit_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "availability_search",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "blocked_date_create",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "blocked_date_delete",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "blocked_date_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "blocked_dates_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "booking_create",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "booking_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "booking_reschedule",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "booking_status_set",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "bookings_export",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "bookings_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_booking_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate",
+                "transport_test": "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_booking_update",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_bookingpage_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate",
+                "transport_test": "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_bookingpage_update",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_branding_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate",
+                "transport_test": "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_branding_update",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_create",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_dashboard",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_embed_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate",
+                "transport_test": "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_embed_update",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_general_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate",
+                "transport_test": "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_general_update",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_notifications_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate",
+                "transport_test": "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_notifications_update",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_privacy_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate",
+                "transport_test": "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_privacy_update",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_set_status",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "business_update",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "businesses_export",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "businesses_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "calendar_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "capabilities_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testIdentityAccountAndCurrentConnectionActivityNeverIncludeOtherConnections",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "capacity_slot_create",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "capacity_slot_delete",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "capacity_slot_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "capacity_slot_set_active",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "capacity_slots_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "connection_activity",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testIdentityAccountAndCurrentConnectionActivityNeverIncludeOtherConnections",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "connection_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testIdentityAccountAndCurrentConnectionActivityNeverIncludeOtherConnections",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "connection_revoke",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testReviewedSelfRevocationCommitsItsReceiptAndImmediatelyEndsAccess",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root settings focused suite passed15tests155assertions, including self-revocation and expiry/record-change rejection; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "connection_setup",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testIdentityAccountAndCurrentConnectionActivityNeverIncludeOtherConnections",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "customer_availability_search",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "customer_booking_cancel",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "customer_booking_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "customer_booking_reschedule",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "customer_deletion_request",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "customer_export",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "customer_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "customer_history",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "customer_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "customer_privacy_export",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "customer_privacy_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "customer_privacy_records",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "deletion_confirm",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "deletion_dismiss",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "deletion_queue_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "deletion_review",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "email_template_preview",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testAllEmailOverridesDefaultsAndSyntheticSamplesUseSharedContracts",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "email_templates_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testAllEmailOverridesDefaultsAndSyntheticSamplesUseSharedContracts",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "email_templates_update",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testAllEmailOverridesDefaultsAndSyntheticSamplesUseSharedContracts",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "event_create",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "event_delete",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "event_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "event_set_active",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "event_update",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "events_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "identity_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/SettingsIdentityOperationsTest.php::testIdentityAccountAndCurrentConnectionActivityNeverIncludeOtherConnections",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "Root isolated settings suite passed; final combined matrix is separate"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "job_request_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "jobs_run",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "jobs_status",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "media_upload_prepare",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/WebhookOperationsTest.php::testEveryWebhookOperationAndMediaReceiptHasARealValidatedSuccess",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20 root contracts suite: 22 tests, 220 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "operation_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/WebhookOperationsTest.php::testEveryWebhookOperationAndMediaReceiptHasARealValidatedSuccess",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20 root contracts suite: 22 tests, 220 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "operation_recover",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/AgentAdmissionRecoveryTest.php::testSimultaneousIdenticalCommandsHaveOneReceiptAndExpiredReplayCannotRepeat",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20 root contracts suite: 22 tests, 220 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "operator_bookings_export",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "operator_bookings_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "operator_business_context",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "operator_dashboard",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "public_booking_create",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "public_business_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "public_catalog_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "public_operation_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "public_operation_recover",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "resource_create",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "resource_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "resource_reorder",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "resource_set_active",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "resource_update",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "resources_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "schedule_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testAllScheduleActionsUseVersionedContractsAndTransportParity",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "schedule_replace",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testAllScheduleActionsUseVersionedContractsAndTransportParity",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "schedule_reset_staff",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testAllScheduleActionsUseVersionedContractsAndTransportParity",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "service_create",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "service_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "service_reorder",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "service_set_active",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "service_update",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "services_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "staff_availability_search",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+                "successful_transports": [
+                    "executor",
+                    "native_mcp_dispatch",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: focused composite 54 tests, 1287 assertions passed; final post-lock privacy and complete contract composite 14 tests, 1053 assertions passed (PHP 8.5.7 / MySQL 8.4.11)."
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "staff_create",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "staff_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "staff_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "staff_reorder",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "staff_set_active",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "staff_update",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "system_handoff",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "system_settings_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "system_settings_update",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "system_status",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "team_invite",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "team_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "team_member_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+                "successful_transports": [
+                    "executor",
+                    "http",
+                    "native_mcp_http"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "team_member_set_active",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20: 9 tests, 634 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "webhook_create",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/WebhookOperationsTest.php::testEveryWebhookOperationAndMediaReceiptHasARealValidatedSuccess",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20 root contracts suite: 22 tests, 220 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "webhook_deliveries_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/WebhookOperationsTest.php::testEveryWebhookOperationAndMediaReceiptHasARealValidatedSuccess",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20 root contracts suite: 22 tests, 220 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "webhook_delivery_retry",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/WebhookOperationsTest.php::testEveryWebhookOperationAndMediaReceiptHasARealValidatedSuccess",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20 root contracts suite: 22 tests, 220 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "webhook_get",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/WebhookOperationsTest.php::testEveryWebhookOperationAndMediaReceiptHasARealValidatedSuccess",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20 root contracts suite: 22 tests, 220 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "webhook_secret_rotate",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/WebhookOperationsTest.php::testEveryWebhookOperationAndMediaReceiptHasARealValidatedSuccess",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20 root contracts suite: 22 tests, 220 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "webhook_update",
+            "read_only": false,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/WebhookOperationsTest.php::testEveryWebhookOperationAndMediaReceiptHasARealValidatedSuccess",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20 root contracts suite: 22 tests, 220 assertions passed"
+            },
+            "status": "focused_pass"
+        },
+        {
+            "operation_id": "webhooks_list",
+            "read_only": true,
+            "output_validation": "Executor validates handler outputSchema; resultSchema describes transport envelope",
+            "success_contract": {
+                "test": "tests/Integration/WebhookOperationsTest.php::testEveryWebhookOperationAndMediaReceiptHasARealValidatedSuccess",
+                "successful_transports": [
+                    "executor"
+                ],
+                "evidence": "2026-10-20 root contracts suite: 22 tests, 220 assertions passed"
+            },
+            "status": "focused_pass"
+        }
+    ]
+}

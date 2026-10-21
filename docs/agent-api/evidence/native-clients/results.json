@@ -1,0 +1,136 @@
+{
+  "tested_at": "2026-10-20",
+  "transport": "native Streamable HTTP MCP; scoped staff bearer credential",
+  "versions": {
+    "codex": "0.153.4",
+    "claude_code": "2.1.281",
+    "PHP": "8.5.7",
+    "MySQL": "8.4.11"
+  },
+  "browser_review": "Real staff session and CSRF protected review POST, driven by isolated HTTP harness",
+  "protocol_version": "Not captured from branded client; protocol conformance tested separately",
+  "limits": [
+    "Staff timeslot bearer flow only",
+    "Branded OAuth, customer, resource, capacity, event and hosted client flows not verified",
+    "Notifications queued; external delivery not verified"
+  ],
+  "database": {
+    "codex": {
+      "receipts": [
+        {
+          "operation": "booking_create",
+          "receipt_id": "01M5DE9FNS4M251EGKM26WJRAY",
+          "outbox": [
+            {
+              "topic": "booking.notification",
+              "total": 2
+            }
+          ]
+        },
+        {
+          "operation": "booking_reschedule",
+          "receipt_id": "01M5DEBBTP9HS9KMWJEV5VH4AZ",
+          "outbox": [
+            {
+              "topic": "booking.notification",
+              "total": 2
+            }
+          ]
+        },
+        {
+          "operation": "booking_status_set",
+          "receipt_id": "01M5DEEVVNP85EY22H74J93CSN",
+          "outbox": [
+            {
+              "topic": "booking.notification",
+              "total": 2
+            }
+          ]
+        }
+      ],
+      "bookings": [
+        {
+          "id": "01M5DE9FPCKYZ92Z74Q5QHJDMQ",
+          "status": "rescheduled",
+          "rescheduled_to_id": "01M5DEBBV9ZEM1GFZ67BVARP0V",
+          "start_datetime": "2026-10-25 10:00:00",
+          "end_datetime": "2026-10-25 10:30:00"
+        },
+        {
+          "id": "01M5DEBBV9ZEM1GFZ67BVARP0V",
+          "status": "cancelled",
+          "rescheduled_to_id": null,
+          "start_datetime": "2026-10-25 10:30:00",
+          "end_datetime": "2026-10-25 11:00:00"
+        }
+      ],
+      "revoked": true
+    },
+    "claude": {
+      "receipts": [
+        {
+          "operation": "booking_create",
+          "receipt_id": "01M5DE6T80FXW2EYX4KHMA2EHX",
+          "outbox": [
+            {
+              "topic": "booking.notification",
+              "total": 2
+            }
+          ]
+        },
+        {
+          "operation": "booking_reschedule",
+          "receipt_id": "01M5DEA0VEM5AX2KX53GN3ZWSK",
+          "outbox": [
+            {
+              "topic": "booking.notification",
+              "total": 2
+            }
+          ]
+        },
+        {
+          "operation": "booking_status_set",
+          "receipt_id": "01M5DEBJ14V7DW1Y7BWQPXE5DH",
+          "outbox": [
+            {
+              "topic": "booking.notification",
+              "total": 2
+            }
+          ]
+        }
+      ],
+      "bookings": [
+        {
+          "id": "01M5DE6T8HT0BMF79668VVPK5K",
+          "status": "rescheduled",
+          "rescheduled_to_id": "01M5DEA0W6T5RGTV41HP119ZWP",
+          "start_datetime": "2026-10-25 11:00:00",
+          "end_datetime": "2026-10-25 11:30:00"
+        },
+        {
+          "id": "01M5DEA0W6T5RGTV41HP119ZWP",
+          "status": "cancelled",
+          "rescheduled_to_id": null,
+          "start_datetime": "2026-10-25 11:30:00",
+          "end_datetime": "2026-10-25 12:00:00"
+        }
+      ],
+      "revoked": true
+    }
+  },
+  "private_log_sha256": {
+    "claude-cancel.jsonl": "3f62c8336754b01ca68fa03f27fe3dc68c1d0fde78c0aa9136c1ad3f16cf3a54",
+    "claude-create.jsonl": "86e4df8e154feab0c40c748d790f801b53962ca1b433c6e47bd3d01a3b32bd1e",
+    "claude-preview.jsonl": "534c1488f83f7a8aa2f782e2ef98e85c9c2ee051d484f5bdb715ca3407c6c084",
+    "claude-read.jsonl": "a36ab444731f90053b1f67f80b0d656ad4f5d32411927945f61922cd1c5ffab9",
+    "claude-reschedule.jsonl": "588bffdd231fda5d92080579143d73ff632e14843460c7d03f96b96b8c0ecf7d",
+    "claude-revoked.jsonl": "68fbc0c76ff1fec78e5df7bd732b0222c9d9f30e7c15279700d11d86aec5fae3",
+    "codex-cancel.jsonl": "293aa82204fc79dd9f382e3e4cf119f1f33bdf05726205655f357fbac5fc440a",
+    "codex-create-approval-required.jsonl": "e7cfe41eb3745c42e061815012ba3cb4b2969af5b217706564fb4bfa6cb767d9",
+    "codex-create.jsonl": "f16ec35000cfb456d55ff617c1e820e6e9c40e16ccdd8553ec3ea863047e5a4e",
+    "codex-preview.jsonl": "b641c28ba69d279f4fe146db5d5ffcaf8632175e0fde3592fd439b6f9e54d8c7",
+    "codex-read.jsonl": "a24b532b738f30b36984adaa00b6ca57eff124ea35cfe8f7ae9d67c95ae67890",
+    "codex-reschedule.jsonl": "06f2699cd086baf5a43a5c3867487e398c937cefdc228f29947322c650f77d95",
+    "codex-revoked.jsonl": "880c0b8f679ad98f6be323dc3c24083ed8143ca3df0e40f2b56411d0cc8d8d13"
+  }
+}

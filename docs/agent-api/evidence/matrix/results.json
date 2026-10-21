@@ -1,0 +1,164 @@
+{
+  "version": 1,
+  "recorded_at": "2026-10-20T20:57:03.869486+00:00",
+  "state": "passed",
+  "scope": "Complete PHPUnit unit and integration suite, including actual HTTP workers, native MCP, database concurrency, updater recovery and native form tests.",
+  "isolation": "Each run owns a fresh loopback MySQL container, restricted database user and private application copy. Ordinary application .env, storage and uploaded files are never copied. All containers and HTTP workers stopped after the tests.",
+  "redaction": "Absolute private temporary-directory prefixes are replaced by isolated-run in retained logs and JUnit. Test names, results, counts and durations are unchanged. No configuration, credential or mail-capture files are retained here.",
+  "runtime_evidence": "PHP versions are reported by PHPUnit. Exact MySQL versions were checked through guarded disposable connections; immutable image repository digests were inspected locally.",
+  "reports": [
+    {
+      "name": "php83-mysql80",
+      "php": "8.3.32",
+      "mysql": "8.0.46",
+      "mysql_image": "mysql:8.0",
+      "mysql_repository_digest": "mysql@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b",
+      "phpunit": "11.5.55",
+      "exit_code": 0,
+      "tests": 1698,
+      "assertions": 24683,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "warnings": 0,
+      "deprecations": 0,
+      "suites": [
+        {
+          "name": "Unit",
+          "tests": 965,
+          "assertions": 19111,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        },
+        {
+          "name": "Integration",
+          "tests": 733,
+          "assertions": 5572,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        }
+      ],
+      "command": "php scripts/test-isolated.php --keep --mysql-image=mysql:8.0 --display-skipped --display-deprecations --display-warnings --log-junit /tmp/voxelbooking-php83-mysql80.xml > /tmp/voxelbooking-php83-mysql80.log 2>&1",
+      "console": {
+        "path": "php83-mysql80.log",
+        "sha256": "354cdbb6130179897dfcb4881322aa04362c243024fec848f76951ccbed12604"
+      },
+      "junit": {
+        "path": "php83-mysql80.xml",
+        "sha256": "781243f2fa33cbc2cb6c2d111bcbba04c5fe06b4bdcc2ea00b969bb1140312cb"
+      }
+    },
+    {
+      "name": "php85-mysql84",
+      "php": "8.5.10",
+      "mysql": "8.4.11",
+      "mysql_image": "mysql:8.4",
+      "mysql_repository_digest": "mysql@sha256:3466ba4a4828aa8d46fb7c3bc16b67b781c98413cf4ea0fac6feaa6e881faa26",
+      "phpunit": "11.5.55",
+      "exit_code": 0,
+      "tests": 1698,
+      "assertions": 24683,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "warnings": 0,
+      "deprecations": 0,
+      "suites": [
+        {
+          "name": "Unit",
+          "tests": 965,
+          "assertions": 19111,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        },
+        {
+          "name": "Integration",
+          "tests": 733,
+          "assertions": 5572,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        }
+      ],
+      "command": "php scripts/test-isolated.php --keep --mysql-image=mysql:8.4 --display-skipped --display-deprecations --display-warnings --log-junit /tmp/voxelbooking-php85-mysql84.xml > /tmp/voxelbooking-php85-mysql84.log 2>&1",
+      "console": {
+        "path": "php85-mysql84.log",
+        "sha256": "b96434a13c8a23822da19c4a02cd648c02d7e1bf38a69382821b9a43c27ba272"
+      },
+      "junit": {
+        "path": "php85-mysql84.xml",
+        "sha256": "6b15eafb51f1654843ae9351c1e37635a7b58d310035d961a4e10d7773129867"
+      }
+    }
+  ],
+  "upgrade_rehearsals": [
+    {
+      "name": "php83-mysql80",
+      "mysql": "8.0.46",
+      "php": "8.3.32",
+      "from": 28,
+      "to": 41,
+      "legacy_read_only": true,
+      "rate_schema_repaired": true,
+      "committed_ddl_replay": true,
+      "partial_booking_columns_recovery": true,
+      "partial_failure_recovery": true,
+      "backup_restore_and_reupgrade": true,
+      "existing_data_preserved": true,
+      "command": "php scripts/test-isolated.php --upgrade-check --mysql-image=mysql:8.0",
+      "console": {
+        "path": "upgrade-php83-mysql80.log",
+        "sha256": "da04eb2cff7b07a1e680b3d9ddcada7b6d992d226b19aaf7452acf86a6745cc9"
+      }
+    },
+    {
+      "name": "php83-mysql84",
+      "mysql": "8.4.11",
+      "php": "8.3.32",
+      "from": 28,
+      "to": 41,
+      "legacy_read_only": true,
+      "rate_schema_repaired": true,
+      "committed_ddl_replay": true,
+      "partial_booking_columns_recovery": true,
+      "partial_failure_recovery": true,
+      "backup_restore_and_reupgrade": true,
+      "existing_data_preserved": true,
+      "command": "php scripts/test-isolated.php --upgrade-check --mysql-image=mysql:8.4",
+      "console": {
+        "path": "upgrade-php83-mysql84.log",
+        "sha256": "db3be4ff927021f52b16832321357671c174a11795a0770beffd9caf38f07e93"
+      }
+    },
+    {
+      "name": "php85-mysql84",
+      "mysql": "8.4.11",
+      "php": "8.5.10",
+      "from": 28,
+      "to": 41,
+      "legacy_read_only": true,
+      "rate_schema_repaired": true,
+      "committed_ddl_replay": true,
+      "partial_booking_columns_recovery": true,
+      "partial_failure_recovery": true,
+      "backup_restore_and_reupgrade": true,
+      "existing_data_preserved": true,
+      "command": "php scripts/test-isolated.php --upgrade-check --mysql-image=mysql:8.4",
+      "console": {
+        "path": "upgrade-php85-mysql84.log",
+        "sha256": "a6fddfa2fa02f082c23b27d65b5357e90b6cbc671aeffd39dff513e4c28112bf"
+      }
+    }
+  ],
+  "upgrade_note": "The real version-28 upgrade, interrupted-DDL and backup-restore rehearsals predate the final GitUpdater recovery correction. They exercise the unchanged migration engine and migration files; the complete final matrix also covers the corrected updater retry, stable lock and native recovery form.",
+  "prior_attempt_note": "An earlier post-updater PHP 8.5 run correctly rejected a test credential whose recomputed expiry exceeded its grant by one second. SharedBookingOperationsTest and DeletionApplicationTest now reuse the returned grant expiry. Both complete final runs above include that fixture correction.",
+  "parity": {
+    "human_routes": 190,
+    "application_operations": 129,
+    "capability_groups": 42,
+    "verification_command": "php scripts/check-agent-parity.php"
+  }
+}

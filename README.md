@@ -1,6 +1,6 @@
 # VoxelBooking
 
-Open-source booking infrastructure for small businesses. Four booking patterns: timeslots, resources, capacity, events, in one self-hosted installation. No SaaS dependency, no vendor lock-in, no outbound connections.
+Open-source booking infrastructure for small businesses. Four booking patterns: timeslots, resources, capacity, events, in one self-hosted installation. No SaaS dependency, no vendor lock-in, and no mandatory AI-provider dependency.
 
 [![VoxelBooking business dashboard](https://voxelbooking.com/screens/desktop/business-dashboard.webp)](https://voxelbooking.com/demo)
 
@@ -54,7 +54,7 @@ Your production server needs only PHP and MySQL — never Composer, Node.js, or 
 | Web server | Apache with `mod_rewrite`, or Nginx |
 | Location | The root of a domain or subdomain |
 
-**Required PHP extensions:** `pdo` `pdo_mysql` `curl` `json` `mbstring` `fileinfo` `openssl` `gd` `zip`
+**Required PHP extensions:** `pdo` `pdo_mysql` `curl` `json` `mbstring` `fileinfo` `openssl` `gd` `sodium` `zip`
 
 VoxelBooking runs at `example.com` or `booking.example.com`. It can't run from a subfolder like `example.com/booking`, because every route and link starts at `/`. If your main site already uses the domain, add a subdomain for VoxelBooking.
 
@@ -173,15 +173,11 @@ The booking page preserves each business's identity color. Selected fills use a 
 
 The admin dashboard leads with upcoming bookings and today's work, with totals below. Business users see pending approvals, their next booking, and today's schedule. Setup guidance follows the booking pattern and the user's role.
 
-### Retention cron (recommended)
+### Background delivery and maintenance
 
-For automated GDPR data retention — anonymizing customer PII after a configurable number of months — schedule this URL to run once daily:
+Configure the cron command shown in **Admin → Settings → Cron** to run every five minutes. Keep its token private. Cron delivers queued email and signed webhooks, retries failed deliveries, reconciles interrupted uploads, runs scheduled maintenance and applies configured data retention.
 
-```
-0 3 * * * curl -s "https://yourdomain.com/cron/run?token=YOUR_CRON_TOKEN" > /dev/null
-```
-
-Your cron token is displayed in Admin → Settings → Advanced. Without this cron, all other features work normally — only automated retention is inactive.
+A successful booking commits independently of delivery. Without cron, queued notifications and maintenance remain pending; monitor their status before going live.
 
 ---
 
@@ -189,10 +185,18 @@ Your cron token is displayed in Admin → Settings → Advanced. Without this cr
 
 Updates run from **Admin → Updates**, on two paths.
 
-- **Git updates (recommended for Git installs).** When the install is a Git checkout, the Updates page shows a **Git Updates** card. It reports your branch and whether a new version is available, then applies it in one click: it pulls the latest release and runs any pending database migrations together. It refuses to run if you have local changes or are ahead of the repository, and it never touches your `.env`, database, or uploads.
+- **Git updates (recommended for Git installs).** When the install is a Git checkout, the Updates page shows a **Git Updates** card. It reports your branch and whether a new version is available, then applies it in one click: it pulls the latest release and runs any pending database migrations together. It refuses to run if you have local changes or are ahead of the repository, preserves your `.env` and uploads, and applies pending database migrations. If files are current after a failed migration, **Retry database update** resumes the pending migrations.
 - **Release archive (for shared hosting without Git).** Download the latest [release archive](https://github.com/NowSquare/VoxelBooking/releases) and upload it from the same Updates page, or drop it in `/dist/`. VoxelBooking stages every file, applies it, and runs migrations — your `.env`, `storage/`, and `public/uploads/` are preserved.
 
-Back up your database and `public/uploads/` before any update, and test on a staging copy first — AGPL-3.0 places no limit on the number of installations. The full guide, including the shell `git fetch --tags` / `git checkout <tag>` workflow for pinning a specific version, is in the [Updating documentation](https://voxelbooking.com/docs/getting-started/updating).
+Back up your database, deployed code, `.env`, `storage/keys/`, `storage/media-journal/` and `public/uploads/` as a coherent set before any update, and test on a staging copy first — AGPL-3.0 places no limit on the number of installations. The full guide, including the shell `git fetch --tags` / `git checkout <tag>` workflow for pinning a specific version, is in the [Updating documentation](https://voxelbooking.com/docs/getting-started/updating).
+
+---
+
+## Agent API and native MCP
+
+Customers, business teams and operators can use scoped connections to discover and perform the actions their current role permits. The versioned HTTP API and native MCP transport share application operations with the human interface across all four booking patterns. Reviewed changes use browser approval, stable idempotency keys and recoverable operation receipts. Connections can be inspected, revoked and reviewed in **AI connections**.
+
+See the [Agent API documentation](https://voxelbooking.com/docs/agent-api), [release notes](docs/agent-api/release-notes.md) and [verification evidence](docs/agent-api/release-evidence.md) for migration requirements, exact tested clients and remaining external verification boundaries.
 
 ---
 
@@ -313,13 +317,13 @@ Thirty currencies are registered in `config/currencies.php`, mapping ISO 4217 co
 
 VoxelBooking is built with privacy-by-design architecture. The following describes what the software implements — not a legal guarantee. Compliance obligations remain with the operator.
 
-### Zero outbound connections by default
+### Explicit outbound integrations
 
-VoxelBooking makes no outbound connections unless you configure SMTP or run a Git update from the admin panel. No telemetry, no analytics beacons, no automatic update checks, no CDN dependencies. Every font, icon, and script is bundled.
+Configured email providers and webhooks make outbound delivery requests. OAuth can fetch a connecting client’s HTTPS metadata, and an operator can request a Git update. There is no required AI provider, telemetry, analytics beacon, automatic update check or CDN dependency. Fonts, icons and scripts are bundled.
 
 ### What it stores
 
-- **Two session cookies, both strictly necessary.** `vb_session` for admin login. `PHPSESSID` on the public booking page, holding only its CSRF token. The embedded booking widget sets no cookies at all. No analytics cookies, no marketing cookies, no fingerprinting.
+- **A necessary session cookie** (`vb_session`) supports sign-in, browser CSRF protection and verified customer access. Bearer-authenticated Agent API and MCP requests use credentials rather than browser-session authority. No analytics cookies, marketing cookies or fingerprinting.
 - **One localStorage entry** (`vb-theme`) — dark/light mode preference stored in the browser.
 
 ### GDPR controls
@@ -329,7 +333,7 @@ VoxelBooking makes no outbound connections unless you configure SMTP or run a Gi
 | Consent capture | Records the exact consent text shown to the customer and a `consent_given_at` timestamp at booking time. Changing the consent text later does not retroactively alter recorded consents. |
 | Customer anonymization | Name → "Deleted", email → SHA-256 hash, phone and notes → NULL. Booking structure and consent evidence are preserved. |
 | Data export | JSON export of all customer personal data, booking history, and consent records for GDPR Art. 20 portability requests. |
-| Self-service privacy page | Customers access their data at `/book/{slug}/privacy/{customer-ulid}`. They can export or request deletion without contacting the business. |
+| Self-service privacy page | Customers verify their email at `/book/{slug}/privacy/{customer-ulid}` to access, export or request deletion of their data. Booking-management links use separate revocable credentials. |
 | Operator deletion queue | Customer deletion requests appear in Admin → Deletion Queue. The operator confirms (triggers anonymization) or dismisses. Both actions are audit-logged. |
 | Retention cron | Automated per-business anonymization based on a configurable `data_retention_months` setting. |
 
@@ -471,15 +475,11 @@ php demo-seed.php          # Rebuilds storage/demo/demo.db
 
 > **Schema parity:** `demo-seed.php` creates SQLite tables that must mirror every MySQL migration in `app/Migrations/`. When you add or alter a migration, update `demo-seed.php` to match, bump the `db_version` setting, regenerate, and commit the updated `demo.db`. The build script also regenerates during packaging as a safety net.
 
-### MySQL showcase seed
+### Disposable MySQL verification
 
-To populate a local MySQL database with all four demo businesses and the full dataset:
+Use `php scripts/test-isolated.php` for write-path tests. It creates a private application copy, an explicitly disposable MySQL database and a guarded test manifest. Use `--keep --serve` when inspecting synthetic browser or client flows, then stop the retained runner.
 
-```bash
-php demo-seed-mysql.php    # DESTRUCTIVE — drops and recreates all tables
-```
-
-This seeds the same four-business dataset as demo mode but against your live MySQL database, enabling the full write path for testing.
+The legacy `demo-seed-mysql.php` script drops and recreates its configured tables. Do not run it against an ordinary development or production database; the isolated runner is the supported verification path.
 
 ### Building assets
 
@@ -518,22 +518,35 @@ The script builds production assets, copies the working tree (excluding runtime 
 
 ### Testing
 
+Use the disposable runner for both suites. It starts MySQL in Docker, copies the application into a private temporary directory, starts a loopback HTTP server with four workers, and captures email. It never copies the application's `.env`, uploads or ordinary database. PHPUnit refuses to run without the generated test manifest.
+
+The test host needs Docker and PHP with `pdo_mysql`, `pdo_sqlite`, `pcntl` and `posix`. These runner requirements do not apply to production hosting.
+
 ```bash
 # Full test suite
-vendor/bin/phpunit --testdox
+php scripts/test-isolated.php --testdox
 
 # Unit tests only
-vendor/bin/phpunit --testsuite Unit
+php scripts/test-isolated.php --testsuite Unit
 
 # Integration tests only
-vendor/bin/phpunit --testsuite Integration
+php scripts/test-isolated.php --testsuite Integration
 
 # Specific pattern tests
-vendor/bin/phpunit --filter EventBookingFlowTest
-vendor/bin/phpunit --filter CapacityBookingFlowTest
+php scripts/test-isolated.php --filter EventBookingFlowTest
+php scripts/test-isolated.php --filter CapacityBookingFlowTest
+
+# Supported minimum database and upgrade/recovery rehearsal
+php scripts/test-isolated.php --mysql-image=mysql:8.0
+php scripts/test-isolated.php --upgrade-check --mysql-image=mysql:8.0
+
+# Keep a private environment running for browser/API checks
+php scripts/test-isolated.php --keep --serve
 ```
 
-Integration tests run at the HTTP level against actual booking flows. Unit tests cover the calculators, models, and engine classes in isolation.
+Both suites include database-backed checks. Integration coverage exercises actual HTTP/MCP flows, authorization, retries and competing writers. The upgrade rehearsal creates a fictional version 28 installation, verifies migration and interrupted-DDL recovery, restores its backup and upgrades again. The default database image is MySQL 8.4; CI runs PHP 8.3/MySQL 8.0 and PHP 8.5/MySQL 8.4.
+
+`--keep` preserves private evidence after shutdown. `--serve` prints a private `run-tests.sh` command and keeps the server available until interrupted. Every invocation has its own database and files; the runner stops its workers and removes its database container on exit.
 
 ---
 
