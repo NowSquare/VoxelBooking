@@ -172,6 +172,21 @@ final class AvailabilityOperations
             $input[$key] = ['type' => 'integer', 'minimum' => 1, 'maximum' => 10000];
         }
 
+        $searchErrors = [
+            'unauthorized',
+            'identity_verification_required',
+            'forbidden',
+            'not_found',
+            'validation_failed',
+            'pattern_not_supported',
+            'invalid_date',
+            'invalid_month',
+            'invalid_cursor',
+            'invalid_party_size',
+            'staff_invalid'
+        ];
+        // Only a booking's own customer can search for a reschedule target.
+        $rescheduleSearchErrors = [...$searchErrors, 'rescheduling_unavailable', 'reschedule_context_mismatch'];
         return [
             new OperationDefinition(
                 'public_business_get',
@@ -190,7 +205,8 @@ final class AvailabilityOperations
                 ['A07', 'A27', 'A41'],
                 'GET',
                 '/public/{slug}/business',
-                AvailabilityService::business(...)
+                AvailabilityService::business(...),
+                errorCodes: ['unauthorized', 'identity_verification_required', 'not_found']
             ),
             new OperationDefinition(
                 'public_catalog_list',
@@ -214,7 +230,8 @@ final class AvailabilityOperations
                 ['A02', 'A28', 'A41'],
                 'GET',
                 '/public/{slug}/catalog',
-                AvailabilityService::catalog(...)
+                AvailabilityService::catalog(...),
+                errorCodes: ['unauthorized', 'identity_verification_required', 'not_found', 'validation_failed', 'invalid_cursor']
             ),
             new OperationDefinition(
                 'availability_search',
@@ -233,7 +250,8 @@ final class AvailabilityOperations
                 ['A21', 'A22', 'A23', 'A24', 'A25', 'A26', 'A41'],
                 'GET',
                 '/public/{slug}/availability',
-                AvailabilityService::search(...)
+                AvailabilityService::search(...),
+                errorCodes: $rescheduleSearchErrors
             ),
             new OperationDefinition(
                 'customer_availability_search',
@@ -252,7 +270,8 @@ final class AvailabilityOperations
                 ['A08', 'A17', 'A21', 'A41'],
                 'GET',
                 '/businesses/{business_id}/customer/booking/availability',
-                AvailabilityService::search(...)
+                AvailabilityService::search(...),
+                errorCodes: $rescheduleSearchErrors
             ),
             new OperationDefinition(
                 'staff_availability_search',
@@ -271,7 +290,8 @@ final class AvailabilityOperations
                 ['A02', 'A21', 'A41'],
                 'GET',
                 '/businesses/{business_id}/availability',
-                AvailabilityService::search(...)
+                AvailabilityService::search(...),
+                errorCodes: $searchErrors
             ),
         ];
     }

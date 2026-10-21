@@ -9,6 +9,72 @@ use App\Engine\{BookingService, Database, VenueDateTime};
 
 final class BookingOperations
 {
+    /** Resolving a staff caller can fail before any booking is touched. */
+    private const STAFF_ACTOR_ERRORS = ['unauthorized', 'identity_verification_required', 'forbidden', 'not_found'];
+
+    /** BookingDraft and the pattern calculators report why a requested time cannot be booked. */
+    private const DRAFT_ERRORS = [
+        'validation_failed',
+        'not_found',
+        'staff_invalid',
+        'invalid_date',
+        'invalid_time',
+        'invalid_party_size',
+        'pattern_not_supported',
+        'slot_unavailable',
+        'too_soon',
+        'too_far',
+        'resource_not_found',
+        'invalid_date_range',
+        'min_stay_violation',
+        'max_stay_violation',
+        'invalid_check_in_day',
+        'invalid_check_out_day',
+        'date_blocked',
+        'already_booked',
+        'capacity_exceeded',
+        'slot_not_found',
+        'slot_not_on_day',
+        'outside_booking_window',
+        'party_too_small',
+        'party_too_large',
+        'event_not_found',
+        'instance_cancelled',
+        'spot_count_too_few',
+        'spot_count_too_many',
+        'waitlist_full',
+        'event_full',
+        'audit_unavailable'
+    ];
+
+    /** BookingService::rescheduleError keeps these codes and folds every other failure into reschedule_failed. */
+    private const RESCHEDULE_ERRORS = [
+        'validation_failed',
+        'not_found',
+        'not_confirmed',
+        'invalid_date',
+        'invalid_time',
+        'invalid_slot',
+        'invalid_event',
+        'same_slot',
+        'too_soon',
+        'slot_unavailable',
+        'capacity_exceeded',
+        'event_full',
+        'already_booked',
+        'date_blocked',
+        'outside_booking_window',
+        'party_too_small',
+        'party_too_large',
+        'invalid_check_in_day',
+        'invalid_check_out_day',
+        'pattern_not_supported',
+        'temporarily_unavailable',
+        'reschedule_failed',
+        'inventory_conflict',
+        'audit_unavailable'
+    ];
+
     public static function definitions(): array
     {
         $patterns = ['timeslot', 'resource', 'capacity', 'event'];
@@ -35,6 +101,10 @@ final class BookingOperations
         ];
 
         $booking = self::bookingSchema();
+        // The customer's own booking also carries its add-to-calendar actions once confirmed.
+        $customerBooking = $booking;
+        $customerBooking['properties']['calendar'] = CalendarLinks::schema();
+        $customerBooking['required'][] = 'calendar';
         $list = self::object(
             [
                 'bookings' => ['type' => 'array', 'items' => $booking],
@@ -79,6 +149,15 @@ final class BookingOperations
         ];
         array_push($calendar['required'], 'blocked_dates', 'hours', 'available_weekdays');
 
+        $listErrors = [...self::STAFF_ACTOR_ERRORS, 'invalid_cursor', 'invalid_date', 'validation_failed'];
+        $exportErrors = [...self::STAFF_ACTOR_ERRORS, 'invalid_date', 'validation_failed'];
+        $readErrors = [
+            'bookings_list' => $listErrors,
+            'booking_get' => self::STAFF_ACTOR_ERRORS,
+            'customer_booking_get' => ['unauthorized', 'forbidden', 'not_found'],
+            'calendar_get' => [...$listErrors, 'invalid_interval'],
+            'bookings_export' => $exportErrors
+        ];
         // Read operations: [name, title, policy, scopes, path, input properties, required, output schema, handler, capability].
         foreach ([
             [
@@ -91,7 +170,8 @@ final class BookingOperations
                 [],
                 $list,
                 static fn ($a, $i) => BookingQueries::listing($a, $i),
-                'C05'
+                // status=waitlisted with event_id is an event's waitlist, in arrival order with sort=id.
+                ['C05', 'C19']
             ],
             [
                 'booking_get',
@@ -113,9 +193,14 @@ final class BookingOperations
                 '/businesses/{business_id}/customer/booking',
                 $base,
                 [],
-                $booking,
-                static fn ($a, $i) => BookingQueries::get($a, $i),
-                'C09'
+                $customerBooking,
+                static function ($a, $i) {
+                    $booking = BookingQueries::get($a, $i);
+                    $booking['calendar'] = CalendarLinks::forBooking($booking, self::calendarTenant($booking['business_id']));
+
+                    return $booking;
+                },
+                ['C09', 'C31']
             ],
             [
                 'calendar_get',
@@ -165,11 +250,12 @@ final class BookingOperations
                 'none',
                 $patterns,
                 'booking-tools',
-                [$capability],
+                (array) $capability,
                 ['A01', 'A02', 'A40', 'A41'],
                 'GET',
                 $path,
-                $handler
+                $handler,
+                errorCodes: $readErrors[$name]
             );
         }
 
@@ -194,6 +280,7 @@ final class BookingOperations
             'GET',
             '/operator/bookings',
             BookingQueries::operatorListing(...),
+            errorCodes: $listErrors,
             allowArchivedBusiness: true
         );
         // Cross-business exports have no single timezone, so it may be null here.
@@ -226,6 +313,7 @@ final class BookingOperations
             'GET',
             '/operator/bookings/export',
             static fn ($a, $i) => BookingQueries::export($a, $i, true),
+            errorCodes: $exportErrors,
             allowArchivedBusiness: true
         );
 
@@ -273,9 +361,20 @@ final class BookingOperations
                         throw new OperationException('forbidden', 403);
                     }
 
-                    return BookingCommands::create($a, $i);
+                    $receipt = BookingCommands::create($a, $i);
+                    if ($public) {
+                        // The customer's own result offers the booking page's add-to-calendar actions.
+                        $receipt['calendar'] = CalendarLinks::forCreation($receipt, self::calendarTenant($receipt['business_id']));
+                    }
+
+                    return $receipt;
                 },
                 sideEffects: ['booking.notification'],
+                errorCodes: array_values(array_unique([
+                    ...self::STAFF_ACTOR_ERRORS,
+                    ...self::DRAFT_ERRORS,
+                    ...($public ? ['consent_required', 'max_bookings_exceeded'] : [])
+                ])),
                 demoAllowed: true,
                 previewHandler: static fn ($a, $i) => self::previewCreate($a, $i)
             );
@@ -340,6 +439,10 @@ final class BookingOperations
                     );
                 },
                 sideEffects: ['booking.notification'],
+                // Customers also meet their business's self-service limits and the event lock.
+                errorCodes: array_values(array_unique($policy === 'staff'
+                    ? [...self::STAFF_ACTOR_ERRORS, ...self::RESCHEDULE_ERRORS]
+                    : ['unauthorized', 'forbidden', ...self::RESCHEDULE_ERRORS, 'rescheduling_disabled', 'too_late'])),
                 demoAllowed: true,
                 previewHandler: static fn ($a, $i) => self::previewReschedule($a, $i)
             );
@@ -371,8 +474,22 @@ final class BookingOperations
                 return BookingQueries::project(BookingService::findByIdWithDetails($i['booking_id'], $tenant['id']), $tenant, $a);
             },
             sideEffects: ['booking.notification'],
+            errorCodes: [
+                'unauthorized',
+                'forbidden',
+                'not_found',
+                'validation_failed',
+                'not_confirmed',
+                'cancellation_disabled',
+                'too_late',
+                'invalid_transition',
+                'cancellation_unavailable',
+                'audit_unavailable'
+            ],
             demoAllowed: true,
-            previewHandler: static fn ($a, $i) => self::previewStatus($a, $i + ['booking_id' => $a->bookingId, 'status' => 'cancelled'])
+            previewHandler: static fn ($a, $i) => self::previewStatus($a, $i + ['booking_id' => $a->bookingId, 'status' => 'cancelled']),
+            // Cancelling a cancelled booking returns it unchanged and notifies nobody again.
+            idempotencyPolicy: 'natural'
         );
         $definitions[] = new OperationDefinition(
             'booking_status_set',
@@ -405,8 +522,18 @@ final class BookingOperations
                 return BookingQueries::project(BookingService::findByIdWithDetails($i['booking_id'], $tenant['id']), $tenant, $a);
             },
             sideEffects: ['booking.notification'],
+            errorCodes: [
+                ...self::STAFF_ACTOR_ERRORS,
+                'validation_failed',
+                'invalid_transition',
+                'inventory_conflict',
+                'pattern_not_supported',
+                'audit_unavailable'
+            ],
             demoAllowed: true,
-            previewHandler: static fn ($a, $i) => self::previewStatus($a, $i)
+            previewHandler: static fn ($a, $i) => self::previewStatus($a, $i),
+            // Setting the status a booking already has returns it unchanged.
+            idempotencyPolicy: 'natural'
         );
 
         return $definitions;
@@ -519,6 +646,13 @@ final class BookingOperations
         );
     }
 
+    /** The tenant fields calendar actions need: its name for the title fallback, slug for the UID and timezone. */
+    private static function calendarTenant(string $businessId): array
+    {
+        return Database::query('SELECT name, slug, timezone FROM tenants WHERE id = ?', [$businessId])[0]
+            ?? throw new OperationException('not_found', 404);
+    }
+
     public static function object(array $properties, array $required = []): array
     {
         return ['type' => 'object', 'additionalProperties' => false, 'properties' => $properties, 'required' => $required];
@@ -578,6 +712,8 @@ final class BookingOperations
         foreach (['consent_recorded', 'email_sent', 'waitlisted'] as $field) {
             $properties[$field] = ['type' => 'boolean'];
         }
+        // Customer results only; null until the booking is confirmed.
+        $properties['calendar'] = CalendarLinks::schema();
 
         return self::periodRequired(
             self::object(

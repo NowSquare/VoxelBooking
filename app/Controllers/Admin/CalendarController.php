@@ -6,13 +6,12 @@ namespace App\Controllers\Admin;
 
 use App\Engine\Auth;
 use App\Engine\Database;
-use App\Engine\Locale;
 use App\Engine\Request;
 use App\Engine\Response;
 use App\Engine\Version;
 use App\Engine\View;
 use App\Middleware\CsrfMiddleware;
-use App\Application\Bookings\{BookingCommands, BookingQueries};
+use App\Application\Bookings\{BookingCalendar, BookingCommands};
 
 /**
  * Calendar controller (tenant-scoped).
@@ -57,7 +56,7 @@ final class CalendarController
         $isToday  = $dateStr === $today;
 
         $calendar = $this->calendar($tenantId, $dateStr, $dateStr);
-        $bookings = $calendar['bookings'];
+        $bookings = BookingCalendar::groupOccupiedDates($calendar['bookings'], $dateStr, $dateStr)[$dateStr] ?? [];
 
         // Assign columns for concurrent bookings (side-by-side layout)
         $bookings = $this->assignOverlapColumns($bookings);
@@ -70,7 +69,7 @@ final class CalendarController
 
         // Availability / blocked state for this specific day
         $isBlocked = in_array($dateStr, $calendar['blocked'], true);
-        $dayOfWeek = $this->isoDayOfWeek($date);
+        $dayOfWeek = BookingCalendar::isoDayOfWeek($date);
         $hasAvailability = in_array($dayOfWeek, $calendar['available_weekdays'], true);
 
         return $this->render('admin.tenants.calendar.day', __('admin.calendar.page_title'), [
@@ -109,30 +108,28 @@ final class CalendarController
         $dateStr = $this->date($request, $tenant);
 
         $date      = new \DateTimeImmutable($dateStr, new \DateTimeZone($tenant['timezone']));
-        $weekStart = Locale::weekStart(); // 0=Sunday, 1=Monday
         $today     = (new \DateTimeImmutable('now', new \DateTimeZone($tenant['timezone'])))->format('Y-m-d');
 
-        // Calculate week boundaries
-        $currentDow = (int) $date->format('w'); // 0=Sun..6=Sat
-        $daysBack   = ($currentDow - $weekStart + 7) % 7;
-        $weekBegin  = $date->modify("-{$daysBack} days");
+        // Week boundaries come from the shared calendar so agents see the same seven days.
+        $window     = BookingCalendar::window('week', $dateStr, BookingCalendar::weekStart($tenant));
+        $weekBegin  = new \DateTimeImmutable($window['from'], new \DateTimeZone($tenant['timezone']));
 
         $prevWeek = $weekBegin->modify('-7 days')->format('Y-m-d');
         $nextWeek = $weekBegin->modify('+7 days')->format('Y-m-d');
 
         // Pre-load availability dow map and blocked dates for the week range
-        $weekEndStr = $weekBegin->modify('+6 days')->format('Y-m-d');
+        $weekEndStr = $window['to'];
         $calendar = $this->calendar($tenantId, $weekBegin->format('Y-m-d'), $weekEndStr);
         $availableDows = $calendar['available_weekdays'];
         $blockedDatesInRange = $calendar['blocked'];
-        $bookingsByDate = $this->groupOccupiedDates($calendar['bookings'], $weekBegin->format('Y-m-d'), $weekEndStr);
+        $bookingsByDate = BookingCalendar::groupOccupiedDates($calendar['bookings'], $weekBegin->format('Y-m-d'), $weekEndStr);
 
         // Build 7 days with their bookings + state
         $days = [];
         for ($i = 0; $i < 7; $i++) {
             $dayDate = $weekBegin->modify("+{$i} days");
             $dayStr  = $dayDate->format('Y-m-d');
-            $dow     = $this->isoDayOfWeek($dayDate);
+            $dow     = BookingCalendar::isoDayOfWeek($dayDate);
             $days[]  = [
                 'date'            => $dayDate,
                 'dateStr'         => $dayStr,
@@ -177,26 +174,16 @@ final class CalendarController
         $today     = (new \DateTimeImmutable('now', new \DateTimeZone($tenant['timezone'])))->format('Y-m-d');
         $year      = (int) $date->format('Y');
         $month     = (int) $date->format('n');
-        $weekStart = Locale::weekStart(); // 0=Sunday, 1=Monday
 
         // Previous / next month navigation
         $prevMonth = $date->modify('first day of previous month')->format('Y-m-d');
         $nextMonth = $date->modify('first day of next month')->format('Y-m-d');
 
-        // First day of the month and total days
-        $firstOfMonth = new \DateTimeImmutable("$year-$month-01");
-        $daysInMonth  = (int) $firstOfMonth->format('t');
-
-        // Calculate grid padding: how many days from previous month to show
-        $firstDow    = (int) $firstOfMonth->format('w'); // 0=Sun..6=Sat
-        $paddingBefore = ($firstDow - $weekStart + 7) % 7;
-
-        // Grid start date (may be in previous month)
-        $gridStart = $firstOfMonth->modify("-{$paddingBefore} days");
-
-        // Always show 6 rows = 42 cells for a consistent grid height
-        $totalCells   = 42;
-        $gridEnd      = $gridStart->modify('+' . ($totalCells - 1) . ' days');
+        // The 42-cell grid starts on the week start on or before the 1st (see BookingCalendar::window).
+        $window     = BookingCalendar::window('month', $dateStr, BookingCalendar::weekStart($tenant));
+        $gridStart  = new \DateTimeImmutable($window['from']);
+        $gridEnd    = new \DateTimeImmutable($window['to']);
+        $totalCells = BookingCalendar::MONTH_CELLS;
 
         // Fetch all bookings in the visible range with a single query
         $calendar = $this->calendar(
@@ -206,7 +193,7 @@ final class CalendarController
         );
 
         // Group bookings by date for O(1) lookup in template
-        $bookingsByDate = $this->groupOccupiedDates($calendar['bookings'], $gridStart->format('Y-m-d'), $gridEnd->format('Y-m-d'));
+        $bookingsByDate = BookingCalendar::groupOccupiedDates($calendar['bookings'], $gridStart->format('Y-m-d'), $gridEnd->format('Y-m-d'));
 
         // Pre-load availability + blocked dates for the grid range
         $availableDows = $calendar['available_weekdays'];
@@ -218,7 +205,7 @@ final class CalendarController
             $cellDate = $gridStart->modify("+{$i} days");
             $cellStr  = $cellDate->format('Y-m-d');
             $cellMonth = (int) $cellDate->format('n');
-            $dow      = $this->isoDayOfWeek($cellDate);
+            $dow      = BookingCalendar::isoDayOfWeek($cellDate);
             $cells[] = [
                 'date'            => $cellDate,
                 'dateStr'         => $cellStr,
@@ -245,54 +232,10 @@ final class CalendarController
         ], $tenantId);
     }
 
-    /** The UI consumes the same paginated calendar projection as HTTP and MCP. */
-    /** A stay occupies every intersected local day, including arrivals before this page. */
-    private function groupOccupiedDates(array $bookings, string $from, string $to): array
-    {
-        $days = [];
-        foreach ($bookings as $booking) {
-            $start = max($from, substr($booking['start_datetime'], 0, 10));
-            $last = min($to, (new \DateTimeImmutable($booking['end_datetime']))->modify('-1 second')->format('Y-m-d'));
-            for ($day = new \DateTimeImmutable($start); $day->format('Y-m-d') <= $last; $day = $day->modify('+1 day')) {
-                $days[$day->format('Y-m-d')][] = $booking;
-            }
-        }
-        return $days;
-    }
-
+    /** The UI reads the same paginated calendar projection as HTTP and MCP. */
     private function calendar(string $tenantId, string $from, string $to): array
     {
-        $actor = BookingCommands::sessionActor($tenantId);
-        $input = ['business_id' => $tenantId, 'from' => $from, 'to' => $to, 'limit' => 100];
-        $result = null;
-        $bookings = [];
-        do {
-            $page = BookingQueries::calendar($actor, $input);
-            $result ??= $page;
-            foreach ($page['bookings'] as $booking) {
-                $booking['customer_name'] = $booking['customer']['name'];
-                $booking['customer_email'] = $booking['customer']['email'];
-                $bookings[] = $booking;
-            }
-            $input['cursor'] = $page['next_cursor'];
-        } while ($input['cursor'] !== null);
-        usort($bookings, static fn($a, $b) => [$a['start_datetime'], $a['id']] <=> [$b['start_datetime'], $b['id']]);
-        $result['bookings'] = $bookings;
-        $blocked = [];
-        foreach ($result['blocked_dates'] as $range) {
-            // Only whole-business closures block a day; staff and resource blocks leave it open.
-            if ($range['staff_id'] !== null || $range['resource_id'] !== null) {
-                continue;
-            }
-            $day = new \DateTimeImmutable(max($from, $range['start_date']));
-            $end = min($to, $range['end_date']);
-            while ($day->format('Y-m-d') <= $end) {
-                $blocked[] = $day->format('Y-m-d');
-                $day = $day->modify('+1 day');
-            }
-        }
-        $result['blocked'] = array_values(array_unique($blocked));
-        return $result;
+        return BookingCalendar::load(BookingCommands::sessionActor($tenantId), $tenantId, $from, $to);
     }
 
     private function date(Request $request, array $tenant): string
@@ -369,20 +312,11 @@ final class CalendarController
     private function loadTenant(string $tenantId): ?array
     {
         $rows = Database::query(
-            'SELECT `id`, `name`, `slug`, `email`, `timezone`, `currency`, `brand_color` FROM `tenants` WHERE `id` = ? LIMIT 1',
+            'SELECT `id`, `name`, `slug`, `email`, `timezone`, `currency`, `brand_color`, `locale`, `week_start` FROM `tenants` WHERE `id` = ? LIMIT 1',
             [$tenantId]
         );
 
         return $rows[0] ?? null;
-    }
-
-    /**
-     * Convert PHP weekday numbering to the availability table's ISO convention.
-     * PHP `N`: 1=Mon .. 7=Sun → DB: 0=Mon .. 6=Sun.
-     */
-    private function isoDayOfWeek(\DateTimeInterface $date): int
-    {
-        return (int) $date->format('N') - 1;
     }
 
     private function render(string $template, string $pageTitle, array $extra, string $tenantId): Response

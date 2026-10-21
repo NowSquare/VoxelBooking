@@ -22,12 +22,21 @@ final class ConnectionAuthenticator
         );
         $query->execute([hash('sha256', $token)]);
         $row = $query->fetch(PDO::FETCH_ASSOC);
-        // Both the connection and this credential must be live, and the token must be presented to its own audience.
-        if (!$row || $row['revoked_at'] !== null || $row['credential_revoked_at'] !== null
-            || strtotime($row['expires_at'] . ' UTC') <= time()
-            || strtotime($row['credential_expires_at'] . ' UTC') <= time()
-            || !hash_equals($row['audience'], $audience)) {
+        // An unknown token learns nothing: it may belong to another installation or be a guess.
+        if (!$row) {
             throw new OperationException('unauthorized', 401, nextAction: 'reconnect');
+        }
+        // The caller holds this token's secret, so telling it why the token stopped working
+        // reveals nothing it does not own, and lets the client show the right recovery.
+        // Both the connection and this credential must be live, and the token must be presented to its own audience.
+        if ($row['revoked_at'] !== null || $row['credential_revoked_at'] !== null) {
+            throw new OperationException('connection_revoked', 401, nextAction: 'reconnect');
+        }
+        if (strtotime($row['expires_at'] . ' UTC') <= time() || strtotime($row['credential_expires_at'] . ' UTC') <= time()) {
+            throw new OperationException('connection_expired', 401, nextAction: 'reconnect');
+        }
+        if (!hash_equals($row['audience'], $audience)) {
+            throw new OperationException('wrong_audience', 401, nextAction: 'use_matching_endpoint');
         }
         $scopes = json_decode($row['scopes'], true, flags: JSON_THROW_ON_ERROR);
         // A credential may carry a narrower scope set than the connection it belongs to.
@@ -37,18 +46,41 @@ final class ConnectionAuthenticator
                 json_decode($row['credential_scopes'], true, flags: JSON_THROW_ON_ERROR)
             ));
         }
-        $actor = (new PrincipalResolver($db))->resolve(
-            $row['principal_type'],
-            $row['principal_id'],
-            json_decode($row['business_ids'], true, flags: JSON_THROW_ON_ERROR),
-            $scopes,
-            $row['identity_hash'],
-            $row['id'],
-            $row['credential_id'],
-            customerCapabilityId: $row['customer_capability_id'] ?? null
-        );
+        try {
+            $actor = (new PrincipalResolver($db))->resolve(
+                $row['principal_type'],
+                $row['principal_id'],
+                json_decode($row['business_ids'], true, flags: JSON_THROW_ON_ERROR),
+                $scopes,
+                $row['identity_hash'],
+                $row['id'],
+                $row['credential_id'],
+                customerCapabilityId: $row['customer_capability_id'] ?? null
+            );
+        } catch (OperationException $refused) {
+            throw $this->disabledAccount($db, $row) ?? $refused;
+        }
         $db->prepare('UPDATE agent_connections SET last_used_at = ? WHERE id = ?')->execute([gmdate('Y-m-d H:i:s'), $row['id']]);
         return $actor;
+    }
+
+    /**
+     * A deactivated team member reconnecting cannot help; the business owner must
+     * reactivate them. Only the authentication boundary says so: a request already
+     * in flight keeps the plain unauthorized answer it has always had.
+     */
+    private function disabledAccount(PDO $db, array $connection): ?OperationException
+    {
+        if ($connection['principal_type'] !== 'business_user') {
+            return null;
+        }
+        $query = $db->prepare('SELECT is_active FROM business_users WHERE id = ?');
+        $query->execute([$connection['principal_id']]);
+        $active = $query->fetchColumn();
+
+        return $active !== false && !(bool) $active
+            ? new OperationException('account_disabled', 403, nextAction: 'contact_business_owner')
+            : null;
     }
 
     public function refresh(ActorContext $actor): ActorContext

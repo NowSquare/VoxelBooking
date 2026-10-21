@@ -117,7 +117,9 @@ final class BusinessOperations
                 $businessOutput,
                 BusinessService::update(...),
                 preview: static fn (ActorContext $actor, array $input): array =>
-                    BusinessService::preview($actor, $input, 'update')
+                    BusinessService::preview($actor, $input, 'update'),
+                effects: ['audit'],
+                idempotency: 'natural'
             ),
             self::op(
                 'business_set_status',
@@ -137,7 +139,9 @@ final class BusinessOperations
                     BusinessService::preview($actor, $input, 'status'),
                 review: true,
                 destructive: true,
-                archived: true
+                archived: true,
+                effects: ['audit'],
+                idempotency: 'natural'
             ),
             self::op(
                 'businesses_export',
@@ -207,7 +211,9 @@ final class BusinessOperations
                 TeamService::setActive(...),
                 preview: TeamService::preview(...),
                 review: true,
-                destructive: true
+                destructive: true,
+                effects: ['audit'],
+                idempotency: 'natural'
             ),
             self::op(
                 'application_submit',
@@ -221,7 +227,8 @@ final class BusinessOperations
                     'accepted' => ['type' => 'boolean', 'const' => true],
                     'status' => ['type' => 'string', 'const' => 'received']
                 ]),
-                ApplicationService::submit(...)
+                ApplicationService::submit(...),
+                effects: ['audit']
             ),
             self::op(
                 'applications_list',
@@ -267,7 +274,9 @@ final class BusinessOperations
                 $applicationOutput,
                 ApplicationService::review(...),
                 preview: ApplicationService::preview(...),
-                review: true
+                review: true,
+                effects: ['audit'],
+                idempotency: 'natural'
             ),
             self::op(
                 'business_dashboard',
@@ -368,7 +377,8 @@ final class BusinessOperations
         bool $review = false,
         bool $destructive = false,
         bool $archived = false,
-        array $effects = []
+        array $effects = [],
+        ?string $idempotency = null
     ): OperationDefinition {
         return new OperationDefinition(
             operationId: $id,
@@ -421,7 +431,9 @@ final class BusinessOperations
             ],
             demoAllowed: $read,
             previewHandler: $preview,
-            allowArchivedBusiness: $archived
+            allowArchivedBusiness: $archived,
+            // Updates, status changes and reviews are version-guarded, so a repeat changes nothing.
+            idempotencyPolicy: $idempotency
         );
     }
 }

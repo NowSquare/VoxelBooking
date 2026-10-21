@@ -13,6 +13,11 @@ final class Server
     public const MODERN_VERSION = '2026-07-28';
     public const LEGACY_VERSION = '2025-11-25';
     public const SUPPORTED_VERSIONS = [self::MODERN_VERSION, self::LEGACY_VERSION];
+    /**
+     * The revision the MCP specification tells servers to assume when a request carries
+     * no `MCP-Protocol-Version` header. Such clients predate the header and get legacy behaviour.
+     */
+    public const ASSUMED_VERSION = '2025-03-26';
 
     private readonly string $cursorSecret;
 
@@ -25,6 +30,8 @@ final class Server
         private readonly ?Closure $prompts = null,
         private readonly ?Closure $getPrompt = null,
         ?string $cursorSecret = null,
+        // Explains a call to a tool this caller cannot see: fn(string $name): ?array problem document.
+        private readonly ?Closure $unlistedTool = null,
     ) {
         // Production callers pass a persistent secret derived for the current actor/grant.
         $this->cursorSecret = $cursorSecret ?? bin2hex(random_bytes(32));
@@ -39,11 +46,11 @@ final class Server
             'ping' => !$modern ? new stdClass() : $this->unknownMethod(true),
             'tools/list' => $this->listTools($params),
             'tools/call' => $this->callTool($params, $context, $headers),
-            'resources/list' => $this->listResources($params),
-            'resources/templates/list' => $this->resourceTemplates($params),
-            'resources/read' => $this->readResource($params),
-            'prompts/list' => $this->listPrompts($params),
-            'prompts/get' => $this->getPrompt($params),
+            'resources/list' => $this->listResources($params, $modern),
+            'resources/templates/list' => $this->resourceTemplates($params, $modern),
+            'resources/read' => $this->readResource($params, $modern),
+            'prompts/list' => $this->listPrompts($params, $modern),
+            'prompts/get' => $this->getPrompt($params, $modern),
             default => $this->unknownMethod($modern),
         };
         if ($modern) {
@@ -102,6 +109,19 @@ final class Server
         return $this->page('tools', $tools, $params);
     }
 
+    /** A tool error carrying a problem document; the successful output schema does not describe problems. */
+    private function toolProblem(array $problem): array
+    {
+        return [
+            'content' => [[
+                'type' => 'text',
+                'text' => json_encode($problem, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+            ]],
+            'isError' => true,
+            '_meta' => ['com.voxelbooking/problem' => $problem],
+        ];
+    }
+
     private function callTool(stdClass $params, array $context, array $headers): array
     {
         if (!is_string($params->name ?? null) || $params->name === ''
@@ -116,6 +136,12 @@ final class Server
             }
         }
         if ($definition === null) {
+            // A real tool the caller's role or grant hides gets the same problem HTTP would send,
+            // so a client can tell "ask for more access" from a misspelt name.
+            $problem = $this->unlistedTool === null ? null : ($this->unlistedTool)($params->name);
+            if ($problem !== null) {
+                return $this->toolProblem($problem);
+            }
             throw new ProtocolError(-32602, 'Unknown tool');
         }
         // Round-trip through JSON to turn the decoded object tree into plain arrays, with a depth limit.
@@ -142,36 +168,28 @@ final class Server
                 'isError' => false,
             ];
         } catch (ToolFailure $error) {
-            // The successful output schema does not describe problem documents.
-            return [
-                'content' => [[
-                    'type' => 'text',
-                    'text' => json_encode($error->problem, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
-                ]],
-                'isError' => true,
-                '_meta' => ['com.voxelbooking/problem' => $error->problem],
-            ];
+            return $this->toolProblem($error->problem);
         }
     }
 
-    private function listResources(stdClass $params): array
+    private function listResources(stdClass $params, bool $modern): array
     {
-        $this->requireResources();
+        $this->requireResources($modern);
         $resources = ($this->resources)();
         usort($resources, static fn (array $left, array $right): int => strcmp($left['uri'], $right['uri']));
         return $this->page('resources', $resources, $params);
     }
 
-    private function resourceTemplates(stdClass $params): array
+    private function resourceTemplates(stdClass $params, bool $modern): array
     {
-        $this->requireResources();
+        $this->requireResources($modern);
         $this->noCursor($params);
         return ['resourceTemplates' => []];
     }
 
-    private function readResource(stdClass $params): array
+    private function readResource(stdClass $params, bool $modern): array
     {
-        $this->requireResources();
+        $this->requireResources($modern);
         if (!is_string($params->uri ?? null)) {
             throw new ProtocolError(-32602, 'Invalid resource params');
         }
@@ -183,17 +201,17 @@ final class Server
         throw new ProtocolError(-32602, 'Unknown resource');
     }
 
-    private function listPrompts(stdClass $params): array
+    private function listPrompts(stdClass $params, bool $modern): array
     {
-        $this->requirePrompts();
+        $this->requirePrompts($modern);
         $prompts = ($this->prompts)();
         usort($prompts, static fn (array $left, array $right): int => strcmp($left['name'], $right['name']));
         return $this->page('prompts', $prompts, $params);
     }
 
-    private function getPrompt(stdClass $params): array
+    private function getPrompt(stdClass $params, bool $modern): array
     {
-        $this->requirePrompts();
+        $this->requirePrompts($modern);
         if (!is_string($params->name ?? null)
             || (property_exists($params, 'arguments') && !$params->arguments instanceof stdClass)) {
             throw new ProtocolError(-32602, 'Invalid prompt params');
@@ -217,17 +235,18 @@ final class Server
         throw new ProtocolError(-32602, 'Unknown prompt');
     }
 
-    private function requireResources(): void
+    /** An unconfigured capability is an unknown method, answered the way the negotiated revision expects. */
+    private function requireResources(bool $modern): void
     {
         if ($this->resources === null || $this->readResource === null) {
-            throw new ProtocolError(-32601, 'Method not found', 404);
+            $this->unknownMethod($modern);
         }
     }
 
-    private function requirePrompts(): void
+    private function requirePrompts(bool $modern): void
     {
         if ($this->prompts === null || $this->getPrompt === null) {
-            throw new ProtocolError(-32601, 'Method not found', 404);
+            $this->unknownMethod($modern);
         }
     }
 
@@ -269,6 +288,7 @@ final class Server
         return $result;
     }
 
+    /** Legacy clients read HTTP 404 as an expired session, so they get the JSON-RPC error with HTTP 200. */
     private function unknownMethod(bool $modern): never
     {
         throw new ProtocolError(-32601, 'Method not found', $modern ? 404 : 200);

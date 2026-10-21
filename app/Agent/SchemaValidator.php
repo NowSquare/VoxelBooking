@@ -19,7 +19,14 @@ final class SchemaValidator
         $result = (new Validator())->validate($json, json_decode(json_encode($schema, JSON_THROW_ON_ERROR)));
         if (!$result->isValid()) {
             $errors = (new ErrorFormatter())->format($result->error());
-            // Output failures are our bug, so their details stay server-side.
+            // Output failures are our bug, so their details stay server-side. The log names
+            // only the failing JSON pointers: the messages can quote values, which may be personal data.
+            if ($output) {
+                error_log(
+                    'Agent response contract failed; request_id=' . \App\Engine\AuditLog::getRequestId()
+                        . '; paths=' . implode(',', array_keys($errors))
+                );
+            }
             throw new OperationException(
                 $output ? 'response_contract_failed' : 'validation_failed',
                 $output ? 500 : 422,

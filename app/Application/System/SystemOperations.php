@@ -309,7 +309,11 @@ final class SystemOperations
             httpMethod: $read ? 'GET' : 'POST',
             httpPath: '/operations/' . $id,
             handler: $handler,
-            sideEffects: $id === 'jobs_run' ? ['scheduled_maintenance'] : [],
+            sideEffects: match ($id) {
+                'jobs_run' => ['scheduled_maintenance'],
+                'system_settings_update' => ['audit'],
+                default => []
+            },
             errorCodes: [
                 'forbidden',
                 'not_found',
@@ -319,7 +323,9 @@ final class SystemOperations
                 'export_too_large'
             ],
             demoAllowed: $read,
-            previewHandler: $preview
+            previewHandler: $preview,
+            // A settings save rotates the revision, so repeating it meets version_conflict; each run request queues new work.
+            idempotencyPolicy: $id === 'system_settings_update' ? 'natural' : null
         );
     }
 }

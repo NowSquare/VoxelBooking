@@ -12,7 +12,8 @@ final class TransportAuth
     {
         $token = AgentAuth::extractBearerToken($request->header('Authorization') ?? '');
         if ($token === '') {
-            throw new OperationException('unauthorized', 401, nextAction: 'connect_client');
+            // Distinct from a rejected token: nothing was presented, often because a proxy dropped the header.
+            throw new OperationException('authorization_required', 401, nextAction: 'connect_client');
         }
         $actor = (new ConnectionAuthenticator())->authenticate($token, Endpoints::resource($transport));
         // Budgets stack: one per credential, one per principal, and one per principal and business.

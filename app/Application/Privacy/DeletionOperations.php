@@ -78,6 +78,7 @@ final class DeletionOperations
             ['id', 'business_id', 'name', 'email', 'deletion_requested_at', 'anonymized_at', 'booking_count']
         );
         $patterns = ['timeslot', 'resource', 'capacity', 'event'];
+        $reviewErrors = ['unauthorized', 'identity_verification_required', 'forbidden', 'not_found', 'request_not_pending'];
         return [
             new OperationDefinition(
                 'deletion_queue_list',
@@ -111,6 +112,7 @@ final class DeletionOperations
                 'GET',
                 '/businesses/{business_id}/deletion-requests',
                 DeletionService::queue(...),
+                errorCodes: ['unauthorized', 'identity_verification_required', 'forbidden', 'validation_failed', 'invalid_cursor'],
                 allowArchivedBusiness: true
             ),
             new OperationDefinition(
@@ -131,6 +133,7 @@ final class DeletionOperations
                 'GET',
                 '/businesses/{business_id}/deletion-requests/{customer_id}',
                 DeletionService::preview(...),
+                errorCodes: $reviewErrors,
                 allowArchivedBusiness: true
             ),
             new OperationDefinition(
@@ -151,8 +154,12 @@ final class DeletionOperations
                 'POST',
                 '/businesses/{business_id}/deletion-requests/{customer_id}/confirm',
                 DeletionService::confirm(...),
+                sideEffects: ['audit'],
+                errorCodes: [...$reviewErrors, 'demo_restricted'],
                 previewHandler: DeletionService::preview(...),
-                allowArchivedBusiness: true
+                allowArchivedBusiness: true,
+                // An erased customer is no longer pending, so a repeat is refused without effect.
+                idempotencyPolicy: 'natural'
             ),
             new OperationDefinition(
                 'deletion_dismiss',
@@ -172,8 +179,12 @@ final class DeletionOperations
                 'POST',
                 '/businesses/{business_id}/deletion-requests/{customer_id}/dismiss',
                 DeletionService::dismiss(...),
+                sideEffects: ['audit'],
+                errorCodes: [...$reviewErrors, 'demo_restricted', 'validation_failed'],
                 previewHandler: DeletionService::preview(...),
-                allowArchivedBusiness: true
+                allowArchivedBusiness: true,
+                // Dismissing a request that is already dismissed changes nothing.
+                idempotencyPolicy: 'natural'
             ),
         ];
     }

@@ -709,23 +709,56 @@ final class Locale
      */
     public static function resolveForAdmin(?array $tenant): void
     {
+        self::setLocale(self::adminLocaleFor($tenant));
+    }
+
+    /**
+     * The locale an admin page adopts: the tenant's own locale when supported,
+     * otherwise APP_LOCALE, otherwise the fallback.
+     */
+    private static function adminLocaleFor(?array $tenant): string
+    {
         // Tenant context: use the tenant's configured locale
         if ($tenant !== null) {
             $locale = $tenant['locale'] ?? '';
             if ($locale !== '' && self::isSupported($locale)) {
-                self::setLocale($locale);
-                return;
+                return $locale;
             }
         }
 
         // Operator-level / no tenant: use APP_LOCALE or fallback
         $appLocale = $_ENV['APP_LOCALE'] ?? $_SERVER['APP_LOCALE'] ?? '';
         if ($appLocale !== '' && self::isSupported($appLocale)) {
-            self::setLocale($appLocale);
-            return;
+            return $appLocale;
         }
 
-        self::setLocale(self::$fallback);
+        return self::$fallback;
+    }
+
+    /**
+     * The week start (0=Sunday .. 6=Saturday) a tenant's admin calendar uses.
+     *
+     * weekStart() answers for whatever request state is active. Agent operations
+     * run without the admin middleware's tenant overrides, so they resolve the
+     * same chain from the tenant row: its own setting, the system default, then
+     * the week start of the locale its admin pages adopt.
+     *
+     * @param array $tenant Tenant row with `week_start` and `locale`
+     */
+    public static function weekStartForTenant(array $tenant): int
+    {
+        $own = $tenant['week_start'] ?? null;
+        if ($own !== null && $own !== '') {
+            return (int) $own;
+        }
+
+        $sysDefaults = self::loadSystemDefaults();
+        if (isset($sysDefaults['week_start']) && $sysDefaults['week_start'] !== '') {
+            return (int) $sysDefaults['week_start'];
+        }
+
+        $config = self::$registry[self::adminLocaleFor($tenant)] ?? self::$registry[self::$fallback] ?? [];
+        return (int) ($config['week_start'] ?? 1);
     }
 
     // ════════════════════════════════════════════════════════════════

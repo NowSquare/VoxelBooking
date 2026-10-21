@@ -34,7 +34,8 @@ final class EmailTemplateOperations
                 ['A34'],
                 'GET',
                 '/businesses/{business_id}/settings/email-templates',
-                static fn($a, $i) => EmailTemplates::read($a, $i['business_id'])
+                static fn($a, $i) => EmailTemplates::read($a, $i['business_id']),
+                errorCodes: ['forbidden', 'not_found']
             ),
             new OperationDefinition(
                 'email_templates_update',
@@ -62,7 +63,11 @@ final class EmailTemplateOperations
                 ['A34', 'A47'],
                 'POST',
                 '/businesses/{business_id}/settings/email-templates',
-                EmailTemplates::update(...)
+                EmailTemplates::update(...),
+                sideEffects: ['audit'],
+                errorCodes: ['demo_restricted', 'forbidden', 'not_found', 'version_conflict', 'validation_failed', 'audit_unavailable'],
+                // Saving the same templates keeps the version; changed ones make a repeat meet version_conflict.
+                idempotencyPolicy: 'natural'
             ),
             new OperationDefinition(
                 'email_template_preview',
@@ -86,7 +91,8 @@ final class EmailTemplateOperations
                 ['A34'],
                 'GET',
                 '/businesses/{business_id}/settings/email-templates/{type}/sample',
-                EmailTemplates::preview(...)
+                EmailTemplates::preview(...),
+                errorCodes: ['forbidden', 'not_found', 'validation_failed']
             ),
         ];
     }

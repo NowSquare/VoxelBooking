@@ -31,8 +31,12 @@ final class AuthorizationPolicy
             'customer_booking' => $actor->role === 'verified_customer' && $actor->bookingId !== null,
             'customer_privacy' => $actor->role === 'verified_customer' && $actor->customerId !== null && $actor->bookingId === null,
         };
-        if (!$eligible || array_diff($operation->requiredScopes, $actor->scopes) !== []) {
+        if (!$eligible) {
             throw new OperationException('forbidden', 403, nextAction: 'review_connection_access');
+        }
+        // The person may do this, but the connection was not granted it: new consent can fix that, a role change cannot.
+        if (array_diff($operation->requiredScopes, $actor->scopes) !== []) {
+            throw new OperationException('insufficient_scope', 403, nextAction: 'request_more_access');
         }
         if ($actor->authMode === 'legacy' && !$operation->readOnly) {
             throw new OperationException('legacy_read_only', 403, nextAction: 'create_connection');

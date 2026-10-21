@@ -104,7 +104,10 @@ final class CustomerOperations
                 ['A28', 'A31'],
                 'GET',
                 '/businesses/{business_id}' . $path,
-                $handler
+                $handler,
+                errorCodes: $name === 'customer_get'
+                    ? ['forbidden', 'not_found']
+                    : ['forbidden', 'not_found', 'invalid_cursor']
             );
         }
 

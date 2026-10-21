@@ -144,7 +144,8 @@ final class PrivacyOperations
                 ['A01', 'A07', 'A08', 'A35', 'A40', 'A41'],
                 'GET',
                 '/businesses/{business_id}/customer/privacy/records',
-                PrivacyService::records(...)
+                PrivacyService::records(...),
+                errorCodes: ['unauthorized', 'identity_verification_required', 'forbidden', 'not_found', 'invalid_cursor']
             ),
             new OperationDefinition(
                 'customer_privacy_get',
@@ -163,7 +164,8 @@ final class PrivacyOperations
                 ['A01', 'A07', 'A08', 'A35', 'A41'],
                 'GET',
                 '/businesses/{business_id}/customer/privacy',
-                PrivacyService::summary(...)
+                PrivacyService::summary(...),
+                errorCodes: ['unauthorized', 'identity_verification_required', 'forbidden', 'not_found']
             ),
             new OperationDefinition(
                 'customer_privacy_export',
@@ -183,7 +185,8 @@ final class PrivacyOperations
                 'POST',
                 '/businesses/{business_id}/customer/privacy/export',
                 PrivacyService::export(...),
-                sideEffects: ['customer.privacy_notification']
+                sideEffects: ['customer.privacy_notification'],
+                errorCodes: ['unauthorized', 'identity_verification_required', 'forbidden', 'not_found']
             ),
             new OperationDefinition(
                 'customer_deletion_request',
@@ -204,7 +207,10 @@ final class PrivacyOperations
                 '/businesses/{business_id}/customer/privacy/deletion-request',
                 PrivacyService::requestDeletion(...),
                 sideEffects: ['customer.privacy_notification'],
-                previewHandler: PrivacyService::preview(...)
+                errorCodes: ['unauthorized', 'identity_verification_required', 'forbidden', 'demo_restricted', 'not_found'],
+                previewHandler: PrivacyService::preview(...),
+                // The request is recorded once; a repeat finds it pending and sends nothing new.
+                idempotencyPolicy: 'natural'
             ),
         ];
     }

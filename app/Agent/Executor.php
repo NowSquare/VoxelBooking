@@ -45,7 +45,8 @@ final class Executor
                 if ($missingPreview->status !== 404 || $idempotencyKey === null) {
                     throw $missingPreview;
                 }
-                return $this->storedReplay($actor, $definition, $idempotencyKey) ?? throw $missingPreview;
+                $replay = $this->storedReplay($actor, $definition, $idempotencyKey) ?? throw $missingPreview;
+                return $this->checkedEnvelope($definition, $replay);
             }
         }
         // Fields a person adds on the review page are not part of the caller's
@@ -84,7 +85,7 @@ final class Executor
             $store = new OperationReceiptStore();
             $receipt = $store->acquire($actor, $definition->operationId, $businessId, $idempotencyKey, $arguments);
             if ($receipt['result'] !== null) {
-                return $receipt['result'];
+                return $this->checkedEnvelope($definition, $receipt['result']);
             }
             if ($previewHandle !== null) {
                 if ($definition->previewHandler === null) {
@@ -129,13 +130,29 @@ final class Executor
         if ($definition->previewHandler === null) {
             throw new OperationException('preview_unavailable', 422);
         }
-        return (new PreviewStore())->create(
+        $preview = (new PreviewStore())->create(
             $actor,
             $definition,
             $arguments,
             ($definition->previewHandler)($actor, $arguments),
             $businessId
         );
+        // A rejected preview leaves its stored row behind, but nobody holds its handle and it expires in minutes.
+        (new SchemaValidator())->validate($this->previewSchema($definition), $preview, true);
+        return $preview;
+    }
+
+    /** The preview result schema exactly as the published contract declares it. */
+    private function previewSchema(OperationDefinition $definition): array
+    {
+        // One reviewed definition publishes two tools: its commit tool and its preview tool.
+        $commitTool = $definition->tool()['name'];
+        foreach ((new Mcp\ContractGenerator())->tools([$definition]) as $tool) {
+            if ($tool['name'] !== $commitTool) {
+                return $tool['outputSchema'];
+            }
+        }
+        throw new \LogicException('Previewable operation has no published preview contract.');
     }
 
     /**
@@ -200,12 +217,27 @@ final class Executor
     private function result(OperationDefinition $definition, array $data, ?string $businessId, ?string $receiptId): array
     {
         (new SchemaValidator())->validate($definition->outputSchema, $data, true);
-        return [
+        return $this->checkedEnvelope($definition, [
             'data' => $data,
             'operation' => $definition->operationId,
             'business_id' => $businessId,
             'receipt_id' => $receiptId,
             'notification_state' => $receiptId === null ? null : \App\Engine\Outbox::notificationState($receiptId)
-        ];
+        ]);
+    }
+
+    /**
+     * Both transports send this envelope verbatim (HTTP body, MCP structuredContent), so it must
+     * match the published result schema, including replays of results stored earlier.
+     */
+    private function checkedEnvelope(OperationDefinition $definition, array $envelope): array
+    {
+        $candidate = $envelope;
+        // PHP cannot tell an empty object from an empty list; check empty object data as the object it stands for.
+        if (($envelope['data'] ?? null) === [] && ($definition->outputSchema['type'] ?? '') === 'object') {
+            $candidate['data'] = new \stdClass();
+        }
+        (new SchemaValidator())->validate($definition->resultSchema(), $candidate, true);
+        return $envelope;
     }
 }

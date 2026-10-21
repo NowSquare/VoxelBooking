@@ -6,6 +6,7 @@ namespace App\Controllers\Mcp;
 
 use App\Agent\{Endpoints, Executor, Operations, OperationException, TransportAuth, CanonicalJson};
 use App\Agent\Mcp\{ContractGenerator, HttpTransport, Server, ToolFailure};
+use App\Controllers\AgentApi\V2\PublicSessionController;
 use App\Engine\{Request, Response, Version, AuditLog};
 
 final class McpController
@@ -56,7 +57,7 @@ final class McpController
                             'maxLength' => 2048,
                             'description' => __('agent.public.continuation_description'),
                         ];
-                        $baseName = str_ends_with($tool['name'], '_preview') ? substr($tool['name'], 0, -8) : $tool['name'];
+                        [$baseName] = self::resolveTool($registry, $tool['name']);
                         if (!$registry->get($baseName)->readOnly || str_starts_with($baseName, 'public_operation_')) {
                             $tool['inputSchema']['required'][] = 'continuation';
                         }
@@ -76,9 +77,11 @@ final class McpController
                             if ($input !== []) {
                                 throw new OperationException('validation_failed', 422);
                             }
-                            return \App\Agent\PublicTransport::start($request);
+                            $session = \App\Agent\PublicTransport::start($request);
+                            (new \App\Agent\SchemaValidator())->validate(PublicSessionController::resultSchema(), $session, true);
+                            return $session;
                         }
-                        $baseName = str_ends_with($name, '_preview') ? substr($name, 0, -8) : $name;
+                        [$baseName, $isPreview] = self::resolveTool($registry, $name);
                         $definition = $registry->get($baseName) ?? throw new OperationException('operation_not_found', 404);
                         $callingActor = $actor;
                         if ($public) {
@@ -92,10 +95,14 @@ final class McpController
                             );
                             unset($input['continuation']);
                         }
-                        if (str_ends_with($name, '_preview')) {
+                        if ($isPreview) {
                             return $executor->preview($callingActor, $baseName, $input);
                         }
-                        return $executor->execute($callingActor, $name, $input, $context['idempotency_key'] ?? null);
+                        // connection_test reports the negotiated revision so a client can check its own setup.
+                        return \App\Agent\TransportContext::during(
+                            $context['protocol_version'] ?? null,
+                            static fn () => $executor->execute($callingActor, $name, $input, $context['idempotency_key'] ?? null),
+                        );
                     } catch (OperationException $error) {
                         throw new ToolFailure($error->problem((string) ($context['request_id'] ?? AuditLog::getRequestId())));
                     }
@@ -109,6 +116,23 @@ final class McpController
                     $actor->scopes,
                     $actor->role,
                 ])),
+                unlistedTool: $public ? null : static function (string $name) use ($registry, $actor): ?array {
+                    $baseName = str_ends_with($name, '_preview') ? substr($name, 0, -8) : $name;
+                    $definition = $registry->get($baseName);
+                    // The published OpenAPI document already names every operation, so saying why
+                    // a known one is hidden from this caller discloses nothing new.
+                    if ($definition === null
+                        || str_starts_with($definition->httpPath, '/public/')
+                        || ($baseName !== $name && ($definition->readOnly || $definition->previewHandler === null))) {
+                        return null;
+                    }
+                    try {
+                        (new \App\Agent\AuthorizationPolicy())->authorize($actor, $definition);
+                    } catch (OperationException $refused) {
+                        return $refused->problem(AuditLog::getRequestId());
+                    }
+                    return null;
+                },
             );
             $transport = new HttpTransport($server, \App\Agent\CorsPolicy::configured()->origins());
             $result = $transport->handle($request->method(), $request->headers(), $request->rawBody(1048577));
@@ -129,18 +153,26 @@ final class McpController
             'title' => __('agent.public.start_title'),
             'description' => __('agent.public.start_description'),
             'inputSchema' => ['type' => 'object', 'properties' => new \stdClass(), 'additionalProperties' => false],
-            'outputSchema' => [
-                'type' => 'object',
-                'required' => ['continuation', 'expires_at', 'business_id', 'permissions'],
-                'properties' => [
-                    'continuation' => ['type' => 'string'],
-                    'expires_at' => ['type' => 'string'],
-                    'business_id' => ['type' => 'string'],
-                    'permissions' => ['type' => 'array', 'items' => ['type' => 'string']],
-                ],
-                'additionalProperties' => false,
-            ],
+            // The same declaration the HTTP session route publishes in OpenAPI.
+            'outputSchema' => PublicSessionController::resultSchema(),
             'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'idempotentHint' => false, 'openWorldHint' => false],
         ];
+    }
+
+    /**
+     * Map a tool name to its operation and say whether it is a preview twin.
+     *
+     * An operation's own name wins: email_template_preview is a read-only
+     * operation, not the preview of an "email_template" command.
+     *
+     * @return array{0: string, 1: bool}
+     */
+    private static function resolveTool(\App\Agent\OperationRegistry $registry, string $name): array
+    {
+        if ($registry->get($name) !== null || !str_ends_with($name, '_preview')) {
+            return [$name, false];
+        }
+
+        return [substr($name, 0, -strlen('_preview')), true];
     }
 }

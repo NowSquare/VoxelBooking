@@ -198,6 +198,67 @@ final class ConnectionService
         AuditLog::log('connection.revoked', 'connection', $id, [], actorType: $actor->auditType(), actorId: $actor->principalId);
     }
 
+    /**
+     * Bring a connection's end forward to a chosen time.
+     *
+     * The admin screen fixes expiry at creation and otherwise only revokes. A
+     * connection can shorten its own life without ending it now, for example to
+     * finish a task and then lapse. It can never extend itself, and its tokens
+     * never outlive it.
+     *
+     * @return array{connection_id: string, previous_expires_at: string, expires_at: string}
+     */
+    public function expire(ActorContext $actor, string $id, string $expiresAt): array
+    {
+        return \App\Application\Shared\Access::transaction(function () use ($actor, $id, $expiresAt): array {
+            $row = Database::query(
+                'SELECT principal_type, principal_id, expires_at FROM agent_connections WHERE id = ? FOR UPDATE',
+                [$id]
+            )[0] ?? null;
+            $actor = (new ConnectionAuthenticator())->refresh($actor);
+            if (!$row || $row['principal_type'] !== $actor->principalType || $row['principal_id'] !== $actor->principalId) {
+                throw new OperationException('not_found', 404);
+            }
+            $expiry = self::shortenedExpiry($expiresAt, $row['expires_at']);
+            Database::execute('UPDATE agent_connections SET expires_at = ? WHERE id = ?', [$expiry, $id]);
+            Database::execute(
+                'UPDATE agent_credentials SET expires_at = LEAST(expires_at, ?) WHERE connection_id = ?',
+                [$expiry, $id]
+            );
+            AuditLog::log(
+                'connection.expiry_shortened',
+                'connection',
+                $id,
+                ['previous_expires_at' => $row['expires_at'], 'expires_at' => $expiry],
+                actorType: $actor->auditType(),
+                actorId: $actor->principalId
+            );
+
+            return ['connection_id' => $id, 'previous_expires_at' => $row['expires_at'], 'expires_at' => $expiry];
+        });
+    }
+
+    /**
+     * The new expiry in storage format, refused unless it lies after now and no
+     * later than the current expiry. Ending access now is connection_revoke's job.
+     */
+    public static function shortenedExpiry(string $requested, string $current): string
+    {
+        try {
+            $time = (new \DateTimeImmutable($requested))->getTimestamp();
+        } catch (\Exception) {
+            throw new OperationException('validation_failed', 422, ['expires_at' => 'invalid']);
+        }
+        if ($time <= time()) {
+            throw new OperationException('validation_failed', 422, ['expires_at' => 'must_be_future'], nextAction: 'revoke_connection');
+        }
+        if ($time > strtotime($current . ' UTC')) {
+            throw new OperationException('validation_failed', 422, ['expires_at' => 'cannot_extend'], nextAction: 'open_connection_settings');
+        }
+
+        return gmdate('Y-m-d H:i:s', $time);
+    }
+
     public function rotate(ActorContext $actor, string $id, string $audience): array
     {
         $actor = (new ConnectionAuthenticator())->refresh($actor);

@@ -17,6 +17,7 @@ final class Operations
             ...\App\Application\Catalog\CatalogOperations::definitions(),
             ...\App\Application\Customers\CustomerOperations::definitions(),
             ...\App\Application\Bookings\BookingOperations::definitions(),
+            ...\App\Application\Bookings\CalendarOperations::definitions(),
             ...\App\Application\Availability\AvailabilityOperations::definitions(),
             ...\App\Application\Privacy\PrivacyOperations::definitions(),
             ...\App\Application\Privacy\DeletionOperations::definitions(),

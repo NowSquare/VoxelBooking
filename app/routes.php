@@ -72,6 +72,13 @@ return function (Router $router): void {
             $router->$method('/mcp/public', \App\Controllers\Mcp\McpController::class, 'handle');
             $router->$method('/mcp/public/{slug}', \App\Controllers\Mcp\McpController::class, 'handle');
         }
+        // Registered last so every real agent route matches first; anything else under
+        // these prefixes is a wrong address and gets a problem pointing at discovery.
+        foreach (['get', 'post', 'put', 'delete'] as $method) {
+            $router->$method('/api/agent/v2', \App\Controllers\AgentApi\UnknownEndpointController::class, 'handle');
+            $router->$method('/api/agent/v2/{unknown:.+}', \App\Controllers\AgentApi\UnknownEndpointController::class, 'handle');
+            $router->$method('/mcp/{unknown:.+}', \App\Controllers\AgentApi\UnknownEndpointController::class, 'handle');
+        }
         $router->corsOptionsFor(
             \App\Middleware\AgentCorsMiddleware::applies(...),
             \App\Middleware\AgentCorsMiddleware::class,

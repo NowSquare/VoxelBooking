@@ -49,7 +49,10 @@ final class WebhookOperations
             string $method,
             string $path,
             \Closure $handler,
-            ?\Closure $preview = null
+            array $errors,
+            ?\Closure $preview = null,
+            array $effects = ['webhook_configuration'],
+            ?string $idempotency = null
         ) use (&$definitions): void {
             $definitions[] = new OperationDefinition(
                 $name,
@@ -69,10 +72,11 @@ final class WebhookOperations
                 $method,
                 $path,
                 $handler,
-                $read ? [] : ['webhook_configuration'],
-                [],
+                $read ? [] : $effects,
+                $errors,
                 false,
-                $preview
+                $preview,
+                idempotencyPolicy: $idempotency
             );
         };
         $base = '/businesses/{business_id}/webhooks';
@@ -83,7 +87,8 @@ final class WebhookOperations
             true,
             'GET',
             $base,
-            WebhookService::listing(...)
+            WebhookService::listing(...),
+            ['forbidden', 'not_found', 'endpoint_configuration_invalid', 'https_required']
         );
         $add(
             'webhook_get',
@@ -92,7 +97,8 @@ final class WebhookOperations
             true,
             'GET',
             $base . '/{subscription_id}',
-            WebhookService::get(...)
+            WebhookService::get(...),
+            ['forbidden', 'not_found', 'endpoint_configuration_invalid', 'https_required']
         );
         $create = self::fields();
         unset($create['is_active']);
@@ -104,6 +110,15 @@ final class WebhookOperations
             'POST',
             $base,
             WebhookService::create(...),
+            [
+                'demo_restricted',
+                'forbidden',
+                'not_found',
+                'validation_failed',
+                'subscription_limit',
+                'endpoint_configuration_invalid',
+                'https_required'
+            ],
             WebhookService::preview(...)
         );
         $add(
@@ -114,7 +129,17 @@ final class WebhookOperations
             'POST',
             $base . '/{subscription_id}',
             WebhookService::update(...),
-            WebhookService::preview(...)
+            [
+                'demo_restricted',
+                'forbidden',
+                'not_found',
+                'version_conflict',
+                'validation_failed',
+                'endpoint_configuration_invalid',
+                'https_required'
+            ],
+            WebhookService::preview(...),
+            idempotency: 'natural'
         );
         $add(
             'webhook_secret_rotate',
@@ -124,6 +149,14 @@ final class WebhookOperations
             'POST',
             $base . '/{subscription_id}/rotate',
             WebhookService::rotate(...),
+            [
+                'demo_restricted',
+                'forbidden',
+                'not_found',
+                'version_conflict',
+                'endpoint_configuration_invalid',
+                'https_required'
+            ],
             WebhookService::preview(...)
         );
         $delivery = S::object([
@@ -146,7 +179,8 @@ final class WebhookOperations
             true,
             'GET',
             $base . '/{subscription_id}/deliveries',
-            WebhookService::deliveries(...)
+            WebhookService::deliveries(...),
+            ['forbidden', 'not_found']
         );
         $add(
             'webhook_delivery_retry',
@@ -155,7 +189,9 @@ final class WebhookOperations
             false,
             'POST',
             '/businesses/{business_id}/webhook-deliveries/{delivery_id}/retry',
-            WebhookService::retry(...)
+            WebhookService::retry(...),
+            ['demo_restricted', 'forbidden', 'not_found', 'delivery_not_retryable'],
+            effects: ['webhook_delivery']
         );
         return $definitions;
     }

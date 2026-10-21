@@ -30,7 +30,7 @@ final class ContractGenerator
             $tools[] = $tool;
             if ($this->reviewed($definition)) {
                 $tools[] = [
-                    'name' => $definition->operationId . '_preview',
+                    'name' => $definition->mcpToolName . '_preview',
                     'title' => __('agent.contract.preview_title', ['title' => $definition->title]),
                     'description' => __('agent.contract.preview_description', ['description' => $definition->description]),
                     'inputSchema' => $this->schema($definition->inputSchema),
@@ -40,6 +40,10 @@ final class ContractGenerator
                         'destructiveHint' => false,
                         'idempotentHint' => true,
                         'openWorldHint' => false
+                    ],
+                    '_meta' => [
+                        'com.voxelbooking/operation_id' => $definition->operationId,
+                        'com.voxelbooking/idempotency_policy' => 'none',
                     ],
                 ];
             }
@@ -82,6 +86,8 @@ final class ContractGenerator
                         'request_id' => ['type' => 'string'],
                         'retryable' => ['type' => 'boolean'],
                         'next_action' => ['type' => ['string', 'null']],
+                        // Present on unknown_endpoint: where the client finds the current contract.
+                        'discovery_url' => ['type' => 'string', 'format' => 'uri'],
                     ],
                     'required' => ['type', 'title', 'status', 'code', 'retryable'],
                 ]],
@@ -155,7 +161,9 @@ final class ContractGenerator
             'x-capability-ids' => $definition->capabilityIds,
             'x-acceptance-tests' => $definition->acceptanceTestIds,
             'x-side-effects' => $preview ? [] : $definition->sideEffects,
-            'x-error-codes' => $definition->errorCodes,
+            'x-error-codes' => $definition->problemCodes(),
+            'x-idempotency-policy' => $preview ? 'none' : $definition->idempotencyPolicy,
+            'x-mcp-tool-name' => $definition->mcpToolName . ($preview ? '_preview' : ''),
             'x-read-only' => $preview || $definition->readOnly,
             'x-destructive' => !$preview && $definition->destructive,
         ];

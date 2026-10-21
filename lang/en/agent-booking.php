@@ -4,6 +4,11 @@ declare(strict_types=1);
 return [
     'custom_fields' => 'Booking details',
     'choose_option' => 'Choose an option',
+    // Calendar event descriptions; the booking page writes the same English text.
+    'calendar' => [
+        'with' => 'With :name',
+        'nights' => ':nights night stay',
+    ],
     'titles' => [
         'customer_privacy_records' => 'Review your booking and consent history',
         'operator_bookings_list'=>'Find bookings across businesses',
@@ -14,6 +19,7 @@ return [
         'booking_get' => 'Read booking',
         'customer_booking_get' => 'Read your booking',
         'calendar_get' => 'Read booking calendar',
+        'calendar_summary' => 'Count bookings by calendar day',
         'bookings_export' => 'Export bookings',
         'booking_create' => 'Create a staff booking',
         'public_booking_create' => 'Book an appointment or place',
@@ -42,6 +48,7 @@ return [
         'booking_get' => 'Returns permitted booking records in business local time and UTC, without management credentials.',
         'customer_booking_get' => 'Returns permitted booking records in business local time and UTC, without management credentials.',
         'calendar_get' => 'Returns permitted booking records in business local time and UTC, without management credentials.',
+        'calendar_summary' => 'Returns the day, week or month the admin calendar shows around a date, using the business’s week start and six-week month grid. Each day carries its occupied booking count, closure and opening state.',
         'bookings_export' => 'Returns permitted booking records in business local time and UTC, without management credentials.',
         'booking_create' => 'Review the exact date, offering, price and policies, then create one booking. Consent must reflect the customer’s explicit choice.',
         'public_booking_create' => 'Review the exact date, offering, price and policies, then create one booking. Consent must reflect the customer’s explicit choice.',

@@ -85,7 +85,7 @@ final class ThrottleMiddleware
     {
         // MCP carries both queries and commands over POST. The authenticated
         // operation layer enforces credential/principal budgets after this IP gate.
-        if (str_starts_with($path, '/api/agent/') || $path === '/mcp' || str_starts_with($path, '/mcp/public')) {
+        if (str_starts_with($path, '/api/agent/') || $path === '/mcp' || str_starts_with($path, '/mcp/')) {
             return 'agent';
         }
         // Auth verification endpoints — stricter than generic admin

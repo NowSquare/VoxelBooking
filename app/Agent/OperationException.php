@@ -12,6 +12,8 @@ final class OperationException extends \RuntimeException
         public readonly array $fieldErrors = [],
         public readonly ?string $nextAction = null,
         public readonly bool $retryable = false,
+        // RFC 9457 extension members, such as where a lost client can rediscover the API.
+        public readonly array $extensions = [],
     ) {
         parent::__construct($problemCode);
     }
@@ -27,6 +29,6 @@ final class OperationException extends \RuntimeException
             'retryable' => $this->retryable,
             'field_errors' => $this->fieldErrors ?: null,
             'next_action' => $this->nextAction,
-        ], static fn ($value) => $value !== null);
+        ], static fn ($value) => $value !== null) + $this->extensions;
     }
 }

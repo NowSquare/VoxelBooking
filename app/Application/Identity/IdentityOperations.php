@@ -78,7 +78,9 @@ final class IdentityOperations
                     'scopes' => $a->scopes,
                     'connection_id' => $a->connectionId,
                     'locale' => $a->locale
-                ]
+                ],
+                // The handler only echoes the resolved caller, so only authentication can fail.
+                errorCodes: ['unauthorized', 'forbidden']
             ),
             new OperationDefinition(
                 'account_get',
@@ -97,7 +99,8 @@ final class IdentityOperations
                 ['A03'],
                 'GET',
                 '/account',
-                AccountService::read(...)
+                AccountService::read(...),
+                errorCodes: ['unauthorized', 'forbidden', 'endpoint_configuration_invalid', 'https_required']
             ),
             new OperationDefinition(
                 'account_update',
@@ -119,7 +122,21 @@ final class IdentityOperations
                 ['A31'],
                 'POST',
                 '/account',
-                AccountService::update(...)
+                AccountService::update(...),
+                sideEffects: ['audit'],
+                errorCodes: [
+                    'unauthorized',
+                    'forbidden',
+                    'demo_restricted',
+                    'version_conflict',
+                    'validation_failed',
+                    'identity_unavailable',
+                    'audit_unavailable',
+                    'endpoint_configuration_invalid',
+                    'https_required'
+                ],
+                // The name is version-guarded: the same name converges, a changed one makes a repeat conflict.
+                idempotencyPolicy: 'natural'
             ),
         ];
         $connection = S::object([
@@ -150,7 +167,8 @@ final class IdentityOperations
             ['A03', 'A04'],
             'GET',
             '/connection',
-            ConnectionState::read(...)
+            ConnectionState::read(...),
+            errorCodes: ['not_found']
         );
         $activity = S::object([
             'id' => $text(26),
@@ -180,7 +198,8 @@ final class IdentityOperations
             ['A02', 'A36'],
             'GET',
             '/connection/activity',
-            ConnectionState::activity(...)
+            ConnectionState::activity(...),
+            errorCodes: ['not_found', 'invalid_cursor']
         );
         $definitions[] = new OperationDefinition(
             'connection_setup',
@@ -202,7 +221,8 @@ final class IdentityOperations
             ['A31'],
             'GET',
             '/connection/setup',
-            static fn() => ['browser_url' => Endpoints::baseUrl() . '/admin/connections', 'requires_browser' => true]
+            static fn() => ['browser_url' => Endpoints::baseUrl() . '/admin/connections', 'requires_browser' => true],
+            errorCodes: ['forbidden', 'endpoint_configuration_invalid', 'https_required']
         );
         foreach ([false, true] as $public) {
             $policy = $public ? 'public' : 'authenticated';
@@ -225,7 +245,8 @@ final class IdentityOperations
                 ['A15', 'A20'],
                 'GET',
                 $path . '/receipts/{receipt_id}',
-                static fn($a, $i) => (new OperationReceiptStore())->get($a, $i['receipt_id'])
+                static fn($a, $i) => (new OperationReceiptStore())->get($a, $i['receipt_id']),
+                errorCodes: ['not_found']
             );
             $definitions[] = new OperationDefinition(
                 $prefix . 'operation_recover',
@@ -256,7 +277,8 @@ final class IdentityOperations
                     $i['operation'],
                     $i['original_business_id'] ?? null,
                     $i['original_idempotency_key']
-                )
+                ),
+                errorCodes: ['operation_not_found', 'not_found']
             );
         }
 
@@ -306,7 +328,9 @@ final class IdentityOperations
                         static fn($op) => !str_starts_with($op->httpPath, '/public/')
                     ))
                 )
-            ]
+            ],
+            // The catalogue is filtered to the caller, so only authentication can fail.
+            errorCodes: ['unauthorized', 'forbidden']
         );
         $definitions[] = new OperationDefinition(
             'connection_revoke',
@@ -333,11 +357,129 @@ final class IdentityOperations
                 (new ConnectionService(Operations::registry()))->revoke($a, $a->connectionId);
                 return ['revoked' => true];
             },
+            sideEffects: ['audit'],
+            errorCodes: ['not_found', 'audit_unavailable'],
             previewHandler: static fn($a) => [
                 'connection_id' => $a->connectionId,
                 'effect' => 'revoke_current_connection'
-            ]
+            ],
+            // A revoked connection stays revoked; it cannot even authenticate a repeat.
+            idempotencyPolicy: 'natural'
         );
+        $definitions[] = new OperationDefinition(
+            'connection_test',
+            __('agent.operations.connection_test'),
+            __('agent.descriptions.connection_test'),
+            $empty,
+            S::object([
+                'authenticated' => ['type' => 'boolean', 'const' => true],
+                'principal' => S::object(['type' => $text(30), 'id' => $text(128), 'role' => $text(30)]),
+                'business_ids' => ['type' => 'array', 'items' => $text(26)],
+                'scopes' => ['type' => 'array', 'items' => $text(100)],
+                'auth_mode' => $text(30),
+                'connection' => [
+                    'type' => ['object', 'null'],
+                    'additionalProperties' => false,
+                    'properties' => [
+                        'id' => $text(26),
+                        'name' => $text(120),
+                        'expires_at' => $text(40),
+                        'credential_expires_at' => $text(40, true),
+                        'expires_in_seconds' => ['type' => 'integer', 'minimum' => 0],
+                    ],
+                    'required' => ['id', 'name', 'expires_at', 'credential_expires_at', 'expires_in_seconds'],
+                ],
+                'transport' => ['type' => ['string', 'null'], 'enum' => ['http', 'mcp', null]],
+                'protocol_version' => $text(30, true),
+                'scope_coverage' => S::object([
+                    'available' => ['type' => 'array', 'items' => $text(100)],
+                    'missing_scope' => [
+                        'type' => 'array',
+                        'items' => S::object([
+                            'operation' => $text(100),
+                            'missing_scopes' => ['type' => 'array', 'items' => $text(100)],
+                        ]),
+                    ],
+                ]),
+                'discovery' => S::object([
+                    'openapi_url' => ['type' => 'string', 'format' => 'uri'],
+                    'mcp_url' => ['type' => 'string', 'format' => 'uri'],
+                ]),
+            ]),
+            [],
+            'authenticated',
+            true,
+            false,
+            'none',
+            $patterns,
+            'connect-your-client',
+            ['C40', 'C42'],
+            ['A03', 'A04', 'A41'],
+            'GET',
+            '/connection/test',
+            ConnectionState::test(...),
+            errorCodes: ['unauthorized', 'forbidden', 'not_found', 'endpoint_configuration_invalid', 'https_required']
+        );
+        $expiry = [
+            'type' => 'string',
+            'maxLength' => 40,
+            // An instant with an explicit offset, so the shortened end never depends on a server timezone.
+            'pattern' => '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2})?(Z|[+-][0-9]{2}:[0-9]{2})$',
+        ];
+        $definitions[] = new OperationDefinition(
+            'connection_expire',
+            __('agent.operations.connection_expire'),
+            __('agent.descriptions.connection_expire'),
+            S::object(['expires_at' => $expiry]),
+            S::object([
+                'connection_id' => $text(26),
+                'previous_expires_at' => $text(40),
+                'expires_at' => $text(40),
+            ]),
+            [],
+            'authenticated',
+            false,
+            true,
+            'trusted',
+            $patterns,
+            'connect-your-client',
+            ['C40'],
+            ['A04', 'A31'],
+            'POST',
+            '/connection/expire',
+            static function ($a, $i): array {
+                if ($a->connectionId === null) {
+                    throw new OperationException('not_found', 404);
+                }
+
+                return (new ConnectionService(Operations::registry()))->expire($a, $a->connectionId, $i['expires_at']);
+            },
+            sideEffects: ['audit'],
+            errorCodes: ['not_found', 'validation_failed', 'audit_unavailable'],
+            previewHandler: static function ($a, $i): array {
+                $row = $a->connectionId === null
+                    ? null
+                    : (\App\Engine\Database::query(
+                        'SELECT name, expires_at FROM agent_connections WHERE id = ?',
+                        [$a->connectionId]
+                    )[0] ?? null);
+                if ($row === null) {
+                    throw new OperationException('not_found', 404);
+                }
+
+                // The reviewer sees both instants in UTC, as stored, and the commit refuses a changed current expiry.
+                return [
+                    'connection_id' => $a->connectionId,
+                    'connection_name' => $row['name'],
+                    'current_expires_at' => $row['expires_at'],
+                    'expires_at' => ConnectionService::shortenedExpiry($i['expires_at'], $row['expires_at']),
+                    'effect' => 'shorten_current_connection'
+                ];
+            },
+            // The same instant twice leaves the same expiry; a later one is refused, never applied.
+            idempotencyPolicy: 'natural'
+        );
+
         return $definitions;
     }
 }

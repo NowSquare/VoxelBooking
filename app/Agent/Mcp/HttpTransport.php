@@ -77,7 +77,7 @@ final class HttpTransport
             $version = $this->protocolVersion($message->method, $params, $headers);
             if ($notification) {
                 // A notification can never invoke an application operation.
-                if ($version === Server::LEGACY_VERSION
+                if ($version !== Server::MODERN_VERSION
                     && in_array($message->method, ['notifications/initialized', 'notifications/cancelled'], true)) {
                     return new HttpResponse(202, null, self::RESPONSE_HEADERS);
                 }
@@ -135,14 +135,22 @@ final class HttpTransport
         if ($bodyVersion === null && ($headers['mcp-protocol-version'] ?? null) === Server::LEGACY_VERSION) {
             return Server::LEGACY_VERSION;
         }
+        // The specification says to assume 2025-03-26 when the header is absent. Only a request
+        // with neither header nor body version qualifies, so a modern body version still needs its header.
+        if ($bodyVersion === null && !array_key_exists('mcp-protocol-version', $headers)) {
+            return Server::ASSUMED_VERSION;
+        }
         if (!is_string($bodyVersion) || $bodyVersion === '') {
             throw new ProtocolError(-32602, 'Missing required protocol metadata');
         }
         HeaderValidator::matching($headers, 'MCP-Protocol-Version', $bodyVersion);
         if ($bodyVersion !== Server::MODERN_VERSION) {
+            // The same code and next action as the HTTP problem documents, so clients diagnose both alike.
             throw new ProtocolError(-32022, 'Unsupported protocol version', data: [
                 'supported' => Server::SUPPORTED_VERSIONS,
                 'requested' => $bodyVersion,
+                'code' => 'unsupported_protocol_version',
+                'next_action' => 'use_supported_protocol',
             ]);
         }
         if (!($meta->{'io.modelcontextprotocol/clientCapabilities'} ?? null) instanceof stdClass) {

@@ -63,6 +63,14 @@ final class SettingsOperations
             $patterns = $section === 'booking'
                 ? ['timeslot', 'resource']
                 : ['timeslot', 'resource', 'capacity', 'event'];
+            // Projections build links from the configured base URL; some sections add their own checks.
+            $readErrors = ['forbidden', 'not_found', 'endpoint_configuration_invalid', 'https_required'];
+            $sectionErrors = match ($section) {
+                'booking' => ['pattern_not_supported'],
+                'branding' => ['upload_grant_invalid', 'upload_expired', 'identity_changed'],
+                'general' => ['slug_in_use'],
+                default => []
+            };
             $definitions[] = new OperationDefinition(
                 'business_' . $section . '_get',
                 __('agent.settings.' . $section),
@@ -84,7 +92,8 @@ final class SettingsOperations
                     $actor,
                     $input['business_id'],
                     $section
-                )
+                ),
+                errorCodes: $section === 'booking' ? [...$readErrors, 'pattern_not_supported'] : $readErrors
             );
             $definitions[] = new OperationDefinition(
                 'business_' . $section . '_update',
@@ -104,11 +113,22 @@ final class SettingsOperations
                 'POST',
                 '/businesses/{business_id}/settings/' . $section,
                 static fn(ActorContext $actor, array $input) => SettingsService::update($actor, $input, $section),
+                sideEffects: ['audit'],
+                errorCodes: [
+                    ...$readErrors,
+                    'demo_restricted',
+                    'version_conflict',
+                    'validation_failed',
+                    'audit_unavailable',
+                    ...$sectionErrors
+                ],
                 previewHandler: static fn(ActorContext $actor, array $input) => SettingsService::preview(
                     $actor,
                     $input,
                     $section
-                )
+                ),
+                // Saving the same values keeps the version; different values make a repeat meet version_conflict.
+                idempotencyPolicy: 'natural'
             );
         }
 

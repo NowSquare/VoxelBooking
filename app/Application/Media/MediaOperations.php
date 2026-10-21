@@ -60,7 +60,16 @@ final class MediaOperations
                 $actor,
                 $input['business_id'],
                 $input['purpose']
-            )
+            ),
+            sideEffects: ['audit'],
+            errorCodes: [
+                'demo_restricted',
+                'forbidden',
+                'not_found',
+                'validation_failed',
+                'endpoint_configuration_invalid',
+                'https_required'
+            ]
         )];
     }
 }

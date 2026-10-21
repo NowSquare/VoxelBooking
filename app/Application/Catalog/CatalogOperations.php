@@ -286,6 +286,9 @@ final class CatalogOperations
             ],
             demoAllowed: !$write || $demoAllowed,
             previewHandler: $preview,
+            // Every catalog write except create checks expected_version against a version that
+            // covers the changed fields, so a repeat converges or meets version_conflict/not_found.
+            idempotencyPolicy: $write && !str_ends_with($id, '_create') ? 'natural' : null,
         );
     }
 
