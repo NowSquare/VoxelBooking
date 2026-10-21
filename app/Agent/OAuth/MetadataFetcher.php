@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Agent\OAuth;
 
+use App\Application\Integrations\WebhookHttp;
 use Closure;
 use InvalidArgumentException;
 
@@ -32,14 +33,7 @@ final class MetadataFetcher
         if ($addresses === []) {
             throw new InvalidArgumentException('client_metadata_unavailable');
         }
-        foreach ($addresses as $address) {
-            // Every resolved address must be public; IPv4-mapped IPv6 could otherwise smuggle a private target.
-            if (!is_string($address)
-                || !filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
-                || str_starts_with(strtolower($address), '::ffff:')) {
-                throw new InvalidArgumentException('invalid_client_id');
-            }
-        }
+        $this->assertPublic($addresses);
         $response = $this->request !== null
             ? ($this->request)($url, $host, $addresses[0])
             : $this->download($url, $host, $addresses[0]);
@@ -63,6 +57,23 @@ final class MetadataFetcher
             $ttl = 0;
         }
         return ['metadata' => $metadata, 'ttl' => $ttl];
+    }
+
+    /**
+     * Every resolved address must be public, or one answer could smuggle the fetch to an internal target.
+     * The webhook guard owns the single definition of "public" (CGNAT, benchmarking, NAT64, 6to4 and the
+     * rest that PHP's private/reserved filter lets through), so this asks it rather than keeping a second
+     * list that would drift. The placeholder host is never resolved: the guard checks exactly the
+     * addresses resolved here, which are the ones the request is then pinned to.
+     */
+    private function assertPublic(array $addresses): void
+    {
+        $guard = new WebhookHttp(static fn (): array => $addresses);
+        try {
+            $guard->destination('https://client-metadata.invalid/');
+        } catch (InvalidArgumentException) {
+            throw new InvalidArgumentException('invalid_client_id');
+        }
     }
 
     private function addresses(string $host): array

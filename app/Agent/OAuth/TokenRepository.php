@@ -128,7 +128,13 @@ final class TokenRepository implements AccessTokenRepositoryInterface, AuthCodeR
 
     public function isAuthCodeRevoked(string $codeId): bool
     {
-        return $this->revoked('oauth_auth_codes', $codeId);
+        $record = $this->one('SELECT * FROM oauth_auth_codes WHERE id_hash = ?' . $this->lock(), [hash('sha256', $codeId)]);
+        // A code is revoked only by its one successful redemption, so seeing it again means it leaked.
+        // RFC 6749 4.1.2 and RFC 9700 2.1.1: revoke the tokens that redemption issued, not just this attempt.
+        if ($record !== null && $record['revoked_at'] !== null) {
+            $this->replayedConnection = $record['connection_id'];
+        }
+        return $record === null || $record['revoked_at'] !== null || strtotime($record['expires_at'] . ' UTC') <= time();
     }
 
     public function getNewRefreshToken(): ?RefreshTokenEntityInterface
@@ -165,7 +171,7 @@ final class TokenRepository implements AccessTokenRepositoryInterface, AuthCodeR
         return $record === null || $record['revoked_at'] !== null || strtotime($record['expires_at'] . ' UTC') <= time();
     }
 
-    /** Called after rollback so reuse detection survives the failed exchange. */
+    /** Called after rollback so code or refresh reuse detection survives the failed exchange. */
     public function revokeReplayedFamily(): void
     {
         if ($this->replayedConnection !== null) {

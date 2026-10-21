@@ -7,6 +7,7 @@ use App\Agent\ConnectionService;
 use App\Agent\ActorContext;
 use App\Agent\Endpoints;
 use App\Agent\OAuth\Factory;
+use App\Agent\OAuth\RegistrationThrottled;
 use App\Agent\OperationException;
 use App\Agent\Operations;
 use App\Agent\RateBudget;
@@ -182,7 +183,7 @@ final class OAuthController
 
     public function register(Request $request): Response
     {
-        return $this->guard($request, 'register', function (): Response {
+        return $this->guard($request, 'register', function () use ($request): Response {
             if (DemoMode::isActive()) {
                 return $this->jsonError('access_denied', 403);
             }
@@ -195,7 +196,7 @@ final class OAuthController
                 return $this->jsonError('invalid_client_metadata', 400);
             }
             $factory = new Factory(Operations::registry());
-            return Response::json($factory->registration->register($metadata), 201)->header('Cache-Control', 'no-store');
+            return Response::json($factory->registration->register($metadata, 'dynamic', $request->ip()), 201)->header('Cache-Control', 'no-store');
         });
     }
 
@@ -234,6 +235,11 @@ final class OAuthController
                 return $this->browserError($error->getErrorType() === 'access_denied' ? 'denied' : 'invalid_request');
             }
             return $this->convert($error->generateHttpResponse(new \Nyholm\Psr7\Response()));
+        } catch (RegistrationThrottled $throttled) {
+            if ($group === 'authorize') {
+                return $this->browserError('unavailable');
+            }
+            return $this->jsonError('slow_down', 429)->header('Retry-After', (string) $throttled->retryAfter);
         } catch (\InvalidArgumentException|\JsonException $error) {
             return $group === 'authorize' ? $this->browserError('invalid_request') : $this->jsonError('invalid_request', 400);
         } catch (OperationException $error) {

@@ -52,7 +52,7 @@
     },
     "POST /oauth/register": {
       "handler": "App\\Controllers\\OAuth\\OAuthController::register",
-      "source_hash": "fda8fbd15d4f736ba80c3b771341d6b928657143685360c96e9bdad83ccab035",
+      "source_hash": "a59bc11def57e95ee9e74376ccd3e0a07570982bcda4895d80394bdfb71de897",
       "disposition": "transport",
       "operations": [],
       "rationale": "Protocol authentication or explicit browser consent. Never expose credentials as an application tool.",
