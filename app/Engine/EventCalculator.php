@@ -98,11 +98,12 @@ final class EventCalculator
             return ['events' => []];
         }
 
-        // Load live booking counts per event and occurrence date.
+        // Load live booking counts per event and occurrence date. A booking whose
+        // event was deleted keeps a null event_id and belongs to no occurrence.
         $bookingSums = Database::query(
             'SELECT `event_id`, DATE(`start_datetime`) AS `d`, SUM(`party_size`) AS `booked`
              FROM `bookings`
-             WHERE `tenant_id` = ? AND `booking_pattern` = \'event\'
+             WHERE `tenant_id` = ? AND `booking_pattern` = \'event\' AND `event_id` IS NOT NULL
              AND `status` IN (\'confirmed\', \'rescheduled\')
              AND (`status` <> \'rescheduled\' OR NULLIF(`rescheduled_to_id`, \'\') IS NULL)
              GROUP BY `event_id`, DATE(`start_datetime`)',
@@ -118,7 +119,7 @@ final class EventCalculator
         $waitlistSums = Database::query(
             'SELECT `event_id`, DATE(`start_datetime`) AS `d`, SUM(`party_size`) AS `waitlisted`
              FROM `bookings`
-             WHERE `tenant_id` = ? AND `booking_pattern` = \'event\'
+             WHERE `tenant_id` = ? AND `booking_pattern` = \'event\' AND `event_id` IS NOT NULL
              AND `status` = \'waitlisted\'
              GROUP BY `event_id`, DATE(`start_datetime`)',
             [$tenantId]

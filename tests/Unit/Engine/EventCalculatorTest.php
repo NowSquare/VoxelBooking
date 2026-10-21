@@ -205,6 +205,31 @@ class EventCalculatorTest extends TestCase
     }
 
     #[Test]
+    public function bookings_whose_event_was_deleted_count_toward_no_occurrence(): void
+    {
+        $orphan = Ulid::generate();
+        Database::execute(
+            "INSERT INTO `bookings` (`id`, `tenant_id`, `customer_id`, `booking_pattern`, `event_id`,
+             `start_datetime`, `end_datetime`, `party_size`, `status`, `source`)
+             VALUES (?, ?, ?, 'event', NULL, ?, ?, 2, 'confirmed', 'web')",
+            [$orphan, self::$tenantId, self::$customerId, date('Y-m-d', strtotime('+10 days')) . ' 09:00:00', date('Y-m-d', strtotime('+10 days')) . ' 13:00:00']
+        );
+        set_error_handler(static function (int $level, string $message): bool {
+            throw new \ErrorException($message, 0, $level);
+        }, E_DEPRECATED);
+
+        try {
+            $result = EventCalculator::getUpcomingEvents(self::$tenant);
+        } finally {
+            restore_error_handler();
+            Database::execute('DELETE FROM `bookings` WHERE `id` = ?', [$orphan]);
+        }
+
+        $workshop = array_values(array_filter($result['events'], fn($e) => $e['name'] === 'Woodworking 101'))[0];
+        $this->assertSame(8, $workshop['remaining'], 'An event-less booking must not take a place');
+    }
+
+    #[Test]
     public function upcoming_events_expands_recurring(): void
     {
         $result = EventCalculator::getUpcomingEvents(self::$tenant);
