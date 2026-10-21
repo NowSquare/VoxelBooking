@@ -1,6 +1,6 @@
 # Final application compatibility matrix
 
-Both complete runs of the 1.3.0 source pass **1,973 tests and 29,223 assertions**, with zero failures, errors, skips, warnings or deprecations. Each contains 1,088 unit tests and 885 integration tests, including HTTP v2 and native MCP success tests for all 132 operations.
+Both complete runs of the 1.3.0 source pass **1,973 tests and 29,224 assertions**, with zero failures, errors, skips, warnings or deprecations. Each contains 1,088 unit tests and 885 integration tests, including HTTP v2 and native MCP success tests for all 132 operations.
 
 | Runtime | Console | Complete JUnit |
 | --- | --- | --- |
