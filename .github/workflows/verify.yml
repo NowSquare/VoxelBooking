@@ -55,6 +55,10 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: curl, fileinfo, gd, mbstring, openssl, pcntl, pdo_mysql, pdo_sqlite, posix, sodium, zip
           coverage: none
+          # setup-php defaults to JIT mode 1235. On PHP 8.3 its call-graph type
+          # inference miscompiles Contract::object() and every request fails.
+          # Servers that enable JIT get PHP's default tracing mode, so test that.
+          ini-values: opcache.jit=tracing
       - run: composer install --no-interaction --prefer-dist
       - name: Rehearse version 28 upgrade, interrupted DDL and backup recovery
         run: php scripts/test-isolated.php --upgrade-check --mysql-image=mysql:${{ matrix.mysql }}

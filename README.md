@@ -60,6 +60,8 @@ VoxelBooking runs at `example.com` or `booking.example.com`. It can't run from a
 
 Most shared hosting providers include all of these by default. The installer's system check step confirms every requirement before proceeding.
 
+**OPcache JIT on PHP 8.3:** leave `opcache.jit` at PHP's default `tracing` mode, or keep JIT off. PHP 8.3's function mode `1235` miscompiles VoxelBooking's agent contracts, and every page then returns a server error. PHP 8.4 and 8.5 are not affected.
+
 ---
 
 ## Installation
@@ -557,7 +559,7 @@ php scripts/test-isolated.php --keep --serve
 
 Tests do not depend on each other's order. Every `TestFixtures::provision()` call restores the shared accounts and the fixture business's settings, a PHPUnit extension (`Tests\Support\FreshRequestBudgets`) gives each test fresh request budgets, and a test that needs another test's result declares it with `#[Depends]`. Close any database connection before forking a child process: a child that exits closes the socket it inherited.
 
-Both suites include database-backed checks. Integration coverage exercises actual HTTP/MCP flows, authorization, retries and competing writers. The upgrade rehearsal creates a fictional version 28 installation, verifies migration and interrupted-DDL recovery, restores its backup and upgrades again. The default database image is MySQL 8.4; CI runs PHP 8.3/MySQL 8.0 and PHP 8.5/MySQL 8.4.
+Both suites include database-backed checks. Integration coverage exercises actual HTTP/MCP flows, authorization, retries and competing writers. The upgrade rehearsal creates a fictional version 28 installation, verifies migration and interrupted-DDL recovery, restores its backup and upgrades again. The default database image is MySQL 8.4; CI runs PHP 8.3/MySQL 8.0 and PHP 8.5/MySQL 8.4, both with OPcache JIT in tracing mode.
 
 `--keep` preserves private evidence after shutdown. `--serve` prints a private `run-tests.sh` command and keeps the server available until interrupted. Every invocation has its own database and files; the runner stops its workers and removes its database container on exit.
 
