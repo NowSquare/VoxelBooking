@@ -104,6 +104,7 @@ return [
         'heading'           => 'Booking confirmed',
         'message'           => 'A confirmation has been sent to :email.',
         'email_sent'        => 'A confirmation has been sent to :email.',
+        'email_queued'      => "We'll send your confirmation to :email.",
         'reference_label'   => 'Reference',
     ],
 

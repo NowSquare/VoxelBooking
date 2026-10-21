@@ -42,6 +42,8 @@ final class BookingDemoParityTest extends TestCase
         $result=$server->dispatch('tools/call',(object)['name'=>'booking_create','arguments'=>(object)['preview_handle'=>$preview['preview_handle'],'idempotency_key'=>'demo-native-'.Ulid::generate()]],['protocol_version'=>Server::LEGACY_VERSION]);
         self::assertFalse($result['isError']);self::assertSame('confirmed',$result['structuredContent']['data']['status']);
         $booking=$result['structuredContent']['data']['id'];
+        // A staff booking sends no email, but a reschedule tells the customer and the business.
+        $booking=BookingCommands::reschedule($actor,['business_id'=>$tenant,'booking_id'=>$booking,'target'=>['new_date'=>$date,'new_time'=>'10:00']])['new_booking_id'];
         $messages=Database::query("SELECT payload_cipher FROM delivery_outbox WHERE topic='booking.notification' AND tenant_id=?",[$tenant]);$seen=false;
         foreach($messages as $message){$payload=(new PayloadCipher())->decrypt($message['payload_cipher']);if($payload['booking_id']!==$booking)continue;$seen=true;self::assertTrue($payload['demo_suppressed']);DemoMode::init($this->demoRoot.'/no-sentinel');self::assertTrue(BookingNotifications::deliver($payload)['suppressed']);DemoMode::init($this->demoRoot);}
         self::assertTrue($seen);

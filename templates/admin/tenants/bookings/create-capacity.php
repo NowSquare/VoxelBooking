@@ -86,51 +86,7 @@ include __DIR__ . '/../../partials/page-header.php';
     </div>
 
     <!-- Section 2: Customer -->
-    <div class="vb-settings-section">
-        <div class="vb-card">
-            <div class="vb-card-header">
-                <div class="vb-card-title-row">
-                    <i data-lucide="contact" class="vb-card-icon"></i>
-                    <div class="vb-card-title"><?= __('admin.bookings.customer') ?></div>
-                </div>
-            </div>
-
-            <div class="vb-form-grid">
-                <div class="vb-form-row">
-                    <div class="vb-form-group">
-                        <label for="create_customer_name" class="vb-label"><?= __('admin.bookings.label_customer_name') ?> <span class="vb-required">*</span></label>
-                        <input type="text" id="create_customer_name" name="customer_name" class="vb-input" required
-                               value="<?= e(old('customer_name', '')) ?>"
-                               autocomplete="off">
-                    </div>
-                    <div class="vb-form-group">
-                        <label for="create_customer_email" class="vb-label"><?= __('admin.bookings.label_customer_email') ?> <span class="vb-required">*</span></label>
-                        <input type="email" id="create_customer_email" name="customer_email" class="vb-input" required
-                               value="<?= e(old('customer_email', '')) ?>"
-                               autocomplete="off">
-                    </div>
-                </div>
-
-                <div class="vb-form-row">
-                    <div class="vb-form-group">
-                        <label for="create_customer_phone" class="vb-label">
-                            <?= __('admin.bookings.label_customer_phone') ?>
-                            <?php if ((int) ($tenant['require_phone'] ?? 0) === 1): ?>
-                                <span class="vb-required">*</span>
-                            <?php endif; ?>
-                        </label>
-                        <input type="tel" id="create_customer_phone" name="customer_phone" class="vb-input"
-                               value="<?= e(old('customer_phone', '')) ?>"
-                               <?php if ((int) ($tenant['require_phone'] ?? 0) === 1): ?>required<?php endif; ?>
-                               autocomplete="off">
-                    </div>
-                    <div class="vb-form-group">
-                        <!-- Intentional: reserved for future fields -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php include __DIR__ . '/customer-fields.php'; ?>
 
     <?php include __DIR__ . '/custom-fields.php'; ?>
 

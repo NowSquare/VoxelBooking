@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Bookings;
 
+use App\Agent\ActorContext;
 use App\Engine\BookingService;
 use App\Engine\Database;
 use App\Engine\Locale;
@@ -11,10 +12,44 @@ use App\Engine\Mailer;
 use App\Engine\Outbox;
 use App\Engine\Ulid;
 
-/** One independently retried recipient per outbox row. */
+/**
+ * Booking emails: who hears about a change, and delivery of each email.
+ *
+ * Each recipient is one independently retried outbox row. The admin screens,
+ * the booking page and agents share one rule for who is told:
+ *
+ * | Change                | Made by  | Customer                 | Business (setting)                 |
+ * |-----------------------|----------|--------------------------|------------------------------------|
+ * | New booking           | customer | confirmation             | new booking (notify_on_booking)    |
+ * | New booking           | staff    | none                     | none                               |
+ * | Cancellation          | customer | cancellation             | cancelled (notify_on_cancellation) |
+ * | Cancellation          | staff    | none                     | none                               |
+ * | Reschedule            | either   | reschedule confirmation  | new booking (notify_on_booking)    |
+ * | Approval or promotion | staff    | approved or confirmation | none                               |
+ *
+ * The business hears about changes it did not make itself. Rescheduling keeps
+ * its long-standing exception: the replacement booking always reaches both.
+ */
 final class BookingNotifications
 {
-    public static function queue(array $tenant, string $bookingId, string $kind, ?string $originalId = null): void
+    /**
+     * @return list<'customer'|'staff'> audiences for a change, before notification settings apply
+     */
+    public static function audiences(string $kind, bool $madeByCustomer): array
+    {
+        return match ($kind) {
+            'created', 'cancellation' => $madeByCustomer ? ['customer', 'staff'] : [],
+            'rescheduled' => ['customer', 'staff'],
+            default => ['customer'],
+        };
+    }
+
+    /**
+     * Queue the emails for one booking change inside the caller's transaction.
+     *
+     * @return bool whether the customer will receive an email
+     */
+    public static function queue(array $tenant, string $bookingId, string $kind, ActorContext $actor, ?string $originalId = null): bool
     {
         // A new transition gets a new event; a replay does not execute this command again.
         $eventId = Ulid::generate();
@@ -25,11 +60,12 @@ final class BookingNotifications
             [$bookingId, $tenant['id']]
         )[0]['status'] ?? null;
 
-        foreach (['customer', 'staff'] as $audience) {
-            if (
-                $audience === 'staff'
-                && !(bool) ($tenant[$kind === 'cancellation' ? 'notify_on_cancellation' : 'notify_on_booking'] ?? false)
-            ) continue;
+        $customerNotified = false;
+        foreach (self::audiences($kind, !$actor->isStaff()) as $audience) {
+            $setting = $kind === 'cancellation' ? 'notify_on_cancellation' : 'notify_on_booking';
+            if ($audience === 'staff' && !(bool) ($tenant[$setting] ?? false)) {
+                continue;
+            }
 
             Outbox::enqueue(
                 'booking.notification',
@@ -45,7 +81,39 @@ final class BookingNotifications
                 $tenant['id'],
                 $eventId . ':' . $audience
             );
+            $customerNotified = $customerNotified || $audience === 'customer';
         }
+
+        return $customerNotified;
+    }
+
+    /**
+     * Send the booking emails this request queued, after its transaction commits.
+     *
+     * The booking page and admin screens call this so emails leave at once,
+     * as they always have; cron retries anything that did not go out.
+     *
+     * @return array{email_sent: bool, notification_state: string} the customer's email outcome
+     */
+    public static function deliverQueued(): array
+    {
+        $customer = null;
+        foreach (Outbox::deliverEnqueued(['booking.notification']) as $outcome) {
+            if ($outcome['audience'] === 'customer') {
+                $customer = $outcome;
+            }
+        }
+
+        if ($customer === null) {
+            return ['email_sent' => false, 'notification_state' => 'none'];
+        }
+
+        // A log or local capture transport accepts mail that never reaches the
+        // customer, so only a real provider counts as sent.
+        return [
+            'email_sent' => $customer['sent'] && Mailer::isProductionSmtp(),
+            'notification_state' => $customer['state'],
+        ];
     }
 
     public static function deliver(array $payload): array

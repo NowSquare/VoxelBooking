@@ -65,7 +65,12 @@ final class BookingDraft
                     $slot = $candidate;
                     break;
                 }
-                if ($slot === null) throw new OperationException('slot_unavailable', 409);
+                if ($slot === null) {
+                    // The calculator offers no times outside the booking window; name that limit
+                    // instead of reporting a taken time.
+                    self::assertWithinBookingWindow($tenant, new \DateTimeImmutable("$date $time", $tz));
+                    throw new OperationException('slot_unavailable', 409);
+                }
 
                 $start = new \DateTimeImmutable("$date $time", $tz);
                 $end = $start->modify('+' . (int) $service['duration_minutes'] . ' minutes');
@@ -140,14 +145,7 @@ final class BookingDraft
         }
 
         // Stays are booked by calendar day, so only past days are refused; other patterns honour the lead time.
-        $now = new \DateTimeImmutable('now', $tz);
-        if (
-            ($pattern === 'resource' && $start < $now->setTime(0, 0))
-            || ($pattern !== 'resource' && ($start <= $now || $start < $now->modify('+' . (int) $tenant['min_advance_hours'] . ' hours')))
-        ) throw new OperationException('too_soon', 409);
-        if (
-            $start > $now->modify('+' . (int) $tenant['max_advance_days'] . ' days')->setTime(23, 59, 59)
-        ) throw new OperationException('too_far', 409);
+        self::assertWithinBookingWindow($tenant, $start);
 
         $data['price_total'] = $display['total'] ?? null;
         $data['price_currency'] = $tenant['currency'];
@@ -157,6 +155,27 @@ final class BookingDraft
             'data' => $data,
             'display' => $display + ['date' => $start->format('Y-m-d'), 'time' => $start->format('H:i'), 'end_time' => $end->format('H:i')]
         ];
+    }
+
+    /**
+     * The minimum advance period and booking horizon apply to every pattern.
+     *
+     * Stays count whole days, so check-in today is allowed. Timed bookings
+     * must start in the future and at least `min_advance_hours` from now.
+     * The horizon ends at the close of its last day.
+     */
+    private static function assertWithinBookingWindow(array $tenant, \DateTimeImmutable $start): void
+    {
+        $now = new \DateTimeImmutable('now', new \DateTimeZone($tenant['timezone']));
+        $tooSoon = $tenant['booking_pattern'] === 'resource'
+            ? $start < $now->setTime(0, 0)
+            : $start <= $now || $start < $now->modify('+' . (int) $tenant['min_advance_hours'] . ' hours');
+        if ($tooSoon) {
+            throw new OperationException('too_soon', 409);
+        }
+        if ($start > $now->modify('+' . (int) $tenant['max_advance_days'] . ' days')->setTime(23, 59, 59)) {
+            throw new OperationException('too_far', 409);
+        }
     }
 
     public static function multiplyMoney(string $amount, int $quantity): string

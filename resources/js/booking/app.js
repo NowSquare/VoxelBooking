@@ -1020,11 +1020,13 @@ Alpine.data('bookingWizard', () => enhanceBookingWizard({
         URL.revokeObjectURL(url);
     },
 
-    // Confirmation email-sent message with :email replaced
-    // Only shown when the API confirms an email was actually dispatched
+    // Confirmation email line with :email replaced. "Sent" only when the
+    // provider accepted the email; "queued" when the next delivery run will
+    // retry it; nothing when no email is on its way.
     get confirmEmailSent() {
-        if (!this.booking?.email_sent) return '';
-        return t('confirmed.email_sent').replace(':email', this.customerEmail);
+        if (this.booking?.email_sent) return t('confirmed.email_sent').replace(':email', this.customerEmail);
+        if (this.booking?.notification_state === 'queued') return t('confirmed.email_queued').replace(':email', this.customerEmail);
+        return '';
     },
 
     // Custom confirmation message from tenant config

@@ -1190,7 +1190,7 @@
     },
     "POST /admin/tenants/{tenant_id}/bookings/create": {
       "handler": "App\\Controllers\\Admin\\BookingsController::tenantStore",
-      "source_hash": "526a5cf502b7f86aac563761a0e67de6a7e51790d1f24558759b3708d71142b3",
+      "source_hash": "2518d93cc917d6fb2b0f093e71887db8ab0ad480826744e304bc2ea29357f112",
       "disposition": "operation",
       "operations": [
         "booking_create"
@@ -2378,7 +2378,7 @@
     },
     "POST /api/{slug}/bookings": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::createBooking",
-      "source_hash": "a39d443a801e40554702d24415ba4ec2b4f7b7ac5019a0072a3a828eace6465d",
+      "source_hash": "3e96d413c2c7f44c5caef8503caa65fc3a48ecb9734bc3fe1d72ddfe69462259",
       "disposition": "operation",
       "operations": [
         "public_booking_create"
@@ -2575,7 +2575,7 @@
     },
     "POST /api/{slug}/bookings/{id}/cancel": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::cancelBookingAction",
-      "source_hash": "4afe940c83e46258312c315a89aed7e36b79996130513011d5634faa7990a6a8",
+      "source_hash": "f96036aeb591cb7d4bf4cd779cc3d98825d6f953a59255e7e2b3929ece971c9a",
       "disposition": "operation",
       "operations": [
         "customer_booking_cancel"
@@ -2590,7 +2590,7 @@
     },
     "POST /api/{slug}/bookings/{id}/reschedule": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::rescheduleBookingAction",
-      "source_hash": "06966f6705ed0faa14c8ea707c7da67bd5ba9f1f448147f2b39d83b79bfd9c8d",
+      "source_hash": "2988cdf439f424839b3e88e2a90803bfe91f160bad40cf960f1cfd246af9584d",
       "disposition": "operation",
       "operations": [
         "customer_booking_reschedule"

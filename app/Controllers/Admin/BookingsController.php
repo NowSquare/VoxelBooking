@@ -10,7 +10,7 @@ use App\Engine\AuditLog;
 use App\Engine\BookingService;
 use App\Engine\CustomerService;
 use App\Engine\Database;
-use App\Application\Bookings\{BookingCommands,BookingQueries};
+use App\Application\Bookings\{BookingCommands, BookingNotifications, BookingQueries};
 use App\Agent\{Operations,SessionActor};
 use App\Agent\OperationException;
 use App\Engine\Locale;
@@ -229,11 +229,15 @@ final class BookingsController
         $booking = Booking::find($id);
         if ($booking === null) return Response::redirect($redirectBase);
         try {
-            $result = BookingCommands::reschedule(BookingCommands::sessionActor($booking['tenant_id']), ['business_id' => $booking['tenant_id'], 'booking_id' => $id, 'target' => $request->all()]);
+            $result = BookingCommands::reschedule(
+                BookingCommands::sessionActor($booking['tenant_id']),
+                ['business_id' => $booking['tenant_id'], 'booking_id' => $id, 'target' => $request->all()]
+            );
+            BookingNotifications::deliverQueued();
             FormState::toast('success', __('admin.bookings.flash_rescheduled'));
             return Response::redirect("{$redirectBase}/{$result['new_booking_id']}");
-        } catch (OperationException) {
-            FormState::toast('error', __('admin.bookings.flash_reschedule_failed'));
+        } catch (OperationException $problem) {
+            FormState::toast('error', BookingProblemMessage::forReschedule($problem));
             return Response::redirect("{$redirectBase}/{$id}");
         }
     }
@@ -385,40 +389,40 @@ final class BookingsController
     {
         $tenantId = (string) $request->getAttribute('tenant_id');
         $this->storeOldInput($request);
+        $input = $request->all();
+        $input['business_id'] = $tenantId;
+        $input['customer'] = [
+            'name' => $request->string('customer_name'),
+            'email' => $request->string('customer_email'),
+            'phone' => $request->string('customer_phone'),
+        ];
+        $tenant = [];
         try {
             $actor = BookingCommands::sessionActor($tenantId);
-            $input = $request->all();
-            $input['business_id'] = $tenantId;
-            $tenant = $this->loadTenant($tenantId);
+            $tenant = $this->loadTenant($tenantId) ?? [];
+            // HTML checkboxes post "1" or nothing; the booking operation expects booleans.
             foreach (json_decode($tenant['custom_fields'] ?? '[]', true) ?: [] as $field) {
-                if (($field['type'] ?? '') === 'checkbox') {
-                    $key=$field['name']??$field['key']??'';
-                    if ($key!=='') $input['custom_fields'][$key]=($input['custom_fields'][$key]??'')==='1';
+                $key = $field['name'] ?? $field['key'] ?? '';
+                if (($field['type'] ?? '') === 'checkbox' && $key !== '') {
+                    $input['custom_fields'][$key] = ($input['custom_fields'][$key] ?? '') === '1';
                 }
             }
-            $input['customer'] = ['name' => $request->string('customer_name'), 'email' => $request->string('customer_email'), 'phone' => $request->string('customer_phone')];
             $booking = BookingCommands::create($actor, $input);
+            BookingNotifications::deliverQueued();
             FormState::clear();
             FormState::toast('success', __('admin.bookings.flash_created'));
             return Response::redirect("/admin/tenants/{$tenantId}/bookings/{$booking['id']}");
-        } catch (\Throwable) {
+        } catch (OperationException $problem) {
+            $explained = BookingProblemMessage::forCreate($problem, $tenant, $input);
+            FormState::flashErrors($explained['fields']);
+            FormState::toast('error', $explained['toast']);
+            return Response::redirect("/admin/tenants/{$tenantId}/bookings/create");
+        } catch (\Throwable $error) {
+            Logger::error('Admin booking creation failed', ['tenant_id' => $tenantId, 'exception' => get_class($error)]);
             FormState::toast('error', __('admin.bookings.flash_create_failed'));
             return Response::redirect("/admin/tenants/{$tenantId}/bookings/create");
         }
     }
-
-    // ── Resource-pattern manual booking ──
-
-
-
-    // ── Capacity-pattern manual booking ──
-
-
-
-    /**
-     * Store an event-pattern booking (admin manual entry).
-     */
-
 
     // ── Shared helpers ──
 
@@ -428,31 +432,17 @@ final class BookingsController
         $booking = Booking::find($id);
         if ($booking === null) return Response::redirect($redirectBase);
         try {
-            BookingCommands::changeStatus(BookingCommands::sessionActor($booking['tenant_id']), ['business_id' => $booking['tenant_id'], 'booking_id' => $id, 'status' => $request->string('status')]);
+            BookingCommands::changeStatus(
+                BookingCommands::sessionActor($booking['tenant_id']),
+                ['business_id' => $booking['tenant_id'], 'booking_id' => $id, 'status' => $request->string('status')]
+            );
+            BookingNotifications::deliverQueued();
             FormState::toast('success', __('admin.bookings.flash_status_updated'));
-        } catch (OperationException) {
-            FormState::toast('error', __('admin.bookings.flash_status_failed'));
+        } catch (OperationException $problem) {
+            FormState::toast('error', BookingProblemMessage::forStatus($problem));
         }
         return Response::redirect("{$redirectBase}/{$id}");
     }
-
-    /**
-     * Send a booking confirmation email when a waitlisted booking is promoted.
-     */
-
-
-    /**
-     * Send a status transition email (approval confirmed or reschedule confirmation).
-     */
-
-
-    /**
-     * Schedule a reminder for a booking that was just approved (pending → confirmed).
-     *
-     * PRD: reminders are deferred until approval since pending bookings skip
-     * reminder scheduling during creation.
-     */
-
 
     private function render(string $template, string $pageTitle, array $extra = []): Response
     {

@@ -7,6 +7,7 @@ namespace Tests\Integration;
 use App\Engine\Database;
 use App\Engine\Ulid;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\PublicBookingClient;
 
 /**
  * The booking page explains every conflict in the customer's own terms.
@@ -21,7 +22,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class PublicBookingConflictTest extends TestCase
 {
-    private static string $baseUrl = '';
     private static string $setupError = '';
 
     /** @var array<string, array<string, string>> pattern => seeded ids */
@@ -32,12 +32,6 @@ final class PublicBookingConflictTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        self::$baseUrl = rtrim($_ENV['APP_TEST_URL'] ?? '', '/');
-        if (self::$baseUrl === '') {
-            self::$setupError = 'APP_TEST_URL is not configured';
-            return;
-        }
-
         try {
             require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
             \Tests\Support\TestEnvironment::boot();
@@ -242,58 +236,17 @@ final class PublicBookingConflictTest extends TestCase
     }
 
     /**
-     * Submit a booking the way the booking page does: page session, CSRF
-     * token, anti-spam timestamp and an empty honeypot.
-     *
      * @return array{code: int, body: string, json: array<string, mixed>}
      */
     private function book(string $pattern, array $selection, ?string $email = null): array
     {
-        $slug = self::$seed[$pattern]['slug'];
-        $cookies = tempnam(sys_get_temp_dir(), 'vb-conflict-');
-        $page = curl_init(self::$baseUrl . '/book/' . $slug);
-        curl_setopt_array($page, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_COOKIEJAR => $cookies,
-            CURLOPT_COOKIEFILE => $cookies,
-            CURLOPT_TIMEOUT => 10,
-        ]);
-        $html = (string) curl_exec($page);
-        // PHP writes the cookie jar when the handle is destroyed.
-        unset($page);
-        preg_match('/window\.__VB_CSRF__\s*=\s*"([^"]+)"/', $html, $match);
-        $this->assertNotEmpty($match[1] ?? '', 'The booking page must render a CSRF token.');
-
-        $payload = $selection + [
+        return PublicBookingClient::fromEnvironment()->book(self::$seed[$pattern]['slug'], $selection + [
             'customer' => [
                 'name' => 'Conflict Example',
                 'email' => $email ?? 'conflict-' . strtolower(substr(Ulid::generate(), -8)) . '@example.com',
             ],
             'consent_given' => true,
-            'customer_timezone' => 'UTC',
-            '__ts' => (string) ((time() - 10) * 1000),
-            '__hp' => '',
-        ];
-
-        $request = curl_init(self::$baseUrl . '/api/' . $slug . '/bookings');
-        curl_setopt_array($request, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode($payload, JSON_THROW_ON_ERROR),
-            CURLOPT_COOKIEJAR => $cookies,
-            CURLOPT_COOKIEFILE => $cookies,
-            CURLOPT_TIMEOUT => 10,
-            CURLOPT_HTTPHEADER => [
-                'Content-Type: application/json',
-                'Accept: application/json',
-                'X-CSRF-Token: ' . $match[1],
-            ],
         ]);
-        $body = (string) curl_exec($request);
-        $code = (int) curl_getinfo($request, CURLINFO_HTTP_CODE);
-        @unlink($cookies);
-
-        return ['code' => $code, 'body' => $body, 'json' => json_decode($body, true) ?: []];
     }
 
     private static function day(int $offset): string

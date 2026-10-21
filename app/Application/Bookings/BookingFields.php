@@ -6,9 +6,17 @@ namespace App\Application\Bookings;
 
 use App\Agent\OperationException;
 
+/**
+ * Validate answers to a business's booking questions.
+ *
+ * Customers must answer required questions. Staff may leave them empty,
+ * because a booking taken by phone often lacks the answer; any answer staff
+ * give must still fit the question's type. Unknown questions are rejected
+ * for everyone.
+ */
 final class BookingFields
 {
-    public static function answers(array $tenant, mixed $answers): array
+    public static function answers(array $tenant, mixed $answers, bool $requireAnswers = true): array
     {
         $definitions = json_decode($tenant['custom_fields'] ?? '[]', true) ?: [];
         $answers ??= [];
@@ -31,7 +39,7 @@ final class BookingFields
 
             // A required checkbox means "must be ticked", so false counts as missing.
             $missing = $value === null || $value === '' || ($type === 'checkbox' && $value !== true);
-            if (($field['required'] ?? false) && $missing) {
+            if ($requireAnswers && ($field['required'] ?? false) && $missing) {
                 $errors['custom_fields.' . $key] = 'required';
                 continue;
             }

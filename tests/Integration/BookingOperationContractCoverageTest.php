@@ -310,35 +310,38 @@ final class BookingOperationContractCoverageTest extends TestCase
 
     public function testCommittedBookingSurvivesProviderFailureAndRetriesOneNoticePerAudience():void
     {
-        $f=$this->fixtures('timeslot');$business=$f['id'];$actor=$this->clients['staff']['actor'];
+        $f=$this->fixtures('timeslot');$business=$f['id'];
         Database::execute('UPDATE tenants SET notify_on_booking=1 WHERE id=?',[$business]);
+        // A customer's own booking notifies the customer and the business; a staff booking notifies no one.
+        $continuation=(new PublicContinuation())->issue($business);$actor=(new PublicContinuation())->resolve($continuation['continuation'],$business);
         $input=['business_id'=>$business]+$f['create']+['customer'=>['name'=>'Delivery guest','email'=>'delivery@example.test']];
-        $preview=$this->executor->preview($actor,'booking_create',$input);
-        (new PreviewStore())->approve($this->reviewer,basename(parse_url($preview['review_url'],PHP_URL_PATH)));
+        $preview=$this->executor->preview($actor,'public_booking_create',$input);
+        $reviewId=basename(parse_url($preview['review_url'],PHP_URL_PATH));$store=new PreviewStore();
+        $store->exchangeBrowserHandle($reviewId,$preview['preview_handle']);$store->approveCustomerBrowser($reviewId,true);
         $commit=['preview_handle'=>$preview['preview_handle']];$key='delivery-'.Ulid::generate();
-        $created=$this->executor->execute($actor,'booking_create',$commit,$key);$bookingId=$created['data']['id'];$receiptId=$created['receipt_id'];
+        $created=$this->executor->execute($actor,'public_booking_create',$commit,$key);$bookingId=$created['data']['id'];$receiptId=$created['receipt_id'];
         self::assertSame('queued',$created['notification_state']);
         self::assertFalse(Database::pdo()->inTransaction(),'Provider delivery must happen after the booking commit.');
         $intents=Database::query('SELECT id FROM delivery_outbox WHERE operation_receipt_id=?',[$receiptId]);
         self::assertCount(2,$intents,'Customer and staff each receive one durable notification.');
-        $this->assertBookingAndReceiptCommitted($business,$bookingId,$receiptId,'queued');
+        $this->assertBookingAndReceiptCommitted($business,$bookingId,$receiptId,'queued',$actor,'public_operation_get');
         // Make only these two intents the oldest eligible work, without deleting or
         // changing any other scenario's delivery rows in the shared disposable run.
         Database::execute("UPDATE delivery_outbox SET available_at='2000-01-01' WHERE operation_receipt_id=?",[$receiptId]);
         \Tests\Support\TestEnvironment::failMail('Synthetic provider unavailable');
         try{$failed=\App\Engine\Outbox::dispatch(2);}finally{\Tests\Support\TestEnvironment::failMail(null);}
         self::assertSame(['delivered'=>0,'retrying'=>2,'failed'=>0],$failed);
-        $this->assertBookingAndReceiptCommitted($business,$bookingId,$receiptId,'queued');
+        $this->assertBookingAndReceiptCommitted($business,$bookingId,$receiptId,'queued',$actor,'public_operation_get');
         $rows=Database::query('SELECT status,attempts,last_error_code FROM delivery_outbox WHERE operation_receipt_id=?',[$receiptId]);
         foreach($rows as $row){self::assertSame('pending',$row['status']);self::assertSame(1,(int)$row['attempts']);self::assertSame('delivery_failed',$row['last_error_code']);}
-        self::assertSame($created,$this->executor->execute($actor,'booking_create',$commit,$key));
+        self::assertSame($created,$this->executor->execute($actor,'public_booking_create',$commit,$key));
         self::assertCount(2,Database::query('SELECT id FROM delivery_outbox WHERE operation_receipt_id=?',[$receiptId]));
         Database::execute("UPDATE delivery_outbox SET available_at='2000-01-01' WHERE operation_receipt_id=?",[$receiptId]);
         self::assertSame(['delivered'=>2,'retrying'=>0,'failed'=>0],\App\Engine\Outbox::dispatch(2));
-        $this->assertBookingAndReceiptCommitted($business,$bookingId,$receiptId,'delivered');
-        self::assertSame($created,$this->executor->execute($actor,'booking_create',$commit,$key));
+        $this->assertBookingAndReceiptCommitted($business,$bookingId,$receiptId,'delivered',$actor,'public_operation_get');
+        self::assertSame($created,$this->executor->execute($actor,'public_booking_create',$commit,$key));
         \App\Engine\Outbox::dispatch(2); // Delivered rows cannot be selected again.
-        $this->assertBookingAndReceiptCommitted($business,$bookingId,$receiptId,'delivered');
+        $this->assertBookingAndReceiptCommitted($business,$bookingId,$receiptId,'delivered',$actor,'public_operation_get');
         $rows=Database::query('SELECT status,attempts,last_error_code FROM delivery_outbox WHERE operation_receipt_id=?',[$receiptId]);
         self::assertCount(2,$rows);
         foreach($rows as $row){self::assertSame('delivered',$row['status']);self::assertSame(2,(int)$row['attempts']);self::assertNull($row['last_error_code']);}
@@ -393,12 +396,13 @@ final class BookingOperationContractCoverageTest extends TestCase
         self::assertSame($moved['id'],Database::query('SELECT rescheduled_to_id FROM bookings WHERE id=?',[$bookingId])[0]['rescheduled_to_id']);
     }
 
-    private function assertBookingAndReceiptCommitted(string $business,string $bookingId,string $receiptId,string $notificationState):void
+    /** Receipts are private to their principal, so read them as whoever committed the operation. */
+    private function assertBookingAndReceiptCommitted(string $business,string $bookingId,string $receiptId,string $notificationState,?ActorContext $reader=null,string $readOperation='operation_get'):void
     {
         $stored=Database::query('SELECT id,status FROM bookings WHERE tenant_id=?',[$business]);
         self::assertSame([['id'=>$bookingId,'status'=>'confirmed']],$stored);
         self::assertSame(1,(int)Database::query('SELECT booking_count FROM customers WHERE tenant_id=?',[$business])[0]['booking_count']);
-        $receipt=$this->executor->execute($this->clients['staff']['actor'],'operation_get',['receipt_id'=>$receiptId])['data'];
+        $receipt=$this->executor->execute($reader??$this->clients['staff']['actor'],$readOperation,['receipt_id'=>$receiptId])['data'];
         self::assertSame('committed',$receipt['status']);self::assertSame($bookingId,$receipt['resource_id']);
         self::assertSame($notificationState,$receipt['notification_state']);self::assertTrue($receipt['replay_available']);
     }

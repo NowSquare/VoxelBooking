@@ -77,7 +77,7 @@ final class BookingCommands
                 && $timezone !== 'UTC'
             ) throw new OperationException('validation_failed', 422, ['customer_timezone' => 'invalid']);
             $data['customer_timezone'] = $timezone ?: null;
-            $data['custom_field_data'] = BookingFields::answers($tenant, $input['custom_fields'] ?? null);
+            $data['custom_field_data'] = BookingFields::answers($tenant, $input['custom_fields'] ?? null, requireAnswers: !$actor->isStaff());
 
             // A waitlisted booking waits for a seat, not for approval; promotion handles it later.
             if (
@@ -93,7 +93,7 @@ final class BookingCommands
             );
             $status = $data['status'] ?? 'confirmed';
             self::scheduleReminder($tenant, $result['id'], $data['start_datetime'], $status);
-            BookingNotifications::queue($tenant, $result['id'], 'created');
+            $customerNotified = BookingNotifications::queue($tenant, $result['id'], 'created', $actor);
             self::publish($tenant, $result['id'], 'booking.created', $actor);
 
             $receipt = $draft['display'] + [
@@ -103,8 +103,9 @@ final class BookingCommands
                 'status' => $status,
                 'timezone' => $tenant['timezone'],
                 'consent_recorded' => $result['consent_recorded'],
+                // Nothing has left at commit time. Adapters that deliver at once report the outcome.
                 'email_sent' => false,
-                'notification_state' => 'queued',
+                'notification_state' => $customerNotified ? 'queued' : 'none',
                 ...VenueDateTime::utcRange($data['start_datetime'], $data['end_datetime'], $tenant['timezone'])
             ];
             if (!$actor->isStaff()) $receipt['manage_url'] = CustomerCapability::manageLink($tenant, $result['id']);
@@ -164,7 +165,7 @@ final class BookingCommands
             );
             Database::execute('UPDATE reminders SET sent_at = UTC_TIMESTAMP() WHERE booking_id = ? AND sent_at IS NULL', [$booking['id']]);
             self::audit($actor, 'booking.cancelled', $booking['id'], $tenant['id'], ['old_status' => $booking['status']]);
-            BookingNotifications::queue($tenant, $booking['id'], 'cancellation');
+            BookingNotifications::queue($tenant, $booking['id'], 'cancellation', $actor);
             self::publish($tenant, $booking['id'], 'booking.cancelled', $actor);
 
             return BookingService::findById($booking['id']);
@@ -201,7 +202,7 @@ final class BookingCommands
                 throw BookingService::rescheduleError($error);
             }
 
-            BookingNotifications::queue($tenant, $result['new_booking_id'], 'rescheduled', $booking['id']);
+            BookingNotifications::queue($tenant, $result['new_booking_id'], 'rescheduled', $actor, $booking['id']);
             // A customer's manage link must keep working after the booking id changes.
             CustomerCapability::followReplacement($actor, $booking['id'], $result['new_booking_id']);
             self::publish($tenant, $booking['id'], 'booking.rescheduled', $actor);
@@ -270,7 +271,7 @@ final class BookingCommands
             );
             self::publish($tenant, $booking['id'], 'booking.status_changed', $actor);
             if ($target === 'confirmed' && in_array($booking['status'], ['pending', 'waitlisted'], true)) {
-                BookingNotifications::queue($tenant, $booking['id'], $booking['status'] === 'pending' ? 'approval_confirmed' : 'promotion');
+                BookingNotifications::queue($tenant, $booking['id'], $booking['status'] === 'pending' ? 'approval_confirmed' : 'promotion', $actor);
             }
 
             return BookingService::findById($booking['id']);

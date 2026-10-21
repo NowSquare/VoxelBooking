@@ -120,3 +120,27 @@ describe('server field corrections', () => {
         expect(wizard.goToStep).not.toHaveBeenCalled();
     });
 });
+
+describe('confirmation email line', () => {
+    beforeEach(() => {
+        window.__VB_I18N__['confirmed.email_sent'] = 'A confirmation has been sent to :email.';
+        window.__VB_I18N__['confirmed.email_queued'] = "We'll send your confirmation to :email.";
+    });
+
+    it('says sent only when the email left', () => {
+        wizard.booking = { email_sent: true, notification_state: 'delivered' };
+        expect(wizard.confirmEmailSent).toBe('A confirmation has been sent to alex@example.com.');
+    });
+
+    it('says queued when delivery will be retried', () => {
+        wizard.booking = { email_sent: false, notification_state: 'queued' };
+        expect(wizard.confirmEmailSent).toBe("We'll send your confirmation to alex@example.com.");
+    });
+
+    it('says nothing when no email was queued or delivery failed', () => {
+        for (const state of ['none', 'failed', undefined]) {
+            wizard.booking = { email_sent: false, notification_state: state };
+            expect(wizard.confirmEmailSent).toBe('');
+        }
+    });
+});

@@ -138,7 +138,8 @@ final class AvailabilityAcceptanceTest extends TestCase
             // This date is 10 days away; a 300-hour deadline excludes the whole day.
             Database::execute('UPDATE tenants SET min_advance_hours=300 WHERE id=?',[$b['id']]);
             self::assertSame([],$this->choices($b,$input));
-            $this->create($b,$transport,$input+['time'=>'11:30'],'slot_unavailable');
+            // Every transport names the minimum advance period instead of calling the time taken.
+            $this->create($b,$transport,$input+['time'=>'11:30'],'too_soon');
             Database::execute('UPDATE tenants SET min_advance_hours=0 WHERE id=?',[$b['id']]);
             $booking=$this->create($b,$transport,$input+['time'=>'11:30']);
             self::assertSame('confirmed',$booking['status']);

@@ -475,6 +475,99 @@ final class ManualBookingCreationTest extends TestCase
     }
 
     // ════════════════════════════════════════════════════════════════
+    // Tests: explained failures (the form names what to fix)
+    // ════════════════════════════════════════════════════════════════
+
+    public function testInvalidEmailIsExplainedOnItsFieldWithInputKept(): void
+    {
+        $slot = $this->getAvailableSlot('next Tuesday');
+        self::httpPost("/admin/tenants/" . self::$tenantId . "/bookings/create", [
+            '_csrf_token'    => self::$operatorCsrf,
+            'service_id'     => self::$serviceId,
+            'date'           => $slot['date'],
+            'time'           => $slot['time'],
+            'customer_name'  => 'Kept Name',
+            'customer_email' => 'not-an-email',
+        ], 'operator');
+
+        $form = self::httpGet("/admin/tenants/" . self::$tenantId . "/bookings/create", 'operator');
+        $this->assertMatchesRegularExpression(
+            '/name="customer_email"[^>]*is-invalid|is-invalid[^>]*name="customer_email"/',
+            $form['body'],
+            'The email input carries the error state.'
+        );
+        $this->assertStringContainsString(e(self::adminMessage('error_email_invalid')), $form['body']);
+        $this->assertStringContainsString('value="Kept Name"', $form['body']);
+    }
+
+    public function testTakenTimeExplainsItself(): void
+    {
+        $slot = $this->getAvailableSlot('next Wednesday');
+        $booking = [
+            '_csrf_token'    => self::$operatorCsrf,
+            'service_id'     => self::$serviceId,
+            'staff_id'       => self::$staffId,
+            'date'           => $slot['date'],
+            'time'           => $slot['time'],
+            'customer_name'  => 'First Caller',
+            'customer_email' => 'first-' . substr(Ulid::generate(), -6) . '@test.test',
+        ];
+        $this->assertStringContainsString('/bookings/', self::httpPost("/admin/tenants/" . self::$tenantId . "/bookings/create", $booking, 'operator')['headers']);
+
+        $booking['customer_email'] = 'second-' . substr(Ulid::generate(), -6) . '@test.test';
+        self::httpPost("/admin/tenants/" . self::$tenantId . "/bookings/create", $booking, 'operator');
+
+        $form = self::httpGet("/admin/tenants/" . self::$tenantId . "/bookings/create", 'operator');
+        $this->assertStringContainsString(e(self::adminMessage('flash_slot_taken')), $form['body']);
+        $this->assertStringNotContainsString(e(self::adminMessage('flash_create_failed')), $form['body']);
+    }
+
+    public function testDateBeyondTheBookingHorizonExplainsItself(): void
+    {
+        $far = (new \DateTimeImmutable('+90 days'))->modify('next Monday')->format('Y-m-d');
+        self::httpPost("/admin/tenants/" . self::$tenantId . "/bookings/create", [
+            '_csrf_token'    => self::$operatorCsrf,
+            'service_id'     => self::$serviceId,
+            'date'           => $far,
+            'time'           => '10:00',
+            'customer_name'  => 'Far Future',
+            'customer_email' => 'far-' . substr(Ulid::generate(), -6) . '@test.test',
+        ], 'operator');
+
+        $form = self::httpGet("/admin/tenants/" . self::$tenantId . "/bookings/create", 'operator');
+        $this->assertStringContainsString(e(self::adminMessage('error_too_far')), $form['body']);
+    }
+
+    public function testStaffMayLeaveRequiredCustomFieldsEmpty(): void
+    {
+        Database::execute(
+            'UPDATE `tenants` SET `custom_fields` = ? WHERE `id` = ?',
+            [json_encode([['name' => 'allergies', 'label' => 'Allergies', 'type' => 'text', 'required' => true]]), self::$tenantId]
+        );
+        try {
+            $slot = $this->getAvailableSlot('next Thursday');
+            $res = self::httpPost("/admin/tenants/" . self::$tenantId . "/bookings/create", [
+                '_csrf_token'    => self::$operatorCsrf,
+                'service_id'     => self::$serviceId,
+                'date'           => $slot['date'],
+                'time'           => $slot['time'],
+                'customer_name'  => 'Phone Caller',
+                'customer_email' => 'phone-' . substr(Ulid::generate(), -6) . '@test.test',
+            ], 'operator');
+
+            $this->assertSame(302, $res['code']);
+            $this->assertDoesNotMatchRegularExpression('#Location: [^\r\n]*/create#i', $res['headers'], 'A phone booking without answers is still created.');
+        } finally {
+            Database::execute('UPDATE `tenants` SET `custom_fields` = NULL WHERE `id` = ?', [self::$tenantId]);
+        }
+    }
+
+    private static function adminMessage(string $key): string
+    {
+        return (require dirname(__DIR__, 2) . '/lang/en/admin.php')['bookings'][$key] ?? throw new \RuntimeException("Missing admin.bookings.{$key}");
+    }
+
+    // ════════════════════════════════════════════════════════════════
     // Tests: "New booking" button visibility
     // ════════════════════════════════════════════════════════════════
 

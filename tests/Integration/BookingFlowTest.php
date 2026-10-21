@@ -1099,11 +1099,10 @@ final class BookingFlowTest extends TestCase
             $this->assertFalse($data['booking']['email_sent'],
                 'email_sent must be false for log transport (no outbound delivery)');
 
-            $pending = Database::query("SELECT id FROM delivery_outbox WHERE tenant_id = ? AND topic = 'booking.notification' AND status = 'pending'", [self::$seed['tenant_id']]);
-            $this->assertNotEmpty($pending, 'Committed booking must have durable notification intents.');
-            \App\Engine\Outbox::dispatch(1000);
+            $this->assertSame('delivered', $data['booking']['notification_state']);
 
-            // The worker records the delivery; the booking request only queues it.
+            // The booking page delivers its durable notifications right after the commit,
+            // so both emails are recorded before the response, as they always were.
             $logs = Database::query(
                 'SELECT `type`, `status` FROM `email_log` WHERE `booking_id` = ?',
                 [$bookingId]

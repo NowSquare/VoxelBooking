@@ -7,6 +7,7 @@ namespace App\Controllers\Booking;
 use App\Engine\CustomerService;
 use App\Engine\CustomerCapability;
 use App\Application\Bookings\BookingCommands;
+use App\Application\Bookings\BookingNotifications;
 use App\Application\Availability\AvailabilityService;
 use App\Agent\ActorContext;
 use App\Agent\OperationException;
@@ -236,6 +237,8 @@ final class BookingApiController
             }
             $actor = new ActorContext('anonymous', $principalId, 'prospective_customer', [$tenant['id']], ['public:read','public:book'], authMode: 'public');
             $booking = BookingCommands::create($actor, array_replace($input, ['business_id' => $tenant['id']]));
+            $booking = array_replace($booking, BookingNotifications::deliverQueued());
+
             return CustomerCapability::protect(Response::json(['booking' => $booking], 201));
         } catch (OperationException $error) {
             $problem = BookingProblemResponse::forCreate($error, $tenant, $input);
@@ -485,8 +488,11 @@ final class BookingApiController
         $actor = CustomerCapability::actor($request, CustomerCapability::MANAGE, $tenant['id'], $bookingId);
         if ($actor === null) return CustomerCapability::protect(Response::json(['error' => 'verification_required', 'message' => __('booking.access.expired')], 403));
         try {
-            $result = BookingCommands::cancel($actor, array_replace($request->json(), ['business_id' => $tenant['id'], 'booking_id' => $bookingId]));
-            return CustomerCapability::protect(Response::json(['cancelled' => true, 'booking_id' => $bookingId, 'email_sent' => false, 'notification_state' => 'queued']));
+            BookingCommands::cancel($actor, array_replace($request->json(), ['business_id' => $tenant['id'], 'booking_id' => $bookingId]));
+
+            return CustomerCapability::protect(Response::json(
+                ['cancelled' => true, 'booking_id' => $bookingId] + BookingNotifications::deliverQueued()
+            ));
         } catch (OperationException $error) {
             $problem = BookingProblemResponse::forManage($error, 'cancel');
 
@@ -526,7 +532,10 @@ final class BookingApiController
             $replacement = ['id' => $result['new_booking_id'], 'manage_url' => $result['manage_url'], 'date' => $result['new_date'], 'time' => $result['new_time'], 'end_time' => substr($result['new_end'], 11, 5), ...VenueDateTime::utcRange($result['new_start'], $result['new_end'], $tenant['timezone'])];
             if ($result['pattern'] === 'resource') $replacement += ['check_in' => substr($result['new_start'], 0, 10), 'check_out' => substr($result['new_end'], 0, 10)];
             if ($result['pattern'] === 'event') $replacement['event_name'] = BookingService::findByIdWithDetails($result['new_booking_id'], $tenant['id'])['event_name'];
-            return CustomerCapability::protect(Response::json(['rescheduled' => true, 'new_booking_id' => $result['new_booking_id'], 'new_booking' => $replacement, 'email_sent' => false, 'notification_state' => 'queued']));
+            return CustomerCapability::protect(Response::json(
+                ['rescheduled' => true, 'new_booking_id' => $result['new_booking_id'], 'new_booking' => $replacement]
+                    + BookingNotifications::deliverQueued()
+            ));
         } catch (OperationException $error) {
             $problem = BookingProblemResponse::forManage($error, 'reschedule');
 

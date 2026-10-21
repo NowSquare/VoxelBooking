@@ -409,7 +409,7 @@ final class BookingOperations
         $tenant = BookingQueries::tenant($actor, $input, $actor->isStaff() ? 'bookings:write' : 'public:book');
         $draft = BookingDraft::prepare($tenant, $input);
         // Validate answers now so the preview fails the same way the real create would.
-        BookingFields::answers($tenant, $input['custom_fields'] ?? null);
+        BookingFields::answers($tenant, $input['custom_fields'] ?? null, requireAnswers: !$actor->isStaff());
         $status = ($draft['data']['status'] ?? 'confirmed') === 'waitlisted'
             ? 'waitlisted'
             : (!$actor->isStaff() && $tenant['booking_requires_approval'] ? 'pending' : 'confirmed');

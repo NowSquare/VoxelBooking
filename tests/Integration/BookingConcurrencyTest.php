@@ -58,7 +58,11 @@ final class BookingConcurrencyTest extends TestCase
     }
     public function testSimultaneousCancelHasOneLogicalNotificationAndCounterChange():void
     {
-        $actor=$this->actor();$input=['business_id'=>TestFixtures::BUSINESS_TENANT_ID,'booking_id'=>TestFixtures::BOOKING_ID];
+        // The customer's own cancellation notifies the customer and the business, so a race
+        // that sent either message twice would show here. Staff cancellations send none.
+        $secret=\App\Engine\CustomerCapability::issueManage(TestFixtures::BUSINESS_TENANT_ID,TestFixtures::BOOKING_ID);
+        $grant=\App\Engine\CustomerCapability::verify($secret,\App\Engine\CustomerCapability::MANAGE,TestFixtures::BUSINESS_TENANT_ID,TestFixtures::BOOKING_ID);
+        $actor=\App\Engine\CustomerCapability::actorById($grant['id']);$input=['business_id'=>TestFixtures::BUSINESS_TENANT_ID,'booking_id'=>TestFixtures::BOOKING_ID];
         Database::execute('UPDATE customers SET booking_count=2 WHERE id=?',[TestFixtures::CUSTOMER_ID]);
         $before=(int)Database::query("SELECT COUNT(*) AS n FROM delivery_outbox WHERE topic='booking.notification'")[0]['n'];
         $results=$this->race(static fn()=>BookingCommands::cancel($actor,$input));
