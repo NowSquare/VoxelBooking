@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Agent\OAuth;
 
 use League\OAuth2\Server\CryptKeyInterface;
@@ -16,7 +17,10 @@ final class AccessToken implements AccessTokenEntityInterface
     public string $audience = '';
     private ?string $rawToken = null;
 
-    public function setRawToken(string $rawToken): void { $this->rawToken = $rawToken; }
+    public function setRawToken(string $rawToken): void
+    {
+        $this->rawToken = $rawToken;
+    }
 
     public function setPrivateKey(CryptKeyInterface $privateKey): void
     {

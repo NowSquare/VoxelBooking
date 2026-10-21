@@ -8,8 +8,14 @@ namespace App\Agent;
 final class CorsPolicy
 {
     private const HEADERS = [
-        'accept', 'authorization', 'content-type', 'mcp-protocol-version',
-        'mcp-method', 'mcp-name', 'idempotency-key', 'x-booking-continuation',
+        'accept',
+        'authorization',
+        'content-type',
+        'mcp-protocol-version',
+        'mcp-method',
+        'mcp-name',
+        'idempotency-key',
+        'x-booking-continuation',
     ];
 
     private array $allowedOrigins;
@@ -20,7 +26,7 @@ final class CorsPolicy
         if (!is_array($base) || !isset($base['scheme'], $base['host']) || isset($base['user']) || isset($base['pass'])) {
             throw new OperationException('origin_configuration_invalid', 503);
         }
-        $origin = $base['scheme'].'://'.$base['host'].(isset($base['port']) ? ':'.$base['port'] : '');
+        $origin = $base['scheme'] . '://' . $base['host'] . (isset($base['port']) ? ':' . $base['port'] : '');
         $configured = $additionalOrigins === '' ? [] : explode(',', $additionalOrigins);
         if (count($configured) > 20 || strlen($additionalOrigins) > 4096) {
             throw new OperationException('origin_configuration_invalid', 503);
@@ -65,7 +71,10 @@ final class CorsPolicy
 
     public function preflight(?string $origin, string $method, string $requestedHeaders, array $allowedMethods): array
     {
-        if ($origin === null || !$this->permits($origin) || !in_array($method, $allowedMethods, true) || strlen($requestedHeaders) > 2048) {
+        if ($origin === null
+            || !$this->permits($origin)
+            || !in_array($method, $allowedMethods, true)
+            || strlen($requestedHeaders) > 2048) {
             throw new OperationException('cors_preflight_denied', 403);
         }
         $headers = $requestedHeaders === '' ? [] : explode(',', strtolower($requestedHeaders));
@@ -95,7 +104,10 @@ final class CorsPolicy
             return false;
         }
         $parts = parse_url($origin);
-        if (!is_array($parts) || !isset($parts['scheme'], $parts['host']) || array_diff(array_keys($parts), ['scheme', 'host', 'port'])) {
+        // An origin is scheme, host and optional port only; any path, query or credentials disqualify it.
+        if (!is_array($parts)
+            || !isset($parts['scheme'], $parts['host'])
+            || array_diff(array_keys($parts), ['scheme', 'host', 'port'])) {
             return false;
         }
         $host = $parts['host'];

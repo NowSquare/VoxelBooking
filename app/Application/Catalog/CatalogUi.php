@@ -31,14 +31,20 @@ final class CatalogUi
         $actor = self::actor();
         $versions = [];
         foreach ($rows as $row) {
-            $versions[$row['id']] = CatalogService::get($actor, $kind, ['business_id' => $businessId, 'id' => $row['id']])['version'];
+            $versions[$row['id']] = CatalogService::get($actor, $kind, [
+                'business_id' => $businessId,
+                'id' => $row['id']
+            ])['version'];
         }
+
         return $versions;
     }
 
     public static function scheduleVersion(string $businessId, ?string $staffId): string
     {
-        return CatalogService::getSchedule(self::actor(), ['business_id' => $businessId, 'staff_id' => $staffId])['version'];
+        return CatalogService::getSchedule(self::actor(), ['business_id' => $businessId, 'staff_id' => $staffId])[
+            'version'
+        ];
     }
 
     public static function mutate(Request $request, string $kind, string $action): Response
@@ -47,7 +53,9 @@ final class CatalogUi
         $id = (string) ($request->getAttribute('id') ?? '');
         $section = str_replace('_', '-', $kind);
         $base = "/admin/tenants/{$businessId}/{$section}";
-        $form = in_array($kind, ['capacity_slots', 'blocked_dates'], true) ? $base : ($action === 'create' ? $base . '/create' : $base . '/' . $id . '/edit');
+        $form = in_array($kind, ['capacity_slots', 'blocked_dates'], true)
+            ? $base
+            : ($action === 'create' ? $base . '/create' : $base . '/' . $id . '/edit');
         try {
             $actor = self::actor();
             $input = ['business_id' => $businessId];
@@ -61,7 +69,12 @@ final class CatalogUi
                 $input += self::formInput($request, $kind, $businessId, $action === 'create');
                 $uploadField = $kind === 'staff' ? 'avatar' : 'cover_image';
                 if (!empty($_FILES[$uploadField]['tmp_name'])) {
-                    $input['media_id'] = MediaService::storeBrowser($actor, $businessId, CatalogFields::definition($kind)['entity'], $_FILES[$uploadField]);
+                    $input['media_id'] = MediaService::storeBrowser(
+                        $actor,
+                        $businessId,
+                        CatalogFields::definition($kind)['entity'],
+                        $_FILES[$uploadField]
+                    );
                 }
                 $input['remove_image'] = !empty($_POST[$kind === 'staff' ? 'remove_avatar' : 'remove_cover_image']);
             }
@@ -79,7 +92,11 @@ final class CatalogUi
                     'delete' => CatalogService::delete($actor, $kind, $input),
                     default => throw new \LogicException('Unknown catalog action.'),
                 };
-                $action = match ($action) { 'create' => 'created', 'update' => 'updated', 'delete' => 'deleted' };
+                $action = match ($action) {
+                    'create' => 'created',
+                    'update' => 'updated',
+                    'delete' => 'deleted'
+                };
             }
             FormState::clear();
             if ($action !== 'reorder') {
@@ -94,7 +111,22 @@ final class CatalogUi
             if ($exception->status === 404) {
                 return Response::redirect($base);
             }
-            $old = array_intersect_key($_POST, array_flip(array_merge(array_keys(CatalogFields::properties($kind)), ['start_date', 'start_time', 'end_date', 'end_time', 'is_recurring', 'frequency', 'count', 'seasonal_start', 'seasonal_end', 'seasonal_price', 'seasonal_label'])));
+            $old = array_intersect_key(
+                $_POST,
+                array_flip(array_merge(array_keys(CatalogFields::properties($kind)), [
+                    'start_date',
+                    'start_time',
+                    'end_date',
+                    'end_time',
+                    'is_recurring',
+                    'frequency',
+                    'count',
+                    'seasonal_start',
+                    'seasonal_end',
+                    'seasonal_price',
+                    'seasonal_label'
+                ]))
+            );
             FormState::flashInput($old);
             FormState::toast('error', self::errorMessage($kind, $exception));
             return Response::redirect(in_array($action, ['create', 'update'], true) ? $form : $base);
@@ -138,14 +170,25 @@ final class CatalogUi
                     }
                 }
                 CatalogService::saveSchedule($actor, $input);
-                FormState::toast('success', __($staffId === null ? 'admin.availability.saved' : 'admin.availability.staff_saved'));
+                FormState::toast(
+                    'success',
+                    __($staffId === null ? 'admin.availability.saved' : 'admin.availability.staff_saved')
+                );
             }
         } catch (OperationException $exception) {
             if (in_array($exception->status, [401, 403], true)) {
                 return self::forbidden($request, $exception);
             }
-            FormState::toast('error', __($exception->problemCode === 'version_conflict' ? 'agent.errors.version_conflict' : 'admin.availability.error_invalid_time'));
+            FormState::toast(
+                'error',
+                __(
+                    $exception->problemCode === 'version_conflict'
+                        ? 'agent.errors.version_conflict'
+                        : 'admin.availability.error_invalid_time'
+                )
+            );
         }
+
         return Response::redirect($redirect);
     }
 
@@ -154,10 +197,16 @@ final class CatalogUi
         if ($request->isJson()) {
             return Response::json($exception->problem(), $exception->status);
         }
-        return \App\Engine\View::response('admin.errors.403', [
-            'user' => \App\Engine\Auth::user(), 'version' => \App\Engine\Version::get(), 'pageTitle' => '403',
-            'csrfToken' => \App\Middleware\CsrfMiddleware::generateToken(),
-        ], $exception->status);
+        return \App\Engine\View::response(
+            'admin.errors.403',
+            [
+                'user' => \App\Engine\Auth::user(),
+                'version' => \App\Engine\Version::get(),
+                'pageTitle' => '403',
+                'csrfToken' => \App\Middleware\CsrfMiddleware::generateToken(),
+            ],
+            $exception->status
+        );
     }
 
     private static function formInput(Request $request, string $kind, string $businessId, bool $creating): array
@@ -190,7 +239,10 @@ final class CatalogUi
             $input[$field] = array_values((array) ($_POST[$field] ?? []));
         }
         if ($kind === 'resources') {
-            $input['amenities'] = array_values(array_filter(array_map('trim', explode(',', $request->string('amenities'))), static fn (string $value): bool => $value !== ''));
+            $input['amenities'] = array_values(array_filter(
+                array_map('trim', explode(',', $request->string('amenities'))),
+                static fn (string $value): bool => $value !== ''
+            ));
             foreach (['check_in_days', 'check_out_days'] as $field) {
                 $input[$field] = array_values(array_unique(array_map('intval', (array) ($_POST[$field] ?? []))));
             }
@@ -201,23 +253,38 @@ final class CatalogUi
                 if (trim((string) $start) === '' && $end === '' && $price === '') {
                     continue;
                 }
-                $input['seasonal_pricing'][] = ['start_date' => trim((string) $start), 'end_date' => $end, 'price_per_night' => $price, 'label' => trim((string) ($_POST['seasonal_label'][$index] ?? '')) ?: null];
+                $input['seasonal_pricing'][] = [
+                    'start_date' => trim((string) $start),
+                    'end_date' => $end,
+                    'price_per_night' => $price,
+                    'label' => trim((string) ($_POST['seasonal_label'][$index] ?? '')) ?: null
+                ];
             }
         }
         if ($kind === 'events') {
-            $tenant = \App\Engine\Database::query('SELECT timezone FROM tenants WHERE id = ?', [$businessId])[0] ?? throw new OperationException('not_found', 404);
+            $tenant = \App\Engine\Database::query('SELECT timezone FROM tenants WHERE id = ?', [$businessId])[0]
+                ?? throw new OperationException('not_found', 404);
             foreach (['start', 'end'] as $prefix) {
                 $raw = $request->string($prefix . '_date') . ' ' . $request->string($prefix . '_time');
-                $date = \DateTimeImmutable::createFromFormat('!Y-m-d H:i', $raw, new \DateTimeZone($tenant['timezone']));
+                $date = \DateTimeImmutable::createFromFormat(
+                    '!Y-m-d H:i',
+                    $raw,
+                    new \DateTimeZone($tenant['timezone'])
+                );
                 if (!$date || $date->format('Y-m-d H:i') !== $raw) {
                     CatalogFields::invalid($prefix . '_datetime', 'invalid_datetime');
                 }
                 $input[$prefix . '_datetime'] = $date->format(DATE_ATOM);
             }
             $input['recurrence'] = $request->string('is_recurring') === '1'
-                ? ['frequency' => strtoupper($request->string('frequency')), 'count' => (int) $request->string('count')] : null;
-            $input['exception_dates'] = array_values(array_filter(array_map('trim', preg_split('/[\r\n]+/', $request->string('exception_dates')))));
+                ? ['frequency' => strtoupper($request->string('frequency')), 'count' => (int) $request->string('count')]
+                : null;
+            $input['exception_dates'] = array_values(array_filter(array_map(
+                'trim',
+                preg_split('/[\r\n]+/', $request->string('exception_dates'))
+            )));
         }
+
         return $input;
     }
 
@@ -225,10 +292,15 @@ final class CatalogUi
     {
         $field = array_key_first($exception->fieldErrors);
         $suffix = match ($field) {
-            'name' => 'error_name_required', 'duration_minutes' => 'error_duration_required',
-            'price', 'price_per_night' => 'error_price_invalid', 'staff_ids' => 'error_invalid_staff',
-            'email' => 'error_email_invalid', 'max_stay_nights' => 'error_stay_range',
-            'seasonal_pricing' => 'error_seasonal_overlap', default => null,
+            'name' => 'error_name_required',
+            'duration_minutes' => 'error_duration_required',
+            'price',
+            'price_per_night' => 'error_price_invalid',
+            'staff_ids' => 'error_invalid_staff',
+            'email' => 'error_email_invalid',
+            'max_stay_nights' => 'error_stay_range',
+            'seasonal_pricing' => 'error_seasonal_overlap',
+            default => null,
         };
         if ($exception->problemCode === 'conflict' && $kind === 'staff') {
             $suffix = 'error_email_taken';
@@ -236,6 +308,7 @@ final class CatalogUi
         if ($exception->problemCode === 'record_in_use' && $kind === 'events') {
             $suffix = 'error_has_bookings';
         }
+
         return $suffix !== null ? __('admin.' . $kind . '.' . $suffix) : __('agent.errors.' . $exception->problemCode);
     }
 }

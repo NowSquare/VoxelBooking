@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Agent\OAuth;
 
 use League\OAuth2\Server\Entities\RefreshTokenEntityInterface;

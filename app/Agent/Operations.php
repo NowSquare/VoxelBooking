@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Agent;
 
 /** Explicit composition root shared by browser, HTTP and MCP adapters. */

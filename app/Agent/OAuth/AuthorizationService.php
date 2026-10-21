@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Agent\OAuth;
 
 use DateInterval;
@@ -17,6 +18,7 @@ use Psr\Http\Message\ResponseInterface;
 final class AuthorizationService
 {
     use \League\OAuth2\Server\CryptTrait;
+
     private AuthorizationServer $server;
 
     public function __construct(
@@ -30,7 +32,14 @@ final class AuthorizationService
         string $encryptionKey,
     ) {
         $this->setEncryptionKey($encryptionKey);
-        $this->server = new AuthorizationServer($clients, $tokens, new ScopeRepository($scopes, $tokens), $privateKey, $encryptionKey, new TokenResponse());
+        $this->server = new AuthorizationServer(
+            $clients,
+            $tokens,
+            new ScopeRepository($scopes, $tokens),
+            $privateKey,
+            $encryptionKey,
+            new TokenResponse()
+        );
         $code = new AuthCodeGrant($tokens, $tokens, new DateInterval('PT5M'));
         $code->setRefreshTokenTTL(new DateInterval('P30D'));
         $refresh = new RefreshTokenGrant($tokens);
@@ -73,6 +82,7 @@ final class AuthorizationService
             $response = $error->generateHttpResponse(new Response());
         }
         $location = $response->getHeaderLine('Location');
+        // RFC 9207: name the issuer in the redirect so clients can detect mix-up attacks.
         if ($location !== '') {
             $location .= (str_contains($location, '?') ? '&' : '?') . 'iss=' . rawurlencode($this->issuer);
             $response = $response->withHeader('Location', $location);
@@ -138,16 +148,21 @@ final class AuthorizationService
             throw OAuthServerException::invalidRequest('token');
         }
         if (str_starts_with($raw, 'vbc_')) {
-            $statement = $this->db->prepare('UPDATE agent_credentials SET revoked_at = COALESCE(revoked_at, ?) WHERE token_hash = ? AND connection_id IN (SELECT id FROM agent_connections WHERE client_id = ?)');
+            $statement = $this->db->prepare(
+                'UPDATE agent_credentials SET revoked_at = COALESCE(revoked_at, ?) WHERE token_hash = ? AND connection_id IN (SELECT id FROM agent_connections WHERE client_id = ?)'
+            );
             $statement->execute([gmdate('Y-m-d H:i:s'), hash('sha256', $raw), $clientId]);
         } else {
+            // Anything else is treated as an encrypted refresh token; undecryptable input is ignored, per RFC 7009.
             try {
                 $payload = json_decode($this->decrypt($raw), true, flags: JSON_THROW_ON_ERROR);
             } catch (\Throwable) {
                 $payload = [];
             }
             if (($payload['client_id'] ?? null) === $clientId && is_string($payload['refresh_token_id'] ?? null)) {
-                $statement = $this->db->prepare('UPDATE agent_connections SET revoked_at = COALESCE(revoked_at, ?) WHERE client_id = ? AND id IN (SELECT connection_id FROM oauth_refresh_tokens WHERE id_hash = ?)');
+                $statement = $this->db->prepare(
+                    'UPDATE agent_connections SET revoked_at = COALESCE(revoked_at, ?) WHERE client_id = ? AND id IN (SELECT connection_id FROM oauth_refresh_tokens WHERE id_hash = ?)'
+                );
                 $statement->execute([gmdate('Y-m-d H:i:s'), $clientId, hash('sha256', $payload['refresh_token_id'])]);
             }
         }
@@ -179,7 +194,9 @@ final class AuthorizationService
         $secret = $parameters['client_secret'] ?? null;
         $method = $secret === null ? 'none' : 'client_secret_post';
         if ($authorization !== null && $authorization !== '') {
-            if (stripos($authorization, 'Basic ') !== 0 || array_key_exists('client_id', $parameters) || array_key_exists('client_secret', $parameters)) {
+            if (stripos($authorization, 'Basic ') !== 0
+                || array_key_exists('client_id', $parameters)
+                || array_key_exists('client_secret', $parameters)) {
                 throw OAuthServerException::invalidRequest('authorization');
             }
             $decoded = base64_decode(substr($authorization, 6), true);

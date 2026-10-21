@@ -17,7 +17,12 @@ final class HeaderValidator
                         throw new ProtocolError(-32020, 'Header mismatch', data: ['header' => $headerName]);
                     }
                 } elseif (is_string($value) || is_int($value) || is_bool($value)) {
-                    self::matching($headers, $headerName, is_bool($value) ? ($value ? 'true' : 'false') : (string) $value, true);
+                    self::matching(
+                        $headers,
+                        $headerName,
+                        is_bool($value) ? ($value ? 'true' : 'false') : (string) $value,
+                        true
+                    );
                 } else {
                     throw new ProtocolError(-32020, 'Header mismatch', data: ['header' => $headerName]);
                 }

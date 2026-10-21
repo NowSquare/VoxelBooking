@@ -13,6 +13,7 @@ final class Server
     public const MODERN_VERSION = '2026-07-28';
     public const LEGACY_VERSION = '2025-11-25';
     public const SUPPORTED_VERSIONS = [self::MODERN_VERSION, self::LEGACY_VERSION];
+
     private readonly string $cursorSecret;
 
     public function __construct(
@@ -48,7 +49,11 @@ final class Server
         if ($modern) {
             $result['resultType'] = 'complete';
             $result['_meta']['io.modelcontextprotocol/serverInfo'] = $this->serverInfo;
-            if (in_array($method, ['server/discover', 'tools/list', 'resources/list', 'resources/read', 'resources/templates/list', 'prompts/list'], true)) {
+            if (in_array(
+                $method,
+                ['server/discover', 'tools/list', 'resources/list', 'resources/read', 'resources/templates/list', 'prompts/list'],
+                true
+            )) {
                 // Discovery and resources can change when the user's role or grant changes.
                 $result['ttlMs'] = 0;
                 $result['cacheScope'] = 'private';
@@ -113,21 +118,36 @@ final class Server
         if ($definition === null) {
             throw new ProtocolError(-32602, 'Unknown tool');
         }
-        $arguments = json_decode(json_encode($params->arguments ?? new stdClass(), JSON_THROW_ON_ERROR), true, 64, JSON_THROW_ON_ERROR);
+        // Round-trip through JSON to turn the decoded object tree into plain arrays, with a depth limit.
+        $arguments = json_decode(
+            json_encode($params->arguments ?? new stdClass(), JSON_THROW_ON_ERROR),
+            true,
+            64,
+            JSON_THROW_ON_ERROR
+        );
         if ($context['protocol_version'] === self::MODERN_VERSION) {
             HeaderValidator::parameters($headers, $definition['inputSchema'], $arguments);
         }
         try {
             $result = ($this->call)($params->name, $arguments, $context);
             return [
-                'content' => [['type' => 'text', 'text' => json_encode($result === [] ? new stdClass() : $result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)]],
+                'content' => [[
+                    'type' => 'text',
+                    'text' => json_encode(
+                        $result === [] ? new stdClass() : $result,
+                        JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+                    )
+                ]],
                 'structuredContent' => $result === [] ? new stdClass() : $result,
                 'isError' => false,
             ];
         } catch (ToolFailure $error) {
             // The successful output schema does not describe problem documents.
             return [
-                'content' => [['type' => 'text', 'text' => json_encode($error->problem, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)]],
+                'content' => [[
+                    'type' => 'text',
+                    'text' => json_encode($error->problem, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]],
                 'isError' => true,
                 '_meta' => ['com.voxelbooking/problem' => $error->problem],
             ];
@@ -226,6 +246,7 @@ final class Server
             if (!is_string($params->cursor) || strlen($params->cursor) > 512) {
                 throw new ProtocolError(-32602, 'Invalid cursor');
             }
+            // Cursors are signed and bound to a digest of the list, so they cannot be forged or reused after it changes.
             $parts = explode('.', $params->cursor);
             if (count($parts) !== 2 || !hash_equals(hash_hmac('sha256', $parts[0], $this->cursorSecret), $parts[1])) {
                 throw new ProtocolError(-32602, 'Invalid cursor');
@@ -239,7 +260,10 @@ final class Server
         }
         $result = [$kind => array_slice($items, $offset, 50)];
         if ($offset + 50 < count($items)) {
-            $encoded = rtrim(strtr(base64_encode(json_encode(['digest' => $digest, 'offset' => $offset + 50], JSON_THROW_ON_ERROR)), '+/', '-_'), '=');
+            $encoded = rtrim(
+                strtr(base64_encode(json_encode(['digest' => $digest, 'offset' => $offset + 50], JSON_THROW_ON_ERROR)), '+/', '-_'),
+                '='
+            );
             $result['nextCursor'] = $encoded . '.' . hash_hmac('sha256', $encoded, $this->cursorSecret);
         }
         return $result;

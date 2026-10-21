@@ -12,10 +12,25 @@ final class CatalogFields
     public const TYPES = [
         'services' => ['scope' => 'services', 'entity' => 'service', 'patterns' => ['timeslot'], 'capability' => 'C12'],
         'staff' => ['scope' => 'staff', 'entity' => 'staff', 'patterns' => ['timeslot'], 'capability' => 'C13'],
-        'resources' => ['scope' => 'resources', 'entity' => 'resource', 'patterns' => ['resource'], 'capability' => 'C16'],
-        'capacity_slots' => ['scope' => 'capacity', 'entity' => 'capacity_slot', 'patterns' => ['capacity'], 'capability' => 'C17'],
+        'resources' => [
+            'scope' => 'resources',
+            'entity' => 'resource',
+            'patterns' => ['resource'],
+            'capability' => 'C16'
+        ],
+        'capacity_slots' => [
+            'scope' => 'capacity',
+            'entity' => 'capacity_slot',
+            'patterns' => ['capacity'],
+            'capability' => 'C17'
+        ],
         'events' => ['scope' => 'events', 'entity' => 'event', 'patterns' => ['event'], 'capability' => 'C18'],
-        'blocked_dates' => ['scope' => 'availability', 'entity' => 'blocked_date', 'patterns' => ['timeslot', 'resource', 'capacity'], 'capability' => 'C15'],
+        'blocked_dates' => [
+            'scope' => 'availability',
+            'entity' => 'blocked_date',
+            'patterns' => ['timeslot', 'resource', 'capacity'],
+            'capability' => 'C15'
+        ],
     ];
 
     public static function definition(string $kind): array
@@ -25,47 +40,120 @@ final class CatalogFields
 
     public static function properties(string $kind): array
     {
-        $text = static fn (int $max, bool $nullable = false): array => ['type' => $nullable ? ['string', 'null'] : 'string', 'maxLength' => $max];
+        $text = static fn (int $max, bool $nullable = false): array => [
+            'type' => $nullable ? ['string', 'null'] : 'string',
+            'maxLength' => $max
+        ];
         $integer = static fn (int $min, int $max): array => ['type' => 'integer', 'minimum' => $min, 'maximum' => $max];
-        $money = ['type' => ['string', 'null'], 'pattern' => '^[0-9]{1,8}(\\.[0-9]{1,2})?$', 'description' => 'Decimal amount in the business currency. Null means no listed price.'];
-        $ids = ['type' => 'array', 'maxItems' => 1000, 'uniqueItems' => true, 'items' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 26]];
+        $money = [
+            'type' => ['string', 'null'],
+            'pattern' => '^[0-9]{1,8}(\\.[0-9]{1,2})?$',
+            'description' => 'Decimal amount in the business currency. Null means no listed price.'
+        ];
+        $ids = [
+            'type' => 'array',
+            'maxItems' => 1000,
+            'uniqueItems' => true,
+            'items' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 26]
+        ];
         $date = ['type' => 'string', 'format' => 'date'];
         $time = ['type' => 'string', 'pattern' => '^([01][0-9]|2[0-3]):[0-5][0-9](:00)?$'];
+
         return match ($kind) {
             'services' => [
-                'name' => $text(255), 'description' => $text(20000, true), 'duration_minutes' => $integer(1, 1440),
-                'price' => $money, 'price_label' => $text(100, true), 'category' => $text(100, true),
-                'color' => ['type' => ['string', 'null'], 'pattern' => '^#[0-9a-fA-F]{6}$'], 'staff_ids' => $ids,
+                'name' => $text(255),
+                'description' => $text(20000, true),
+                'duration_minutes' => $integer(1, 1440),
+                'price' => $money,
+                'price_label' => $text(100, true),
+                'category' => $text(100, true),
+                'color' => ['type' => ['string', 'null'], 'pattern' => '^#[0-9a-fA-F]{6}$'],
+                'staff_ids' => $ids,
             ],
             'staff' => [
-                'name' => $text(255), 'email' => [...$text(255), 'format' => 'email'],
-                'phone' => $text(50, true), 'title' => $text(255, true), 'bio' => $text(20000, true), 'service_ids' => $ids,
+                'name' => $text(255),
+                'email' => [...$text(255), 'format' => 'email'],
+                'phone' => $text(50, true),
+                'title' => $text(255, true),
+                'bio' => $text(20000, true),
+                'service_ids' => $ids,
             ],
             'resources' => [
-                'name' => $text(255), 'description' => $text(20000, true), 'capacity' => $integer(1, 10000),
-                'price_per_night' => $money, 'min_stay_nights' => $integer(1, 3650), 'max_stay_nights' => $integer(1, 3650),
+                'name' => $text(255),
+                'description' => $text(20000, true),
+                'capacity' => $integer(1, 10000),
+                'price_per_night' => $money,
+                'min_stay_nights' => $integer(1, 3650),
+                'max_stay_nights' => $integer(1, 3650),
                 'amenities' => ['type' => 'array', 'maxItems' => 100, 'items' => $text(100)],
-                'check_in_days' => ['type' => ['array', 'null'], 'uniqueItems' => true, 'maxItems' => 7, 'items' => $integer(0, 6), 'description' => '0 is Sunday; null allows every day.'],
-                'check_out_days' => ['type' => ['array', 'null'], 'uniqueItems' => true, 'maxItems' => 7, 'items' => $integer(0, 6), 'description' => '0 is Sunday; null allows every day.'],
-                'seasonal_pricing' => ['type' => 'array', 'maxItems' => 100, 'items' => ['type' => 'object', 'additionalProperties' => false, 'required' => ['start_date', 'end_date', 'price_per_night'], 'properties' => ['start_date' => $date, 'end_date' => $date, 'price_per_night' => $money, 'label' => $text(100, true)]]],
+                'check_in_days' => [
+                    'type' => ['array', 'null'],
+                    'uniqueItems' => true,
+                    'maxItems' => 7,
+                    'items' => $integer(0, 6),
+                    'description' => '0 is Sunday; null allows every day.'
+                ],
+                'check_out_days' => [
+                    'type' => ['array', 'null'],
+                    'uniqueItems' => true,
+                    'maxItems' => 7,
+                    'items' => $integer(0, 6),
+                    'description' => '0 is Sunday; null allows every day.'
+                ],
+                'seasonal_pricing' => [
+                    'type' => 'array',
+                    'maxItems' => 100,
+                    'items' => [
+                        'type' => 'object',
+                        'additionalProperties' => false,
+                        'required' => ['start_date', 'end_date', 'price_per_night'],
+                        'properties' => [
+                            'start_date' => $date,
+                            'end_date' => $date,
+                            'price_per_night' => $money,
+                            'label' => $text(100, true)
+                        ]
+                    ]
+                ],
             ],
             'capacity_slots' => [
                 'day_of_week' => [...$integer(0, 6), 'description' => '0 is Monday; 6 is Sunday.'],
-                'start_time' => $time, 'end_time' => $time, 'max_capacity' => $integer(1, 10000),
-                'min_party_size' => $integer(1, 1000), 'max_party_size' => $integer(1, 1000), 'label' => $text(100, true),
+                'start_time' => $time,
+                'end_time' => $time,
+                'max_capacity' => $integer(1, 10000),
+                'min_party_size' => $integer(1, 1000),
+                'max_party_size' => $integer(1, 1000),
+                'label' => $text(100, true),
             ],
             'events' => [
-                'name' => $text(200), 'description' => $text(20000, true), 'location' => $text(255, true), 'price' => $money,
-                'start_datetime' => ['type' => 'string', 'format' => 'date-time'], 'end_datetime' => ['type' => 'string', 'format' => 'date-time'],
-                'max_participants' => $integer(1, 10000), 'min_spot_count' => $integer(1, 1000),
+                'name' => $text(200),
+                'description' => $text(20000, true),
+                'location' => $text(255, true),
+                'price' => $money,
+                'start_datetime' => ['type' => 'string', 'format' => 'date-time'],
+                'end_datetime' => ['type' => 'string', 'format' => 'date-time'],
+                'max_participants' => $integer(1, 10000),
+                'min_spot_count' => $integer(1, 1000),
                 'max_spot_count' => ['type' => ['integer', 'null'], 'minimum' => 1, 'maximum' => 10000],
-                'recurrence' => ['type' => ['object', 'null'], 'additionalProperties' => false, 'required' => ['frequency', 'count'], 'properties' => ['frequency' => ['type' => 'string', 'enum' => ['DAILY', 'WEEKLY', 'MONTHLY']], 'count' => $integer(1, 3660)]],
+                'recurrence' => [
+                    'type' => ['object', 'null'],
+                    'additionalProperties' => false,
+                    'required' => ['frequency', 'count'],
+                    'properties' => [
+                        'frequency' => ['type' => 'string', 'enum' => ['DAILY', 'WEEKLY', 'MONTHLY']],
+                        'count' => $integer(1, 3660)
+                    ]
+                ],
                 'exception_dates' => ['type' => 'array', 'uniqueItems' => true, 'maxItems' => 1000, 'items' => $date],
-                'allow_waitlist' => ['type' => 'boolean'], 'waitlist_max' => $integer(0, 10000),
+                'allow_waitlist' => ['type' => 'boolean'],
+                'waitlist_max' => $integer(0, 10000),
             ],
             'blocked_dates' => [
-                'start_date' => $date, 'end_date' => $date, 'reason' => $text(255, true),
-                'staff_id' => ['type' => ['string', 'null'], 'maxLength' => 26], 'resource_id' => ['type' => ['string', 'null'], 'maxLength' => 26],
+                'start_date' => $date,
+                'end_date' => $date,
+                'reason' => $text(255, true),
+                'staff_id' => ['type' => ['string', 'null'], 'maxLength' => 26],
+                'resource_id' => ['type' => ['string', 'null'], 'maxLength' => 26],
             ],
         };
     }
@@ -85,11 +173,38 @@ final class CatalogFields
     public static function defaults(string $kind): array
     {
         return match ($kind) {
-            'services' => ['description' => null, 'price' => null, 'price_label' => null, 'category' => null, 'color' => null, 'staff_ids' => []],
+            'services' => [
+                'description' => null,
+                'price' => null,
+                'price_label' => null,
+                'category' => null,
+                'color' => null,
+                'staff_ids' => []
+            ],
             'staff' => ['phone' => null, 'title' => null, 'bio' => null, 'service_ids' => []],
-            'resources' => ['description' => null, 'capacity' => 1, 'price_per_night' => null, 'min_stay_nights' => 1, 'max_stay_nights' => 30, 'amenities' => [], 'check_in_days' => null, 'check_out_days' => null, 'seasonal_pricing' => []],
+            'resources' => [
+                'description' => null,
+                'capacity' => 1,
+                'price_per_night' => null,
+                'min_stay_nights' => 1,
+                'max_stay_nights' => 30,
+                'amenities' => [],
+                'check_in_days' => null,
+                'check_out_days' => null,
+                'seasonal_pricing' => []
+            ],
             'capacity_slots' => ['min_party_size' => 1, 'label' => null],
-            'events' => ['description' => null, 'location' => null, 'price' => null, 'min_spot_count' => 1, 'max_spot_count' => null, 'recurrence' => null, 'exception_dates' => [], 'allow_waitlist' => false, 'waitlist_max' => 5],
+            'events' => [
+                'description' => null,
+                'location' => null,
+                'price' => null,
+                'min_spot_count' => 1,
+                'max_spot_count' => null,
+                'recurrence' => null,
+                'exception_dates' => [],
+                'allow_waitlist' => false,
+                'waitlist_max' => 5
+            ],
             'blocked_dates' => ['reason' => null, 'staff_id' => null, 'resource_id' => null],
         };
     }
@@ -132,8 +247,11 @@ final class CatalogFields
             usort($seasons, static fn (array $a, array $b): int => strcmp($a['start_date'], $b['start_date']));
             $lastEnd = null;
             foreach ($seasons as $season) {
-                if ($season['end_date'] < $season['start_date'] || $season['price_per_night'] === null
-                    || ($lastEnd !== null && $season['start_date'] <= $lastEnd)) {
+                if (
+                    $season['end_date'] < $season['start_date']
+                    || $season['price_per_night'] === null
+                    || ($lastEnd !== null && $season['start_date'] <= $lastEnd)
+                ) {
                     self::invalid('seasonal_pricing', 'invalid_or_overlapping_range');
                 }
                 $lastEnd = $season['end_date'];
@@ -152,7 +270,10 @@ final class CatalogFields
             if ($result['start_time'] >= $result['end_time']) {
                 self::invalid('end_time', 'end_before_start');
             }
-            if ($result['min_party_size'] > $result['max_party_size'] || $result['max_party_size'] > $result['max_capacity']) {
+            if (
+                $result['min_party_size'] > $result['max_party_size']
+                || $result['max_party_size'] > $result['max_capacity']
+            ) {
                 self::invalid('max_party_size', 'party_exceeds_capacity');
             }
         }
@@ -165,12 +286,16 @@ final class CatalogFields
             if ($result['end_datetime'] <= $result['start_datetime']) {
                 self::invalid('end_datetime', 'end_before_start');
             }
-            if ($result['min_spot_count'] > ($result['max_spot_count'] ?? $result['max_participants'])
-                || ($result['max_spot_count'] ?? 1) > $result['max_participants']) {
+            if (
+                $result['min_spot_count'] > ($result['max_spot_count'] ?? $result['max_participants'])
+                || ($result['max_spot_count'] ?? 1) > $result['max_participants']
+            ) {
                 self::invalid('max_spot_count', 'party_exceeds_capacity');
             }
             $result['is_recurring'] = $result['recurrence'] !== null ? 1 : 0;
-            $result['rrule'] = $result['recurrence'] === null ? null : 'FREQ=' . $result['recurrence']['frequency'] . ';COUNT=' . $result['recurrence']['count'];
+            $result['rrule'] = $result['recurrence'] === null
+                ? null
+                : 'FREQ=' . $result['recurrence']['frequency'] . ';COUNT=' . $result['recurrence']['count'];
             unset($result['recurrence']);
         }
         if ($kind === 'blocked_dates') {
@@ -178,12 +303,15 @@ final class CatalogFields
             if ($result['end_date'] < $result['start_date'] || $result['start_date'] < $today) {
                 self::invalid('start_date', 'invalid_or_past_range');
             }
-            if (($result['staff_id'] !== null && $tenant['booking_pattern'] !== 'timeslot')
+            if (
+                ($result['staff_id'] !== null && $tenant['booking_pattern'] !== 'timeslot')
                 || ($result['resource_id'] !== null && $tenant['booking_pattern'] !== 'resource')
-                || ($result['staff_id'] !== null && $result['resource_id'] !== null)) {
+                || ($result['staff_id'] !== null && $result['resource_id'] !== null)
+            ) {
                 self::invalid('staff_id', 'unsupported_target');
             }
         }
+
         return $result;
     }
 
@@ -191,8 +319,12 @@ final class CatalogFields
     {
         $types = (array) $schema['type'];
         $type = match (true) {
-            $value === null => 'null', is_bool($value) => 'boolean', is_int($value) => 'integer',
-            is_string($value) => 'string', is_array($value) && array_is_list($value) => 'array', is_array($value) => 'object',
+            $value === null => 'null',
+            is_bool($value) => 'boolean',
+            is_int($value) => 'integer',
+            is_string($value) => 'string',
+            is_array($value) && array_is_list($value) => 'array',
+            is_array($value) => 'object',
             default => 'unknown',
         };
         if (!in_array($type, $types, true) && !($value === [] && in_array('object', $types, true))) {
@@ -205,8 +337,11 @@ final class CatalogFields
             self::invalid($key, 'invalid_value');
         }
         if (is_string($value)) {
-            if (mb_strlen($value) > ($schema['maxLength'] ?? PHP_INT_MAX) || mb_strlen($value) < ($schema['minLength'] ?? 0)
-                || (isset($schema['pattern']) && preg_match('~' . $schema['pattern'] . '~D', $value) !== 1)) {
+            if (
+                mb_strlen($value) > ($schema['maxLength'] ?? PHP_INT_MAX)
+                || mb_strlen($value) < ($schema['minLength'] ?? 0)
+                || (isset($schema['pattern']) && preg_match('~' . $schema['pattern'] . '~D', $value) !== 1)
+            ) {
                 self::invalid($key, 'invalid_value');
             }
             if (($schema['format'] ?? null) === 'email' && filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
@@ -232,12 +367,20 @@ final class CatalogFields
                 }
             }
         }
-        if (is_int($value) && ($value < ($schema['minimum'] ?? PHP_INT_MIN) || $value > ($schema['maximum'] ?? PHP_INT_MAX))) {
+        if (
+            is_int($value)
+            && ($value < ($schema['minimum'] ?? PHP_INT_MIN) || $value > ($schema['maximum'] ?? PHP_INT_MAX))
+        ) {
             self::invalid($key, 'out_of_range');
         }
         if ($type === 'array') {
-            if (count($value) > ($schema['maxItems'] ?? PHP_INT_MAX)
-                || (($schema['uniqueItems'] ?? false) && count(array_unique(array_map('serialize', $value))) !== count($value))) {
+            if (
+                count($value) > ($schema['maxItems'] ?? PHP_INT_MAX)
+                || (
+                    ($schema['uniqueItems'] ?? false)
+                        && count(array_unique(array_map('serialize', $value))) !== count($value)
+                )
+            ) {
                 self::invalid($key, 'invalid_list');
             }
             foreach ($value as $item) {

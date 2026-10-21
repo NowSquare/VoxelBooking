@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Agent\OAuth;
 
 use Closure;
@@ -36,7 +37,11 @@ final class TokenRepository implements AccessTokenRepositoryInterface, AuthCodeR
 
     public function grant(string $connectionId, string $clientId): array
     {
-        $grant = $this->one('SELECT c.*, g.audience FROM agent_connections c JOIN oauth_grants g ON g.connection_id = c.id WHERE c.id = ?' . $this->lock(), [$connectionId]);
+        $grant = $this->one(
+            'SELECT c.*, g.audience FROM agent_connections c JOIN oauth_grants g ON g.connection_id = c.id WHERE c.id = ?' . $this->lock(),
+            [$connectionId]
+        );
+        // Every token mint re-checks the grant: same client, still live, and bound to this resource.
         if ($grant === null || $grant['client_id'] !== $clientId || $grant['revoked_at'] !== null
             || strtotime($grant['expires_at'] . ' UTC') <= time()
             || $this->resource === null || !hash_equals($grant['audience'], $this->resource)) {
@@ -47,8 +52,11 @@ final class TokenRepository implements AccessTokenRepositoryInterface, AuthCodeR
         return $grant;
     }
 
-    public function getNewToken(ClientEntityInterface $clientEntity, array $scopes, ?string $userIdentifier = null): AccessTokenEntityInterface
-    {
+    public function getNewToken(
+        ClientEntityInterface $clientEntity,
+        array $scopes,
+        ?string $userIdentifier = null
+    ): AccessTokenEntityInterface {
         $token = new AccessToken();
         $token->setClient($clientEntity);
         if ($userIdentifier !== null) {
@@ -66,6 +74,7 @@ final class TokenRepository implements AccessTokenRepositoryInterface, AuthCodeR
             throw OAuthServerException::invalidGrant();
         }
         $grant = $this->grant($accessTokenEntity->getUserIdentifier(), $accessTokenEntity->getClient()->getIdentifier());
+        // A token never outlives the connection it was issued from.
         $expiry = min($accessTokenEntity->getExpiryDateTime()->getTimestamp(), strtotime($grant['expires_at'] . ' UTC'));
         $accessTokenEntity->setExpiryDateTime(new DateTimeImmutable('@' . $expiry));
         $scopes = array_map(static fn ($scope) => $scope->getIdentifier(), $accessTokenEntity->getScopes());
@@ -74,7 +83,10 @@ final class TokenRepository implements AccessTokenRepositoryInterface, AuthCodeR
         }
         $credential = ($this->issueCredential)($grant['id'], $grant['audience'], gmdate('Y-m-d H:i:s', $expiry), $scopes);
         $this->execute('INSERT INTO oauth_access_tokens (id_hash, connection_id, credential_id, expires_at) VALUES (?, ?, ?, ?)', [
-            hash('sha256', $accessTokenEntity->getIdentifier()), $grant['id'], $credential['id'], gmdate('Y-m-d H:i:s', $expiry),
+            hash('sha256', $accessTokenEntity->getIdentifier()),
+            $grant['id'],
+            $credential['id'],
+            gmdate('Y-m-d H:i:s', $expiry),
         ]);
         $accessTokenEntity->audience = $grant['audience'];
         $accessTokenEntity->setRawToken($credential['raw_token']);
@@ -89,20 +101,40 @@ final class TokenRepository implements AccessTokenRepositoryInterface, AuthCodeR
         $this->revoke('oauth_access_tokens', $tokenId);
     }
 
-    public function isAccessTokenRevoked(string $tokenId): bool { return $this->revoked('oauth_access_tokens', $tokenId); }
-    public function getNewAuthCode(): AuthCodeEntityInterface { return new AuthCode(); }
+    public function isAccessTokenRevoked(string $tokenId): bool
+    {
+        return $this->revoked('oauth_access_tokens', $tokenId);
+    }
+
+    public function getNewAuthCode(): AuthCodeEntityInterface
+    {
+        return new AuthCode();
+    }
 
     public function persistNewAuthCode(AuthCodeEntityInterface $authCodeEntity): void
     {
         $grant = $this->grant($authCodeEntity->getUserIdentifier() ?? '', $authCodeEntity->getClient()->getIdentifier());
         $this->execute('INSERT INTO oauth_auth_codes (id_hash, connection_id, expires_at) VALUES (?, ?, ?)', [
-            hash('sha256', $authCodeEntity->getIdentifier()), $grant['id'], $this->date($authCodeEntity->getExpiryDateTime()),
+            hash('sha256', $authCodeEntity->getIdentifier()),
+            $grant['id'],
+            $this->date($authCodeEntity->getExpiryDateTime()),
         ]);
     }
 
-    public function revokeAuthCode(string $codeId): void { $this->revoke('oauth_auth_codes', $codeId); }
-    public function isAuthCodeRevoked(string $codeId): bool { return $this->revoked('oauth_auth_codes', $codeId); }
-    public function getNewRefreshToken(): ?RefreshTokenEntityInterface { return new RefreshToken(); }
+    public function revokeAuthCode(string $codeId): void
+    {
+        $this->revoke('oauth_auth_codes', $codeId);
+    }
+
+    public function isAuthCodeRevoked(string $codeId): bool
+    {
+        return $this->revoked('oauth_auth_codes', $codeId);
+    }
+
+    public function getNewRefreshToken(): ?RefreshTokenEntityInterface
+    {
+        return new RefreshToken();
+    }
 
     public function persistNewRefreshToken(RefreshTokenEntityInterface $refreshTokenEntity): void
     {
@@ -111,15 +143,22 @@ final class TokenRepository implements AccessTokenRepositoryInterface, AuthCodeR
         $expiry = min($refreshTokenEntity->getExpiryDateTime()->getTimestamp(), strtotime($grant['expires_at'] . ' UTC'));
         $refreshTokenEntity->setExpiryDateTime(new DateTimeImmutable('@' . $expiry));
         $this->execute('INSERT INTO oauth_refresh_tokens (id_hash, connection_id, access_id_hash, expires_at) VALUES (?, ?, ?, ?)', [
-            hash('sha256', $refreshTokenEntity->getIdentifier()), $grant['id'], hash('sha256', $access->getIdentifier()), gmdate('Y-m-d H:i:s', $expiry),
+            hash('sha256', $refreshTokenEntity->getIdentifier()),
+            $grant['id'],
+            hash('sha256', $access->getIdentifier()),
+            gmdate('Y-m-d H:i:s', $expiry),
         ]);
     }
 
-    public function revokeRefreshToken(string $tokenId): void { $this->revoke('oauth_refresh_tokens', $tokenId); }
+    public function revokeRefreshToken(string $tokenId): void
+    {
+        $this->revoke('oauth_refresh_tokens', $tokenId);
+    }
 
     public function isRefreshTokenRevoked(string $tokenId): bool
     {
         $record = $this->one('SELECT * FROM oauth_refresh_tokens WHERE id_hash = ?' . $this->lock(), [hash('sha256', $tokenId)]);
+        // A revoked refresh token presented again signals theft; remember the family so it can be revoked.
         if ($record !== null && $record['revoked_at'] !== null) {
             $this->replayedConnection = $record['connection_id'];
         }
@@ -130,7 +169,10 @@ final class TokenRepository implements AccessTokenRepositoryInterface, AuthCodeR
     public function revokeReplayedFamily(): void
     {
         if ($this->replayedConnection !== null) {
-            $this->execute('UPDATE agent_connections SET revoked_at = COALESCE(revoked_at, ?) WHERE id = ?', [gmdate('Y-m-d H:i:s'), $this->replayedConnection]);
+            $this->execute(
+                'UPDATE agent_connections SET revoked_at = COALESCE(revoked_at, ?) WHERE id = ?',
+                [gmdate('Y-m-d H:i:s'), $this->replayedConnection]
+            );
         }
     }
 
@@ -142,7 +184,10 @@ final class TokenRepository implements AccessTokenRepositoryInterface, AuthCodeR
 
     private function revoke(string $table, string $id): void
     {
-        $this->execute('UPDATE ' . $table . ' SET revoked_at = COALESCE(revoked_at, ?) WHERE id_hash = ?', [gmdate('Y-m-d H:i:s'), hash('sha256', $id)]);
+        $this->execute(
+            'UPDATE ' . $table . ' SET revoked_at = COALESCE(revoked_at, ?) WHERE id_hash = ?',
+            [gmdate('Y-m-d H:i:s'), hash('sha256', $id)]
+        );
     }
 
     private function lock(): string
@@ -163,5 +208,8 @@ final class TokenRepository implements AccessTokenRepositoryInterface, AuthCodeR
         $statement->execute($parameters);
     }
 
-    private function date(DateTimeImmutable $value): string { return $value->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s'); }
+    private function date(DateTimeImmutable $value): string
+    {
+        return $value->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+    }
 }

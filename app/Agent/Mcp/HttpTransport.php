@@ -34,7 +34,9 @@ final class HttpTransport
         try {
             $headers = array_change_key_case($headers, CASE_LOWER);
             if (array_key_exists('origin', $headers)
-                && (!is_string($headers['origin']) || !in_array($headers['origin'], $this->allowedOrigins, true) || $headers['origin'] === '')) {
+                && (!is_string($headers['origin'])
+                    || !in_array($headers['origin'], $this->allowedOrigins, true)
+                    || $headers['origin'] === '')) {
                 throw new ProtocolError(-32600, 'Origin not allowed', 403);
             }
             if ($method !== 'POST') {
@@ -75,7 +77,8 @@ final class HttpTransport
             $version = $this->protocolVersion($message->method, $params, $headers);
             if ($notification) {
                 // A notification can never invoke an application operation.
-                if ($version === Server::LEGACY_VERSION && in_array($message->method, ['notifications/initialized', 'notifications/cancelled'], true)) {
+                if ($version === Server::LEGACY_VERSION
+                    && in_array($message->method, ['notifications/initialized', 'notifications/cancelled'], true)) {
                     return new HttpResponse(202, null, self::RESPONSE_HEADERS);
                 }
                 throw new ProtocolError(-32600, 'Unsupported notification');
@@ -124,7 +127,9 @@ final class HttpTransport
         }
         $bodyVersion = $meta->{'io.modelcontextprotocol/protocolVersion'} ?? null;
         // Only a real initialize request can enter legacy negotiation without headers.
-        if ($method === 'initialize' && $bodyVersion === null && ($headers['mcp-protocol-version'] ?? Server::LEGACY_VERSION) !== Server::MODERN_VERSION) {
+        if ($method === 'initialize'
+            && $bodyVersion === null
+            && ($headers['mcp-protocol-version'] ?? Server::LEGACY_VERSION) !== Server::MODERN_VERSION) {
             return Server::LEGACY_VERSION;
         }
         if ($bodyVersion === null && ($headers['mcp-protocol-version'] ?? null) === Server::LEGACY_VERSION) {

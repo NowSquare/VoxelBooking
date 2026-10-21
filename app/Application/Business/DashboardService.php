@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Application\Business;
 
 use App\Agent\ActorContext;
@@ -15,78 +16,163 @@ final class DashboardService
     public static function business(ActorContext $actor, array $input): array
     {
         $actor = BusinessAccess::actor($actor, 'reports:read', 'staff');
-        if (!in_array('bookings:read', $actor->scopes, true)) { throw new OperationException('insufficient_scope', 403); }
+        if (!in_array('bookings:read', $actor->scopes, true)) {
+            throw new OperationException('insufficient_scope', 403);
+        }
         $tenant = BusinessAccess::tenant($actor, $input);
+
         return self::businessData($tenant);
     }
+
     private static function businessData(array $tenant): array
     {
         $tenantId = $tenant['id'];
-        $now = new \DateTimeImmutable('now',new \DateTimeZone($tenant['timezone']));
+        $now = new \DateTimeImmutable('now', new \DateTimeZone($tenant['timezone']));
         $today = $now->format('Y-m-d');
         $weekStart = $now->modify('-6 days')->format('Y-m-d');
-        $todayCount = Booking::countForTenant($tenantId,null,$today,$today);
-        $weekCount = Booking::countForTenant($tenantId,null,$weekStart,$today);
+        $todayCount = Booking::countForTenant($tenantId, null, $today, $today);
+        $weekCount = Booking::countForTenant($tenantId, null, $weekStart, $today);
+
         return [
-            'tenant'=>$tenant, 'dashboardDate'=>$now,
-            'todayBookings'=>$todayCount, 'weekBookings'=>$weekCount,
-            'monthBookings'=>Booking::countForTenant($tenantId,null,$now->format('Y-m-01'),$today),
-            'totalCustomers'=>Customer::countForTenant($tenantId,null),
-            'deltaToday'=>$todayCount-Booking::countForTenant($tenantId,null,$now->modify('-7 days')->format('Y-m-d'),$now->modify('-7 days')->format('Y-m-d')),
-            'deltaWeek'=>$weekCount-Booking::countForTenant($tenantId,null,$now->modify('-13 days')->format('Y-m-d'),$now->modify('-7 days')->format('Y-m-d')),
-            'upcoming'=>Booking::forTenantUpcoming($tenantId,$now->format('Y-m-d H:i:s'),5),
-            'todaySchedule'=>Booking::forTenantDate($tenantId,$today),
-            'staffWorkingToday'=>$tenant['booking_pattern']==='timeslot'?self::loadStaffWorkingToday($tenantId,$now):null,
-            'pendingApprovals'=>Booking::countForTenant($tenantId,'pending',null,null),
-            'setupActions'=>self::loadSetupActions($tenantId,$tenant['booking_pattern']),
+            'tenant' => $tenant,
+            'dashboardDate' => $now,
+            'todayBookings' => $todayCount,
+            'weekBookings' => $weekCount,
+            'monthBookings' => Booking::countForTenant($tenantId, null, $now->format('Y-m-01'), $today),
+            'totalCustomers' => Customer::countForTenant($tenantId, null),
+            'deltaToday' => $todayCount - Booking::countForTenant(
+                $tenantId,
+                null,
+                $now->modify('-7 days')->format('Y-m-d'),
+                $now->modify('-7 days')->format('Y-m-d')
+            ),
+            'deltaWeek' => $weekCount - Booking::countForTenant(
+                $tenantId,
+                null,
+                $now->modify('-13 days')->format('Y-m-d'),
+                $now->modify('-7 days')->format('Y-m-d')
+            ),
+            'upcoming' => Booking::forTenantUpcoming($tenantId, $now->format('Y-m-d H:i:s'), 5),
+            'todaySchedule' => Booking::forTenantDate($tenantId, $today),
+            'staffWorkingToday' => $tenant['booking_pattern'] === 'timeslot'
+                ? self::loadStaffWorkingToday($tenantId, $now)
+                : null,
+            'pendingApprovals' => Booking::countForTenant($tenantId, 'pending', null, null),
+            'setupActions' => self::loadSetupActions($tenantId, $tenant['booking_pattern']),
         ];
     }
+
     public static function operator(ActorContext $actor): array
     {
-        $actor = BusinessAccess::actor($actor,'reports:read');
-        if (!in_array('bookings:read',$actor->scopes,true)) { throw new OperationException('insufficient_scope',403); }
-        $counts = ['active'=>0,'paused'=>0,'archived'=>0,'total'=>0];
-        $data = ['todayBookings'=>0,'weekBookings'=>0,'deltaToday'=>0,'deltaWeek'=>0,'upcoming24h'=>0,'pendingApprovals'=>0];
+        $actor = BusinessAccess::actor($actor, 'reports:read');
+        if (!in_array('bookings:read', $actor->scopes, true)) {
+            throw new OperationException('insufficient_scope', 403);
+        }
+        $counts = ['active' => 0, 'paused' => 0, 'archived' => 0, 'total' => 0];
+        $data = [
+            'todayBookings' => 0,
+            'weekBookings' => 0,
+            'deltaToday' => 0,
+            'deltaWeek' => 0,
+            'upcoming24h' => 0,
+            'pendingApprovals' => 0
+        ];
         $upcoming = [];
-        $now = new \DateTimeImmutable('now',new \DateTimeZone('UTC'));
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
         foreach ($actor->businessIds as $id) {
-            $tenant = Database::query('SELECT * FROM tenants WHERE id = ?',[$id])[0] ?? null;
-            if (!$tenant) { continue; }
-            $counts[$tenant['status']]++; $counts['total']++;
+            $tenant = Database::query('SELECT * FROM tenants WHERE id = ?', [$id])[0] ?? null;
+            if (!$tenant) {
+                continue;
+            }
+            $counts[$tenant['status']]++;
+            $counts['total']++;
             $summary = self::businessData($tenant);
-            foreach (['todayBookings','weekBookings','deltaToday','deltaWeek','pendingApprovals'] as $key) { $data[$key]+=$summary[$key]; }
+            foreach (['todayBookings', 'weekBookings', 'deltaToday', 'deltaWeek', 'pendingApprovals'] as $key) {
+                $data[$key] += $summary[$key];
+            }
             $zone = new \DateTimeZone($tenant['timezone']);
-            $data['upcoming24h'] += (int)Database::query("SELECT COUNT(*) AS total FROM bookings WHERE tenant_id = ? AND status = 'confirmed' AND start_datetime >= ? AND start_datetime < ?",[$id,$now->setTimezone($zone)->format('Y-m-d H:i:s'),$now->modify('+24 hours')->setTimezone($zone)->format('Y-m-d H:i:s')])[0]['total'];
+            $data['upcoming24h'] += (int) Database::query(
+                "SELECT COUNT(*) AS total FROM bookings WHERE tenant_id = ? AND status = 'confirmed' AND start_datetime >= ? AND start_datetime < ?",
+                [
+                    $id,
+                    $now->setTimezone($zone)->format('Y-m-d H:i:s'),
+                    $now->modify('+24 hours')->setTimezone($zone)->format('Y-m-d H:i:s')
+                ]
+            )[0]['total'];
             foreach ($summary['upcoming'] as $booking) {
                 $booking['tenant_timezone'] = $tenant['timezone'];
                 $upcoming[] = $booking;
             }
         }
-        usort($upcoming,static fn(array $a,array $b):int => (new \DateTimeImmutable($a['start_datetime'],new \DateTimeZone($a['tenant_timezone'])))->getTimestamp() <=> (new \DateTimeImmutable($b['start_datetime'],new \DateTimeZone($b['tenant_timezone'])))->getTimestamp());
-        return [...$data,'activeTenants'=>$counts['active'],'tenantCounts'=>$counts,'upcoming'=>array_slice($upcoming,0,5)];
+        usort(
+            $upcoming,
+            static fn (array $a, array $b): int =>
+                (new \DateTimeImmutable($a['start_datetime'], new \DateTimeZone($a['tenant_timezone'])))->getTimestamp()
+                <=> (new \DateTimeImmutable($b['start_datetime'], new \DateTimeZone($b['tenant_timezone'])))->getTimestamp()
+        );
+
+        return [
+            ...$data,
+            'activeTenants' => $counts['active'],
+            'tenantCounts' => $counts,
+            'upcoming' => array_slice($upcoming, 0, 5)
+        ];
     }
-    public static function query(ActorContext $actor,array $input,bool $operator=false): array
+
+    public static function query(ActorContext $actor, array $input, bool $operator = false): array
     {
-        $data = $operator ? self::operator($actor) : self::business($actor,$input);
+        $data = $operator ? self::operator($actor) : self::business($actor, $input);
         $tenant = $data['tenant'] ?? null;
         $timezone = $tenant['timezone'] ?? 'UTC';
-        $now = new \DateTimeImmutable('now',new \DateTimeZone($timezone));
-        $booking = static function(array $row) use ($timezone): array {
+        $now = new \DateTimeImmutable('now', new \DateTimeZone($timezone));
+        $booking = static function (array $row) use ($timezone): array {
             $zone = new \DateTimeZone($row['tenant_timezone'] ?? $timezone);
-            return ['id'=>$row['id'],'business_id'=>$row['tenant_id'] ?? null,'customer_name'=>$row['customer_name'] ?? null,'status'=>$row['status'],
-                'booking_pattern'=>$row['booking_pattern'],'start_datetime'=>(new \DateTimeImmutable($row['start_datetime'],$zone))->format(DATE_ATOM),
-                'end_datetime'=>(new \DateTimeImmutable($row['end_datetime'],$zone))->format(DATE_ATOM),
-                'service_name'=>$row['service_name'] ?? null,'resource_name'=>$row['resource_name'] ?? null,'event_name'=>$row['event_name'] ?? null];
+            return [
+                'id' => $row['id'],
+                'business_id' => $row['tenant_id'] ?? null,
+                'customer_name' => $row['customer_name'] ?? null,
+                'status' => $row['status'],
+                'booking_pattern' => $row['booking_pattern'],
+                'start_datetime' => (new \DateTimeImmutable($row['start_datetime'], $zone))->format(DATE_ATOM),
+                'end_datetime' => (new \DateTimeImmutable($row['end_datetime'], $zone))->format(DATE_ATOM),
+                'service_name' => $row['service_name'] ?? null,
+                'resource_name' => $row['resource_name'] ?? null,
+                'event_name' => $row['event_name'] ?? null
+            ];
         };
-        return ['business_id'=>$tenant['id'] ?? null,'timezone'=>$timezone,'generated_at'=>$now->format(DATE_ATOM),
-            'date_basis'=>$operator?'Each business local calendar date; upcoming 24 hours measured as instants.':'Business local calendar date.',
-            'metrics'=>['today_bookings'=>$data['todayBookings'],'week_bookings'=>$data['weekBookings'],'month_bookings'=>$data['monthBookings'] ?? null,
-                'today_change'=>$data['deltaToday'],'week_change'=>$data['deltaWeek'],'customers'=>$data['totalCustomers'] ?? null,
-                'pending_approvals'=>$data['pendingApprovals'],'upcoming_24h'=>$data['upcoming24h'] ?? null,'businesses'=>$data['tenantCounts'] ?? null],
-            'upcoming'=>array_map($booking,$data['upcoming']), 'today_schedule'=>array_map($booking,array_slice($data['todaySchedule'] ?? [],0,500)),
-            'today_schedule_truncated'=>count($data['todaySchedule'] ?? [])>500, 'staff_working_today'=>$data['staffWorkingToday'] ?? null,
-            'setup_actions'=>array_map(static fn(array $action):array=>['key'=>$action['key'],'url'=>app_url('/admin/tenants/'.$tenant['id'].'/'.$action['path'])],$data['setupActions'] ?? [])];
+
+        return [
+            'business_id' => $tenant['id'] ?? null,
+            'timezone' => $timezone,
+            'generated_at' => $now->format(DATE_ATOM),
+            'date_basis' => $operator
+                ? 'Each business local calendar date; upcoming 24 hours measured as instants.'
+                : 'Business local calendar date.',
+            'metrics' => [
+                'today_bookings' => $data['todayBookings'],
+                'week_bookings' => $data['weekBookings'],
+                'month_bookings' => $data['monthBookings'] ?? null,
+                'today_change' => $data['deltaToday'],
+                'week_change' => $data['deltaWeek'],
+                'customers' => $data['totalCustomers'] ?? null,
+                'pending_approvals' => $data['pendingApprovals'],
+                'upcoming_24h' => $data['upcoming24h'] ?? null,
+                'businesses' => $data['tenantCounts'] ?? null
+            ],
+            'upcoming' => array_map($booking, $data['upcoming']),
+            'today_schedule' => array_map($booking, array_slice($data['todaySchedule'] ?? [], 0, 500)),
+            'today_schedule_truncated' => count($data['todaySchedule'] ?? []) > 500,
+            'staff_working_today' => $data['staffWorkingToday'] ?? null,
+            'setup_actions' => array_map(
+                static fn (array $action): array => [
+                    'key' => $action['key'],
+                    'url' => app_url('/admin/tenants/' . $tenant['id'] . '/' . $action['path'])
+                ],
+                $data['setupActions'] ?? []
+            )
+        ];
     }
+
     private static function loadSetupActions(string $tenantId, string $pattern): array
     {
         $catalog = match ($pattern) {
@@ -96,7 +182,10 @@ final class DashboardService
             default => ['services', 'setup_services', 'services'],
         };
         [$table, $key, $path] = $catalog;
-        $count = Database::query("SELECT COUNT(*) AS cnt FROM `{$table}` WHERE `tenant_id` = ? AND `is_active` = 1", [$tenantId]);
+        $count = Database::query(
+            "SELECT COUNT(*) AS cnt FROM `{$table}` WHERE `tenant_id` = ? AND `is_active` = 1",
+            [$tenantId]
+        );
         if ((int) ($count[0]['cnt'] ?? 0) === 0) {
             return [['key' => $key, 'path' => $path]];
         }
@@ -105,10 +194,14 @@ final class DashboardService
         }
 
         $actions = [];
-        $hours = Database::query('SELECT COUNT(*) AS cnt FROM `availability` WHERE `tenant_id` = ? AND `is_available` = 1', [$tenantId]);
+        $hours = Database::query(
+            'SELECT COUNT(*) AS cnt FROM `availability` WHERE `tenant_id` = ? AND `is_available` = 1',
+            [$tenantId]
+        );
         if ((int) ($hours[0]['cnt'] ?? 0) === 0) {
             $actions[] = ['key' => 'setup_hours', 'path' => 'availability'];
         }
+
         return $actions;
     }
 
@@ -159,7 +252,7 @@ final class DashboardService
         foreach ($overrideRows as $row) {
             $overrideMap[$row['staff_id']][] = [
                 'start' => substr($row['start_time'], 0, 5),
-                'end'   => substr($row['end_time'], 0, 5),
+                'end' => substr($row['end_time'], 0, 5),
             ];
             $staffWithOverrides[$row['staff_id']] = true;
         }
@@ -189,7 +282,7 @@ final class DashboardService
         foreach ($defaultRows as $row) {
             $defaultWindows[] = [
                 'start' => substr($row['start_time'], 0, 5),
-                'end'   => substr($row['end_time'], 0, 5),
+                'end' => substr($row['end_time'], 0, 5),
             ];
         }
 
@@ -214,15 +307,13 @@ final class DashboardService
             }
 
             $result[] = [
-                'id'      => $sid,
-                'name'    => $staff['name'],
-                'title'   => $staff['title'] ?? null,
+                'id' => $sid,
+                'name' => $staff['name'],
+                'title' => $staff['title'] ?? null,
                 'windows' => $windows,
             ];
         }
 
         return $result;
     }
-
-
 }

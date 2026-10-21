@@ -1,14 +1,19 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Agent;
 
 final class AuthorizationPolicy
 {
     public function permits(ActorContext $actor, OperationDefinition $operation, ?string $businessId = null): bool
     {
-        try { $this->authorize($actor, $operation, $businessId); return true; }
-        catch (OperationException) { return false; }
+        try {
+            $this->authorize($actor, $operation, $businessId);
+            return true;
+        } catch (OperationException) {
+            return false;
+        }
     }
 
     public function authorize(ActorContext $actor, OperationDefinition $operation, ?string $businessId = null): void

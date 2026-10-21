@@ -1,13 +1,18 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Agent\OAuth;
 
 use PDO;
 
 final class ClientRegistration
 {
-    public function __construct(private readonly PDO $db, private readonly ClientRepository $clients, private readonly MetadataFetcher $fetcher = new MetadataFetcher()) {}
+    public function __construct(
+        private readonly PDO $db,
+        private readonly ClientRepository $clients,
+        private readonly MetadataFetcher $fetcher = new MetadataFetcher()
+    ) {}
 
     public function ensure(string $clientId): Client
     {
@@ -27,14 +32,19 @@ final class ClientRegistration
         $fetched = $this->fetcher->fetch($clientId);
         $metadata = $fetched['metadata'];
         $record = [
-            'id' => $clientId, 'name' => $metadata['client_name'],
+            'id' => $clientId,
+            'name' => $metadata['client_name'],
             'redirect_uris' => json_encode($metadata['redirect_uris'], JSON_THROW_ON_ERROR),
-            'secret_hash' => null, 'auth_method' => 'none', 'registration_type' => 'cimd',
+            'secret_hash' => null,
+            'auth_method' => 'none',
+            'registration_type' => 'cimd',
             'metadata_expires_at' => gmdate('Y-m-d H:i:s', time() + $fetched['ttl']),
-            'revoked_at' => null, 'created_at' => gmdate('Y-m-d H:i:s'),
+            'revoked_at' => null,
+            'created_at' => gmdate('Y-m-d H:i:s'),
         ];
         if ($this->exists($clientId)) {
-            $this->db->prepare('UPDATE oauth_clients SET name = ?, redirect_uris = ?, metadata_expires_at = ? WHERE id = ? AND revoked_at IS NULL')
+            $this->db
+                ->prepare('UPDATE oauth_clients SET name = ?, redirect_uris = ?, metadata_expires_at = ? WHERE id = ? AND revoked_at IS NULL')
                 ->execute([$record['name'], $record['redirect_uris'], $record['metadata_expires_at'], $clientId]);
         } else {
             $this->insert($record);
@@ -56,11 +66,15 @@ final class ClientRegistration
         $id = 'vbo_' . bin2hex(random_bytes(24));
         $secret = $metadata['token_endpoint_auth_method'] !== 'none' ? bin2hex(random_bytes(32)) : null;
         $this->insert([
-            'id' => $id, 'name' => $metadata['client_name'],
+            'id' => $id,
+            'name' => $metadata['client_name'],
             'redirect_uris' => json_encode($metadata['redirect_uris'], JSON_THROW_ON_ERROR),
             'secret_hash' => $secret === null ? null : password_hash($secret, PASSWORD_DEFAULT),
-            'auth_method' => $metadata['token_endpoint_auth_method'], 'registration_type' => $type,
-            'metadata_expires_at' => null, 'revoked_at' => null, 'created_at' => gmdate('Y-m-d H:i:s'),
+            'auth_method' => $metadata['token_endpoint_auth_method'],
+            'registration_type' => $type,
+            'metadata_expires_at' => null,
+            'revoked_at' => null,
+            'created_at' => gmdate('Y-m-d H:i:s'),
         ]);
         $result = ['client_id' => $id, 'client_id_issued_at' => time()] + $metadata;
         if ($secret !== null) {
@@ -79,6 +93,9 @@ final class ClientRegistration
 
     private function insert(array $record): void
     {
-        $this->db->prepare('INSERT INTO oauth_clients (id, name, redirect_uris, secret_hash, auth_method, registration_type, metadata_expires_at, revoked_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')->execute(array_values($record));
+        // Column order matches the key order of every $record built in this class.
+        $this->db
+            ->prepare('INSERT INTO oauth_clients (id, name, redirect_uris, secret_hash, auth_method, registration_type, metadata_expires_at, revoked_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+            ->execute(array_values($record));
     }
 }

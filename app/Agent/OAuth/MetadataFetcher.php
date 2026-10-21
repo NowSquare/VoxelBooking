@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Agent\OAuth;
 
 use Closure;
@@ -9,7 +10,10 @@ use InvalidArgumentException;
 /** Public HTTPS only, no proxy/redirects, DNS-pinned connection and a bounded body. */
 final class MetadataFetcher
 {
-    public function __construct(private readonly ?Closure $resolve = null, private readonly ?Closure $request = null) {}
+    public function __construct(
+        private readonly ?Closure $resolve = null,
+        private readonly ?Closure $request = null
+    ) {}
 
     public function fetch(string $url): array
     {
@@ -29,7 +33,9 @@ final class MetadataFetcher
             throw new InvalidArgumentException('client_metadata_unavailable');
         }
         foreach ($addresses as $address) {
-            if (!is_string($address) || !filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
+            // Every resolved address must be public; IPv4-mapped IPv6 could otherwise smuggle a private target.
+            if (!is_string($address)
+                || !filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
                 || str_starts_with(strtolower($address), '::ffff:')) {
                 throw new InvalidArgumentException('invalid_client_id');
             }
@@ -37,7 +43,9 @@ final class MetadataFetcher
         $response = $this->request !== null
             ? ($this->request)($url, $host, $addresses[0])
             : $this->download($url, $host, $addresses[0]);
-        if (($response['status'] ?? null) !== 200 || !is_string($response['body'] ?? null) || strlen($response['body']) > 65536) {
+        if (($response['status'] ?? null) !== 200
+            || !is_string($response['body'] ?? null)
+            || strlen($response['body']) > 65536) {
             throw new InvalidArgumentException('client_metadata_unavailable');
         }
         try {
@@ -85,6 +93,7 @@ final class MetadataFetcher
             CURLOPT_TIMEOUT => 5,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
+            // Pin the connection to the address validated above so DNS cannot be rebound mid-request.
             CURLOPT_RESOLVE => [$host . ':443:' . (str_contains($address, ':') ? '[' . $address . ']' : $address)],
             CURLOPT_HTTPHEADER => ['Accept: application/json'],
             CURLOPT_WRITEFUNCTION => static function ($handle, string $chunk) use (&$body): int {

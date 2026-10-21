@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Agent\OAuth;
 
 use League\OAuth2\Server\Entities\ClientEntityInterface;
@@ -9,7 +10,9 @@ use PDO;
 
 final class ClientRepository implements ClientRepositoryInterface
 {
+    /** Records fetched during this request, so no-store client metadata still works once. */
     private array $fresh = [];
+
     public function __construct(private readonly PDO $db) {}
 
     public function record(string $identifier): ?array
@@ -20,13 +23,17 @@ final class ClientRepository implements ClientRepositoryInterface
         $statement = $this->db->prepare('SELECT * FROM oauth_clients WHERE id = ? AND revoked_at IS NULL');
         $statement->execute([$identifier]);
         $record = $statement->fetch(PDO::FETCH_ASSOC);
-        if (!$record || ($record['metadata_expires_at'] !== null && strtotime($record['metadata_expires_at'] . ' UTC') <= time())) {
+        if (!$record
+            || ($record['metadata_expires_at'] !== null && strtotime($record['metadata_expires_at'] . ' UTC') <= time())) {
             return null;
         }
         return $record;
     }
 
-    public function remember(array $record): void { $this->fresh[$record['id']] = $record; }
+    public function remember(array $record): void
+    {
+        $this->fresh[$record['id']] = $record;
+    }
 
     public function getClientEntity(string $clientIdentifier): ?ClientEntityInterface
     {
@@ -42,6 +49,8 @@ final class ClientRepository implements ClientRepositoryInterface
         }
         return $record['auth_method'] === 'none'
             ? $clientSecret === null || $clientSecret === ''
-            : is_string($clientSecret) && is_string($record['secret_hash']) && password_verify($clientSecret, $record['secret_hash']);
+            : is_string($clientSecret)
+                && is_string($record['secret_hash'])
+                && password_verify($clientSecret, $record['secret_hash']);
     }
 }

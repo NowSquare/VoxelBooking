@@ -28,6 +28,7 @@ final class RateBudget
         $start = intdiv($now, $window) * $window;
         $reset = $start + $window;
         $sqlite = $db->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite';
+        // A stable key order keeps row locks in the same sequence across concurrent requests.
         ksort($budgets);
         $allowed = true;
         $remaining = PHP_INT_MAX;
@@ -55,7 +56,12 @@ final class RateBudget
             throw $error;
         }
 
-        return ['allowed' => $allowed, 'limit' => $limit, 'remaining' => $remaining,
-            'reset' => $reset, 'retry_after' => max(1, $reset - $now)];
+        return [
+            'allowed' => $allowed,
+            'limit' => $limit,
+            'remaining' => $remaining,
+            'reset' => $reset,
+            'retry_after' => max(1, $reset - $now)
+        ];
     }
 }

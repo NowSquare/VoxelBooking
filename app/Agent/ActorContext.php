@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Agent;
 
 /** Server-resolved identity. Request arguments never populate authority fields. */
@@ -43,8 +44,10 @@ final readonly class ActorContext
     public function auditType(): string
     {
         return match ($this->principalType) {
-            'operator' => 'operator', 'business_user' => 'business_user',
-            'customer' => 'customer', default => 'api',
+            'operator' => 'operator',
+            'business_user' => 'business_user',
+            'customer' => 'customer',
+            default => 'api',
         };
     }
 }

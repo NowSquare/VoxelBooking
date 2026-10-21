@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Agent;
 
 final readonly class OperationDefinition
@@ -32,7 +33,11 @@ final readonly class OperationDefinition
         if (preg_match('/\A[a-z][a-z0-9_]*\z/D', $operationId) !== 1) {
             throw new \InvalidArgumentException('Invalid operation name.');
         }
-        if (!in_array($actorPolicy, ['public', 'authenticated', 'customer_booking', 'customer_privacy', 'staff', 'owner', 'operator', 'self'], true)) {
+        if (!in_array(
+            $actorPolicy,
+            ['public', 'authenticated', 'customer_booking', 'customer_privacy', 'staff', 'owner', 'operator', 'self'],
+            true
+        )) {
             throw new \InvalidArgumentException('Unknown actor policy.');
         }
     }
@@ -40,17 +45,25 @@ final readonly class OperationDefinition
     public function tool(): array
     {
         return [
-            'name' => $this->operationId, 'title' => $this->title, 'description' => $this->description,
-            'inputSchema' => $this->inputSchema, 'outputSchema' => $this->resultSchema(),
-            'annotations' => ['readOnlyHint' => $this->readOnly, 'destructiveHint' => $this->destructive,
-                'idempotentHint' => true, 'openWorldHint' => $this->sideEffects !== []],
+            'name' => $this->operationId,
+            'title' => $this->title,
+            'description' => $this->description,
+            'inputSchema' => $this->inputSchema,
+            'outputSchema' => $this->resultSchema(),
+            'annotations' => [
+                'readOnlyHint' => $this->readOnly,
+                'destructiveHint' => $this->destructive,
+                'idempotentHint' => true,
+                'openWorldHint' => $this->sideEffects !== []
+            ],
         ];
     }
 
     public function resultSchema(): array
     {
         return [
-            'type' => 'object', 'additionalProperties' => false,
+            'type' => 'object',
+            'additionalProperties' => false,
             'required' => ['data', 'operation', 'business_id', 'receipt_id', 'notification_state'],
             'properties' => [
                 'data' => $this->outputSchema,

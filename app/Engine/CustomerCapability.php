@@ -33,8 +33,16 @@ final class CustomerCapability
         Database::execute(
             'INSERT INTO `customer_capabilities` (`id`, `token_hash`, `purpose`, `tenant_id`, `subject_id`, `customer_id`, `created_at`, `expires_at`)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [Ulid::generate(), hash('sha256', $token), $purpose, $tenantId, $subjectId, $customerId,
-                $now->format('Y-m-d H:i:s'), $now->modify('+' . $lifetime . ' seconds')->format('Y-m-d H:i:s')]
+            [
+                Ulid::generate(),
+                hash('sha256', $token),
+                $purpose,
+                $tenantId,
+                $subjectId,
+                $customerId,
+                $now->format('Y-m-d H:i:s'),
+                $now->modify('+' . $lifetime . ' seconds')->format('Y-m-d H:i:s')
+            ]
         );
         return $token;
     }
@@ -117,8 +125,14 @@ final class CustomerCapability
 
     public static function refreshActor(\App\Agent\ActorContext $actor): \App\Agent\ActorContext
     {
-        $grant = Database::query('SELECT * FROM customer_capabilities WHERE id = ? AND revoked_at IS NULL AND expires_at > ?', [$actor->credentialId, gmdate('Y-m-d H:i:s')])[0] ?? null;
-        if ($grant === null || $grant['customer_id'] !== $actor->principalId || !in_array($grant['tenant_id'], $actor->businessIds, true)
+        $grant = Database::query(
+            'SELECT * FROM customer_capabilities WHERE id = ? AND revoked_at IS NULL AND expires_at > ?',
+            [$actor->credentialId, gmdate('Y-m-d H:i:s')]
+        )[0] ?? null;
+        // The actor must still match the grant exactly: same customer, business and subject.
+        if ($grant === null
+            || $grant['customer_id'] !== $actor->principalId
+            || !in_array($grant['tenant_id'], $actor->businessIds, true)
             || self::currentCustomer($grant['purpose'], $grant['tenant_id'], $grant['subject_id']) !== $grant['customer_id']
             || ($grant['purpose'] === self::MANAGE && $actor->bookingId !== $grant['subject_id'])
             || ($grant['purpose'] === self::PRIVACY && ($actor->bookingId !== null || $actor->customerId !== $grant['subject_id']))) {
@@ -130,18 +144,28 @@ final class CustomerCapability
     /** Internal connection resolver. Possession of this identifier is never proof. */
     public static function actorById(string $id): ?\App\Agent\ActorContext
     {
-        $grant = Database::query('SELECT * FROM customer_capabilities WHERE id = ? AND revoked_at IS NULL AND expires_at > ?', [$id, gmdate('Y-m-d H:i:s')])[0] ?? null;
-        if ($grant === null || self::currentCustomer($grant['purpose'], $grant['tenant_id'], $grant['subject_id']) !== $grant['customer_id']) return null;
+        $grant = Database::query(
+            'SELECT * FROM customer_capabilities WHERE id = ? AND revoked_at IS NULL AND expires_at > ?',
+            [$id, gmdate('Y-m-d H:i:s')]
+        )[0] ?? null;
+        if ($grant === null
+            || self::currentCustomer($grant['purpose'], $grant['tenant_id'], $grant['subject_id']) !== $grant['customer_id'])
+            return null;
         return self::actorForGrant($grant);
     }
 
     public static function verifiedContinuation(string $purpose, string $tenantId, string $subjectId): ?string
     {
         $return = $_SESSION['oauth_customer_return'] ?? null;
-        if (!is_array($return) || ($return['purpose'] ?? null) !== $purpose || ($return['tenant_id'] ?? null) !== $tenantId
-            || ($return['subject_id'] ?? null) !== $subjectId || ($return['expires_at'] ?? 0) <= time()
+        // Resume OAuth only for the exact subject just verified and a pending request that is still alive.
+        if (!is_array($return)
+            || ($return['purpose'] ?? null) !== $purpose
+            || ($return['tenant_id'] ?? null) !== $tenantId
+            || ($return['subject_id'] ?? null) !== $subjectId
+            || ($return['expires_at'] ?? 0) <= time()
             || !preg_match('/^[a-f0-9]{64}$/D', $return['handle'] ?? '')
-            || ($_SESSION['oauth_pending'][$return['handle']]['expires_at'] ?? 0) <= time()) return null;
+            || ($_SESSION['oauth_pending'][$return['handle']]['expires_at'] ?? 0) <= time())
+            return null;
         unset($_SESSION['oauth_customer_return']);
         return '/oauth/authorize?request=' . $return['handle'];
     }
@@ -150,22 +174,35 @@ final class CustomerCapability
     public static function followReplacement(\App\Agent\ActorContext $actor, string $originalId, string $replacementId): void
     {
         if ($actor->role !== 'verified_customer' || $actor->bookingId !== $originalId) return;
+        // A delegated connection acts through the capability it was granted from.
         $id = $actor->authMode === 'customer' ? $actor->credentialId : (Database::query(
             "SELECT customer_capability_id FROM agent_connections WHERE id = ? AND principal_type = 'customer' AND principal_id = ?",
-            [$actor->connectionId, $actor->principalId])[0]['customer_capability_id'] ?? null);
+            [$actor->connectionId, $actor->principalId]
+        )[0]['customer_capability_id'] ?? null);
         if ($id === null || self::currentCustomer(self::MANAGE, $actor->business(), $replacementId) !== $actor->customerId) {
             throw new \App\Agent\OperationException('unauthorized', 401);
         }
-        Database::execute('UPDATE customer_capabilities SET subject_id = ? WHERE id = ? AND purpose = ? AND tenant_id = ? AND subject_id = ? AND customer_id = ? AND revoked_at IS NULL',
-            [$replacementId, $id, self::MANAGE, $actor->business(), $originalId, $actor->customerId]);
+        Database::execute(
+            'UPDATE customer_capabilities SET subject_id = ? WHERE id = ? AND purpose = ? AND tenant_id = ? AND subject_id = ? AND customer_id = ? AND revoked_at IS NULL',
+            [$replacementId, $id, self::MANAGE, $actor->business(), $originalId, $actor->customerId]
+        );
     }
 
     private static function actorForGrant(array $grant): \App\Agent\ActorContext
     {
-        return new \App\Agent\ActorContext('customer', $grant['customer_id'], 'verified_customer', [$grant['tenant_id']],
-            $grant['purpose'] === self::MANAGE ? ['bookings:read', 'bookings:cancel', 'bookings:reschedule', 'availability:read'] : ['privacy:read', 'privacy:export', 'privacy:request'],
-            credentialId: $grant['id'], authMode: 'customer', bookingId: $grant['purpose'] === self::MANAGE ? $grant['subject_id'] : null,
-            customerId: $grant['customer_id']);
+        return new \App\Agent\ActorContext(
+            'customer',
+            $grant['customer_id'],
+            'verified_customer',
+            [$grant['tenant_id']],
+            $grant['purpose'] === self::MANAGE
+                ? ['bookings:read', 'bookings:cancel', 'bookings:reschedule', 'availability:read']
+                : ['privacy:read', 'privacy:export', 'privacy:request'],
+            credentialId: $grant['id'],
+            authMode: 'customer',
+            bookingId: $grant['purpose'] === self::MANAGE ? $grant['subject_id'] : null,
+            customerId: $grant['customer_id']
+        );
     }
 
     /** Exchange a secret for a bounded browser grant; every use still checks revocation. */
@@ -195,7 +232,8 @@ final class CustomerCapability
 
     public static function link(string $slug, string $purpose, string $subjectId, string $token = ''): string
     {
-        if (!in_array($purpose, [self::MANAGE, self::PRIVACY], true)) throw new \InvalidArgumentException('Unsupported customer capability purpose.');
+        if (!in_array($purpose, [self::MANAGE, self::PRIVACY], true))
+            throw new \InvalidArgumentException('Unsupported customer capability purpose.');
         $url = '/book/' . rawurlencode($slug) . '/' . ($purpose === self::MANAGE ? 'manage' : 'privacy') . '/' . rawurlencode($subjectId);
         return $token === '' ? $url : $url . '#access=' . rawurlencode($token);
     }
@@ -207,7 +245,9 @@ final class CustomerCapability
 
     public static function protect(Response $response): Response
     {
-        return $response->header('Cache-Control', 'no-store, private')->header('Referrer-Policy', 'no-referrer')
+        // Capability pages carry secrets in the URL fragment; keep them out of caches, referrers and indexes.
+        return $response->header('Cache-Control', 'no-store, private')
+            ->header('Referrer-Policy', 'no-referrer')
             ->header('X-Robots-Tag', 'noindex, nofollow');
     }
 
@@ -219,7 +259,10 @@ final class CustomerCapability
     public static function cleanup(): int
     {
         $now = gmdate('Y-m-d H:i:s');
-        $count = Database::execute('DELETE FROM `customer_capabilities` WHERE `expires_at` <= ? OR `revoked_at` IS NOT NULL', [$now]);
+        $count = Database::execute(
+            'DELETE FROM `customer_capabilities` WHERE `expires_at` <= ? OR `revoked_at` IS NOT NULL',
+            [$now]
+        );
         return $count + Database::execute('DELETE FROM `customer_recovery_limits` WHERE `expires_at` <= ?', [$now]);
     }
 }

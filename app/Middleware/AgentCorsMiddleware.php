@@ -13,10 +13,14 @@ final class AgentCorsMiddleware
 {
     public static function applies(string $path): bool
     {
-        return $path === '/mcp' || $path === '/mcp/public' || str_starts_with($path, '/mcp/public/')
+        return $path === '/mcp'
+            || $path === '/mcp/public'
+            || str_starts_with($path, '/mcp/public/')
             || str_starts_with($path, '/api/agent/v2/')
             || in_array($path, [
-                '/oauth/token', '/oauth/register', '/oauth/revoke',
+                '/oauth/token',
+                '/oauth/register',
+                '/oauth/revoke',
                 '/.well-known/oauth-authorization-server',
                 '/.well-known/oauth-protected-resource',
                 '/.well-known/oauth-protected-resource/mcp',
@@ -38,8 +42,15 @@ final class AgentCorsMiddleware
             }
             $headers = $policy->responseHeaders($origin);
             if ($request->method() === 'OPTIONS') {
-                $methods = str_starts_with($request->path(), '/mcp') ? ['POST'] : $request->getAttribute('_route_allowed_methods', []);
-                $headers = $policy->preflight($origin, $request->header('Access-Control-Request-Method') ?? '', $request->header('Access-Control-Request-Headers') ?? '', $methods);
+                $methods = str_starts_with($request->path(), '/mcp')
+                    ? ['POST']
+                    : $request->getAttribute('_route_allowed_methods', []);
+                $headers = $policy->preflight(
+                    $origin,
+                    $request->header('Access-Control-Request-Method') ?? '',
+                    $request->header('Access-Control-Request-Headers') ?? '',
+                    $methods
+                );
                 $response = Response::empty();
             } else {
                 $response = $next($request);
@@ -51,6 +62,7 @@ final class AgentCorsMiddleware
         foreach ($headers as $name => $value) {
             $response->header($name, $value);
         }
+        // Merge with any Vary the handler set, since responses differ per origin and preflight request.
         $vary = $response->getHeaders()['Vary'] ?? '';
         $varyFields = array_filter(array_map('trim', explode(',', $vary)));
         $varyFields[] = 'Origin';

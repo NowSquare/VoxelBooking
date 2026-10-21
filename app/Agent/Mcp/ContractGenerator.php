@@ -20,7 +20,10 @@ final class ContractGenerator
             if (!$definition->readOnly) {
                 $tool['inputSchema'] = $this->reviewed($definition) ? $this->commitSchema() : $definition->inputSchema;
                 $tool['inputSchema']['properties']['idempotency_key'] = $this->idempotencySchema();
-                $tool['inputSchema']['required'] = array_values(array_unique([...($tool['inputSchema']['required'] ?? []), 'idempotency_key']));
+                $tool['inputSchema']['required'] = array_values(array_unique([
+                    ...($tool['inputSchema']['required'] ?? []),
+                    'idempotency_key'
+                ]));
             }
             $tool['inputSchema'] = $this->schema($tool['inputSchema']);
             $tool['outputSchema'] = $this->schema($tool['outputSchema']);
@@ -32,7 +35,12 @@ final class ContractGenerator
                     'description' => 'Review this proposed action before committing it. ' . $definition->description,
                     'inputSchema' => $this->schema($definition->inputSchema),
                     'outputSchema' => $this->schema($this->previewSchema()),
-                    'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'idempotentHint' => true, 'openWorldHint' => false],
+                    'annotations' => [
+                        'readOnlyHint' => true,
+                        'destructiveHint' => false,
+                        'idempotentHint' => true,
+                        'openWorldHint' => false
+                    ],
                 ];
             }
         }
@@ -130,7 +138,14 @@ final class ContractGenerator
             'security' => $this->publicOperation($definition) ? [] : [['oauth' => $definition->requiredScopes], ['bearer' => []]],
             'parameters' => [],
             'responses' => [
-                '200' => ['description' => 'Operation result', 'content' => ['application/json' => ['schema' => $this->schema($preview ? $this->previewSchema() : $definition->resultSchema())]]],
+                '200' => [
+                    'description' => 'Operation result',
+                    'content' => [
+                        'application/json' => [
+                            'schema' => $this->schema($preview ? $this->previewSchema() : $definition->resultSchema())
+                        ]
+                    ]
+                ],
             ],
             'externalDocs' => ['url' => 'https://voxelbooking.com/docs/agent-api/' . Documentation::page($definition->documentationPage)],
             'x-actor-policy' => $definition->actorPolicy,
@@ -151,7 +166,12 @@ final class ContractGenerator
             if (!$transportSlug && !isset($input['properties'][$name])) {
                 throw new LogicException('HTTP path parameter is absent from the operation input schema.');
             }
-            $operation['parameters'][] = ['name' => $name, 'in' => 'path', 'required' => true, 'schema' => $transportSlug ? $this->slugSchema() : $this->schema($input['properties'][$name])];
+            $operation['parameters'][] = [
+                'name' => $name,
+                'in' => 'path',
+                'required' => true,
+                'schema' => $transportSlug ? $this->slugSchema() : $this->schema($input['properties'][$name])
+            ];
             unset($input['properties'][$name]);
         }
         $input['required'] = array_values(array_diff($input['required'] ?? [], $matches[1]));
@@ -160,14 +180,20 @@ final class ContractGenerator
         }
         if ($this->publicOperation($definition) && (!$definition->readOnly || str_contains($definition->httpPath, '/receipts/'))) {
             $operation['parameters'][] = [
-                'name' => 'X-Booking-Continuation', 'in' => 'header', 'required' => true,
+                'name' => 'X-Booking-Continuation',
+                'in' => 'header',
+                'required' => true,
                 'schema' => ['type' => 'string', 'minLength' => 1],
-                'description' => 'Obtain a continuation from POST /public/' . (str_contains($definition->httpPath, '/{slug}/') ? '{slug}/' : '') . 'session and reuse it for this task. It does not authorize access to existing customer records.',
+                'description' => 'Obtain a continuation from POST /public/'
+                    . (str_contains($definition->httpPath, '/{slug}/') ? '{slug}/' : '')
+                    . 'session and reuse it for this task. It does not authorize access to existing customer records.',
             ];
         }
         if (!$definition->readOnly && !$preview) {
             $operation['parameters'][] = [
-                'name' => 'Idempotency-Key', 'in' => 'header', 'required' => true,
+                'name' => 'Idempotency-Key',
+                'in' => 'header',
+                'required' => true,
                 'schema' => $this->idempotencySchema(),
                 'description' => 'Reuse this key for retries of the same reviewed operation.',
             ];
@@ -175,7 +201,10 @@ final class ContractGenerator
         if (!$preview && strtoupper($definition->httpMethod) === 'GET') {
             foreach ($input['properties'] ?? [] as $name => $property) {
                 $parameter = ['name' => $name, 'in' => 'query', 'required' => in_array($name, $input['required'], true)];
-                if (in_array($property['type'] ?? null, ['object', 'array'], true) || isset($property['oneOf']) || isset($property['anyOf'])) {
+                // Structured query values cannot be expressed as a plain schema, so they travel as JSON.
+                if (in_array($property['type'] ?? null, ['object', 'array'], true)
+                    || isset($property['oneOf'])
+                    || isset($property['anyOf'])) {
                     $parameter['content'] = ['application/json' => ['schema' => $this->schema($property)]];
                 } else {
                     $parameter['schema'] = $this->schema($property);
@@ -183,7 +212,10 @@ final class ContractGenerator
                 $operation['parameters'][] = $parameter;
             }
         } else {
-            $operation['requestBody'] = ['required' => $input['required'] !== [], 'content' => ['application/json' => ['schema' => $this->schema($input)]]];
+            $operation['requestBody'] = [
+                'required' => $input['required'] !== [],
+                'content' => ['application/json' => ['schema' => $this->schema($input)]]
+            ];
         }
         foreach ([400, 401, 403, 404, 409, 422, 429, 503] as $status) {
             $operation['responses'][(string) $status] = [
@@ -211,7 +243,9 @@ final class ContractGenerator
             'summary' => $business ? 'Start a public booking task' : 'Start a public application task',
             'description' => 'Create a temporary continuation for public booking previews, browser review and retries. This grants no access to existing bookings or customer data.',
             'security' => [],
-            'parameters' => $business ? [['name' => 'slug', 'in' => 'path', 'required' => true, 'schema' => $this->slugSchema()]] : [],
+            'parameters' => $business
+                ? [['name' => 'slug', 'in' => 'path', 'required' => true, 'schema' => $this->slugSchema()]]
+                : [],
             'responses' => [
                 '200' => ['description' => 'Temporary booking continuation', 'content' => ['application/json' => ['schema' => [
                     'type' => 'object',
@@ -219,7 +253,10 @@ final class ContractGenerator
                         'continuation' => ['type' => 'string'],
                         'expires_at' => ['type' => 'string', 'format' => 'date-time'],
                         'business_id' => ['type' => 'string'],
-                        'permissions' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => ['public:read', 'public:book']]],
+                        'permissions' => [
+                            'type' => 'array',
+                            'items' => ['type' => 'string', 'enum' => ['public:read', 'public:book']]
+                        ],
                     ],
                     'required' => ['continuation', 'expires_at', 'business_id', 'permissions'],
                     'additionalProperties' => false,
@@ -243,21 +280,31 @@ final class ContractGenerator
 
     private function commitSchema(): array
     {
-        return ['type' => 'object', 'additionalProperties' => false, 'properties' => [
-            'preview_handle' => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$'],
-        ], 'required' => ['preview_handle']];
+        return [
+            'type' => 'object',
+            'additionalProperties' => false,
+            'properties' => [
+                'preview_handle' => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$'],
+            ],
+            'required' => ['preview_handle']
+        ];
     }
 
     private function previewSchema(): array
     {
-        return ['type' => 'object', 'additionalProperties' => false, 'properties' => [
-            'preview_handle' => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$'],
-            'review' => ['type' => 'object', 'additionalProperties' => true],
-            'expires_at' => ['type' => 'string', 'format' => 'date-time'],
-            'review_url' => ['type' => 'string', 'format' => 'uri'],
-            'approval_required' => ['type' => 'boolean'],
-            'reserves_inventory' => ['type' => 'boolean', 'const' => false],
-        ], 'required' => ['preview_handle', 'review', 'expires_at', 'review_url', 'approval_required', 'reserves_inventory']];
+        return [
+            'type' => 'object',
+            'additionalProperties' => false,
+            'properties' => [
+                'preview_handle' => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$'],
+                'review' => ['type' => 'object', 'additionalProperties' => true],
+                'expires_at' => ['type' => 'string', 'format' => 'date-time'],
+                'review_url' => ['type' => 'string', 'format' => 'uri'],
+                'approval_required' => ['type' => 'boolean'],
+                'reserves_inventory' => ['type' => 'boolean', 'const' => false],
+            ],
+            'required' => ['preview_handle', 'review', 'expires_at', 'review_url', 'approval_required', 'reserves_inventory']
+        ];
     }
 
     private function schema(array $schema): array
@@ -265,10 +312,14 @@ final class ContractGenerator
         // PHP otherwise serializes empty schema maps as arrays, which violates JSON Schema.
         foreach (['properties', 'patternProperties', '$defs', 'definitions', 'dependentSchemas'] as $map) {
             if (array_key_exists($map, $schema)) {
-                $schema[$map] = $schema[$map] === [] ? new stdClass() : array_map(fn ($child) => is_array($child) ? $this->schema($child) : $child, $schema[$map]);
+                $schema[$map] = $schema[$map] === []
+                    ? new stdClass()
+                    : array_map(fn ($child) => is_array($child) ? $this->schema($child) : $child, $schema[$map]);
             }
         }
-        foreach (['items', 'contains', 'additionalProperties', 'unevaluatedProperties', 'propertyNames', 'not', 'if', 'then', 'else'] as $single) {
+        foreach (
+            ['items', 'contains', 'additionalProperties', 'unevaluatedProperties', 'propertyNames', 'not', 'if', 'then', 'else'] as $single
+        ) {
             if (isset($schema[$single]) && is_array($schema[$single])) {
                 $schema[$single] = $this->schema($schema[$single]);
             }

@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Agent\OAuth;
 
 /** Key creation is locked so concurrent PHP requests cannot read a partial key. */
@@ -25,7 +26,10 @@ final class KeyStore
                 if ($key === false || !openssl_pkey_export($key, $pem)) {
                     throw new \RuntimeException('OAuth key generation failed.');
                 }
-                $payload = json_encode(['private_key' => $pem, 'encryption_key' => bin2hex(random_bytes(32))], JSON_THROW_ON_ERROR);
+                $payload = json_encode(
+                    ['private_key' => $pem, 'encryption_key' => bin2hex(random_bytes(32))],
+                    JSON_THROW_ON_ERROR
+                );
                 $handle = fopen($path, 'x');
                 if ($handle === false) {
                     throw new \RuntimeException('OAuth key write failed.');
@@ -39,7 +43,9 @@ final class KeyStore
                 }
             }
             $keys = json_decode(file_get_contents($path) ?: '', true, flags: JSON_THROW_ON_ERROR);
-            if (!is_string($keys['private_key'] ?? null) || !is_string($keys['encryption_key'] ?? null) || strlen($keys['encryption_key']) < 64) {
+            if (!is_string($keys['private_key'] ?? null)
+                || !is_string($keys['encryption_key'] ?? null)
+                || strlen($keys['encryption_key']) < 64) {
                 throw new \RuntimeException('OAuth keys invalid.');
             }
             return $keys;

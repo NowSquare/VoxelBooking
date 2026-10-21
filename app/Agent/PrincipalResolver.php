@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Agent;
 
 use App\Engine\Database;
@@ -11,10 +12,20 @@ final class PrincipalResolver
 {
     public function __construct(private ?PDO $db = null) {}
 
-    public function resolve(string $type, string $id, array $businessIds, array $scopes, ?string $identityHash = null, ?string $connectionId = null, ?string $credentialId = null, string $authMode = 'bearer', ?string $customerCapabilityId = null): ActorContext
-    {
+    public function resolve(
+        string $type,
+        string $id,
+        array $businessIds,
+        array $scopes,
+        ?string $identityHash = null,
+        ?string $connectionId = null,
+        ?string $credentialId = null,
+        string $authMode = 'bearer',
+        ?string $customerCapabilityId = null
+    ): ActorContext {
         $db = $this->db ?? Database::pdo();
         if ($type === 'customer') {
+            // A customer principal is only as strong as the capability it was delegated from.
             $source = $customerCapabilityId === null ? null : \App\Engine\CustomerCapability::actorById($customerCapabilityId);
             if ($source === null || $source->principalId !== $id || array_diff($businessIds, $source->businessIds) !== []) {
                 throw new OperationException('unauthorized', 401, nextAction: 'verify_customer');
@@ -25,12 +36,22 @@ final class PrincipalResolver
             if (!is_string($email) || ($identityHash !== null && !hash_equals($identityHash, self::identityHash($email)))) {
                 throw new OperationException('identity_changed', 401, nextAction: 'verify_customer');
             }
-            return new ActorContext('customer', $id, 'verified_customer', $businessIds,
-                array_values(array_intersect($scopes, $source->scopes)), $connectionId, $credentialId, $authMode,
-                $source->bookingId, $source->customerId);
+            return new ActorContext(
+                'customer',
+                $id,
+                'verified_customer',
+                $businessIds,
+                array_values(array_intersect($scopes, $source->scopes)),
+                $connectionId,
+                $credentialId,
+                $authMode,
+                $source->bookingId,
+                $source->customerId
+            );
         }
         $table = match ($type) {
-            'operator' => 'operators', 'business_user' => 'business_users',
+            'operator' => 'operators',
+            'business_user' => 'business_users',
             default => throw new OperationException('unauthorized', 401),
         };
         $query = $db->prepare('SELECT * FROM ' . $table . ' WHERE id = ?');
@@ -50,16 +71,31 @@ final class PrincipalResolver
         }
         $ids = [];
         if ($businessIds !== []) {
-            $query = $db->prepare('SELECT id FROM tenants WHERE ' . ($type === 'operator' ? '' : "status != 'archived' AND ") . 'id IN (' . implode(',', array_fill(0, count($businessIds), '?')) . ')');
+            // Operators keep access to archived businesses; business users do not.
+            $query = $db->prepare(
+                'SELECT id FROM tenants WHERE '
+                    . ($type === 'operator' ? '' : "status != 'archived' AND ")
+                    . 'id IN (' . implode(',', array_fill(0, count($businessIds), '?')) . ')'
+            );
             $query->execute($businessIds);
             $ids = $query->fetchAll(PDO::FETCH_COLUMN);
             sort($ids);
         }
         $role = $type === 'operator' ? 'operator' : match ($principal['role']) {
-            'owner' => 'business_owner', 'manager' => 'business_manager',
+            'owner' => 'business_owner',
+            'manager' => 'business_manager',
             default => throw new OperationException('unauthorized', 401),
         };
-        return new ActorContext($type, $id, $role, $ids, array_values(array_unique($scopes)), $connectionId, $credentialId, $authMode);
+        return new ActorContext(
+            $type,
+            $id,
+            $role,
+            $ids,
+            array_values(array_unique($scopes)),
+            $connectionId,
+            $credentialId,
+            $authMode
+        );
     }
 
     public static function identityHash(string $email): string
