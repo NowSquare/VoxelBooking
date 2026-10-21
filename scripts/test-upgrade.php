@@ -70,7 +70,9 @@ $check(in_array('customer_email_snapshot',$columns,true) && in_array('price_curr
 
 // MySQL DDL is not transactional. Retry a partially applied migration safely.
 $recovery=$run.'/upgrade-recovery';mkdir($recovery,0700);
-$file=$recovery.'/042_recovery_probe.php';
+// One past the newest real migration, so the probe always runs next.
+$probeVersion=$latest+1;
+$file=$recovery.'/'.sprintf('%03d',$probeVersion).'_recovery_probe.php';
 file_put_contents($file,"<?php return ".var_export(["CREATE TABLE IF NOT EXISTS upgrade_recovery_probe (id INT PRIMARY KEY, value VARCHAR(40))","INSERT INTO deliberately_missing_upgrade_table VALUES (1)"],true).';');
 $failed=false;
 try{(new Migrator($recovery))->migrate();}catch(\PDOException){$failed=true;}
@@ -78,7 +80,7 @@ $check($failed && $migrator->getCurrentVersion()===$current,'Failed migration mu
 $check(Database::tableExists('upgrade_recovery_probe'),'Rehearsal must exercise committed partial DDL.');
 file_put_contents($file,"<?php return ".var_export(["CREATE TABLE IF NOT EXISTS upgrade_recovery_probe (id INT PRIMARY KEY, value VARCHAR(40))","INSERT INTO upgrade_recovery_probe VALUES (1,'recovered') ON DUPLICATE KEY UPDATE value='recovered'"],true).';');
 (new Migrator($recovery))->migrate();
-$check($migrator->getCurrentVersion()===42 && Database::query('SELECT value FROM upgrade_recovery_probe')[0]['value']==='recovered','Corrected migration did not resume successfully.');
+$check($migrator->getCurrentVersion()===$probeVersion && Database::query('SELECT value FROM upgrade_recovery_probe')[0]['value']==='recovered','Corrected migration did not resume successfully.');
 
 // Restore the actual v28 schema/data backup, then prove it can upgrade again.
 Database::execute('SET FOREIGN_KEY_CHECKS=0');
