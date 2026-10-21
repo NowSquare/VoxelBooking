@@ -24,6 +24,10 @@ jobs:
       - run: composer install --no-interaction --prefer-dist
       - name: Require a reviewed parity decision for every human action
         run: php scripts/check-agent-parity.php
+      - name: Require every user-facing string to go through translations
+        run: python3 scripts/audit-i18n.py --include-api
+      - name: Require canonical design tokens in every stylesheet
+        run: python3 scripts/audit-css-tokens.py
       - run: npm ci
       - run: npm test
       - run: npm run build
