@@ -32,7 +32,7 @@ include __DIR__.'/../partials/page-header.php';
     <?php foreach($connections as $connection): ?>
         <article class="vb-form-group space-y-2">
             <div class="vb-info-row"><h4 class="vb-card-title"><?= e($connection['name']) ?></h4><span class="vb-badge"><?= e(__('agent.connections.states.'.$connection['state'])) ?></span></div>
-            <p class="vb-card-desc"><?= e(__('agent.connections.expires',['time'=>$connection['expires_at'].' UTC'])) ?></p>
+            <p class="vb-card-desc"><?php $expiresAt=new DateTimeImmutable($connection['expires_at'],new DateTimeZone('UTC')); ?><?= e(__('agent.connections.expires',['time'=>\App\Engine\Locale::datetime($expiresAt).' UTC'])) ?></p>
             <details><summary class="vb-label"><?= e(__('agent.connections.access_details')) ?></summary>
                 <p><?= e($connection['purpose']) ?></p>
                 <?php $grantedBusinesses=array_filter($businesses,static fn($business)=>in_array($business['id'],$connection['business_ids'],true)); ?>

@@ -57,7 +57,8 @@ include __DIR__.'/../partials/page-header.php';
             echo '</details>';
         }
         $reviewTimezone=$business['timezone']??'UTC';
-        $expiry=(new DateTimeImmutable($row['expires_at'],new DateTimeZone('UTC')))->setTimezone(new DateTimeZone($reviewTimezone))->format('H:i T');
+        $expiry=(new DateTimeImmutable($row['expires_at'],new DateTimeZone('UTC')))->setTimezone(new DateTimeZone($reviewTimezone));
+        $expiry=\App\Engine\Locale::time($expiry).' '.$expiry->format('T');
         ?>
         <p class="vb-card-desc"><?= e(__('agent.review.expiry',['time'=>$expiry])) ?></p>
         <form method="post" action="<?= $public?'/agent-reviews/':'/admin/agent-reviews/' ?><?= e($id) ?>">

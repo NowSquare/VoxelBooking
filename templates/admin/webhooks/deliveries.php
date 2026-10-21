@@ -4,7 +4,7 @@
     <?php foreach($deliveries['items'] as $delivery): ?>
     <article class="vb-form-group">
         <h3 class="vb-card-title"><?= e(__('agent-webhooks.event_labels.'.$delivery['event_type'])) ?></h3>
-        <p class="vb-card-desc"><?= e($delivery['created_at']) ?> UTC · <?= e(__('agent-webhooks.states.'.$delivery['status'])) ?> · <?= e(__('agent-webhooks.attempts')) ?> <?= (int)$delivery['attempts'] ?></p>
+        <p class="vb-card-desc"><?php $createdAt=new DateTimeImmutable($delivery['created_at'],new DateTimeZone('UTC')); ?><time datetime="<?= e($createdAt->format('Y-m-d\\TH:i:s\\Z')) ?>"><?= e(\App\Engine\Locale::datetime($createdAt)) ?> UTC</time> · <?= e(__('agent-webhooks.states.'.$delivery['status'])) ?> · <?= e(__('agent-webhooks.attempts')) ?> <?= (int)$delivery['attempts'] ?></p>
         <code><?= e($delivery['id']) ?></code>
         <?php if($delivery['status']==='failed'): ?>
         <form method="post" action="/admin/tenants/<?= e($tenantId) ?>/webhook-deliveries/<?= e($delivery['id']) ?>/retry">

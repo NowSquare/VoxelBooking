@@ -14,7 +14,7 @@ ob_start();
     <form method="post" action="/oauth/authorize" class="vb-card-body">
         <input type="hidden" name="_csrf_token" value="<?= e($csrfToken) ?>">
         <input type="hidden" name="request" value="<?= e($handle) ?>">
-        <?php if ($formError): ?><p class="vb-alert vb-alert-danger" role="alert"><?= e(__('oauth.errors.' . $formError)) ?></p><?php endif; ?>
+        <?php if ($formError): ?><p class="vb-alert vb-alert-error" role="alert"><?= e(__('oauth.errors.' . $formError)) ?></p><?php endif; ?>
         <div class="oauth-client-identity">
             <div class="vb-info-row">
                 <span class="vb-info-label"><?= e(__('oauth.returns_to')) ?></span>

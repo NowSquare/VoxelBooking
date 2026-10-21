@@ -1086,6 +1086,12 @@
         margin-top: 2px; accent-color: var(--vb-accent);
         cursor: pointer;
     }
+    /* A native checkbox ignores borders, so the error ring is an outline. */
+    .vb-checkbox.is-invalid {
+        outline: 2px solid var(--vb-error);
+        outline-offset: 2px;
+        accent-color: var(--vb-error);
+    }
     .vb-password-field {
         display: flex; align-items: center; gap: 0.375rem;
     }

@@ -5,6 +5,7 @@ use App\Engine\View;
 <!DOCTYPE html>
 <html lang="<?= Locale::getLocale() ?>" dir="<?= Locale::direction() ?>">
 <head>
+    <script src="/js/theme.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
