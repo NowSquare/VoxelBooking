@@ -22,6 +22,8 @@ final class BookingOperationContractCoverageTest extends TestCase
     protected function setUp():void
     {
         \Tests\Support\TestEnvironment::boot();TestFixtures::provision();
+        // The HTTP side always loads translations; in-process calls must match it whatever earlier tests reset.
+        \App\Engine\Locale::init(dirname(__DIR__, 2));
         $this->resetTransportBudgets();
         Auth::startSession();$this->session=$_SESSION;$_SESSION=['auth_type'=>'operator','auth_id'=>TestFixtures::OPERATOR_ID];
         $this->registry=Operations::registry();$this->executor=new Executor($this->registry);

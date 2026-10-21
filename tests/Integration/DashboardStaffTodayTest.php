@@ -40,6 +40,9 @@ final class DashboardStaffTodayTest extends TestCase
     private const STAFF_OFF_NAME      = 'DashOff Bob';
     private const STAFF_RIVAL_NAME    = 'DashRival Carol';
 
+    /** @var list<array<string, mixed>> the shared fixture business's own schedule, restored after this class */
+    private static array $fixtureAvailability = [];
+
     public static function setUpBeforeClass(): void
     {
         $baseUrl = rtrim($_ENV['APP_TEST_URL'] ?? 'https://voxelbooking-app.test', '/');
@@ -66,6 +69,35 @@ final class DashboardStaffTodayTest extends TestCase
         }
 
         self::seedFixtures();
+    }
+
+    /**
+     * The timeslot business is the shared fixture, and TestFixtures::provision()
+     * resets it only once per process. Leave it exactly as this class found it,
+     * or later classes inherit two staff members who never work their slots.
+     */
+    public static function tearDownAfterClass(): void
+    {
+        if (!self::$dbReady) {
+            return;
+        }
+
+        // Deleting the staff removes their availability rows through the foreign key.
+        Database::execute("DELETE FROM `staff` WHERE `id` IN (?, ?, ?)", [
+            self::STAFF_WORKING_ID, self::STAFF_OFF_ID, self::STAFF_RIVAL_ID,
+        ]);
+        Database::execute("DELETE FROM `tenants` WHERE `id` IN (?, ?)", [
+            self::TENANT_RESOURCE_ID, self::TENANT_NONSTAFFING,
+        ]);
+        Database::execute("DELETE FROM `availability` WHERE `tenant_id` = ?", [self::TENANT_TIMESLOT_ID]);
+        foreach (self::$fixtureAvailability as $row) {
+            $columns = array_keys($row);
+            Database::execute(
+                'INSERT INTO `availability` (`' . implode('`, `', $columns) . '`) VALUES ('
+                    . implode(', ', array_fill(0, count($columns), '?')) . ')',
+                array_values($row)
+            );
+        }
     }
 
     protected function setUp(): void
@@ -183,6 +215,11 @@ final class DashboardStaffTodayTest extends TestCase
         $todayDow = ((int) date('N')) - 1;
         // A day NOT today
         $otherDow = ($todayDow + 3) % 7;
+
+        self::$fixtureAvailability = Database::query(
+            "SELECT * FROM `availability` WHERE `tenant_id` = ? AND (`staff_id` IS NULL OR `staff_id` NOT IN (?, ?, ?))",
+            [self::TENANT_TIMESLOT_ID, self::STAFF_WORKING_ID, self::STAFF_OFF_ID, self::STAFF_RIVAL_ID]
+        );
 
         // ── Clean up test rows ──
         Database::execute("DELETE FROM `availability` WHERE `tenant_id` IN (?, ?)", [

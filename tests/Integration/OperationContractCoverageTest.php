@@ -30,6 +30,8 @@ final class OperationContractCoverageTest extends TestCase
     protected function setUp(): void
     {
         TestFixtures::provision();
+        // The HTTP side always loads translations; in-process calls must match it whatever earlier tests reset.
+        \App\Engine\Locale::init(dirname(__DIR__, 2));
         \App\Engine\Auth::startSession();
         $this->session = $_SESSION;
         $_SESSION = ['auth_type'=>'operator', 'auth_id'=>TestFixtures::OPERATOR_ID];
