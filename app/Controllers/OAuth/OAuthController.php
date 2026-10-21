@@ -90,11 +90,30 @@ final class OAuthController
                 'user' => $user, 'version' => Version::get(), 'pageTitle' => __('oauth.title'),
                 'csrfToken' => CsrfMiddleware::generateToken(), 'handle' => $handle,
                 'clientName' => $client->getName(), 'clientId' => $client->getIdentifier(),
+                'clientNameVerified' => $client->hasVerifiedName(),
+                'redirectHost' => self::redirectHost($query['redirect_uri'] ?? ((array) $client->getRedirectUri())[0] ?? ''),
                 'scopes' => $scopes, 'operationTitles' => array_values(array_unique($titles)), 'businesses' => $businesses,
                 'isCustomer' => $customer !== null, 'customerPurpose' => $selector[0] ?? null, 'expiresAt' => $expiresAt,
                 'formError' => $pending[$handle]['error'] ?? null,
             ])->header('Cache-Control', 'no-store')->header('Referrer-Policy', 'no-referrer');
         });
+    }
+
+    /**
+     * Where the browser returns after consent, the one detail a client cannot
+     * disguise. Loopback hosts belong to an app on the person's own computer.
+     *
+     * @return array{host: string, local: bool}
+     */
+    private static function redirectHost(string $redirectUri): array
+    {
+        $host = strtolower((string) parse_url($redirectUri, PHP_URL_HOST));
+        $host = trim($host, '[]');
+
+        return [
+            'host' => $host,
+            'local' => in_array($host, ['127.0.0.1', '::1', 'localhost'], true),
+        ];
     }
 
     public function approve(Request $request): Response

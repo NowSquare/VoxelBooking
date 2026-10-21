@@ -21,6 +21,9 @@
         .oauth-review details summary { cursor: pointer; padding-block: var(--space-3); display: list-item; }
         .oauth-review ul { padding-inline-start: var(--space-6); margin-block: var(--space-3); }
         .oauth-review .vb-form-actions { flex-wrap: wrap; }
+        .oauth-client-identity { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border: 1px solid var(--vb-border-default); border-radius: var(--vb-radius-md); background: var(--vb-bg-well); }
+        .oauth-client-identity .vb-info-row { padding-block: 0; border-bottom: none; }
+        .oauth-redirect-host strong { font-size: var(--vb-text-base); overflow-wrap: anywhere; }
         .oauth-review .vb-btn { min-height: 44px; }
         .oauth-review .vb-info-row { flex-wrap: wrap; gap: var(--space-2); }
         .oauth-review .vb-info-value { overflow-wrap: anywhere; }

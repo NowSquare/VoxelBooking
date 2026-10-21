@@ -113,6 +113,41 @@ final class OAuthHttpTest extends TestCase
         self::assertStringContainsString('resource_metadata=', $denied['headers']['www-authenticate'] ?? '');
     }
 
+    /**
+     * A registering client names itself, so a client called "Claude" may be
+     * anyone. The consent screen marks the name as unverified and shows the
+     * host the browser returns to, which the client cannot disguise.
+     */
+    public function testConsentShowsTheRedirectHostOfASelfNamedClient(): void
+    {
+        $registration = $this->request('/oauth/register', 'POST', json_encode([
+            'client_name' => 'Claude', 'redirect_uris' => ['https://attacker.example/callback'],
+            'token_endpoint_auth_method' => 'none',
+        ]), ['Content-Type: application/json']);
+        self::assertSame(201, $registration['status'], $registration['body']);
+        $client = json_decode($registration['body'], true)['client_id'];
+        $start = $this->request('/oauth/authorize?' . http_build_query([
+            'response_type' => 'code', 'client_id' => $client, 'redirect_uri' => 'https://attacker.example/callback',
+            'scope' => 'services:read', 'resource' => $this->base . '/mcp', 'state' => 'impostor',
+            'code_challenge_method' => 'S256',
+            'code_challenge' => rtrim(strtr(base64_encode(hash('sha256', str_repeat('y', 64), true)), '+/', '-_'), '='),
+        ]));
+        self::assertSame('/admin/login', $start['headers']['location'] ?? '', $start['body']);
+        $login = $this->request('/admin/login');
+        $signedIn = $this->request('/admin/login', 'POST', http_build_query([
+            '_csrf_token' => $this->hidden($login['body'], '_csrf_token'),
+            'email' => TestFixtures::BUSINESS_EMAIL, 'password' => TestFixtures::BUSINESS_PASSWORD,
+        ]), ['Content-Type: application/x-www-form-urlencoded']);
+
+        $consent = $this->request($signedIn['headers']['location'] ?? '');
+
+        self::assertSame(200, $consent['status'], $consent['body']);
+        $oauth = require dirname(__DIR__, 2) . '/lang/en/oauth.php';
+        self::assertMatchesRegularExpression('~data-redirect-host[^>]*>\s*attacker\.example\s*<~', $consent['body'], 'The return host is shown on its own.');
+        self::assertStringContainsString(e($oauth['unverified_name']), $consent['body']);
+        self::assertStringContainsString(e($client), $consent['body'], 'The client ID is visible without opening details.');
+    }
+
     public function testDuplicateParametersAndInvalidPkceFailBeforeConsent(): void
     {
         $response = $this->request('/oauth/token', 'POST', 'client_id=a&client_id=b', ['Content-Type: application/x-www-form-urlencoded']);

@@ -15,6 +15,25 @@ ob_start();
         <input type="hidden" name="_csrf_token" value="<?= e($csrfToken) ?>">
         <input type="hidden" name="request" value="<?= e($handle) ?>">
         <?php if ($formError): ?><p class="vb-alert vb-alert-danger" role="alert"><?= e(__('oauth.errors.' . $formError)) ?></p><?php endif; ?>
+        <div class="oauth-client-identity">
+            <div class="vb-info-row">
+                <span class="vb-info-label"><?= e(__('oauth.returns_to')) ?></span>
+                <span class="vb-info-value oauth-redirect-host">
+                    <?php if ($redirectHost['local']): ?>
+                        <?= e(__('oauth.returns_to_local', ['host' => $redirectHost['host']])) ?>
+                    <?php else: ?>
+                        <strong data-redirect-host><?= e($redirectHost['host']) ?></strong>
+                    <?php endif; ?>
+                </span>
+            </div>
+            <p class="vb-hint<?= $clientNameVerified ? '' : ' vb-hint-warning' ?>">
+                <?= e(__($clientNameVerified ? 'oauth.verified_name' : 'oauth.unverified_name')) ?>
+            </p>
+            <div class="vb-info-row">
+                <span class="vb-info-label"><?= e(__('oauth.client_id')) ?></span>
+                <code class="vb-info-value oauth-client-id"><?= e($clientId) ?></code>
+            </div>
+        </div>
         <div class="vb-info-row">
             <span class="vb-info-label"><?= e(__('oauth.account')) ?></span>
             <span class="vb-info-value"><?= e($user['name'] ?? '') ?> · <?= e($user['email'] ?? '') ?></span>
@@ -58,10 +77,6 @@ ob_start();
             </details>
         </div>
         <p class="vb-card-desc"><?= e(__($isCustomer ? 'oauth.customer_expiry' : 'oauth.expiry', ['expiry' => $expiresAt])) ?></p>
-        <details class="vb-form-group">
-            <summary class="vb-label"><?= e(__('oauth.client_details')) ?></summary>
-            <code><?= e($clientId) ?></code>
-        </details>
         <div class="vb-form-actions">
             <button type="submit" name="decision" value="approve" class="vb-btn vb-btn-primary"><?= e(__('oauth.connect')) ?></button>
             <button type="submit" name="decision" value="deny" class="vb-btn vb-btn-secondary"><?= e(__('oauth.cancel')) ?></button>

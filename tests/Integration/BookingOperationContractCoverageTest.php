@@ -75,7 +75,7 @@ final class BookingOperationContractCoverageTest extends TestCase
             $preview=$this->executor->preview($actor,$name,$input);
             $id=basename(parse_url($preview['review_url'],PHP_URL_PATH));$store=new PreviewStore();
             if($actor->isStaff())$store->approve($this->reviewer,$id);
-            else{$store->exchangeBrowserHandle($id,$preview['preview_handle']);$store->approveCustomerBrowser($id,true);}
+            else{$store->exchangeBrowserHandle($id,\Tests\Support\ReviewLink::secret($preview));$store->approveCustomerBrowser($id,true);}
             $input=['preview_handle'=>$preview['preview_handle']];
         }
         $key=$definition->readOnly?null:'contract-'.Ulid::generate();
@@ -219,10 +219,11 @@ final class BookingOperationContractCoverageTest extends TestCase
     {
         $f=$this->fixtures('timeslot');$path='/api/agent/v2/public/'.$f['slug'];
         $session=$this->request($path.'/session',body:[]);
-        $input=['service_id'=>$f['offering'],'date'=>$f['date'],'time'=>'11:00','customer'=>['name'=>'Guide example','email'=>'guide@example.test'],'consent_given'=>true];
+        $input=['service_id'=>$f['offering'],'date'=>$f['date'],'time'=>'11:00','customer'=>['name'=>'Guide example','email'=>'guide@example.test']];
+        // Consent comes from the review page, so the published request carries none.
         $preview=$this->request($path.'/bookings/preview',body:$input,continuation:$session['continuation']);
         $id=basename(parse_url($preview['review_url'],PHP_URL_PATH));$store=new PreviewStore();
-        $store->exchangeBrowserHandle($id,$preview['preview_handle']);$store->approveCustomerBrowser($id,true);
+        $store->exchangeBrowserHandle($id,\Tests\Support\ReviewLink::secret($preview));$store->approveCustomerBrowser($id,true);
         $commit=['preview_handle'=>$preview['preview_handle']];$key='guide-'.Ulid::generate();
         $result=$this->request($path.'/bookings',body:$commit,continuation:$session['continuation'],idempotencyKey:$key);
         (new SchemaValidator())->validate($this->registry->get('public_booking_create')->resultSchema(),$result,true);
@@ -317,7 +318,7 @@ final class BookingOperationContractCoverageTest extends TestCase
         $input=['business_id'=>$business]+$f['create']+['customer'=>['name'=>'Delivery guest','email'=>'delivery@example.test']];
         $preview=$this->executor->preview($actor,'public_booking_create',$input);
         $reviewId=basename(parse_url($preview['review_url'],PHP_URL_PATH));$store=new PreviewStore();
-        $store->exchangeBrowserHandle($reviewId,$preview['preview_handle']);$store->approveCustomerBrowser($reviewId,true);
+        $store->exchangeBrowserHandle($reviewId,\Tests\Support\ReviewLink::secret($preview));$store->approveCustomerBrowser($reviewId,true);
         $commit=['preview_handle'=>$preview['preview_handle']];$key='delivery-'.Ulid::generate();
         $created=$this->executor->execute($actor,'public_booking_create',$commit,$key);$bookingId=$created['data']['id'];$receiptId=$created['receipt_id'];
         self::assertSame('queued',$created['notification_state']);
@@ -370,7 +371,7 @@ final class BookingOperationContractCoverageTest extends TestCase
         $input=$base+['target'=>$f['target']];
         $preview=$this->executor->preview($customer['actor'],'customer_booking_reschedule',$input);
         $id=basename(parse_url($preview['review_url'],PHP_URL_PATH));$store=new PreviewStore();
-        $store->exchangeBrowserHandle($id,$preview['preview_handle']);$store->approveCustomerBrowser($id,true);
+        $store->exchangeBrowserHandle($id,\Tests\Support\ReviewLink::secret($preview));$store->approveCustomerBrowser($id,true);
         $counts=[];
         foreach(['bookings','delivery_outbox','agent_operation_receipts'] as $table)$counts[$table]=(int)Database::query('SELECT COUNT(*) AS n FROM '.$table.' WHERE tenant_id=?',[$business])[0]['n'];
         Database::execute('UPDATE tenants SET '.$field.'=48 WHERE id=?',[$business]);

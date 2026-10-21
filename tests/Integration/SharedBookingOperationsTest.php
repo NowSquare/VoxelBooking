@@ -164,7 +164,7 @@ final class SharedBookingOperationsTest extends TestCase
         $executor=new \App\Agent\Executor($registry);
         $preview=$executor->preview($actor,'customer_booking_reschedule',['business_id'=>$tenant,'target'=>['date'=>$date,'slot_id'=>'native-move-slot']]);
         // Simulate the already-verified browser approval. Production tools cannot set this field.
-        Database::execute("UPDATE agent_previews SET approved_at=UTC_TIMESTAMP(),approval_source='trusted_browser' WHERE handle_hash=?",[hash('sha256',$preview['preview_handle'])]);
+        Database::execute("UPDATE agent_previews SET approved_at=UTC_TIMESTAMP(),approval_source='customer_browser' WHERE handle_hash=?",[hash('sha256',$preview['preview_handle'])]);
         $args=['preview_handle'=>$preview['preview_handle']];$first=$executor->execute($actor,'customer_booking_reschedule',$args,'native-move-retry-001');
         $again=$executor->execute($actor,'customer_booking_reschedule',$args,'native-move-retry-001');
         self::assertSame($first,$again);self::assertNotNull($first['receipt_id']);

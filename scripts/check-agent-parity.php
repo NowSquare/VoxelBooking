@@ -9,10 +9,12 @@ declare(strict_types=1);
  *   php scripts/check-agent-parity.php
  *   php scripts/check-agent-parity.php --render
  *   php scripts/check-agent-parity.php --reviewed="POST /api/{slug}/bookings"
+ *   php scripts/check-agent-parity.php --reviewed-operation=booking_create
  *
  * `--reviewed` records that a person re-reviewed a changed human action and
- * its parity decision still holds. Only the named actions are updated, so a
- * changed handler can never pass the gate without someone naming it.
+ * its parity decision still holds; `--reviewed-operation` does the same for
+ * a changed operation contract. Only the named entries are updated, so a
+ * change can never pass the gate without someone naming it.
  */
 
 require dirname(__DIR__) . '/vendor/autoload.php';
@@ -24,12 +26,24 @@ $path = dirname(__DIR__) . '/tests/Fixtures/agent-parity.json';
 $ledger = json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
 
 $reviewed = [];
+$reviewedOperations = [];
 foreach ($argv as $argument) {
     if (str_starts_with($argument, '--reviewed=')) {
         $reviewed[] = substr($argument, strlen('--reviewed='));
+    } elseif (str_starts_with($argument, '--reviewed-operation=')) {
+        $reviewedOperations[] = substr($argument, strlen('--reviewed-operation='));
     }
 }
-if ($reviewed !== []) {
+foreach ($reviewedOperations as $operationId) {
+    $operation = \App\Agent\Operations::registry()->get($operationId);
+    if ($operation === null || !isset($ledger['operations'][$operationId])) {
+        fwrite(STDERR, "Unknown operation: {$operationId}\n");
+        exit(1);
+    }
+    $ledger['operations'][$operationId]['contract_hash'] = ParityLedger::contractHash($operation);
+    fwrite(STDOUT, "Recorded contract review: {$operationId}\n");
+}
+if ($reviewed !== [] || $reviewedOperations !== []) {
     $routes = [];
     foreach (ParityLedger::humanRoutes(ParityLedger::routes()) as $route) {
         $routes[ParityLedger::key($route)] = $route;

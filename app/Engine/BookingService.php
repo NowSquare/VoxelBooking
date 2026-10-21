@@ -50,11 +50,12 @@ final class BookingService
 
         // Consent enforcement: if tenant requires consent, it must be given
         // Exceptions:
-        //   1. Admin-created bookings bypass consent (consent is a customer action).
+        //   1. Staff-created bookings bypass consent (consent is a customer action),
+        //      whether staff work in the admin or through a connection.
         //   2. Internal reschedule carry-forward bypasses when original had no consent
-        //      (avoids manufacturing false consent evidence — §23-Legal-Logging).
+        //      (avoids manufacturing false consent evidence, §23-Legal-Logging).
         $requiresConsent = (int) ($tenant['requires_consent'] ?? 1) === 1;
-        $isAdminSource = ($bookingData['source'] ?? 'web') === 'admin';
+        $isAdminSource = $actor?->isStaff() ?? (($bookingData['source'] ?? 'web') === 'admin');
         $skipConsentEnforcement = !empty($bookingData['_skip_consent_enforcement']);
 
         if ($requiresConsent && !$consentGiven && !$isAdminSource && !$skipConsentEnforcement) {

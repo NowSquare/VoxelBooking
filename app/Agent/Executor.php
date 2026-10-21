@@ -11,6 +11,9 @@ use App\Engine\Ulid;
 
 final class Executor
 {
+    /** Set only by PreviewStore when a person approves a review, never accepted from callers. */
+    private const REVIEW_ONLY_FIELDS = ['consent_given' => true];
+
     public function __construct(private OperationRegistry $registry) {}
 
     public function execute(ActorContext $actor, string $operationId, array $arguments, ?string $idempotencyKey = null): array
@@ -36,7 +39,11 @@ final class Executor
             }
             $arguments = (new PreviewStore())->resolve($actor, $operationId, $previewHandle)['arguments'];
         }
-        [$arguments, $businessId] = $this->authorizeInput($actor, $definition, $arguments);
+        // Fields a person adds on the review page are not part of the caller's
+        // contract, so they skip input validation and only ever come from a review.
+        $reviewed = array_intersect_key($arguments, self::REVIEW_ONLY_FIELDS);
+        [$arguments, $businessId] = $this->authorizeInput($actor, $definition, array_diff_key($arguments, self::REVIEW_ONLY_FIELDS));
+        $arguments += $reviewed;
         if ($definition->readOnly) {
             return $this->result($definition, ($definition->handler)($actor, $arguments), $businessId, null);
         }

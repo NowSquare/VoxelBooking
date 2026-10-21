@@ -534,8 +534,7 @@ final class BookingOperations
                 ),
                 'notes' => ['type' => 'string', 'maxLength' => 10000],
                 'customer_timezone' => ['type' => 'string', 'maxLength' => 100],
-                'custom_fields' => ['type' => ['object', 'null']],
-                'consent_given' => ['type' => 'boolean']
+                'custom_fields' => ['type' => ['object', 'null']]
             ],
             ['customer']
         );

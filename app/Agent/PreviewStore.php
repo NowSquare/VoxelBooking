@@ -7,8 +7,25 @@ namespace App\Agent;
 use App\Engine\Database;
 use App\Engine\Ulid;
 
+/**
+ * Reviewed proposals: the payload an agent may commit once a person approves it.
+ *
+ * Two secrets protect a proposal. The agent keeps the commit handle. A
+ * customer's review link carries a separate review secret in its fragment,
+ * which the browser exchanges for a session-bound review. The link cannot
+ * commit, and the handle cannot open the review.
+ *
+ * Approval sources say who approved:
+ * - `trusted_browser`: a signed-in staff member in the admin.
+ * - `customer_browser`: whoever opened the customer's review link. The agent
+ *   relays that link, so the server cannot prove a person rather than the
+ *   agent opened it; the approval carries the same weight as the booking form.
+ */
 final class PreviewStore
 {
+    public const STAFF_APPROVAL = 'trusted_browser';
+    public const CUSTOMER_APPROVAL = 'customer_browser';
+
     public function create(
         ActorContext $actor,
         OperationDefinition $definition,
@@ -18,10 +35,13 @@ final class PreviewStore
     ): array {
         $id = Ulid::generate();
         $handle = bin2hex(random_bytes(32));
+        // Staff review in the signed-in admin and need no link secret.
+        $reviewSecret = $actor->isStaff() ? null : bin2hex(random_bytes(32));
         $cipher = new PayloadCipher();
-        Database::execute('INSERT INTO agent_previews (id, handle_hash, principal_type, principal_id, connection_id, credential_id, tenant_id, operation_id, request_hash, payload_cipher, review_cipher, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+        Database::execute('INSERT INTO agent_previews (id, handle_hash, review_hash, principal_type, principal_id, connection_id, credential_id, tenant_id, operation_id, request_hash, payload_cipher, review_cipher, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
             $id,
             hash('sha256', $handle),
+            $reviewSecret === null ? null : hash('sha256', $reviewSecret),
             $actor->principalType,
             $actor->principalId,
             $actor->connectionId,
@@ -36,8 +56,8 @@ final class PreviewStore
         ]);
         $url = Endpoints::baseUrl() . ($actor->isStaff() ? '/admin/agent-reviews/' : '/agent-reviews/') . $id;
         // The fragment never reaches server logs; the browser exchanges it for a session-bound review.
-        if (!$actor->isStaff()) {
-            $url .= '#review=' . $handle;
+        if ($reviewSecret !== null) {
+            $url .= '#review=' . $reviewSecret;
         }
         return [
             'preview_handle' => $handle,
@@ -60,7 +80,7 @@ final class PreviewStore
             $row = $this->forReviewer($reviewer, $id);
             Database::execute(
                 'UPDATE agent_previews SET approved_at = ?, approval_source = ? WHERE id = ?',
-                [gmdate('Y-m-d H:i:s'), 'trusted_browser', $row['id']]
+                [gmdate('Y-m-d H:i:s'), self::STAFF_APPROVAL, $row['id']]
             );
         });
     }
@@ -84,12 +104,12 @@ final class PreviewStore
         return $row;
     }
 
-    /** A fragment secret is exchanged into a CSRF-protected browser session for one review. */
-    public function exchangeBrowserHandle(string $id, string $handle): void
+    /** A link's review secret is exchanged into a CSRF-protected browser session for one review. */
+    public function exchangeBrowserHandle(string $id, string $reviewSecret): void
     {
         $row = Database::query(
-            'SELECT * FROM agent_previews WHERE id = ? AND handle_hash = ?',
-            [$id, hash('sha256', $handle)]
+            'SELECT * FROM agent_previews WHERE id = ? AND review_hash = ?',
+            [$id, hash('sha256', $reviewSecret)]
         )[0] ?? null;
         if (!$row || !in_array($row['principal_type'], ['public', 'customer'], true)) {
             throw new OperationException('not_found', 404);
@@ -97,7 +117,7 @@ final class PreviewStore
         $this->checkTime($row);
         $this->authorizeSource($row);
         \App\Engine\Auth::startSession();
-        $_SESSION['agent_review_handles'][$id] = $row['handle_hash'];
+        $_SESSION['agent_review_handles'][$id] = $row['review_hash'];
         $_SESSION['agent_review_handles'] = array_slice($_SESSION['agent_review_handles'], -20, null, true);
     }
 
@@ -106,7 +126,7 @@ final class PreviewStore
         \App\Engine\Auth::startSession();
         $hash = $_SESSION['agent_review_handles'][$id] ?? null;
         $row = is_string($hash)
-            ? Database::query('SELECT * FROM agent_previews WHERE id = ? AND handle_hash = ?', [$id, $hash])[0] ?? null
+            ? Database::query('SELECT * FROM agent_previews WHERE id = ? AND review_hash = ?', [$id, $hash])[0] ?? null
             : null;
         if (!$row || !in_array($row['principal_type'], ['public', 'customer'], true)) {
             throw new OperationException('review_link_required', 401, nextAction: 'open_review_link');
@@ -132,7 +152,7 @@ final class PreviewStore
         $hash = $_SESSION['agent_review_handles'][$id] ?? null;
         $row = is_string($hash)
             ? Database::query(
-                "SELECT * FROM agent_previews WHERE id = ? AND handle_hash = ? AND principal_type = 'customer'",
+                "SELECT * FROM agent_previews WHERE id = ? AND review_hash = ? AND principal_type = 'customer'",
                 [$id, $hash]
             )[0] ?? null
             : null;
@@ -175,7 +195,7 @@ final class PreviewStore
             }
             Database::execute(
                 'UPDATE agent_previews SET approved_at = ?, approval_source = ? WHERE id = ?',
-                [gmdate('Y-m-d H:i:s'), 'trusted_browser', $row['id']]
+                [gmdate('Y-m-d H:i:s'), self::CUSTOMER_APPROVAL, $row['id']]
             );
         });
     }
@@ -265,7 +285,9 @@ final class PreviewStore
     public function assertCommittable(array $row): void
     {
         $this->checkTime($row);
-        if ($row['approved_at'] === null || $row['approval_source'] !== 'trusted_browser') {
+        // Each proposal needs the approval its principal can give: staff in the admin, customers by link.
+        $expected = in_array($row['principal_type'], ['public', 'customer'], true) ? self::CUSTOMER_APPROVAL : self::STAFF_APPROVAL;
+        if ($row['approved_at'] === null || $row['approval_source'] !== $expected) {
             throw new OperationException('trusted_review_required', 409, nextAction: 'open_review');
         }
         if ($row['consumed_at'] !== null) {

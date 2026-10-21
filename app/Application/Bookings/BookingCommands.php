@@ -47,7 +47,9 @@ final class BookingCommands
             if ((bool) $tenant['require_phone'] && $phone === '') $errors['customer.phone'] = 'required';
             if ($errors) throw new OperationException('validation_failed', 422, $errors);
 
-            $consent = ($input['consent_given'] ?? false) === true;
+            // Consent is the customer's own act. Staff and their agents never record it, and an
+            // agent's customer booking carries it only from the review page (see Executor).
+            $consent = !$actor->isStaff() && ($input['consent_given'] ?? false) === true;
             if (
                 !$actor->isStaff()
                 && (bool) $tenant['requires_consent']
@@ -64,7 +66,7 @@ final class BookingCommands
                 ) throw new OperationException('max_bookings_exceeded', 422);
             }
 
-            $data += ['customer_id' => $customerId, 'source' => $actor->isStaff() ? 'admin' : 'web'];
+            $data += ['customer_id' => $customerId, 'source' => self::channel($actor)];
             $data['customer_name_snapshot'] = $name;
             $data['customer_email_snapshot'] = $email;
             $data['customer_phone_snapshot'] = $phone ?: null;
@@ -112,6 +114,22 @@ final class BookingCommands
 
             return $receipt;
         });
+    }
+
+    /**
+     * The surface a booking came through, as stored in `bookings.source`.
+     *
+     * Staff work in the signed-in admin; anything else staff do arrives through
+     * a connection. Agent operations always run inside an operation receipt,
+     * which the booking page never does.
+     */
+    private static function channel(ActorContext $actor): string
+    {
+        if ($actor->isStaff()) {
+            return $actor->authMode === 'session' ? 'admin' : 'api';
+        }
+
+        return \App\Engine\Outbox::currentReceiptId() !== null ? 'api' : 'web';
     }
 
     public static function scheduleReminder(array $tenant, string $bookingId, string $start, string $status): void

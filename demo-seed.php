@@ -576,6 +576,7 @@ $pdo->exec(<<<'SQL'
 CREATE TABLE agent_previews (
     `id` TEXT NOT NULL PRIMARY KEY,
     `handle_hash` TEXT NOT NULL,
+    `review_hash` TEXT NULL,
     `principal_type` TEXT NOT NULL,
     `principal_id` TEXT NOT NULL,
     `connection_id` TEXT NULL,
@@ -592,6 +593,7 @@ CREATE TABLE agent_previews (
     `created_at` TEXT NOT NULL
 );
 CREATE UNIQUE INDEX preview_handle ON agent_previews (`handle_hash`);
+CREATE UNIQUE INDEX uq_agent_preview_review ON agent_previews (`review_hash`);
 CREATE INDEX preview_expiry ON agent_previews (`expires_at`);
 SQL);
 
@@ -805,7 +807,8 @@ $today = new DateTime();
 // Settings
 $settings = [
     ['installed_at', date('Y-m-d H:i:s')],
-    ['db_version', '41'],
+    // The newest migration file is the demo's schema checkpoint.
+    ['db_version', (string) max(array_map(static fn ($file) => (int) basename($file), glob(__DIR__ . '/app/Migrations/[0-9]*.php')))],
     ['system_settings_revision', '0'],
     ['app_name', 'VoxelBooking Demo'],
     ['timezone', 'Europe/Amsterdam'],

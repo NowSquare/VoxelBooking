@@ -103,7 +103,7 @@ final class AvailabilityAcceptanceTest extends TestCase
             self::assertFalse($response['json']['result']['isError'],$response['raw']);$preview=$response['json']['result']['structuredContent'];
         }
         $id=basename(parse_url($preview['review_url'],PHP_URL_PATH));$store=new PreviewStore();
-        $store->exchangeBrowserHandle($id,$preview['preview_handle']);$store->approveCustomerBrowser($id,true);
+        $store->exchangeBrowserHandle($id,\Tests\Support\ReviewLink::secret($preview));$store->approveCustomerBrowser($id,true);
         $key='acceptance-'.Ulid::generate();$arguments=['preview_handle'=>$preview['preview_handle']];
         if($transport==='http'){
             $response=$this->request('/api/agent/v2/public/'.$business['slug'].'/bookings',$arguments,[

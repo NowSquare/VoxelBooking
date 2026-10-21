@@ -46,7 +46,9 @@ foreach(Database::query('SHOW TABLES') as $row){
 }
 file_put_contents($run.'/upgrade-v28-backup.json',json_encode($backup,JSON_THROW_ON_ERROR));chmod($run.'/upgrade-v28-backup.json',0600);
 $migrator=new Migrator($root.'/app/Migrations');$migrator->migrate();$current=$migrator->getCurrentVersion();
-$check($current===41,'Expected the current schema version after v28 upgrade.');
+// The newest migration file is the expected checkpoint, so new migrations need no edit here.
+$latest=max(array_map(static fn($file)=>(int)basename($file),glob($root.'/app/Migrations/[0-9]*.php')));
+$check($current===$latest,'Expected the current schema version after v28 upgrade.');
 $check($before===$snapshot(),'Upgrade changed existing booking, customer or key data.');
 $key=AgentAuth::validate($raw);
 $check($key!==null && AgentAuth::hasScope($key,'bookings:read') && !AgentAuth::hasScope($key,'bookings:write') && !AgentAuth::hasScope($key,'services:write'),'Upgrade broadened dormant legacy write authority.');

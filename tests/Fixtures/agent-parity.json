@@ -19,7 +19,7 @@
     },
     "GET /oauth/authorize": {
       "handler": "App\\Controllers\\OAuth\\OAuthController::authorize",
-      "source_hash": "2f6b647c7f25d4cbe37e3ddd48b52f146c4c7d31bdd1e03983a9d59e36da998f",
+      "source_hash": "4c4dddf6eb2895423dcb8e118102a938d25b51418bf94af83394e274603b2ab8",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Protocol authentication or explicit browser consent. Never expose credentials as an application tool.",
@@ -2819,7 +2819,7 @@
       ]
     },
     "booking_create": {
-      "contract_hash": "31c2f44a3bb85848fd5f8f45054ef6d110584006c62f7d647f7b360f5b346181",
+      "contract_hash": "bb9ea187204f9086970034f19159740fbf59e40e3ed6a851376ee838022b1d3f",
       "tests": [
         "tests/Integration/AvailabilityAcceptanceTest.php",
         "tests/Integration/BookingConcurrencyTest.php",
@@ -3453,7 +3453,7 @@
       ]
     },
     "public_booking_create": {
-      "contract_hash": "07070acfbdcc14a3fb298a4ae7d42d5e63aef5e601c4e2c843494e9a61c118b8",
+      "contract_hash": "650c5c247a82354c4ca3dbaa491c6353dc5742dbd74153dc8ad58cfd512bfc83",
       "tests": [
         "tests/Integration/BookingConcurrencyTest.php",
         "tests/Integration/BookingOperationContractCoverageTest.php",
