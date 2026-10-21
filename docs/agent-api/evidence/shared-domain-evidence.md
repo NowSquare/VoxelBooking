@@ -1,6 +1,6 @@
 # Shared catalog, business and operator implementation evidence
 
-Final status: both complete runtime matrices pass **1,698 tests and 24,683 assertions**, with no failures, errors, skips, warnings or deprecations. See the [retained final reports](matrix/README.md). The dated progression below preserves intermediate red and green evidence; earlier totals are historical snapshots.
+Final status: both complete runtime matrices of the 1.3.0 source pass **1,973 tests and 29,223 assertions**, with no failures, errors, skips, warnings or deprecations. See the [retained final reports](matrix/README.md). The dated progression below preserves intermediate red and green evidence; earlier totals are historical snapshots.
 
 ## Environment and commands
 
@@ -54,4 +54,4 @@ The final shared-domain snapshot is green on both PHP 8.3.32 / MySQL 8.0.46 and 
 
 The subsequent updater correction is independently reviewed with no outstanding finding. The migration callback runs under the same exclusive lock even when code is already current; dirty, ahead and fetch-failure guards still run first. A pending schema exposes the existing operator/CSRF native retry action. Retaining the lock inode prevents an already-open waiter from competing with a new lock file. Deterministic regressions and the native recovery form test are now part of the complete suite.
 
-Final verification after that correction: **1,698 tests, 24,683 assertions per runtime**, PHP 8.3.32 / MySQL 8.0.46 and PHP 8.5.10 / MySQL 8.4.11, zero failures, errors, skips, warnings or deprecations. The exact logs, full JUnit, commands, image digests and checksums are retained in `docs/agent-api/evidence/matrix/`. The two fixtures that previously recomputed grant expiry now reuse the stored expiry; the final suite includes that test-only timing correction. No shared-domain implementation changed after the earlier independent review.
+Verification after that correction, before the 1.3.0 review fixes: **1,698 tests, 24,683 assertions per runtime**, PHP 8.3.32 / MySQL 8.0.46 and PHP 8.5.10 / MySQL 8.4.11, zero failures, errors, skips, warnings or deprecations. The exact logs, full JUnit, commands, image digests and checksums are retained in `docs/agent-api/evidence/matrix/`. The two fixtures that previously recomputed grant expiry now reuse the stored expiry; the final suite includes that test-only timing correction. No shared-domain implementation changed after the earlier independent review.

@@ -21,14 +21,14 @@ The isolated runner creates a private copied application, uniquely named disposa
 
 For a focused regression, pass PHPUnit arguments after the runner command, for example `php scripts/test-isolated.php --filter MediaUploadRecoveryTest`. `--keep --serve` retains a disposable server for browser/client verification; stop that runner when finished. Keep generated credentials and raw client logs private.
 
-The baseline revisions are application `5ba99941c3c296716e7c9b7d49e3cb666de0d064` and site `ad0e67f4b77b1f84a3ee0610ed792f3c8a298f67`, plus the implementation in the shared working trees. The final [source manifest](evidence/source-manifest.json) fingerprints source, tests, configuration, compiled assets and lockfiles without runtime secrets or evidence self-cycles. Reproduce with `python3 scripts/release-source-manifest.py --site ../voxelbooking-site --output /tmp/voxelbooking-source-manifest.json` and compare its file hashes.
+The baseline revisions are application `5ba99941c3c296716e7c9b7d49e3cb666de0d064` and site `ad0e67f4b77b1f84a3ee0610ed792f3c8a298f67`, and the 1.3.0 release is the `main` branch of each repository after those revisions. The matrix [results](evidence/matrix/results.json) record the Git tree of every tested source directory. The final [source manifest](evidence/source-manifest.json) fingerprints source, tests, configuration, compiled assets and lockfiles without runtime secrets or evidence self-cycles. Reproduce with `python3 scripts/release-source-manifest.py --site ../voxelbooking-site --output /tmp/voxelbooking-source-manifest.json` and compare its file hashes.
 
 ## Recorded runs
 
 | Check | Recorded result |
 | --- | --- |
-| Complete matrix: PHP 8.3.32 / MySQL 8.0.46 | **1,698 tests, 24,683 assertions passed**; zero failures, errors, skips, warnings or deprecations; exit 0 |
-| Complete matrix: PHP 8.5.10 / MySQL 8.4.11 | **1,698 tests, 24,683 assertions passed**; zero failures, errors, skips, warnings or deprecations; exit 0 |
+| Complete matrix: PHP 8.3.32 / MySQL 8.0.46 | **1,973 tests, 29,223 assertions passed**; zero failures, errors, skips, warnings or deprecations; exit 0 |
+| Complete matrix: PHP 8.5.10 / MySQL 8.4.11 | **1,973 tests, 29,223 assertions passed**; zero failures, errors, skips, warnings or deprecations; exit 0 |
 | Pure MCP/OAuth adapter suite | 86 tests, 270 assertions; PHP 8.5.7 |
 | Catalog/business/system operation success contracts | 9 tests, 634 assertions; PHP 8.5.7/MySQL 8.4.11 |
 | Booking/customer/privacy success contracts and related regressions | 54 tests, 1,287 assertions; subsequent privacy-lock and complete-contract run 14 tests, 1,053 assertions; final creation/reschedule policy, delivery, DST and retained-authority follow-up 27 tests, 1,361 assertions; PHP 8.5.7/MySQL 8.4.11 |
@@ -38,11 +38,12 @@ The baseline revisions are application `5ba99941c3c296716e7c9b7d49e3cb666de0d064
 | Settings/identity/activity and reviewed recovery checks | Final focused run: 21 tests, 242 assertions; no warnings or deprecations |
 | Webhook/media/receipt and related contract checks | Earlier combined focused run: 22 tests, 220 assertions; final runtime matrix includes all later changes |
 | Git migration retry and stable lock | 3 pure tests, 76 assertions; native pending-schema retry form 1 test, 8 assertions; PHP 8.5.7/MySQL 8.4.11 |
-| Upgrade rehearsal | Actual version-28 database to migration 41; MySQL 8.0.46 and 8.4.11, PHP 8.3.32 and 8.5.10 combinations recorded by the test-harness owner |
-| Documentation/marketing | 21 tests, 4,014 assertions; 3 JavaScript tests; 61 indexed guides; production asset build passed |
+| Upgrade rehearsal | Actual version-28 database to migration 42, committed-DDL replay, partial-column recovery, failed-migration retry and backup restore; PHP 8.3.32/MySQL 8.0.46, PHP 8.3.32/MySQL 8.4.11 and PHP 8.5.10/MySQL 8.4.11 ([logs](evidence/matrix/README.md)) |
+| Transport success evidence | All 132 operations succeed over HTTP v2 and native MCP over the wire; the [parity ledger](parity-ledger.md) names each test method and CI requires each one to run and pass |
+| Documentation/marketing | 35 tests, 11,065 assertions; 30 JavaScript tests; 61 indexed guides; production asset build passed; homepage CLS 0 at 390 px and 1440 px |
 | Installed native clients | Codex CLI 0.153.4 and Claude Code 2.1.281: scoped staff bearer timeslot workflow passed |
 
-Both complete matrices ran after the updater recovery fix and final test-fixture correction. Their [retained results](evidence/matrix/results.json), [reproduction record](evidence/matrix/README.md), [PHP 8.3/MySQL 8.0 log](evidence/matrix/php83-mysql80.log) and [PHP 8.5/MySQL 8.4 log](evidence/matrix/php85-mysql84.log) describe the exact final run. An earlier PHP 8.5 attempt exposed a fixture that recomputed credential expiry across a clock-second boundary; the fixture now uses its stored connection expiry, preserving the production bound. Both matrices were rerun after that correction. Focused runs are not added together because suites overlap.
+Both complete matrices ran on the 1.3.0 source. Their [retained results](evidence/matrix/results.json), [reproduction record](evidence/matrix/README.md), [PHP 8.3/MySQL 8.0 log](evidence/matrix/php83-mysql80.log) and [PHP 8.5/MySQL 8.4 log](evidence/matrix/php85-mysql84.log) describe the exact final run. The first 1.3.0 matrix exposed a calendar stamp that followed the clock and an upgrade probe that collided with migration 042; both were fixed and the matrix rerun. Focused runs are not added together because suites overlap.
 
 ## Acceptance scenarios
 

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "recorded_at": "2026-10-20T20:57:03.869486+00:00",
+  "recorded_at": "2026-10-21T13:03:48.634800+00:00",
   "state": "passed",
   "scope": "Complete PHPUnit unit and integration suite, including actual HTTP workers, native MCP, database concurrency, updater recovery and native form tests.",
   "isolation": "Each run owns a fresh loopback MySQL container, restricted database user and private application copy. Ordinary application .env, storage and uploaded files are never copied. All containers and HTTP workers stopped after the tests.",
@@ -15,8 +15,8 @@
       "mysql_repository_digest": "mysql@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b",
       "phpunit": "11.5.55",
       "exit_code": 0,
-      "tests": 1698,
-      "assertions": 24683,
+      "tests": 1973,
+      "assertions": 29223,
       "errors": 0,
       "failures": 0,
       "skipped": 0,
@@ -25,29 +25,30 @@
       "suites": [
         {
           "name": "Unit",
-          "tests": 965,
-          "assertions": 19111,
+          "tests": 1088,
+          "assertions": 20580,
           "errors": 0,
           "failures": 0,
           "skipped": 0
         },
         {
           "name": "Integration",
-          "tests": 733,
-          "assertions": 5572,
+          "tests": 885,
+          "assertions": 8643,
           "errors": 0,
           "failures": 0,
           "skipped": 0
         }
       ],
-      "command": "php scripts/test-isolated.php --keep --mysql-image=mysql:8.0 --display-skipped --display-deprecations --display-warnings --log-junit /tmp/voxelbooking-php83-mysql80.xml > /tmp/voxelbooking-php83-mysql80.log 2>&1",
+      "command": "php scripts/test-isolated.php --mysql-image=mysql:8.0 --display-skipped --display-deprecations --display-warnings --log-junit <absolute path>/php83-mysql80.xml > php83-mysql80.log 2>&1",
       "console": {
         "path": "php83-mysql80.log",
-        "sha256": "354cdbb6130179897dfcb4881322aa04362c243024fec848f76951ccbed12604"
+        "sha256": "190daea99ed281fa0c1cc0bf11c9476bc0f872070a2c5f91cc4bf51d77c99099"
       },
       "junit": {
         "path": "php83-mysql80.xml",
-        "sha256": "781243f2fa33cbc2cb6c2d111bcbba04c5fe06b4bdcc2ea00b969bb1140312cb"
+        "retained_in_repository": false,
+        "sha256": "eed4bd50ab19af2fa2c19b296a0aa4396d2aaf3e21500cd1af5ee58de90b6b4d"
       }
     },
     {
@@ -58,8 +59,8 @@
       "mysql_repository_digest": "mysql@sha256:3466ba4a4828aa8d46fb7c3bc16b67b781c98413cf4ea0fac6feaa6e881faa26",
       "phpunit": "11.5.55",
       "exit_code": 0,
-      "tests": 1698,
-      "assertions": 24683,
+      "tests": 1973,
+      "assertions": 29223,
       "errors": 0,
       "failures": 0,
       "skipped": 0,
@@ -68,89 +69,45 @@
       "suites": [
         {
           "name": "Unit",
-          "tests": 965,
-          "assertions": 19111,
+          "tests": 1088,
+          "assertions": 20580,
           "errors": 0,
           "failures": 0,
           "skipped": 0
         },
         {
           "name": "Integration",
-          "tests": 733,
-          "assertions": 5572,
+          "tests": 885,
+          "assertions": 8643,
           "errors": 0,
           "failures": 0,
           "skipped": 0
         }
       ],
-      "command": "php scripts/test-isolated.php --keep --mysql-image=mysql:8.4 --display-skipped --display-deprecations --display-warnings --log-junit /tmp/voxelbooking-php85-mysql84.xml > /tmp/voxelbooking-php85-mysql84.log 2>&1",
+      "command": "php scripts/test-isolated.php --mysql-image=mysql:8.4 --display-skipped --display-deprecations --display-warnings --log-junit <absolute path>/php85-mysql84.xml > php85-mysql84.log 2>&1",
       "console": {
         "path": "php85-mysql84.log",
-        "sha256": "b96434a13c8a23822da19c4a02cd648c02d7e1bf38a69382821b9a43c27ba272"
+        "sha256": "8545292acca36f8c5d58f8b2ca85749acc6cf5069b983fe61364546c3c81b148"
       },
       "junit": {
         "path": "php85-mysql84.xml",
-        "sha256": "6b15eafb51f1654843ae9351c1e37635a7b58d310035d961a4e10d7773129867"
+        "retained_in_repository": false,
+        "sha256": "9035b88f9d5ee57e99b9411a4767a47f579405aa13b568ab26e2551bdc46a8c3"
       }
     }
   ],
   "upgrade_rehearsals": [
     {
-      "name": "php83-mysql80",
-      "mysql": "8.0.46",
-      "php": "8.3.32",
-      "from": 28,
-      "to": 41,
-      "legacy_read_only": true,
-      "rate_schema_repaired": true,
-      "committed_ddl_replay": true,
-      "partial_booking_columns_recovery": true,
-      "partial_failure_recovery": true,
-      "backup_restore_and_reupgrade": true,
-      "existing_data_preserved": true,
-      "command": "php scripts/test-isolated.php --upgrade-check --mysql-image=mysql:8.0",
-      "console": {
-        "path": "upgrade-php83-mysql80.log",
-        "sha256": "da04eb2cff7b07a1e680b3d9ddcada7b6d992d226b19aaf7452acf86a6745cc9"
-      }
+      "log": "upgrade-php83-mysql80.log",
+      "sha256": "d9bd235ea1f8758dfda909455fda52ea788e53ca50e0ce88c10de12200511afb"
     },
     {
-      "name": "php83-mysql84",
-      "mysql": "8.4.11",
-      "php": "8.3.32",
-      "from": 28,
-      "to": 41,
-      "legacy_read_only": true,
-      "rate_schema_repaired": true,
-      "committed_ddl_replay": true,
-      "partial_booking_columns_recovery": true,
-      "partial_failure_recovery": true,
-      "backup_restore_and_reupgrade": true,
-      "existing_data_preserved": true,
-      "command": "php scripts/test-isolated.php --upgrade-check --mysql-image=mysql:8.4",
-      "console": {
-        "path": "upgrade-php83-mysql84.log",
-        "sha256": "db3be4ff927021f52b16832321357671c174a11795a0770beffd9caf38f07e93"
-      }
+      "log": "upgrade-php83-mysql84.log",
+      "sha256": "fa7006cbced60b21bd51795ea17b7cfcb968ee95104d9047cfee7b2b4436adcf"
     },
     {
-      "name": "php85-mysql84",
-      "mysql": "8.4.11",
-      "php": "8.5.10",
-      "from": 28,
-      "to": 41,
-      "legacy_read_only": true,
-      "rate_schema_repaired": true,
-      "committed_ddl_replay": true,
-      "partial_booking_columns_recovery": true,
-      "partial_failure_recovery": true,
-      "backup_restore_and_reupgrade": true,
-      "existing_data_preserved": true,
-      "command": "php scripts/test-isolated.php --upgrade-check --mysql-image=mysql:8.4",
-      "console": {
-        "path": "upgrade-php85-mysql84.log",
-        "sha256": "a6fddfa2fa02f082c23b27d65b5357e90b6cbc671aeffd39dff513e4c28112bf"
-      }
+      "log": "upgrade-php85-mysql84.log",
+      "sha256": "a60d56a90607401f5ee00759ba25152a6a64a67f64cd63c990ce906e8c6d7de3"
     }
   ],
   "upgrade_note": "The real version-28 upgrade, interrupted-DDL and backup-restore rehearsals predate the final GitUpdater recovery correction. They exercise the unchanged migration engine and migration files; the complete final matrix also covers the corrected updater retry, stable lock and native recovery form.",
@@ -160,5 +117,16 @@
     "application_operations": 129,
     "capability_groups": 42,
     "verification_command": "php scripts/check-agent-parity.php"
+  },
+  "source": {
+    "note": "Release 1.3.0 source. The suites ran on these exact trees; later commits change only evidence documents and VERSION.",
+    "trees": {
+      "app": "669509f252c2717f8e45be6688a1d834d4e297a4",
+      "tests": "a878b5aef15692e58f215650d8fe6cf28c65fbe3",
+      "lang": "59aff7686b452f2cbeb5c0a367f5255d19526b0d",
+      "templates": "5e82bc4122f127420e621f9b21ad6c645f5998a5",
+      "resources": "5586767d8f15dca9f34c0d6346ba63fcb021e1a1",
+      "public": "27058b35a3e7a44c618bf61ba82630b3b8b168c9"
+    }
   }
 }
