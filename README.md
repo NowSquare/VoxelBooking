@@ -128,6 +128,8 @@ server {
 
 Match the `fastcgi_pass` socket to your PHP-FPM version, then reload Nginx.
 
+Keep `root` on the `public/` folder. Nginx ignores the root `.htaccess`, so a project-folder root would serve `storage/`, and `storage/keys/` holds the key that seals agent payloads, receipts and webhook secrets. If you can't change the root, add `location ^~ /storage/ { deny all; }` and the same for `/app/`, `/config/` and `/.env`.
+
 > **HTTPS:** On a production server, get a free TLS certificate with [Let's Encrypt / Certbot](https://certbot.eff.org/). `certbot --nginx` adds the certificate and HTTPS redirect for you.
 
 ### Step 3 — Open your domain and run the installer
@@ -194,7 +196,13 @@ Back up your database, deployed code, `.env`, `storage/keys/`, `storage/media-jo
 
 ## Agent API and native MCP
 
-Customers, business teams and operators can use scoped connections to discover and perform the actions their current role permits. The versioned HTTP API and native MCP transport share application operations with the human interface across all four booking patterns. Reviewed changes use browser approval, stable idempotency keys and recoverable operation receipts. Connections can be inspected, revoked and reviewed in **AI connections**.
+AI connections are optional. Every booking and every admin task works in the browser without one, and VoxelBooking needs no AI account of its own.
+
+Customers, business teams and operators can use scoped connections to discover and perform the actions their current role permits. Agent API v2 and native MCP (protocol revisions `2026-07-28` and `2025-11-25`) share application operations with the human interface across all four booking patterns. A customer approves their own booking on a review page; a staff member approves theirs in the admin. Reviewed changes also use stable idempotency keys and recoverable operation receipts. Connections use a scoped bearer key or OAuth with PKCE, and you inspect and revoke them in **AI connections**. The legacy `/api/agent/v1` API stays read-only.
+
+Signed webhooks report `booking.created`, `booking.status_changed`, `booking.cancelled` and `booking.rescheduled` through the same delivery queue as email.
+
+Codex CLI 0.153.4 and Claude Code 2.1.281 completed a staff timeslot workflow with a scoped bearer connection on 20 October 2026. Other clients, OAuth sign-in in a client and customer flows in a client are untested.
 
 See the [Agent API documentation](https://voxelbooking.com/docs/agent-api), [release notes](docs/agent-api/release-notes.md) and [verification evidence](docs/agent-api/release-evidence.md) for migration requirements, exact tested clients and remaining external verification boundaries.
 

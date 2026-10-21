@@ -4,7 +4,7 @@ Final status: both complete runtime matrices pass **1,698 tests and 24,683 asser
 
 ## Environment and commands
 
-PHP8.3.32, disposable Docker MySQL8.4.11, four isolated PHP workers. No ordinary application database used. Run `"/Users/admin/Library/Application Support/Herd/bin/php83" scripts/test-isolated.php --filter 'SystemOperationsTest|EmailSettingsCredentialTest|BusinessOperationsTest|CatalogOperationsTest|BusinessApplicationsTest|BusinessUserCrudTest|TenantOwnerCreationTest|TenantSlugValidationTest|DashboardOutputTest|DashboardUpcomingTest|AdminDashboard|TestIsolationTest'`.
+PHP8.3.32, disposable Docker MySQL8.4.11, four isolated PHP workers. No ordinary application database used. Run `php8.3 scripts/test-isolated.php --filter 'SystemOperationsTest|EmailSettingsCredentialTest|BusinessOperationsTest|CatalogOperationsTest|BusinessApplicationsTest|BusinessUserCrudTest|TenantOwnerCreationTest|TenantSlugValidationTest|DashboardOutputTest|DashboardUpcomingTest|AdminDashboard|TestIsolationTest'`.
 
 Combined verification: **155 tests,547 assertions,pass**, `/tmp/voxelbooking-agent-w6-system-combined2.log`. Earlier red runs demonstrated missing implementations, closed-weekday schedule inheritance, booked-event exclusion, stale versions and migration fixture omissions; each corrected before the combined pass. The synthetic dashboard SQLite fixture was updated for the newly preserved customer snapshot columns. Source refinements after this pass are presentation-only cron labels, multi-capability handoff metadata, and test settings restoration; final whole-tree verification remains required.
 
