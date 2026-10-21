@@ -22,7 +22,9 @@ Queued notifications and signed webhooks survive request and provider failures. 
 - Inventory writes and restorations recheck current availability under transactional locks. Approved proposals become invalid when material price, policy, eligibility or record state changes. Repeated commands cannot silently reserve or release inventory twice.
 - Migration 41 is the current schema checkpoint. The migration sequence includes the corrected per-key limiter, delegated credentials, customer capabilities, reviews, receipts, durable effects and supporting stores. A failed migration is reported as a failure rather than a successful code update.
 
-Follow the [v1 migration guide](https://voxelbooking.com/docs/agent-api/migration-from-v1) for route mapping and credential changes. The [parity ledger](parity-ledger.md) records 42 capability groups, 190 human route registrations and 129 application operations; these are separate inventories, not a target tool count.
+Follow the [v1 migration guide](https://voxelbooking.com/docs/agent-api/migration-from-v1) for route mapping and credential changes. The [parity ledger](parity-ledger.md) records 42 capability rows (41 verified, 1 justified handoff), 178 product actions plus 12 protocol routes, and 132 application operations, each with an HTTP v2 and a native MCP success test; these are separate inventories, not a target tool count.
+
+Failed connections name their cause with a distinct problem `code` (`unknown_endpoint`, `authorization_required`, `wrong_audience`, `connection_revoked`, `connection_expired`, `account_disabled`, `insufficient_scope`, `unsupported_protocol_version`). `connection_test` lets a client inspect its own access and `connection_expire` shortens it after browser approval. `calendar_summary` returns the admin calendar's day, week and month totals, and confirmed bookings include calendar links.
 
 ## Hosting requirements
 
