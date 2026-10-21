@@ -485,7 +485,7 @@ php demo-seed.php          # Rebuilds storage/demo/demo.db
 
 ### Disposable MySQL verification
 
-Use `php scripts/test-isolated.php` for write-path tests. It creates a private application copy, an explicitly disposable MySQL database and a guarded test manifest. Use `--keep --serve` when inspecting synthetic browser or client flows, then stop the retained runner.
+Use `php scripts/test-isolated.php` for write-path tests. It creates a private application copy, an explicitly disposable MySQL database and a guarded test manifest. Use `--keep --serve` when inspecting synthetic browser or client flows, then stop the retained runner. When PHPUnit fails, the runner prints the first distinct warnings and errors from the HTTP server log and the application log before it deletes the run, so CI output names the cause of a broken worker.
 
 The legacy `demo-seed-mysql.php` script drops and recreates its configured tables. Do not run it against an ordinary development or production database; the isolated runner is the supported verification path.
 

@@ -71,6 +71,39 @@ function copyTree(string $source, string $destination): void
     }
 }
 
+/**
+ * Print the first distinct problems the HTTP server and application logged.
+ *
+ * Access lines, the multi-worker poll notice and informational log entries
+ * are routine. Everything else is a warning, fatal or error a failing test
+ * could not show by itself.
+ */
+function reportServerDiagnostics(string ...$logFiles): void
+{
+    $routine = '/(Accepted$|Closing$| \[\d{3}\]: [A-Z]+ |Development Server .* started|Failed to poll event|\] (DEBUG|INFO): )/';
+    foreach ($logFiles as $logFile) {
+        if (!is_file($logFile)) {
+            continue;
+        }
+        $seen = [];
+        $handle = fopen($logFile, 'r');
+        while ($handle !== false && ($line = fgets($handle)) !== false && count($seen) < 40) {
+            $line = rtrim($line);
+            if ($line === '' || preg_match($routine, $line)) {
+                continue;
+            }
+            // Workers prefix their pid and a timestamp. Repeats differ only there.
+            $seen[preg_replace('/^\[\d+\] \[[^\]]+\] /', '', $line)] ??= $line;
+        }
+        if ($handle !== false) {
+            fclose($handle);
+        }
+        if ($seen !== []) {
+            fwrite(STDERR, "\nFirst distinct entries in " . basename($logFile) . ":\n" . implode("\n", $seen) . "\n");
+        }
+    }
+}
+
 function deleteTree(string $path): void
 {
     if (!is_dir($path) || is_link($path)) {
@@ -263,6 +296,11 @@ try {
         throw new RuntimeException('Could not start PHPUnit.');
     }
     $exitCode = proc_close($testProcess);
+    if ($exitCode !== 0) {
+        // Cleanup deletes the run root, and CI keeps nothing else. A broken
+        // HTTP worker fails hundreds of tests with one cause, so show it.
+        reportServerDiagnostics($runRoot . '/server.log', $appRoot . '/storage/logs/app.log');
+    }
     $cleanup();
     if ($keep) {
         fwrite(STDOUT, "Retained files: {$runRoot}. The database and server have stopped.\n");
