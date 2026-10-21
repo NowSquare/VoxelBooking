@@ -30,6 +30,19 @@ The final combined pure MCP/OAuth command passed 86 tests and 270 assertions on 
 
 The tests instantiate protocol objects without loading the application bootstrap or connecting to a database. They prove protocol behavior at the adapter boundary. They do not establish complete MCP conformance, correct application authorization, or successful integration with a hosted AI client.
 
+## MCP Inspector conformance (21 October 2026)
+
+`@modelcontextprotocol/inspector` 2.9.0 in CLI mode against a disposable `php scripts/test-isolated.php --keep --serve` instance (PHP 8.5.7, MySQL 8.4.11) on the release source, over Streamable HTTP at `/mcp` with a scoped staff bearer token (`bookings:read`, `availability:read`, `services:read`, `businesses:read`):
+
+| Check | Result |
+| --- | --- |
+| Initialize and negotiate | Passed; the Inspector negotiated `2025-11-25`, which `connection_test` reported back |
+| `tools/list` | 24 tools, exactly those the four read scopes allow; every tool carries an `outputSchema` |
+| `tools/call identity_get`, `bookings_list`, `connection_test` | `isError: false`; `structuredContent` carries the published envelope (`data`, `operation`, `business_id`, `receipt_id`, `notification_state`) and a matching text block |
+| No or unknown token | HTTP 401 with `WWW-Authenticate: Bearer resource_metadata=".../.well-known/oauth-protected-resource/mcp"`; the Inspector started OAuth discovery from it |
+
+The Inspector does not yet speak `2026-07-28`; the modern revision stays covered by the isolated protocol suite. The token lived only in the disposable database and was deleted with it.
+
 ## Local client inventory
 
 These versions came from local executables or application Info.plist records:
