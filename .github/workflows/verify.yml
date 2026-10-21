@@ -22,12 +22,17 @@ jobs:
           node-version: '24'
           cache: npm
       - run: composer install --no-interaction --prefer-dist
-      - name: Require a reviewed parity decision for every human action
-        run: php scripts/check-agent-parity.php
+      - name: Require a reviewed parity decision and a current rendered ledger
+        run: php scripts/check-agent-parity.php --check-render
       - name: Require every user-facing string to go through translations
         run: python3 scripts/audit-i18n.py --include-api
       - name: Require canonical design tokens in every stylesheet
         run: python3 scripts/audit-css-tokens.py
+      - name: Validate the generated v2 OpenAPI 3.1 document with an external validator
+        run: |
+          mkdir -p "$RUNNER_TEMP/agent-docs"
+          php scripts/export-agent-docs.php "$RUNNER_TEMP/agent-docs"
+          npx --yes @redocly/cli@2.57.0 lint --extends=spec --format=stylish "$RUNNER_TEMP/agent-docs/openapi.json"
       - run: npm ci
       - run: npm test
       - run: npm run build
@@ -54,4 +59,6 @@ jobs:
       - name: Rehearse version 28 upgrade, interrupted DDL and backup recovery
         run: php scripts/test-isolated.php --upgrade-check --mysql-image=mysql:${{ matrix.mysql }}
       - name: Run only against a disposable database and isolated application
-        run: php scripts/test-isolated.php --mysql-image=mysql:${{ matrix.mysql }}
+        run: php scripts/test-isolated.php --mysql-image=mysql:${{ matrix.mysql }} --log-junit "$RUNNER_TEMP/junit.xml"
+      - name: Require every referenced parity test to have run and passed
+        run: php scripts/check-agent-parity.php --junit="$RUNNER_TEMP/junit.xml"

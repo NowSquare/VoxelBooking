@@ -19,7 +19,7 @@
     },
     "GET /oauth/authorize": {
       "handler": "App\\Controllers\\OAuth\\OAuthController::authorize",
-      "source_hash": "554cbd642e33b1ec037cf3f22a7c08aa0333ebfe06b1657202826f9a13e142bd",
+      "source_hash": "f1a010a23beb95d3acdd76491db7c226e1a0dbc103935034a5f1a8782f9eed1a",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Protocol authentication or explicit browser consent. Never expose credentials as an application tool.",
@@ -30,7 +30,7 @@
     },
     "POST /oauth/authorize": {
       "handler": "App\\Controllers\\OAuth\\OAuthController::approve",
-      "source_hash": "309d459f9dc757e3df51d3adbf2ca19ab1e2eb224d6d35cebb14967992f8405a",
+      "source_hash": "12884da01a5351866356d1b96a11e3c822b6c31af7b513958fabc8acb48757e7",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Protocol authentication or explicit browser consent. Never expose credentials as an application tool.",
@@ -41,7 +41,7 @@
     },
     "POST /oauth/token": {
       "handler": "App\\Controllers\\OAuth\\OAuthController::token",
-      "source_hash": "10c93c3477953b6ced1f358242d5188af20b80af016c8520fae4eaec5f786786",
+      "source_hash": "2479bd501dbd6199419f81abc2bf4b9914aa52cfd0769ac628309ee7fc4c5d6c",
       "disposition": "transport",
       "operations": [],
       "rationale": "Protocol authentication or explicit browser consent. Never expose credentials as an application tool.",
@@ -52,7 +52,7 @@
     },
     "POST /oauth/register": {
       "handler": "App\\Controllers\\OAuth\\OAuthController::register",
-      "source_hash": "08264a0742fa09e12c23fc301a310ba043cb8909501b609238a0381e2da61ec6",
+      "source_hash": "7de6ac0133bd1dc809c371c61a785bb5ecd20bcb351d554fedf4b30e34f6cb41",
       "disposition": "transport",
       "operations": [],
       "rationale": "Protocol authentication or explicit browser consent. Never expose credentials as an application tool.",
@@ -63,7 +63,7 @@
     },
     "POST /oauth/revoke": {
       "handler": "App\\Controllers\\OAuth\\OAuthController::revoke",
-      "source_hash": "88db5b9201b47c7202b8396a572a5c6514a0fc7d8927033e6ba93d9718ce860b",
+      "source_hash": "40ddd8214a0419b7ea97e905743a5abdaa939556095e83da01b634151ea83b7d",
       "disposition": "transport",
       "operations": [],
       "rationale": "Protocol authentication or explicit browser consent. Never expose credentials as an application tool.",
@@ -127,7 +127,7 @@
     },
     "GET /": {
       "handler": "App\\Controllers\\HomeController::index",
-      "source_hash": "3bded2e6fcecb6e5018370b529730cfb6214e844d4127d201a17d6a91ef954af",
+      "source_hash": "80ffbc60e041c9f21a8dd7e6815d40312b3c7af15c066645a9e4885d493172dd",
       "disposition": "presentation",
       "operations": [
         "public_business_get"
@@ -141,7 +141,7 @@
     },
     "POST /request-access": {
       "handler": "App\\Controllers\\HomeController::submitRequest",
-      "source_hash": "b1dd3545aa428a4763050768c9af814acf5a292f1b04a865f8c31475f90091d2",
+      "source_hash": "31af121e7c8bfb4e8f1a258f71a8852bcd50e73f165eee340c509f1e60470481",
       "disposition": "operation",
       "operations": [
         "application_submit"
@@ -155,7 +155,7 @@
     },
     "GET /install": {
       "handler": "App\\Controllers\\Install\\WizardController::show",
-      "source_hash": "0854739256bd79180c658a77ddee798a35c71c23eae5aeda154e1da43c1e9d5d",
+      "source_hash": "92c518d66602b9512d66bd3db78aabf0d33fc4dc7bea18dcdf9913cb2d19243f",
       "disposition": "trusted_browser",
       "operations": [
         "system_handoff"
@@ -171,7 +171,7 @@
     },
     "POST /install/step/2": {
       "handler": "App\\Controllers\\Install\\WizardController::stepTwo",
-      "source_hash": "dc5b35a99286e5fe4faa15c69b34667438069d7e133e864692a12b1e91026f34",
+      "source_hash": "3819f4b62f9f6288749be38a28844f9caa30ccd344d13e046eb8cc8d646b9ded",
       "disposition": "trusted_browser",
       "operations": [
         "system_handoff"
@@ -187,7 +187,7 @@
     },
     "POST /install/step/3": {
       "handler": "App\\Controllers\\Install\\WizardController::stepThree",
-      "source_hash": "4e6c9a03bad20e04c65ad1dc65cd33965cfd511e471a5f93e4a37374e68511ab",
+      "source_hash": "b4439fc4050a03d752c39cd650986b5917fcc41e394ee88dda51364840bf6a96",
       "disposition": "trusted_browser",
       "operations": [
         "system_handoff"
@@ -203,7 +203,7 @@
     },
     "POST /install/step/4": {
       "handler": "App\\Controllers\\Install\\WizardController::stepFour",
-      "source_hash": "334a8e5618c8e203391d1649ec59666045eb6a1ce906787c5e195a6b16ba9643",
+      "source_hash": "d6380dacf74503fb72d4299a5a467a75295a021fdab4e833fa94ea01ed83ceaa",
       "disposition": "trusted_browser",
       "operations": [
         "system_handoff"
@@ -219,7 +219,7 @@
     },
     "POST /install/step/5": {
       "handler": "App\\Controllers\\Install\\WizardController::stepFive",
-      "source_hash": "605b6e2f0c7273fdcd5b24b1304b1759b4542896e8b6682849e95bf51000ce8d",
+      "source_hash": "15260dc7e924f8a78c602794046fb1e944395b5c0c90a494baac3a0f18a8ab50",
       "disposition": "trusted_browser",
       "operations": [
         "system_handoff"
@@ -235,7 +235,7 @@
     },
     "POST /install/complete": {
       "handler": "App\\Controllers\\Install\\WizardController::complete",
-      "source_hash": "93892d680e515204f537ef3e31c727b26d0ea9db19612017ee136f00356601cd",
+      "source_hash": "60a8f10611e6ef003ec133d04d267c389cc4ba59ff22923b9b6d62a91b256f7f",
       "disposition": "trusted_browser",
       "operations": [
         "system_handoff"
@@ -251,7 +251,7 @@
     },
     "GET /admin/login": {
       "handler": "App\\Controllers\\Auth\\AuthController::showLogin",
-      "source_hash": "0194bc5b6d7a9d15d523026b30e79923e90c129639e10d88947385366e9415f3",
+      "source_hash": "5e84ebeb495892d7ceff9811ec83c3d80ba1843ec56efdb7adbfa6e19c281deb",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
@@ -262,7 +262,7 @@
     },
     "POST /admin/login": {
       "handler": "App\\Controllers\\Auth\\AuthController::login",
-      "source_hash": "58208d58a6bcd0d673d255fce30f697c2dd5b704d7eeab54974c206a3b27459f",
+      "source_hash": "70ce4331ee70fef079be26fbd2c6d3285838dc3d33049c2d54d9cd41ee37c44d",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
@@ -295,7 +295,7 @@
     },
     "GET /admin/login/verify-code": {
       "handler": "App\\Controllers\\Auth\\AuthController::showVerifyCode",
-      "source_hash": "432918cefcad312d9753a353ab85aa4b11f164e32589d3508bb4675aca9b25ac",
+      "source_hash": "5e07b9bdc549eeaaf5e75b5169990c0b812059a6bf58e1c6b9cfee5f74c621ab",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
@@ -306,7 +306,7 @@
     },
     "POST /admin/login/verify-code": {
       "handler": "App\\Controllers\\Auth\\AuthController::verifyCode",
-      "source_hash": "226ba4ef5ea682e60ce892065be51d8ddb2fca19207e5903337411f4ae1050a7",
+      "source_hash": "e71c485f8b0b6968d0cb1880a91fa137be60851c55132f2cccc3abc1211b0745",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
@@ -317,7 +317,7 @@
     },
     "GET /admin/login/verify": {
       "handler": "App\\Controllers\\Auth\\AuthController::verifyMagicLink",
-      "source_hash": "0c41ee82c67607bc6f461dd2bfbb0a5b743478dd00ae2e0e28b2888c0ef3ee67",
+      "source_hash": "d4610f8aeb6f14c684b859966dd7dbbb2d646d1d249817421ede0f353b8ef28c",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
@@ -328,7 +328,7 @@
     },
     "GET /admin/forgot-password": {
       "handler": "App\\Controllers\\Auth\\AuthController::showForgotPassword",
-      "source_hash": "22f046507d3ca1220a47cbc84556e23c32b712790a66994bdef56d796f24cd48",
+      "source_hash": "b7c0a1d537da41ada4c68b4f69e9b1d87fbf7163fe488e0a363e38f7f9b56f35",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
@@ -350,7 +350,7 @@
     },
     "GET /admin/reset-password": {
       "handler": "App\\Controllers\\Auth\\AuthController::showResetPassword",
-      "source_hash": "1419ed78a03d4c08304243be418369a7503580695389baaf50057c0a18d268e7",
+      "source_hash": "708dbea3d7b74e0d21e454a2bc4d13867c1758dbbb14420bebaf37dec324ef6b",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Passwords, mailbox verification and browser sessions stay in their trusted human flow. OAuth provides separate client delegation.",
@@ -421,7 +421,7 @@
     },
     "POST /admin/connections": {
       "handler": "App\\Controllers\\Admin\\ConnectionsController::create",
-      "source_hash": "fe84cd2b032db4a6c7ea1c4e9bfb7d83d6880109e8ca5892f551438e7a638b0e",
+      "source_hash": "838293413e8814fd3136a7dbbedeff2d556f7565d3d40de188cfa07228ee5b7f",
       "disposition": "trusted_browser",
       "operations": [
         "connection_setup"
@@ -437,7 +437,7 @@
     },
     "POST /admin/connections/{id}/revoke": {
       "handler": "App\\Controllers\\Admin\\ConnectionsController::revoke",
-      "source_hash": "f6f8a7268672c15789c5a472efadcc3e42210d45d851d6ca9eef0e2e426da9df",
+      "source_hash": "b9e51210b26c6550b30c3a06c2b9d69a3a7b775d472549df2567a07e560d8a3f",
       "disposition": "trusted_browser",
       "operations": [
         "connection_revoke"
@@ -453,7 +453,7 @@
     },
     "POST /admin/connections/{id}/rotate": {
       "handler": "App\\Controllers\\Admin\\ConnectionsController::rotate",
-      "source_hash": "603916eba85eb22777202e6792d7c913133d2e1139e86f732f2917e23b27dbb8",
+      "source_hash": "2d1b1d60a3526ced568dfab6aad6e58ab0decb378d4007ebdee363d6e09ac4e4",
       "disposition": "trusted_browser",
       "operations": [
         "connection_setup"
@@ -491,7 +491,7 @@
     },
     "GET /admin/tenants/{tenant_id}/webhooks": {
       "handler": "App\\Controllers\\Admin\\WebhooksController::index",
-      "source_hash": "329384936a577003d554afe8b698e7319f1f41645e923e92a1f381dfc2a23d23",
+      "source_hash": "e14e82a90f780f223f0eba7c2b72f83eaa87a3e063a3697f47dd154b96f74f76",
       "disposition": "operation",
       "operations": [
         "webhooks_list"
@@ -504,7 +504,7 @@
     },
     "POST /admin/tenants/{tenant_id}/webhooks": {
       "handler": "App\\Controllers\\Admin\\WebhooksController::create",
-      "source_hash": "0a57e5200d2e4c6d8a6357dcac3f76f6060a064e4723d2dc2816cc9dbbe795ff",
+      "source_hash": "1558bc9f972e168b460760e39c743eb59c140d8dac4bf48d393d3beddedf8487",
       "disposition": "operation",
       "operations": [
         "webhook_create"
@@ -517,7 +517,7 @@
     },
     "POST /admin/tenants/{tenant_id}/webhooks/{id}": {
       "handler": "App\\Controllers\\Admin\\WebhooksController::update",
-      "source_hash": "cd2e2ebc08432bb38f8aa51f58778b66353188ab61b47c646c51ab0dc01fcbf4",
+      "source_hash": "a9f2c74584b52ea9feb847bc61e7c7bae2e8b663fc5464e7d701ae553a2a6c9f",
       "disposition": "operation",
       "operations": [
         "webhook_update"
@@ -530,7 +530,7 @@
     },
     "GET /admin/tenants/{tenant_id}/webhooks/{id}/secret": {
       "handler": "App\\Controllers\\Admin\\WebhooksController::secret",
-      "source_hash": "b3d28fbc48670fab8b07ac4c69057e5ce3bde0243c09ceab2c60abca2fa24aa7",
+      "source_hash": "cec82eed3967a67418c4968ba1ecccd4319c972d0d06fba1d5cb440fb30439fb",
       "disposition": "trusted_browser",
       "operations": [
         "webhook_get"
@@ -543,7 +543,7 @@
     },
     "POST /admin/tenants/{tenant_id}/webhooks/{id}/secret": {
       "handler": "App\\Controllers\\Admin\\WebhooksController::secret",
-      "source_hash": "b3d28fbc48670fab8b07ac4c69057e5ce3bde0243c09ceab2c60abca2fa24aa7",
+      "source_hash": "cec82eed3967a67418c4968ba1ecccd4319c972d0d06fba1d5cb440fb30439fb",
       "disposition": "trusted_browser",
       "operations": [
         "webhook_get"
@@ -556,7 +556,7 @@
     },
     "POST /admin/tenants/{tenant_id}/webhooks/{id}/rotate": {
       "handler": "App\\Controllers\\Admin\\WebhooksController::rotate",
-      "source_hash": "feab83a41d3abe516956c95a2f316e9f6b0e4fa4752bd44f4b85d085da9d7e65",
+      "source_hash": "333255ead2fc9f59f83aeb2af44debf59e1fdd47eb77e2d5f43a9a10d73c382f",
       "disposition": "operation",
       "operations": [
         "webhook_secret_rotate"
@@ -569,7 +569,7 @@
     },
     "GET /admin/tenants/{tenant_id}/webhooks/{id}/deliveries": {
       "handler": "App\\Controllers\\Admin\\WebhooksController::deliveries",
-      "source_hash": "4cf063fb7044a01c7e53df0e2c1af14c669bc3c931c3a494884c0d6b74f7592e",
+      "source_hash": "717c765010d5a4ac899c4ba4f2d9f769881f339db3eaf2e58f6a46fab33ceafd",
       "disposition": "operation",
       "operations": [
         "webhook_deliveries_list"
@@ -582,7 +582,7 @@
     },
     "POST /admin/tenants/{tenant_id}/webhook-deliveries/{id}/retry": {
       "handler": "App\\Controllers\\Admin\\WebhooksController::retry",
-      "source_hash": "ac40af3935f802f3b3d20e151b94f1a0be14c7f5037d1a064b8da8deac6dc520",
+      "source_hash": "6c79e9bcf15312385f19351cce2073591293122a47dac68db47c2e4d99c6c250",
       "disposition": "operation",
       "operations": [
         "webhook_delivery_retry"
@@ -595,7 +595,7 @@
     },
     "GET /admin/settings": {
       "handler": "App\\Controllers\\Admin\\SettingsController::general",
-      "source_hash": "2d1ff8e0abb0e350d32e208b75f4698e53470b27be57d58300e6583bd8981a6a",
+      "source_hash": "f48240a9c343b624fb11d063dac06f94c3a3fcd2c48e356b58fe8c81df879807",
       "disposition": "operation",
       "operations": [
         "system_settings_get"
@@ -623,7 +623,7 @@
     },
     "GET /admin/account": {
       "handler": "App\\Controllers\\Admin\\AccountController::show",
-      "source_hash": "6c8f25bf979d4ac512eb7dcc44a175498224fb5559c18fbba6bc9d08bf80fb4b",
+      "source_hash": "ab46b276ea9968108b00dc842425b6c3ba18a77ae34103e1990daf341eedf823",
       "disposition": "operation",
       "operations": [
         "account_get"
@@ -638,7 +638,7 @@
     },
     "POST /admin/account": {
       "handler": "App\\Controllers\\Admin\\AccountController::save",
-      "source_hash": "2e5ece62242203cac355331b1e5cdb1b57d8e7571c32b02fc3f53c439c2a17ce",
+      "source_hash": "acfd0478f07c0a15314930a74690ef5f99e5295ff54f509bc4cd51139bbd16c2",
       "disposition": "operation",
       "operations": [
         "account_update"
@@ -653,7 +653,7 @@
     },
     "GET /admin/settings/email": {
       "handler": "App\\Controllers\\Admin\\SettingsController::email",
-      "source_hash": "67d12cfac43de3144ff42f8b8be58541605b64a09632e46224ca263a48428169",
+      "source_hash": "2e4ae203da32b7f0f5b971dc08a47056676643478f7a60b80217c067d4f806b7",
       "disposition": "operation",
       "operations": [
         "system_settings_get",
@@ -687,7 +687,7 @@
     },
     "GET /admin/settings/cron": {
       "handler": "App\\Controllers\\Admin\\SettingsController::cron",
-      "source_hash": "299688e5668e6bf64fe424dcb8de54e1e230c3dac4eeb2e521d9b51a7f99f165",
+      "source_hash": "64d56126974b44b04b7cdd0606fa9dad4bbb87d2f41901514c5c1e08bbff8734",
       "disposition": "operation",
       "operations": [
         "jobs_status"
@@ -715,7 +715,7 @@
     },
     "GET /admin/settings/logs": {
       "handler": "App\\Controllers\\Admin\\SettingsController::logs",
-      "source_hash": "6633051298b849b15d44aa1ff23fa207f8c9c5e280ea490163373af523459503",
+      "source_hash": "2cb2e9eb78c0bbd33643dc3ef859a6a4e520d44bfb029e0df679fff323099153",
       "disposition": "operation",
       "operations": [
         "system_handoff"
@@ -731,7 +731,7 @@
     },
     "GET /admin/settings/audit": {
       "handler": "App\\Controllers\\Admin\\SettingsController::audit",
-      "source_hash": "d7ebcf7a7d8436602bfb572b53adb77dedcacc523b4dd9509f3727a3924db06b",
+      "source_hash": "4d0afc76aa159590b5842c41f9e3b1a172787a6358ab6f9c5eea22d06d2dba3a",
       "disposition": "operation",
       "operations": [
         "audit_list"
@@ -843,7 +843,7 @@
     },
     "GET /admin/updates": {
       "handler": "App\\Controllers\\Admin\\UpdateController::index",
-      "source_hash": "0a4d283eea23bbf9dbe6757b81a0269a5545047e5197f6fc500b9735af19bed0",
+      "source_hash": "88eab676d06b32116d39a4e47259e0e7639f4517f3e8feba0b8de2c243973fc3",
       "disposition": "trusted_browser",
       "operations": [
         "system_status",
@@ -861,7 +861,7 @@
     },
     "POST /admin/updates/upload": {
       "handler": "App\\Controllers\\Admin\\UpdateController::upload",
-      "source_hash": "d862bf661b3079e74c3f403b64a451debadfc9817ce7ef32357c4b44a32cc743",
+      "source_hash": "037c9219976a2a43a414d82724e1a4e1ed3153d3f599817a8ac9c4dded603c39",
       "disposition": "trusted_browser",
       "operations": [
         "system_status",
@@ -879,7 +879,7 @@
     },
     "POST /admin/updates/apply": {
       "handler": "App\\Controllers\\Admin\\UpdateController::applyLocal",
-      "source_hash": "5d2f6009407aa8e54619416eafcfacf86b3db4800d6539cbad1a23b4afea586a",
+      "source_hash": "7b11ee8948930d8cc88511979a60d0d8639fa0235bfa7503a051a8a31b25c08e",
       "disposition": "trusted_browser",
       "operations": [
         "system_status",
@@ -897,7 +897,7 @@
     },
     "GET /admin/updates/git-status": {
       "handler": "App\\Controllers\\Admin\\UpdateController::gitStatus",
-      "source_hash": "1b6d273a1d68f48c483e6e98c5f91d32a348eae3e27440e210dd25c41e94c994",
+      "source_hash": "f2990a4edde960a239bb25093ae0e58ae301647e2122caa62d96f04f529abbf9",
       "disposition": "trusted_browser",
       "operations": [
         "system_status",
@@ -915,7 +915,7 @@
     },
     "POST /admin/updates/git-update": {
       "handler": "App\\Controllers\\Admin\\UpdateController::gitUpdate",
-      "source_hash": "ed1cc3e8895d0ad96c5519a0e7d624561f534432f8fe4bc565f60f82c262666d",
+      "source_hash": "e17032c23d3d1000867a409e80feb27bd8b3d2debd940a98faf00e9f28f29ce5",
       "disposition": "trusted_browser",
       "operations": [
         "system_status",
@@ -933,7 +933,7 @@
     },
     "GET /admin/tenants": {
       "handler": "App\\Controllers\\Admin\\TenantsController::index",
-      "source_hash": "faaca48ca1b4e89a06d4c07ff23a2c54364ea412ae28a859903e100486bfe559",
+      "source_hash": "4d134b9cb73aad9555f31c842f13b29d685d848e05f8b2625a02799c2bdcd66e",
       "disposition": "operation",
       "operations": [
         "businesses_list"
@@ -947,7 +947,7 @@
     },
     "GET /admin/tenants/export": {
       "handler": "App\\Controllers\\Admin\\TenantsController::export",
-      "source_hash": "84ee95da04b8ebcba387056f55bbd00aa9a8699147190cb883576d79612e79bf",
+      "source_hash": "0ad3ca5fc35858689a5777636782043b578a420956cfe186a8bffee1a35cfacb",
       "disposition": "operation",
       "operations": [
         "businesses_export"
@@ -961,7 +961,7 @@
     },
     "GET /admin/tenants/create": {
       "handler": "App\\Controllers\\Admin\\TenantsController::create",
-      "source_hash": "5d13de4756a8bc86a4c266c9dfd31bbf6cf228ca2cffebbad67d4aa495d4cd40",
+      "source_hash": "318184de71c62f9f51e6498683e0978bd665dca3d4e45bce0cab0486704501ff",
       "disposition": "operation",
       "operations": [
         "business_create"
@@ -989,7 +989,7 @@
     },
     "GET /admin/tenants/{id}/edit": {
       "handler": "App\\Controllers\\Admin\\TenantsController::edit",
-      "source_hash": "a485d0fa888cae6d1ec06e75705fc418ee2e5f5221be93a3d88d5e8cc0cca285",
+      "source_hash": "9e3555dfeabed997974e9cf20e11d01012d2dbc8eda21b781691a0ca792a6700",
       "disposition": "operation",
       "operations": [
         "business_get"
@@ -1045,7 +1045,7 @@
     },
     "GET /admin/bookings": {
       "handler": "App\\Controllers\\Admin\\BookingsController::index",
-      "source_hash": "399796fe73eeed4fec12ca81e6c19ab7f15d7b949e6eaf6a69087672c741c721",
+      "source_hash": "182215fbec61c933bfac87b4b4cccc5facd71fad16c61d7a5964b0f3b6a2f215",
       "disposition": "operation",
       "operations": [
         "operator_bookings_list"
@@ -1061,7 +1061,7 @@
     },
     "GET /admin/bookings/export": {
       "handler": "App\\Controllers\\Admin\\BookingsController::export",
-      "source_hash": "530ffe8574687b284ef765dbd6844da80f6345e1cbb7852d4c9f5f8fa5bca612",
+      "source_hash": "729742b5b52b4e5e2c86ca3bf32cd54d1d82cc048138caf5be1c0bc6fc8aa2c4",
       "disposition": "operation",
       "operations": [
         "operator_bookings_export"
@@ -1077,7 +1077,7 @@
     },
     "GET /admin/bookings/{id}": {
       "handler": "App\\Controllers\\Admin\\BookingsController::show",
-      "source_hash": "fca2a244f95074a34316b87511fe8947e9ee83377b209ff99319992af2897604",
+      "source_hash": "833946171c9362430608b1c626bd8d8dd82c1eb961a03cb225a7d7d5c39386fa",
       "disposition": "operation",
       "operations": [
         "booking_get"
@@ -1093,7 +1093,7 @@
     },
     "POST /admin/bookings/{id}/status": {
       "handler": "App\\Controllers\\Admin\\BookingsController::updateStatus",
-      "source_hash": "200eefd7c777975e556516125d6fbf4d8a9a0e8ddb9a7dbc3495a0d667ddabcc",
+      "source_hash": "90cfea44bfe79112fa1596774092abe4d78477fb3b10438f204cdf30385b93a4",
       "disposition": "operation",
       "operations": [
         "booking_status_set"
@@ -1108,7 +1108,7 @@
     },
     "POST /admin/bookings/{id}/reschedule": {
       "handler": "App\\Controllers\\Admin\\BookingsController::reschedule",
-      "source_hash": "e0de9c72815f085aa99bf5f332cb93905ce936d87e7bef1f143d4745b7df8887",
+      "source_hash": "1e31414ce036b0ae6f6271dc58cd23fd5a076d29cc4b266c52966062b0238858",
       "disposition": "operation",
       "operations": [
         "booking_reschedule"
@@ -1137,7 +1137,7 @@
     },
     "GET /admin/tenants/{tenant_id}/bookings": {
       "handler": "App\\Controllers\\Admin\\BookingsController::tenantIndex",
-      "source_hash": "8ba2253f0bdbacf9e56f6c37ac785e9f9614dbb117bae003b2c865cd53589e6e",
+      "source_hash": "c8c4e3b24500eaf790f38584ddcbdf158ebbff13d4caf414d54da19bbcd70ca7",
       "disposition": "operation",
       "operations": [
         "bookings_list"
@@ -1153,7 +1153,7 @@
     },
     "GET /admin/tenants/{tenant_id}/bookings/create": {
       "handler": "App\\Controllers\\Admin\\BookingsController::tenantCreate",
-      "source_hash": "2b818f9cc63ae58d7378dca7adb0f77c18c9305484e34b85c314fa11c4033640",
+      "source_hash": "68e3e1e09f7ef2a729bfeb8ea3fd6ec1641133ba4e100c5c7bb6f0bcf02a0541",
       "disposition": "operation",
       "operations": [
         "staff_availability_search",
@@ -1190,7 +1190,7 @@
     },
     "POST /admin/tenants/{tenant_id}/bookings/create": {
       "handler": "App\\Controllers\\Admin\\BookingsController::tenantStore",
-      "source_hash": "2518d93cc917d6fb2b0f093e71887db8ab0ad480826744e304bc2ea29357f112",
+      "source_hash": "fe818750f97f6e8c984c2f8da7780d81a82f3b07451d7215fb44cc09d5c68630",
       "disposition": "operation",
       "operations": [
         "booking_create"
@@ -1209,7 +1209,7 @@
     },
     "GET /admin/tenants/{tenant_id}/bookings/{id}": {
       "handler": "App\\Controllers\\Admin\\BookingsController::tenantShow",
-      "source_hash": "9c9a98f0e32566a0b5f33bf17beb45b0e9560dcd42c51d8cd6a9f0c9753602a7",
+      "source_hash": "8313f8dfce4e277b854010ed45369425507fa4ba8cd2262178689a1609a06f5b",
       "disposition": "operation",
       "operations": [
         "booking_get"
@@ -1225,7 +1225,7 @@
     },
     "POST /admin/tenants/{tenant_id}/bookings/{id}/status": {
       "handler": "App\\Controllers\\Admin\\BookingsController::tenantUpdateStatus",
-      "source_hash": "1667cda37716215c08640e8bbd9ab7d7b86e3ee29dc6a2a107a7748a9d1bf9a5",
+      "source_hash": "9af76bde19d0ae83e6ca033d085a1a0a8c4458fe4f283217308a324a77507342",
       "disposition": "operation",
       "operations": [
         "booking_status_set"
@@ -1240,7 +1240,7 @@
     },
     "POST /admin/tenants/{tenant_id}/bookings/{id}/reschedule": {
       "handler": "App\\Controllers\\Admin\\BookingsController::tenantReschedule",
-      "source_hash": "4408351925a25a49420793cfec4e11305d98b7936270e134e20a7b01a8700d36",
+      "source_hash": "0c6e6760b1b5fd89cc1e42677bcd32dab0cc36af42a4943d9e690bd793dc29e7",
       "disposition": "operation",
       "operations": [
         "booking_reschedule"
@@ -1256,7 +1256,7 @@
     },
     "GET /admin/tenants/{tenant_id}/users": {
       "handler": "App\\Controllers\\Admin\\BusinessUsersController::index",
-      "source_hash": "0d95ca722c7ffaed89edb2f4c233f40feb17eb45fe8d7555ba0c45e022cbe05c",
+      "source_hash": "dc49a33190bd120c28bf7c7f228cd0e27a8cc53eee5f13c977ba4313726f1a38",
       "disposition": "operation",
       "operations": [
         "team_list",
@@ -1271,7 +1271,7 @@
     },
     "GET /admin/tenants/{tenant_id}/users/invite": {
       "handler": "App\\Controllers\\Admin\\BusinessUsersController::invite",
-      "source_hash": "92675c203c93a7946ec5e56cdb595ee4c9aa0cf89d432ff9ba683529618c0082",
+      "source_hash": "a76e0108460edc6e145f74570d2f15ff36ff57155132c09b9bbf545ec9f05c57",
       "disposition": "operation",
       "operations": [
         "team_invite"
@@ -1327,7 +1327,7 @@
     },
     "GET /admin/tenants/{tenant_id}/settings": {
       "handler": "App\\Controllers\\Admin\\TenantSettingsController::general",
-      "source_hash": "9164124688962842639e17c93a427f3f5888793acbc9e5e292c0b11c703c4fdb",
+      "source_hash": "8e0942ab14e063193635b1c1d331704a46e0e8c0dbec3e5a376518faf1485d65",
       "disposition": "operation",
       "operations": [
         "business_general_get"
@@ -1355,7 +1355,7 @@
     },
     "GET /admin/tenants/{tenant_id}/settings/branding": {
       "handler": "App\\Controllers\\Admin\\TenantSettingsController::branding",
-      "source_hash": "51d75bc65583ee9b8ad934466c9076cf08ccd2a4fa4f9aeb1c02c7736900f5a3",
+      "source_hash": "31a939484ba57272c0273474c2c91f1aba3c5e388bf05f829fe4c36a48147a1f",
       "disposition": "operation",
       "operations": [
         "business_branding_get"
@@ -1389,7 +1389,7 @@
     },
     "GET /admin/tenants/{tenant_id}/settings/bookingpage": {
       "handler": "App\\Controllers\\Admin\\TenantSettingsController::bookingPage",
-      "source_hash": "0de1f51d77aa9fecf7f58724abda828b123ce4f2538de3e7bfba48ec58da835a",
+      "source_hash": "7d3448cacdab018ac8208113b2ef1b91042c962ccf99febd935ec716970d24eb",
       "disposition": "operation",
       "operations": [
         "business_bookingpage_get"
@@ -1415,7 +1415,7 @@
     },
     "GET /admin/tenants/{tenant_id}/settings/booking": {
       "handler": "App\\Controllers\\Admin\\TenantSettingsController::booking",
-      "source_hash": "4bb69a599f8d05cd25c833e5b3f9e507d1d1c20b4a31f2c9c28948238d2b3391",
+      "source_hash": "399a9779a317539fe2ba0c756966823f4304546ab5c6a7d157559316269178e5",
       "disposition": "operation",
       "operations": [
         "business_booking_get"
@@ -1441,7 +1441,7 @@
     },
     "GET /admin/tenants/{tenant_id}/settings/privacy": {
       "handler": "App\\Controllers\\Admin\\TenantSettingsController::privacy",
-      "source_hash": "f4216c26a7ad493deceec86497ac97564db09bbda31a5a99ace57631b093f1de",
+      "source_hash": "979a42f08540a99732d39df84e1fc5f11c745311adc03f0c1cbb523c4f0676f0",
       "disposition": "operation",
       "operations": [
         "business_privacy_get"
@@ -1467,7 +1467,7 @@
     },
     "GET /admin/tenants/{tenant_id}/settings/notifications": {
       "handler": "App\\Controllers\\Admin\\TenantSettingsController::notifications",
-      "source_hash": "98194c5668835e67a344bca7d546341ef8767814527969c5438acf2e32165c64",
+      "source_hash": "57b5121e567950050d93fb5922cf316948c39b4207edc1338523d6abea2d6f65",
       "disposition": "operation",
       "operations": [
         "business_notifications_get"
@@ -1493,7 +1493,7 @@
     },
     "GET /admin/tenants/{tenant_id}/settings/emails": {
       "handler": "App\\Controllers\\Admin\\TenantSettingsController::emails",
-      "source_hash": "e1fa70bfe50fbc58a181149f6ba0083de25372a93e5ebb47b652cf526e44b2ee",
+      "source_hash": "fbc7fe1dc67b032ecd5caa13f72d49f62f20364b90f41235dfbe7cc10384c2ed",
       "disposition": "operation",
       "operations": [
         "email_templates_get",
@@ -1520,7 +1520,7 @@
     },
     "GET /admin/tenants/{tenant_id}/settings/embed": {
       "handler": "App\\Controllers\\Admin\\TenantSettingsController::embed",
-      "source_hash": "c7aca23368797c980bcfd71db2f0e10de81f73412b91892ccb7f4c47be1a7cb6",
+      "source_hash": "b32a85dc9e0fd748e376988293652a4801edd36248713f61424e6283b4e947fc",
       "disposition": "operation",
       "operations": [
         "business_embed_get"
@@ -1546,7 +1546,7 @@
     },
     "GET /admin/tenants/{tenant_id}/customers": {
       "handler": "App\\Controllers\\Admin\\CustomersController::index",
-      "source_hash": "80747a44874c3555d6a48454dea408097b2e75390ea9b70827c66d8ab694668e",
+      "source_hash": "9654126ffc0060d9fcc8f48b726b525f780419913abd3b235fb1a7734844ac9b",
       "disposition": "operation",
       "operations": [
         "customer_list"
@@ -1559,7 +1559,7 @@
     },
     "GET /admin/tenants/{tenant_id}/customers/export": {
       "handler": "App\\Controllers\\Admin\\CustomersController::export",
-      "source_hash": "059a6d4e197930f2dc71b86277bfc80722bf99548a13593f711ab66b954c280e",
+      "source_hash": "84646fece608c70062b9d907342a0cdf8750c8539e83a6b14330eca946fc3d15",
       "disposition": "operation",
       "operations": [
         "customer_export"
@@ -1572,7 +1572,7 @@
     },
     "GET /admin/tenants/{tenant_id}/customers/{id}": {
       "handler": "App\\Controllers\\Admin\\CustomersController::show",
-      "source_hash": "ca862e2cb1660390e840275749f4496be79ce66193941a83275143b814a46e9d",
+      "source_hash": "de2c47258ae295aa367d5488bf83fc3917431cae9645dc013ea9189ec3c00342",
       "disposition": "operation",
       "operations": [
         "customer_get",
@@ -1586,7 +1586,7 @@
     },
     "GET /admin/tenants/{tenant_id}/services": {
       "handler": "App\\Controllers\\Admin\\ServiceController::index",
-      "source_hash": "6ea353e9ced7c1111e9aeeceb3ced78bd384c082d9a91d382a442a56c031f500",
+      "source_hash": "69f27ca26696ef6a6e9cd66b17f8f966161f30de58f95729e6ec4241da993a47",
       "disposition": "operation",
       "operations": [
         "services_list"
@@ -1600,7 +1600,7 @@
     },
     "GET /admin/tenants/{tenant_id}/services/create": {
       "handler": "App\\Controllers\\Admin\\ServiceController::create",
-      "source_hash": "2252faeae720019e4c34bfd037936e513fc8575c5f1218e5e68a1f7147cf73d0",
+      "source_hash": "772b08746d596051654e0f262ff52d2d555bc701854e1abd5d039e3155cd8089",
       "disposition": "operation",
       "operations": [
         "service_create"
@@ -1628,7 +1628,7 @@
     },
     "GET /admin/tenants/{tenant_id}/services/{id}/edit": {
       "handler": "App\\Controllers\\Admin\\ServiceController::edit",
-      "source_hash": "648961a78bde4cf5a1b872db394b09e1be658395cf20005ae67ab38f66bdc607",
+      "source_hash": "dee35cea361e2c29abd297c7d520e06f4a87dd7a738bb6ba172568e702a25ec0",
       "disposition": "operation",
       "operations": [
         "service_get"
@@ -1698,7 +1698,7 @@
     },
     "GET /admin/tenants/{tenant_id}/staff": {
       "handler": "App\\Controllers\\Admin\\StaffController::index",
-      "source_hash": "d8fbbf1c5e823b3238c47c8aa2bf671f5306918f60fa8c763ed6086b9c0c819f",
+      "source_hash": "3d72bab4618449394801de1fb1151caa3a8e385ee98fe335196d0734786342de",
       "disposition": "operation",
       "operations": [
         "staff_list"
@@ -1712,7 +1712,7 @@
     },
     "GET /admin/tenants/{tenant_id}/staff/create": {
       "handler": "App\\Controllers\\Admin\\StaffController::create",
-      "source_hash": "d1b73f8f667cb5209245f76382c44c32d55352966201c1ac5202211399b6d9c1",
+      "source_hash": "015b73d75820515e09903535d640680660e40b2e67a1b1ba57f7c05f692b76d0",
       "disposition": "operation",
       "operations": [
         "staff_create"
@@ -1740,7 +1740,7 @@
     },
     "GET /admin/tenants/{tenant_id}/staff/{id}/edit": {
       "handler": "App\\Controllers\\Admin\\StaffController::edit",
-      "source_hash": "dd625b77027347398000e8dd1dbaee9c39542a6fe5a1aee4eccd1402e6daafbb",
+      "source_hash": "69f8acbf143dbadd9321cd797c20d5c75a85b25868afdaedc0343fd3beb75f7b",
       "disposition": "operation",
       "operations": [
         "staff_get"
@@ -1810,7 +1810,7 @@
     },
     "GET /admin/tenants/{tenant_id}/availability": {
       "handler": "App\\Controllers\\Admin\\AvailabilityController::index",
-      "source_hash": "e29ce41d9623c44f3c9739d3604cde5054ab71fc71963d7ffd35b8247273f5a1",
+      "source_hash": "fa6d103ec42797a45669ce0936c0c036bdd76b767e82b08a8829613135177bc4",
       "disposition": "operation",
       "operations": [
         "schedule_get"
@@ -1838,7 +1838,7 @@
     },
     "GET /admin/tenants/{tenant_id}/availability/staff/{id}": {
       "handler": "App\\Controllers\\Admin\\AvailabilityController::staffOverride",
-      "source_hash": "d69713da959ef038774b969f519cc5c72562c9d16b163534b51d87c8aff44766",
+      "source_hash": "8eeca6feb97291f509b4658bbaa8ebd3f4ecee264280b8a8242c06b05f6ef6d6",
       "disposition": "operation",
       "operations": [
         "schedule_get"
@@ -1880,7 +1880,7 @@
     },
     "GET /admin/tenants/{tenant_id}/blocked-dates": {
       "handler": "App\\Controllers\\Admin\\BlockedDatesController::index",
-      "source_hash": "05b27064d206959b6b6f34e6a2bdeb46bc9af49f6887c950d2eee4442a309431",
+      "source_hash": "c1ea82f65050540bc53b8cada24a508d9b3812e18bd4e083be6bf0036d70fe0d",
       "disposition": "operation",
       "operations": [
         "blocked_dates_list"
@@ -1922,7 +1922,7 @@
     },
     "GET /admin/tenants/{tenant_id}/resources": {
       "handler": "App\\Controllers\\Admin\\ResourceController::index",
-      "source_hash": "5b7eecaf64a5c92927aae7519f755ef70becd857a1f08b1f827bcf9475716185",
+      "source_hash": "137e78ecc2c6308a427c4bfd2680c1a4eb49d317f2912eb274cc24d2de9b46a2",
       "disposition": "operation",
       "operations": [
         "resources_list"
@@ -1936,7 +1936,7 @@
     },
     "GET /admin/tenants/{tenant_id}/resources/create": {
       "handler": "App\\Controllers\\Admin\\ResourceController::create",
-      "source_hash": "cc108df16049e8dcb29877fb3e605c2fb58729d574441cbf52fab5f63e2c0f7f",
+      "source_hash": "2a4d961984471ff681de9d94dee3dac11b8203fb783ac90b359c1306646fb311",
       "disposition": "operation",
       "operations": [
         "resource_create"
@@ -1964,7 +1964,7 @@
     },
     "GET /admin/tenants/{tenant_id}/resources/{id}/edit": {
       "handler": "App\\Controllers\\Admin\\ResourceController::edit",
-      "source_hash": "98759a4483e2325ae1877ce396836d5c568216b9b68de6d02d4683105673ee40",
+      "source_hash": "b856388857d80ace4320464558ecda10567b0e7d3bfc73098e4e73fabd718634",
       "disposition": "operation",
       "operations": [
         "resource_get"
@@ -2034,7 +2034,7 @@
     },
     "GET /admin/tenants/{tenant_id}/capacity-slots": {
       "handler": "App\\Controllers\\Admin\\CapacitySlotsController::index",
-      "source_hash": "8bdceea1311fe739dba03a0ce529f7f46b7b9e4a1d8def44f829c81b4b3dcd4f",
+      "source_hash": "4054868b499e6ebbff4c7868fa7ec20c91fec6811c73f17e11411608116df3ce",
       "disposition": "operation",
       "operations": [
         "capacity_slots_list"
@@ -2090,7 +2090,7 @@
     },
     "GET /admin/tenants/{tenant_id}/events": {
       "handler": "App\\Controllers\\Admin\\EventsController::index",
-      "source_hash": "62c9d00b132d01e3d2e774871910929da94cd134bb1d48f00fb05ee87fc3f416",
+      "source_hash": "fa019e822dce168cd8a224cd359b5a899685eff0a352272f6bc30e1033b26fce",
       "disposition": "operation",
       "operations": [
         "events_list"
@@ -2105,7 +2105,7 @@
     },
     "GET /admin/tenants/{tenant_id}/events/create": {
       "handler": "App\\Controllers\\Admin\\EventsController::create",
-      "source_hash": "6398dfc10bd3dab077ca1aacd8ae895a2dc35d8979d4ac19137e4536b2bc34e0",
+      "source_hash": "21578dd6acfb1ad961e45480e75d2c23d6cd752e16928cafd6aa466add187711",
       "disposition": "operation",
       "operations": [
         "event_create"
@@ -2135,7 +2135,7 @@
     },
     "GET /admin/tenants/{tenant_id}/events/{id}/edit": {
       "handler": "App\\Controllers\\Admin\\EventsController::edit",
-      "source_hash": "f887f92ee441a6e0d26523e659f8aa56852e1d7d2d2b1269fc0296a91dcb4b35",
+      "source_hash": "1d1024acdedf677bbf2e513bfcee1234c8f2b46370b3ff1794240cae5aad9390",
       "disposition": "operation",
       "operations": [
         "event_get"
@@ -2195,46 +2195,52 @@
     },
     "GET /admin/tenants/{tenant_id}/calendar": {
       "handler": "App\\Controllers\\Admin\\CalendarController::month",
-      "source_hash": "157ff7408dce9e2d0d6ab674e4c00fd7c9a80cd92979216fad2a640b8b1a4fae",
+      "source_hash": "21a46afd063bee412f7985c9c7ba5cfe4feb909c4d99921b3057563294080758",
       "disposition": "operation",
       "operations": [
-        "calendar_get"
+        "calendar_get",
+        "calendar_summary"
       ],
-      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "rationale": "The calendar view reads its date window, closures and per-day booking counts from the shared BookingCalendar, the same source as calendar_summary; calendar_get pages the booking records behind it.",
       "tests": [
         "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CalendarSummaryTest.php",
         "tests/Integration/SharedBookingOperationsTest.php"
       ]
     },
     "GET /admin/tenants/{tenant_id}/calendar/day": {
       "handler": "App\\Controllers\\Admin\\CalendarController::day",
-      "source_hash": "ff26cdb4b5787e8a6f5f9b421a5bed7c4f7ea407ede54435574cac3b99ba5e82",
+      "source_hash": "f25030c8d975aff2e1d81d6caf2b6999550586cf3b6805105486c84a46c9e66b",
       "disposition": "operation",
       "operations": [
-        "calendar_get"
+        "calendar_get",
+        "calendar_summary"
       ],
-      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "rationale": "The calendar view reads its date window, closures and per-day booking counts from the shared BookingCalendar, the same source as calendar_summary; calendar_get pages the booking records behind it.",
       "tests": [
         "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CalendarSummaryTest.php",
         "tests/Integration/SharedBookingOperationsTest.php"
       ]
     },
     "GET /admin/tenants/{tenant_id}/calendar/week": {
       "handler": "App\\Controllers\\Admin\\CalendarController::week",
-      "source_hash": "3743a707a44e30b3d456e5362723eebe7dce2a6977df9e26d647d2e0189ac479",
+      "source_hash": "03336d8d6a05f7f9f1b921ea9bff4638f7f90a7a5cbe509cd3f8fe9a4304c6f1",
       "disposition": "operation",
       "operations": [
-        "calendar_get"
+        "calendar_get",
+        "calendar_summary"
       ],
-      "rationale": "Shared application operation preserves this action’s current role and business boundary.",
+      "rationale": "The calendar view reads its date window, closures and per-day booking counts from the shared BookingCalendar, the same source as calendar_summary; calendar_get pages the booking records behind it.",
       "tests": [
         "tests/Integration/BookingOperationContractCoverageTest.php",
+        "tests/Integration/CalendarSummaryTest.php",
         "tests/Integration/SharedBookingOperationsTest.php"
       ]
     },
     "POST /admin/tenants/{tenant_id}/impersonate": {
       "handler": "App\\Controllers\\Admin\\ImpersonationController::start",
-      "source_hash": "86429007a69ed63f22de69da774fa1ffc059c09d0d451f3991bd434005a48a0a",
+      "source_hash": "e16a33c171467b2c8e808e69adaa1da44d53ddf353278c88e1e41902d61d389e",
       "disposition": "operation",
       "operations": [
         "operator_business_context"
@@ -2266,7 +2272,7 @@
     },
     "GET /book/{slug}": {
       "handler": "App\\Controllers\\Booking\\BookingPageController::show",
-      "source_hash": "5dabd4ef2787105aca4ef5b8dc452f60127478a1e4c35c975929dd06e39294dc",
+      "source_hash": "52b70581b8274cafb7b4456d24dca69dc12af15f59e25c69743a43ea9a083afe",
       "disposition": "operation",
       "operations": [
         "public_business_get",
@@ -2281,7 +2287,7 @@
     },
     "GET /embed/{slug}.js": {
       "handler": "App\\Controllers\\Booking\\EmbedController::script",
-      "source_hash": "0eebe0795fd209443045d2e42a856aab360cf4d3a5e395486c06e7907d1662b2",
+      "source_hash": "edfecb3c5074404696ad0c63293c45552901958262357f5a6b49bb154ce5dc50",
       "disposition": "operation",
       "operations": [
         "business_embed_get"
@@ -2308,7 +2314,7 @@
     },
     "GET /api/{slug}/services": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::services",
-      "source_hash": "76f5f39147f031d6ef0bca0ebe696cca407b373d6fa3a8dfedecf45107a088af",
+      "source_hash": "b9d1e5fc61350c26da3a4870936978178d674c319aae8be2af641b7d0ae53d59",
       "disposition": "operation",
       "operations": [
         "public_catalog_list"
@@ -2322,7 +2328,7 @@
     },
     "GET /api/{slug}/staff": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::staff",
-      "source_hash": "e4cc7732828f16c4f10743f91df4386ef0190df31dc0b88f59097d9c534a2070",
+      "source_hash": "f05728a5299a939a0e0ff4339d7f077ed257fcfea10184eb412d210f95268554",
       "disposition": "operation",
       "operations": [
         "public_catalog_list"
@@ -2336,7 +2342,7 @@
     },
     "GET /api/{slug}/availability": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::availability",
-      "source_hash": "449fbd9d3e75944530a226a2eafe00a67da536b3cf53d54b1dbaffbad493c5d8",
+      "source_hash": "779debee55c19598335e629cde4050b5af216e62d2fa86b0799d2f5de525c23d",
       "disposition": "operation",
       "operations": [
         "availability_search",
@@ -2359,7 +2365,7 @@
     },
     "GET /api/{slug}/available-dates": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::availableDates",
-      "source_hash": "a9058dd3a9fb4e7e9e2d1abd84a003af5848e80e38c1d964919bca7c3545ff9d",
+      "source_hash": "54115334d39ffbfdfe4f685254a2e09929c50fdcc608077959e57297116485d2",
       "disposition": "operation",
       "operations": [
         "availability_search"
@@ -2378,7 +2384,7 @@
     },
     "POST /api/{slug}/bookings": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::createBooking",
-      "source_hash": "f9e05bec95ee00134727e7503a29efae7ef771fbf769ab8747d0f1e32fe7c4a5",
+      "source_hash": "e4e20d55bd062515976398c07dc861d3236bfa489e5363f902666ace2ef68bf9",
       "disposition": "operation",
       "operations": [
         "public_booking_create"
@@ -2394,7 +2400,7 @@
     },
     "GET /api/{slug}/resources": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::resources",
-      "source_hash": "f96f1e2df225b450c6193f4cee880adafb4431e9362381e22e3b05df9b4da040",
+      "source_hash": "aef8d674a204dd2d0721dbf3ad71ace037a98dd2b79001030e09b99ff1369822",
       "disposition": "operation",
       "operations": [
         "public_catalog_list"
@@ -2408,7 +2414,7 @@
     },
     "GET /api/{slug}/resources/{id}/availability": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::resourceAvailability",
-      "source_hash": "9eac30356cb5179d4228243a25b0622aa945a7ba2a1ef83b377fc6f1502f3e9c",
+      "source_hash": "fe5756f34fda754f12886750b8872365601d98149dcc01d28c2109a49f158a9a",
       "disposition": "operation",
       "operations": [
         "availability_search"
@@ -2427,7 +2433,7 @@
     },
     "GET /api/{slug}/capacity/available-dates": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::capacityAvailableDates",
-      "source_hash": "82375c37c20fab73b3f18eb11dddb8c7f42cca846f4dbde7f0029f76211c4661",
+      "source_hash": "083ed2100869df77cf87481df986aa8c4932ae14b5af9fd0fec3d134addfff43",
       "disposition": "operation",
       "operations": [
         "availability_search"
@@ -2446,7 +2452,7 @@
     },
     "GET /api/{slug}/capacity/slots": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::capacitySlots",
-      "source_hash": "3e337402307ca5997cc21f985929ee2455d034743733cb4a8277e6cc1a4d193e",
+      "source_hash": "89b43929aa8623a93d159abe926098b127e5edb0c603df4a388089bfd193766c",
       "disposition": "operation",
       "operations": [
         "availability_search"
@@ -2465,7 +2471,7 @@
     },
     "GET /api/{slug}/events": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::events",
-      "source_hash": "b6de44028c42347d37812379c50ffb1edf3b8ce6b3de1f269b5a161d0f4bde35",
+      "source_hash": "434d5f569c81014b9fd3ec6fcf07e41c2e5785e8fee2fe882de94e2f0c9e1d12",
       "disposition": "operation",
       "operations": [
         "public_catalog_list"
@@ -2479,7 +2485,7 @@
     },
     "GET /api/{slug}/events/{id}": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::eventDetail",
-      "source_hash": "a6f3ac1cccce3ff4c5d323a20dea7e6b1f33d4f06997c4e9d0496c8de8dc9574",
+      "source_hash": "4f91525acd99476176ad20e350f3f1887d16be0c7156aefae2bb72f07c1dc7ee",
       "disposition": "operation",
       "operations": [
         "public_catalog_list"
@@ -2493,7 +2499,7 @@
     },
     "POST /api/{slug}/customer-access": {
       "handler": "App\\Controllers\\Booking\\CustomerAccessController::exchange",
-      "source_hash": "cb1d7a8158b9b1e1d2c4c42122932a790d721d1fd534e45ae2a73459e0d309db",
+      "source_hash": "0dd9d85559f3a48f64048956c2ecd82983e72c7a82a398c1992ac052951f859f",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Proof of mailbox access is exchanged into a purpose-bound browser session; identifiers and email knowledge never grant authority.",
@@ -2503,7 +2509,7 @@
     },
     "POST /book/{slug}/access-recovery": {
       "handler": "App\\Controllers\\Booking\\CustomerAccessController::recover",
-      "source_hash": "39a5194ea0540492fb5da4b424b24a113fc24858756711efbe15156d449e83a1",
+      "source_hash": "3177554e0a0230f0e96e499644318a932fdc6b41044d313a67c53143c18a02e2",
       "disposition": "trusted_browser",
       "operations": [],
       "rationale": "Proof of mailbox access is exchanged into a purpose-bound browser session; identifiers and email knowledge never grant authority.",
@@ -2513,7 +2519,7 @@
     },
     "GET /book/{slug}/privacy/{customer_id}": {
       "handler": "App\\Controllers\\Booking\\PrivacyController::show",
-      "source_hash": "19da037f0584a1ee022026af78f3de3497a82d1248cb588b47bda5afbad38c8a",
+      "source_hash": "18087f53c316604e3e021698a666b499886711a233143744f5b03b17d763c0fb",
       "disposition": "operation",
       "operations": [
         "customer_privacy_get",
@@ -2529,7 +2535,7 @@
     },
     "POST /book/{slug}/privacy/{customer_id}": {
       "handler": "App\\Controllers\\Booking\\PrivacyController::action",
-      "source_hash": "f8bd225a437fa528182908e8d06882c51f1f5c230a4118f37c82feaf041b3034",
+      "source_hash": "e4cdffd069ff72ad2d1048b7ef7d5ff9ec115bc7f1118b6ca1600e1f913c312e",
       "disposition": "operation",
       "operations": [
         "customer_privacy_export",
@@ -2545,7 +2551,7 @@
     },
     "GET /book/{slug}/manage/{booking_id}": {
       "handler": "App\\Controllers\\Booking\\BookingPageController::manage",
-      "source_hash": "5a7dc342b7448ca20b716a5a47243edbddf9d34b8262cc2f010f6cfee0357835",
+      "source_hash": "7ab44c44d1f4df193f911cb5b4f62b745ced061cf25caff13daa6fcc411173de",
       "disposition": "operation",
       "operations": [
         "customer_booking_get"
@@ -2560,7 +2566,7 @@
     },
     "GET /api/{slug}/bookings/{id}": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::bookingDetail",
-      "source_hash": "60905bf318d6da65d8d2e260d316fd3bf65b00fc15b723d714da7a6309c61bcc",
+      "source_hash": "71dedee8699225fe6c7270322f641bba7d59f1e15f06d1b72e858b1c42ffa769",
       "disposition": "operation",
       "operations": [
         "customer_booking_get"
@@ -2575,7 +2581,7 @@
     },
     "POST /api/{slug}/bookings/{id}/cancel": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::cancelBookingAction",
-      "source_hash": "4d3a33d9e59aeea5e9e541618e6231e5a3c484710825a05377fd33e554bf2697",
+      "source_hash": "5225246bdf9d4e0d2e98030fc7304f4bf5e69fc02ed2ca87da6197bd979f4af8",
       "disposition": "operation",
       "operations": [
         "customer_booking_cancel"
@@ -2590,7 +2596,7 @@
     },
     "POST /api/{slug}/bookings/{id}/reschedule": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::rescheduleBookingAction",
-      "source_hash": "ae798e716b8949eb934137caa08a08e8d4266824a5c1f7b77a04f3446daf4d3c",
+      "source_hash": "07707fdf1750db581972192f327bb9238e6c862a24f6ff79e3aeb871fb95b967",
       "disposition": "operation",
       "operations": [
         "customer_booking_reschedule"
@@ -2606,7 +2612,7 @@
     },
     "GET /cron/run": {
       "handler": "App\\Controllers\\CronController::run",
-      "source_hash": "35e163218fcf2e29e4e91eaf62377ad482e30be6f3001361bfa5e02a6bf069ba",
+      "source_hash": "37b74c90b32c8e3f4cbf645846136aeb5b29aeb663f084e8f2d7abe1b5bb36fd",
       "disposition": "transport",
       "operations": [
         "jobs_run"
@@ -2620,7 +2626,7 @@
     },
     "GET /cron/retention": {
       "handler": "App\\Controllers\\CronController::run",
-      "source_hash": "35e163218fcf2e29e4e91eaf62377ad482e30be6f3001361bfa5e02a6bf069ba",
+      "source_hash": "37b74c90b32c8e3f4cbf645846136aeb5b29aeb663f084e8f2d7abe1b5bb36fd",
       "disposition": "transport",
       "operations": [
         "jobs_run"
@@ -2647,7 +2653,7 @@
     },
     "GET /api/agent/v1/tenants": {
       "handler": "App\\Controllers\\AgentApi\\ResourceController::tenants",
-      "source_hash": "76e1a801ef5efbe224b9b54ce30f7be6990d337964bc52412a2a9c2f0e2b93d8",
+      "source_hash": "989c7bba9e0d08da22555ef19db6407ef282e76651a40d8571677fea15b1d714",
       "disposition": "transport",
       "operations": [
         "businesses_list"
@@ -2662,7 +2668,7 @@
     },
     "GET /api/agent/v1/bookings": {
       "handler": "App\\Controllers\\AgentApi\\ResourceController::bookings",
-      "source_hash": "4ab80f3fee76fc4d5975aab64cac8db4222727e69870479ddc2d24db4ae94a1c",
+      "source_hash": "7bc7c21a0d9e241f60513a8729633e05f8532e74912ae141db0bf5631454c750",
       "disposition": "transport",
       "operations": [
         "bookings_list"
@@ -2679,7 +2685,7 @@
     },
     "GET /api/agent/v1/services": {
       "handler": "App\\Controllers\\AgentApi\\ResourceController::services",
-      "source_hash": "b8effef8fcde7e705cfc2ff777a0c1a22972f143a9a3c2d0f770046895c467cc",
+      "source_hash": "e7125bc2c426a898178aea3ac4e50ab0cf59e3c6a20c0e5b54ec2563c434a554",
       "disposition": "transport",
       "operations": [
         "services_list"
@@ -2694,7 +2700,7 @@
     },
     "GET /api/agent/v1/availability": {
       "handler": "App\\Controllers\\AgentApi\\ResourceController::availability",
-      "source_hash": "7f2d4b8dd1b5502fbca9e6eab939dece8e5a924c3a8a69cf6b77b8b39897e936",
+      "source_hash": "4117ae749fa97e6275fdb65f529a398ee65bec98b1d3c0dc4134fc2ba167be79",
       "disposition": "transport",
       "operations": [
         "schedule_get"
@@ -2715,8 +2721,17 @@
         "tests/Integration/AgentAdmissionRecoveryTest.php",
         "tests/Integration/AgentFoundationTest.php",
         "tests/Integration/AuthFlowTest.php",
-        "tests/Integration/SettingsIdentityOperationsTest.php"
-      ]
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/Transport/IdentityTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testAccountGetOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testAccountGetOverHttpAndMcp"
+        ]
+      }
     },
     "account_update": {
       "contract_hash": "850203363564d0eb2276da8b3260cda19efe4f606b319e4384d9f2d67d6d1ba1",
@@ -2724,8 +2739,17 @@
         "tests/Integration/AgentAdmissionRecoveryTest.php",
         "tests/Integration/AgentFoundationTest.php",
         "tests/Integration/AuthFlowTest.php",
-        "tests/Integration/SettingsIdentityOperationsTest.php"
-      ]
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/Transport/IdentityTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testAccountUpdateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testAccountUpdateOverHttpAndMcp"
+        ]
+      }
     },
     "application_get": {
       "contract_hash": "9718a28137bb5ff8f4f3044134bcbfae60c69f9f489b68eb4391999728bfc64f",
@@ -2733,23 +2757,49 @@
         "tests/Integration/BusinessApplicationsTest.php",
         "tests/Integration/BusinessOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ]
+      }
     },
     "application_review": {
       "contract_hash": "d4140dfb0ed32af6cadc6ffc20b29335c4aa93ad5560457a459f25583b53c711",
       "tests": [
         "tests/Integration/BusinessApplicationsTest.php",
         "tests/Integration/BusinessOperationsTest.php",
-        "tests/Integration/OperationContractCoverageTest.php"
-      ]
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/Transport/BusinessTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/BusinessTransportTest.php::testApplicationReviewOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/BusinessTransportTest.php::testApplicationReviewOverHttpAndMcp"
+        ]
+      }
     },
     "application_submit": {
       "contract_hash": "b1b5eeda05728b7a1b010d8ca3f0d5c472b17ebe9a2ab1a6a6d5e14609e191dd",
       "tests": [
         "tests/Integration/BusinessApplicationsTest.php",
         "tests/Integration/BusinessOperationsTest.php",
-        "tests/Integration/OperationContractCoverageTest.php"
-      ]
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/Transport/BusinessTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/BusinessTransportTest.php::testApplicationSubmitOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/BusinessTransportTest.php::testApplicationSubmitOverHttpAndMcp"
+        ]
+      }
     },
     "applications_list": {
       "contract_hash": "9a1f107ea7503b184e058842a0e757fd1aedf1c85835fee4ebc86b614f842b94",
@@ -2757,21 +2807,45 @@
         "tests/Integration/BusinessApplicationsTest.php",
         "tests/Integration/BusinessOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ]
+      }
     },
     "audit_export": {
       "contract_hash": "22c91f795c73570c616e86b76d854fdf39c13d88fe9ee2c4fbf660b4f5c75a4f",
       "tests": [
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/SystemOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts"
+        ]
+      }
     },
     "audit_list": {
       "contract_hash": "e9f1ed5b062686d872ecb66c4abc25069a8b9f226bb3d9101dcb2f2201473111",
       "tests": [
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/SystemOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts"
+        ]
+      }
     },
     "availability_search": {
       "contract_hash": "181dc11b61f7db7c7c9c5b830f5deb975e807a28c6bfcf0ecc8b1aa06ce63246",
@@ -2784,23 +2858,53 @@
         "tests/Integration/EventBookingFlowTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/ResourceBookingFlowTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+          "tests/Integration/AvailabilityAcceptanceTest.php::testTimeslotOverridesBuffersBlocksAndDeadlineHaveIdenticalOptionsAndOutcome",
+          "tests/Integration/AvailabilityAcceptanceTest.php::testCapacityMinimumMaximumAdjacentBoundariesAndRemainingArithmeticMatchAllTransports"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+          "tests/Integration/AvailabilityAcceptanceTest.php::testTimeslotOverridesBuffersBlocksAndDeadlineHaveIdenticalOptionsAndOutcome",
+          "tests/Integration/AvailabilityAcceptanceTest.php::testCapacityMinimumMaximumAdjacentBoundariesAndRemainingArithmeticMatchAllTransports"
+        ]
+      }
     },
     "blocked_date_create": {
       "contract_hash": "cd35c0db109c497001b4d7adf3ac6f72be353e5d91fbc8a8cd36b30c2b5afcee",
       "tests": [
         "tests/Integration/BlockedDatesManagementTest.php",
         "tests/Integration/CatalogOperationsTest.php",
-        "tests/Integration/OperationContractCoverageTest.php"
-      ]
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testBlockedDateCreateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testBlockedDateCreateOverHttpAndMcp"
+        ]
+      }
     },
     "blocked_date_delete": {
       "contract_hash": "11eb59e6c403f48e7cc72f6ce2143a69edacb30221eeca30b65954441a883f45",
       "tests": [
         "tests/Integration/BlockedDatesManagementTest.php",
         "tests/Integration/CatalogOperationsTest.php",
-        "tests/Integration/OperationContractCoverageTest.php"
-      ]
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testBlockedDateDeleteOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testBlockedDateDeleteOverHttpAndMcp"
+        ]
+      }
     },
     "blocked_date_get": {
       "contract_hash": "92ab1d0a66cc030f72fa267cf6fbbf7f89e40c5c31ab5860139bc64837139bbb",
@@ -2808,7 +2912,15 @@
         "tests/Integration/BlockedDatesManagementTest.php",
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ]
+      }
     },
     "blocked_dates_list": {
       "contract_hash": "73628f198dda37d74e6dbb9e233b4a7e54fca7ce767e921fff49a422c817dcfd",
@@ -2816,20 +2928,40 @@
         "tests/Integration/BlockedDatesManagementTest.php",
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ]
+      }
     },
     "booking_create": {
-      "contract_hash": "43780c9ecce36995b89372f636a043ed0d87bc79eea3b03c91ebbc6bbea230c2",
+      "contract_hash": "e4a6eb4bef0eab5119e19b436f29260fa89f654196fea0003bfde95abab8010c",
       "tests": [
         "tests/Integration/AvailabilityAcceptanceTest.php",
+        "tests/Integration/BookingCalendarActionsTest.php",
         "tests/Integration/BookingConcurrencyTest.php",
         "tests/Integration/BookingDirectAuthorizationTest.php",
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/ConsentRecordingTest.php",
         "tests/Integration/CustomerApplicationOperationsTest.php",
         "tests/Integration/ManualBookingCreationTest.php",
-        "tests/Integration/SharedBookingOperationsTest.php"
-      ]
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/Transport/BookingTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/BookingTransportTest.php::testBookingCreateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+          "tests/Integration/BookingDemoParityTest.php::testDemoWritesUseSharedRulesAndNativeReviewWhileNotificationsStaySuppressed",
+          "tests/Integration/Transport/BookingTransportTest.php::testBookingCreateOverHttpAndMcp"
+        ]
+      }
     },
     "booking_get": {
       "contract_hash": "154e530f3dcc84244391b62fe4ad1dcce1e2613db782d1901eea6b2fc1e09b14",
@@ -2839,7 +2971,15 @@
         "tests/Integration/CustomerApplicationOperationsTest.php",
         "tests/Integration/SharedBookingOperationsTest.php",
         "tests/Integration/SharedBookingReadTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "booking_reschedule": {
       "contract_hash": "656e9f726b777bfae0b851bbaf61a7e13c9a80a4d51dc00376ebac3c283829ce",
@@ -2848,8 +2988,18 @@
         "tests/Integration/BookingDirectAuthorizationTest.php",
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/ReschedulePatternTest.php",
-        "tests/Integration/SharedBookingOperationsTest.php"
-      ]
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/Transport/BookingTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/BookingTransportTest.php::testBookingRescheduleOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+          "tests/Integration/Transport/BookingTransportTest.php::testBookingRescheduleOverHttpAndMcp"
+        ]
+      }
     },
     "booking_status_set": {
       "contract_hash": "91a7f0d43e4eb29ba82ecc8ca566e268a1955e109262e91a86e455b31b0dfdfe",
@@ -2857,8 +3007,19 @@
         "tests/Integration/BookingConcurrencyTest.php",
         "tests/Integration/BookingDirectAuthorizationTest.php",
         "tests/Integration/BookingOperationContractCoverageTest.php",
-        "tests/Integration/SharedBookingOperationsTest.php"
-      ]
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/Transport/BookingTransportTest.php",
+        "tests/Integration/WaitlistOperationsTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/BookingTransportTest.php::testBookingStatusSetOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+          "tests/Integration/Transport/BookingTransportTest.php::testBookingStatusSetOverHttpAndMcp"
+        ]
+      }
     },
     "bookings_export": {
       "contract_hash": "4b2ec6e5c0102e1e720d4e31a5696f8401b7e540e9964cdde57833fe7cdcba8c",
@@ -2868,7 +3029,15 @@
         "tests/Integration/CustomerApplicationOperationsTest.php",
         "tests/Integration/SharedBookingOperationsTest.php",
         "tests/Integration/SharedBookingReadTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "bookings_list": {
       "contract_hash": "f899865eca32f062354ee3f30a131054980239805e57e5f43f2d1e13dee2d3e8",
@@ -2877,36 +3046,79 @@
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/CustomerApplicationOperationsTest.php",
         "tests/Integration/SharedBookingOperationsTest.php",
-        "tests/Integration/SharedBookingReadTest.php"
-      ]
+        "tests/Integration/SharedBookingReadTest.php",
+        "tests/Integration/WaitlistOperationsTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "business_booking_get": {
       "contract_hash": "e81031375fb549c8121aef5c314ca066fb29b0f4fa554784dfa73d30e35ac9da",
       "tests": [
         "tests/Integration/SettingsIdentityOperationsTest.php",
         "tests/Integration/TenantSettingsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+        ],
+        "mcp": [
+          "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+        ]
+      }
     },
     "business_booking_update": {
       "contract_hash": "514e36e71092582eede85f3d645e33255634ec9a37e7ef2a8f3fa59283072cf8",
       "tests": [
         "tests/Integration/SettingsIdentityOperationsTest.php",
-        "tests/Integration/TenantSettingsTest.php"
-      ]
+        "tests/Integration/TenantSettingsTest.php",
+        "tests/Integration/Transport/SettingsTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testBusinessBookingUpdateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testBusinessBookingUpdateOverHttpAndMcp"
+        ]
+      }
     },
     "business_bookingpage_get": {
       "contract_hash": "25f66889fa0d8c24c836d89bc5a559b33efa0062eb191de66579e67a6bb9d059",
       "tests": [
         "tests/Integration/SettingsIdentityOperationsTest.php",
         "tests/Integration/TenantSettingsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+        ],
+        "mcp": [
+          "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+        ]
+      }
     },
     "business_bookingpage_update": {
       "contract_hash": "cda0ac12c647a91294e0654d7c0fec8e3bca79d427401e314b5bb7f511c5c129",
       "tests": [
         "tests/Integration/SettingsIdentityOperationsTest.php",
-        "tests/Integration/TenantSettingsTest.php"
-      ]
+        "tests/Integration/TenantSettingsTest.php",
+        "tests/Integration/Transport/SettingsTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testBusinessBookingpageUpdateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testBusinessBookingpageUpdateOverHttpAndMcp"
+        ]
+      }
     },
     "business_branding_get": {
       "contract_hash": "bfdf08230134f8a0b5702e1c8b36eb5e6df3b006d354e9bbc2e9d9191f470213",
@@ -2917,7 +3129,15 @@
         "tests/Integration/SettingsIdentityOperationsTest.php",
         "tests/Integration/TenantSettingsTest.php",
         "tests/Integration/WebhookOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+        ],
+        "mcp": [
+          "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+        ]
+      }
     },
     "business_branding_update": {
       "contract_hash": "9aa467d9984b844245775e91a6e0d79a2cdbc04f4c33c648808a1c13ee31ec34",
@@ -2927,37 +3147,80 @@
         "tests/Integration/MediaUploadRecoveryTest.php",
         "tests/Integration/SettingsIdentityOperationsTest.php",
         "tests/Integration/TenantSettingsTest.php",
+        "tests/Integration/Transport/SettingsTransportTest.php",
         "tests/Integration/WebhookOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testBusinessBrandingUpdateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testBusinessBrandingUpdateOverHttpAndMcp"
+        ]
+      }
     },
     "business_create": {
       "contract_hash": "b56b9a37096780d47849ac3524ab21c57c0585e4615404ea73e9abc024e71256",
       "tests": [
         "tests/Integration/BusinessOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
-        "tests/Integration/TenantOwnerCreationTest.php"
-      ]
+        "tests/Integration/TenantOwnerCreationTest.php",
+        "tests/Integration/Transport/BusinessTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/BusinessTransportTest.php::testBusinessCreateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/BusinessTransportTest.php::testBusinessCreateOverHttpAndMcp"
+        ]
+      }
     },
     "business_dashboard": {
       "contract_hash": "6b3a74a69fde5708ca07eb419b6e5b7a5a431ca019ad7b5aef465ffd28235fbc",
       "tests": [
         "tests/Integration/BusinessOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ]
+      }
     },
     "business_embed_get": {
       "contract_hash": "939f63d5c26553a55fad047abf7f3a2b730250a74b96d4679ba72c785c98855b",
       "tests": [
         "tests/Integration/SettingsIdentityOperationsTest.php",
         "tests/Integration/TenantSettingsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+        ],
+        "mcp": [
+          "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+        ]
+      }
     },
     "business_embed_update": {
       "contract_hash": "237169e25c5fac0b51f1fdcc7f851091a8f3a2c55dd308dd4bda15759e313595",
       "tests": [
         "tests/Integration/SettingsIdentityOperationsTest.php",
-        "tests/Integration/TenantSettingsTest.php"
-      ]
+        "tests/Integration/TenantSettingsTest.php",
+        "tests/Integration/Transport/SettingsTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testBusinessEmbedUpdateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testBusinessEmbedUpdateOverHttpAndMcp"
+        ]
+      }
     },
     "business_general_get": {
       "contract_hash": "65614dd8fe2820cdbfa9d24da66e35d09d853ee51b7d7475fd11ce5a843a9af0",
@@ -2965,15 +3228,32 @@
         "tests/Integration/AgentFoundationTest.php",
         "tests/Integration/SettingsIdentityOperationsTest.php",
         "tests/Integration/TenantSettingsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+        ],
+        "mcp": [
+          "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+        ]
+      }
     },
     "business_general_update": {
       "contract_hash": "aa44513381c8976936d1eea2a7cdd24158708a5863868d09b158c803967bd60d",
       "tests": [
         "tests/Integration/AgentFoundationTest.php",
         "tests/Integration/SettingsIdentityOperationsTest.php",
-        "tests/Integration/TenantSettingsTest.php"
-      ]
+        "tests/Integration/TenantSettingsTest.php",
+        "tests/Integration/Transport/SettingsTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testBusinessGeneralUpdateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testBusinessGeneralUpdateOverHttpAndMcp"
+        ]
+      }
     },
     "business_get": {
       "contract_hash": "737e39f7bf72c5492b8d25afa681316b370485a0675e803523d84d11398aad30",
@@ -2981,51 +3261,111 @@
         "tests/Integration/BusinessOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/TenantOwnerCreationTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ]
+      }
     },
     "business_notifications_get": {
       "contract_hash": "f277bfb8a7ac47b1883a420693af6dd3f37557e6eac06ed5a2d6664bcea13bdc",
       "tests": [
         "tests/Integration/SettingsIdentityOperationsTest.php",
         "tests/Integration/TenantSettingsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+        ],
+        "mcp": [
+          "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+        ]
+      }
     },
     "business_notifications_update": {
       "contract_hash": "5bdc160b95595ddd044ade8f7b786ab9e1beacb148eeeaa126cd8243e55d116b",
       "tests": [
         "tests/Integration/SettingsIdentityOperationsTest.php",
-        "tests/Integration/TenantSettingsTest.php"
-      ]
+        "tests/Integration/TenantSettingsTest.php",
+        "tests/Integration/Transport/SettingsTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testBusinessNotificationsUpdateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testBusinessNotificationsUpdateOverHttpAndMcp"
+        ]
+      }
     },
     "business_privacy_get": {
       "contract_hash": "627ea76686549775f13725923895bcb406e00889745002b4f13791b2ab9aa057",
       "tests": [
         "tests/Integration/SettingsIdentityOperationsTest.php",
         "tests/Integration/TenantSettingsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+        ],
+        "mcp": [
+          "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+        ]
+      }
     },
     "business_privacy_update": {
       "contract_hash": "f93a064d189d363c75144afb42091ca6b0fd1594f528b50ce2b87ecc99739d38",
       "tests": [
         "tests/Integration/SettingsIdentityOperationsTest.php",
-        "tests/Integration/TenantSettingsTest.php"
-      ]
+        "tests/Integration/TenantSettingsTest.php",
+        "tests/Integration/Transport/SettingsTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testBusinessPrivacyUpdateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testBusinessPrivacyUpdateOverHttpAndMcp"
+        ]
+      }
     },
     "business_set_status": {
       "contract_hash": "d9f64bb58d45cfbe43bacc25575ba6b66791576afff33448d8105f0df225bd3d",
       "tests": [
         "tests/Integration/BusinessOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
-        "tests/Integration/TenantOwnerCreationTest.php"
-      ]
+        "tests/Integration/TenantOwnerCreationTest.php",
+        "tests/Integration/Transport/BusinessTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/BusinessTransportTest.php::testBusinessSetStatusOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/BusinessTransportTest.php::testBusinessSetStatusOverHttpAndMcp"
+        ]
+      }
     },
     "business_update": {
       "contract_hash": "9e00cfeb7c4b3b5953d471e71387fa27e0037d132d11c58ef7420125e2b77f79",
       "tests": [
         "tests/Integration/BusinessOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
-        "tests/Integration/TenantOwnerCreationTest.php"
-      ]
+        "tests/Integration/TenantOwnerCreationTest.php",
+        "tests/Integration/Transport/BusinessTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/BusinessTransportTest.php::testBusinessUpdateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/BusinessTransportTest.php::testBusinessUpdateOverHttpAndMcp"
+        ]
+      }
     },
     "businesses_export": {
       "contract_hash": "7b03ec49fa34e72f252b13b763e34982c10d6bb1194ceadff3b785b9af588247",
@@ -3033,7 +3373,15 @@
         "tests/Integration/BusinessOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/TenantOwnerCreationTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ]
+      }
     },
     "businesses_list": {
       "contract_hash": "c37b5c87ba3afdf9a3d0291725122cc40b92e4dee8272a7d929adfa09dc550b4",
@@ -3041,37 +3389,94 @@
         "tests/Integration/BusinessOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/TenantOwnerCreationTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ]
+      }
     },
     "calendar_get": {
       "contract_hash": "f8532d41dbc63f4602d58bc0b379c873d85106e84f41bbdedfd9779e1354a343",
       "tests": [
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/SharedBookingOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
+    },
+    "calendar_summary": {
+      "contract_hash": "5dd1bb3360f4b8ce6f793040199e32d467b2c88aff9cdcf3732c068b08dafcd4",
+      "tests": [
+        "tests/Integration/CalendarSummaryTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/CalendarSummaryTest.php::testMonthWeekAndDayTotalsEqualTheRenderedCalendarOnEveryTransport"
+        ],
+        "mcp": [
+          "tests/Integration/CalendarSummaryTest.php::testMonthWeekAndDayTotalsEqualTheRenderedCalendarOnEveryTransport"
+        ]
+      }
     },
     "capabilities_get": {
       "contract_hash": "3c5bbd16781db30bf5ae5ce4a1f17f6edd2e8ccfba84a9687be0594361030757",
       "tests": [
         "tests/Integration/AgentV1ContractTest.php",
-        "tests/Integration/OAuthHttpTest.php"
-      ]
+        "tests/Integration/OAuthHttpTest.php",
+        "tests/Integration/Transport/IdentityTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testCapabilitiesGetOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testCapabilitiesGetOverHttpAndMcp"
+        ]
+      }
     },
     "capacity_slot_create": {
       "contract_hash": "9f0436a5a828c874f51df90eee9df73c21e2cb8fb0bd0d08e334d097361e3ba8",
       "tests": [
         "tests/Integration/CapacityBookingFlowTest.php",
         "tests/Integration/CatalogOperationsTest.php",
-        "tests/Integration/OperationContractCoverageTest.php"
-      ]
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testCapacitySlotCreateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testCapacitySlotCreateOverHttpAndMcp"
+        ]
+      }
     },
     "capacity_slot_delete": {
       "contract_hash": "d54a80ff687f3bd82cb348ab68f8c25a8389ab38d52ab60b4b3a49945fe3d89e",
       "tests": [
         "tests/Integration/CapacityBookingFlowTest.php",
         "tests/Integration/CatalogOperationsTest.php",
-        "tests/Integration/OperationContractCoverageTest.php"
-      ]
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testCapacitySlotDeleteOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testCapacitySlotDeleteOverHttpAndMcp"
+        ]
+      }
     },
     "capacity_slot_get": {
       "contract_hash": "6a69d4574ab1b40dc5241b6d8214aefb65f2681b3e17d8859976d0dedc22c903",
@@ -3079,15 +3484,32 @@
         "tests/Integration/CapacityBookingFlowTest.php",
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ]
+      }
     },
     "capacity_slot_set_active": {
       "contract_hash": "72f6eb3abfe9a4fed63b3033344234b0fe17c4b7e8ec32ba58533aa9db754ea5",
       "tests": [
         "tests/Integration/CapacityBookingFlowTest.php",
         "tests/Integration/CatalogOperationsTest.php",
-        "tests/Integration/OperationContractCoverageTest.php"
-      ]
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testCapacitySlotSetActiveOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testCapacitySlotSetActiveOverHttpAndMcp"
+        ]
+      }
     },
     "capacity_slots_list": {
       "contract_hash": "196068c904c1fb2bdea860be2e35b485d8468d732a2d2d5e7a46b5a7c8e6f272",
@@ -3095,7 +3517,15 @@
         "tests/Integration/CapacityBookingFlowTest.php",
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ]
+      }
     },
     "connection_activity": {
       "contract_hash": "ae4355e9ee12145ae4e6c27df214f330347f3e0fcce18423a765b1ed1ec09575",
@@ -3104,8 +3534,31 @@
         "tests/Integration/AgentFoundationTest.php",
         "tests/Integration/OAuthHttpTest.php",
         "tests/Integration/OAuthIntegrationTest.php",
-        "tests/Integration/SettingsIdentityOperationsTest.php"
-      ]
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/Transport/IdentityTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testConnectionActivityOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testConnectionActivityOverHttpAndMcp"
+        ]
+      }
+    },
+    "connection_expire": {
+      "contract_hash": "88f2c44ca66bc9730e05935b3a63959cea68e9905812835807b021ad1248caa2",
+      "tests": [
+        "tests/Integration/ConnectionTestAndExpireTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/ConnectionTestAndExpireTest.php::testExpireShortensAfterReviewAuditsAndCapsTokensButNeverExtends"
+        ],
+        "mcp": [
+          "tests/Integration/ConnectionTestAndExpireTest.php::testExpireShortensAfterReviewAuditsAndCapsTokensButNeverExtends"
+        ]
+      }
     },
     "connection_get": {
       "contract_hash": "e0d6a5a1168445943a4b8516cb16adaae6e9c535e3a60febe4ffc0977bd1daab",
@@ -3114,8 +3567,17 @@
         "tests/Integration/AgentFoundationTest.php",
         "tests/Integration/OAuthHttpTest.php",
         "tests/Integration/OAuthIntegrationTest.php",
-        "tests/Integration/SettingsIdentityOperationsTest.php"
-      ]
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/Transport/IdentityTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testConnectionGetOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testConnectionGetOverHttpAndMcp"
+        ]
+      }
     },
     "connection_revoke": {
       "contract_hash": "896b084315a79eb211454354a95d8ca83e638fef9b225bffa02fcb139f227e6f",
@@ -3124,8 +3586,17 @@
         "tests/Integration/AgentFoundationTest.php",
         "tests/Integration/OAuthHttpTest.php",
         "tests/Integration/OAuthIntegrationTest.php",
-        "tests/Integration/SettingsIdentityOperationsTest.php"
-      ]
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/Transport/IdentityTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testConnectionRevokeOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testConnectionRevokeOverHttpAndMcp"
+        ]
+      }
     },
     "connection_setup": {
       "contract_hash": "b9c5467c92de9b4682941229166c784f3071af28ede72cd53a97bbf1bb243e55",
@@ -3134,8 +3605,32 @@
         "tests/Integration/AgentFoundationTest.php",
         "tests/Integration/OAuthHttpTest.php",
         "tests/Integration/OAuthIntegrationTest.php",
-        "tests/Integration/SettingsIdentityOperationsTest.php"
-      ]
+        "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/Transport/IdentityTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testConnectionSetupOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testConnectionSetupOverHttpAndMcp"
+        ]
+      }
+    },
+    "connection_test": {
+      "contract_hash": "3bfb45f968fb5ab44b45926b2595ed69abce12c579a7f11210498d23dbcfdeb1",
+      "tests": [
+        "tests/Integration/ConnectionDiagnosticsTest.php",
+        "tests/Integration/ConnectionTestAndExpireTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/ConnectionTestAndExpireTest.php::testConnectionTestReportsGrantExpiryTransportAndScopeCoverageOnEveryTransport"
+        ],
+        "mcp": [
+          "tests/Integration/ConnectionTestAndExpireTest.php::testConnectionTestReportsGrantExpiryTransportAndScopeCoverageOnEveryTransport"
+        ]
+      }
     },
     "customer_availability_search": {
       "contract_hash": "7f81455b98d26826cf603cb5967efb167fef4febb02526707a2bb12d6dac8a8a",
@@ -3147,7 +3642,15 @@
         "tests/Integration/CustomerApplicationOperationsTest.php",
         "tests/Integration/ReschedulePatternTest.php",
         "tests/Integration/SharedBookingOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "customer_booking_cancel": {
       "contract_hash": "e921dcc7afe1e730fb0bd51e09154f3c953cb689ca6e66080757dd16680974c0",
@@ -3155,17 +3658,36 @@
         "tests/Integration/BookingDirectAuthorizationTest.php",
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/CustomerCapabilityBoundaryTest.php",
-        "tests/Integration/SharedBookingOperationsTest.php"
-      ]
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/Transport/BookingTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/BookingTransportTest.php::testCustomerBookingCancelOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+          "tests/Integration/Transport/BookingTransportTest.php::testCustomerBookingCancelOverHttpAndMcp"
+        ]
+      }
     },
     "customer_booking_get": {
-      "contract_hash": "a5bffa2255a69f1d3e8f5afb238c5572700e39774ccd80cae4bbcb4357d16696",
+      "contract_hash": "4e5647d1f19d04e9a3317d6ed0a94fc7e9e2f0f8f016fc67f7b11ca4381df099",
       "tests": [
+        "tests/Integration/BookingCalendarActionsTest.php",
         "tests/Integration/BookingDirectAuthorizationTest.php",
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/CustomerCapabilityBoundaryTest.php",
         "tests/Integration/SharedBookingOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "customer_booking_reschedule": {
       "contract_hash": "fca232bc8eb28b742901fc5491118149a022800cf8ee999dee0897e25b4f0017",
@@ -3174,8 +3696,18 @@
         "tests/Integration/BookingDirectAuthorizationTest.php",
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/ReschedulePatternTest.php",
-        "tests/Integration/SharedBookingOperationsTest.php"
-      ]
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/Transport/BookingTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/BookingTransportTest.php::testCustomerBookingRescheduleOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+          "tests/Integration/Transport/BookingTransportTest.php::testCustomerBookingRescheduleOverHttpAndMcp"
+        ]
+      }
     },
     "customer_deletion_request": {
       "contract_hash": "ad1bd8ca61c77c4180c1c6d0d0d1ecd8c849f9b0cc559b196a5bb38c2db8b6b6",
@@ -3183,36 +3715,78 @@
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/CustomerApplicationOperationsTest.php",
         "tests/Integration/CustomerCapabilityBoundaryTest.php",
-        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
-      ]
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php",
+        "tests/Integration/Transport/BookingTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/BookingTransportTest.php::testCustomerDeletionRequestOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+          "tests/Integration/Transport/BookingTransportTest.php::testCustomerDeletionRequestOverHttpAndMcp"
+        ]
+      }
     },
     "customer_export": {
       "contract_hash": "c69de20ea42b05593bb3db1724b7802672b714b061a72f1e9f197177da12a429",
       "tests": [
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/CustomerDirectoryOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "customer_get": {
       "contract_hash": "618b741ce4a05f5f093d53d34057fc9e3d5e186548d61f60d384ec98d1123871",
       "tests": [
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/CustomerDirectoryOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "customer_history": {
       "contract_hash": "edd61731c02d1091e5ab19148edd322e7e6fed84fba6bb469130d603a18aa7c7",
       "tests": [
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/CustomerDirectoryOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "customer_list": {
       "contract_hash": "a7153d658ffeee729cc4dfa2721982cbc841580c4911c1472369da735fae85ff",
       "tests": [
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/CustomerDirectoryOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "customer_privacy_export": {
       "contract_hash": "c83eea3878ef9dcb521c4ad4f81823a443e8ee5fbf608f8f8ab64aabaffc1fbd",
@@ -3220,8 +3794,18 @@
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/CustomerApplicationOperationsTest.php",
         "tests/Integration/CustomerCapabilityBoundaryTest.php",
-        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
-      ]
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php",
+        "tests/Integration/Transport/BookingTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/BookingTransportTest.php::testCustomerPrivacyExportOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+          "tests/Integration/Transport/BookingTransportTest.php::testCustomerPrivacyExportOverHttpAndMcp"
+        ]
+      }
     },
     "customer_privacy_get": {
       "contract_hash": "7102a72d2a997dc1bbe01a2d458268f7855584198c927e2343d62bde344f566f",
@@ -3230,7 +3814,15 @@
         "tests/Integration/CustomerApplicationOperationsTest.php",
         "tests/Integration/CustomerCapabilityBoundaryTest.php",
         "tests/Integration/PrivacyPostLockAuthorizationTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "customer_privacy_records": {
       "contract_hash": "42cc535351240fa2efd3a05c613bd079336402f360a521ca8726e6cc2cd8cced",
@@ -3239,23 +3831,51 @@
         "tests/Integration/CustomerApplicationOperationsTest.php",
         "tests/Integration/CustomerCapabilityBoundaryTest.php",
         "tests/Integration/PrivacyPostLockAuthorizationTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "deletion_confirm": {
       "contract_hash": "d0b83ef593fb2f10672d14b229dd6ec7720c39361e24536e369b8b84e78647e4",
       "tests": [
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/DeletionApplicationTest.php",
-        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
-      ]
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php",
+        "tests/Integration/Transport/BookingTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/BookingTransportTest.php::testDeletionConfirmOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+          "tests/Integration/Transport/BookingTransportTest.php::testDeletionConfirmOverHttpAndMcp"
+        ]
+      }
     },
     "deletion_dismiss": {
       "contract_hash": "cf3f4ac2ac6bfdcdcb354afe9914abd1ada3c1a5cd36eb78d9195e7c6e7462cd",
       "tests": [
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/DeletionApplicationTest.php",
-        "tests/Integration/PrivacyPostLockAuthorizationTest.php"
-      ]
+        "tests/Integration/PrivacyPostLockAuthorizationTest.php",
+        "tests/Integration/Transport/BookingTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/BookingTransportTest.php::testDeletionDismissOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+          "tests/Integration/Transport/BookingTransportTest.php::testDeletionDismissOverHttpAndMcp"
+        ]
+      }
     },
     "deletion_queue_list": {
       "contract_hash": "57330b7447e5905cf0639692f6dc370a6cb951c0addf08d922ae669d8323ccca",
@@ -3263,7 +3883,15 @@
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/DeletionApplicationTest.php",
         "tests/Integration/PrivacyPostLockAuthorizationTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "deletion_review": {
       "contract_hash": "72072089c4495216ffe429034128cc41f6b3f5a424d28493e683a0a86c4c7e07",
@@ -3271,28 +3899,63 @@
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/DeletionApplicationTest.php",
         "tests/Integration/PrivacyPostLockAuthorizationTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "email_template_preview": {
       "contract_hash": "be269188a8367a460d326734c3539324fec036dcfbe2ca66704ceffbbae23558",
       "tests": [
         "tests/Integration/SettingsIdentityOperationsTest.php",
-        "tests/Integration/TenantSettingsTest.php"
-      ]
+        "tests/Integration/TenantSettingsTest.php",
+        "tests/Integration/Transport/SettingsTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testEmailTemplatePreviewOverHttp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testEmailTemplatePreviewOverMcp"
+        ]
+      }
     },
     "email_templates_get": {
       "contract_hash": "6abc2bf447a1f8684a0e5c27a2d99d0784504dbccdbe26471732ea2fd39696e5",
       "tests": [
         "tests/Integration/SettingsIdentityOperationsTest.php",
-        "tests/Integration/TenantSettingsTest.php"
-      ]
+        "tests/Integration/TenantSettingsTest.php",
+        "tests/Integration/Transport/SettingsTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testEmailTemplatesGetOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testEmailTemplatesGetOverHttpAndMcp"
+        ]
+      }
     },
     "email_templates_update": {
       "contract_hash": "7752a591e913666ae4a5eeb9fd33c543b53feedbde11eafc8c09f11a288061c7",
       "tests": [
         "tests/Integration/SettingsIdentityOperationsTest.php",
-        "tests/Integration/TenantSettingsTest.php"
-      ]
+        "tests/Integration/TenantSettingsTest.php",
+        "tests/Integration/Transport/SettingsTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testEmailTemplatesUpdateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testEmailTemplatesUpdateOverHttpAndMcp"
+        ]
+      }
     },
     "event_create": {
       "contract_hash": "226e0597f37e8cde73d4c55f0b079df41a8e4512f08c0c1d60883c8d6071f7c2",
@@ -3300,8 +3963,17 @@
         "tests/Integration/AvailabilityAcceptanceTest.php",
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/EventBookingFlowTest.php",
-        "tests/Integration/OperationContractCoverageTest.php"
-      ]
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testEventCreateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testEventCreateOverHttpAndMcp"
+        ]
+      }
     },
     "event_delete": {
       "contract_hash": "ff27c650b02f34bb12cbfb3e00dca3a763f846f3f2579269662296a897eaf7ca",
@@ -3309,8 +3981,17 @@
         "tests/Integration/AvailabilityAcceptanceTest.php",
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/EventBookingFlowTest.php",
-        "tests/Integration/OperationContractCoverageTest.php"
-      ]
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testEventDeleteOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testEventDeleteOverHttpAndMcp"
+        ]
+      }
     },
     "event_get": {
       "contract_hash": "af8d85f34c06482ff9117e9c5213527a73c057230b9766077fc2d731b893f0a8",
@@ -3319,7 +4000,15 @@
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/EventBookingFlowTest.php",
         "tests/Integration/OperationContractCoverageTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ]
+      }
     },
     "event_set_active": {
       "contract_hash": "602bfe9b0d45f6e496402ba665e476072f81e2993c81c0c257aa941699a190cd",
@@ -3327,8 +4016,17 @@
         "tests/Integration/AvailabilityAcceptanceTest.php",
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/EventBookingFlowTest.php",
-        "tests/Integration/OperationContractCoverageTest.php"
-      ]
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testEventSetActiveOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testEventSetActiveOverHttpAndMcp"
+        ]
+      }
     },
     "event_update": {
       "contract_hash": "baa2ac2d9354a6d35408809bc02fae83b8fc4aa02155e3bf957db2e481ab8008",
@@ -3336,8 +4034,17 @@
         "tests/Integration/AvailabilityAcceptanceTest.php",
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/EventBookingFlowTest.php",
-        "tests/Integration/OperationContractCoverageTest.php"
-      ]
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testEventUpdateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testEventUpdateOverHttpAndMcp"
+        ]
+      }
     },
     "events_list": {
       "contract_hash": "bb024ae26e37310329ace964eca5ea0d1e2090ec8aff7326cc317a459169cc31",
@@ -3346,7 +4053,15 @@
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/EventBookingFlowTest.php",
         "tests/Integration/OperationContractCoverageTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ]
+      }
     },
     "identity_get": {
       "contract_hash": "9ffb7ca82176ce707674998f2de76aadab54c48de1d668a417d501de0f871dad",
@@ -3357,8 +4072,17 @@
         "tests/Integration/ImpersonationTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/SettingsIdentityOperationsTest.php",
-        "tests/Integration/SystemOperationsTest.php"
-      ]
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/Transport/IdentityTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testIdentityGetOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testIdentityGetOverHttpAndMcp"
+        ]
+      }
     },
     "job_request_get": {
       "contract_hash": "222fe5240d236bff5db49b7fb2ad88e760c69a2cdf88d3ff57c8a5f3ff5b2dd1",
@@ -3366,15 +4090,32 @@
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/SystemOperationsTest.php",
         "tests/Integration/TestIsolationTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts"
+        ]
+      }
     },
     "jobs_run": {
       "contract_hash": "3df9c5197f9c012e29124316080c2d126eb01ed1441e38ff43e67ef3f8ee76d5",
       "tests": [
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/SystemOperationsTest.php",
-        "tests/Integration/TestIsolationTest.php"
-      ]
+        "tests/Integration/TestIsolationTest.php",
+        "tests/Integration/Transport/SystemTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/SystemTransportTest.php::testJobsRunOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/SystemTransportTest.php::testJobsRunOverHttpAndMcp"
+        ]
+      }
     },
     "jobs_status": {
       "contract_hash": "9b39d3e5aa3271031aaf9669bad127cf2a990334ce9b2afb0f9c292d5dceb56f",
@@ -3382,7 +4123,15 @@
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/SystemOperationsTest.php",
         "tests/Integration/TestIsolationTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts"
+        ]
+      }
     },
     "media_upload_prepare": {
       "contract_hash": "9faa1688d4890455691cf873e6bc0650f76343abe6031b18babff2b7b33c6b12",
@@ -3392,8 +4141,17 @@
         "tests/Integration/MediaUploadRecoveryTest.php",
         "tests/Integration/SettingsIdentityOperationsTest.php",
         "tests/Integration/TenantSettingsTest.php",
+        "tests/Integration/Transport/SettingsTransportTest.php",
         "tests/Integration/WebhookOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testMediaUploadPrepareOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/SettingsTransportTest.php::testMediaUploadPrepareOverHttpAndMcp"
+        ]
+      }
     },
     "operation_get": {
       "contract_hash": "ed22c3a1cddf23c782d4196f571d76ac586c0df246fa44f094d8886ca92abc08",
@@ -3403,8 +4161,17 @@
         "tests/Integration/OAuthHttpTest.php",
         "tests/Integration/OAuthIntegrationTest.php",
         "tests/Integration/SettingsIdentityOperationsTest.php",
+        "tests/Integration/Transport/IdentityTransportTest.php",
         "tests/Integration/WebhookOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testOperationGetOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/IdentityTransportTest.php::testOperationGetOverHttpAndMcp"
+        ]
+      }
     },
     "operation_recover": {
       "contract_hash": "ad15811e4756131e8276158a925d5330d6d3e6b05796197f3a2b994b10352db4",
@@ -3415,7 +4182,15 @@
         "tests/Integration/OAuthIntegrationTest.php",
         "tests/Integration/SettingsIdentityOperationsTest.php",
         "tests/Integration/WebhookOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "operator_bookings_export": {
       "contract_hash": "93fd08a8bc2af87340f98501afc822d3b2e06835a54a0c3412b596cb73233829",
@@ -3425,7 +4200,15 @@
         "tests/Integration/CustomerApplicationOperationsTest.php",
         "tests/Integration/SharedBookingOperationsTest.php",
         "tests/Integration/SharedBookingReadTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "operator_bookings_list": {
       "contract_hash": "2d6a512876a56539f1758ea1eadc345a4cf341e55c305e9bf302b2e0d533d2de",
@@ -3435,7 +4218,15 @@
         "tests/Integration/CustomerApplicationOperationsTest.php",
         "tests/Integration/SharedBookingOperationsTest.php",
         "tests/Integration/SharedBookingReadTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "operator_business_context": {
       "contract_hash": "0509f56f642d8e7098b157b8d8bfa372c300282628cfd41e93993402d72f0440",
@@ -3443,24 +4234,54 @@
         "tests/Integration/ImpersonationTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/SystemOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts"
+        ]
+      }
     },
     "operator_dashboard": {
       "contract_hash": "bf7b06a54dc5c354a6f8364ed4a71b1aa8991cfa46054b4e88fa8319d41dd5e2",
       "tests": [
         "tests/Integration/BusinessOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ]
+      }
     },
     "public_booking_create": {
-      "contract_hash": "bc50c5d8274743626d3fcc4e872f88a1f46f431588e235d86d5903d86d12909f",
+      "contract_hash": "b699b686f064e381efd15a40629afa06914f4cb6113290b5104f6fd48873b5e5",
       "tests": [
+        "tests/Integration/BookingCalendarActionsTest.php",
         "tests/Integration/BookingConcurrencyTest.php",
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/ConsentRecordingTest.php",
         "tests/Integration/CustomerApplicationOperationsTest.php",
-        "tests/Integration/SharedBookingOperationsTest.php"
-      ]
+        "tests/Integration/SharedBookingOperationsTest.php",
+        "tests/Integration/WaitlistOperationsTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testPublishedAppointmentExampleSessionPreviewReviewCommitAndRetry",
+          "tests/Integration/AvailabilityAcceptanceTest.php::testTimeslotOverridesBuffersBlocksAndDeadlineHaveIdenticalOptionsAndOutcome",
+          "tests/Integration/AvailabilityAcceptanceTest.php::testCapacityMinimumMaximumAdjacentBoundariesAndRemainingArithmeticMatchAllTransports"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+          "tests/Integration/AvailabilityAcceptanceTest.php::testTimeslotOverridesBuffersBlocksAndDeadlineHaveIdenticalOptionsAndOutcome",
+          "tests/Integration/AvailabilityAcceptanceTest.php::testCapacityMinimumMaximumAdjacentBoundariesAndRemainingArithmeticMatchAllTransports"
+        ]
+      }
     },
     "public_business_get": {
       "contract_hash": "b90467c00bf83f56458b95e128ab8316c86dfe795dfefa2fe53a5c993cfeecd2",
@@ -3468,7 +4289,15 @@
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/ConsentRecordingTest.php",
         "tests/Integration/CustomerApplicationOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "public_catalog_list": {
       "contract_hash": "fe3c191b0ec714bebadf74411b03d732429f9adcb27eaf8f42f8f410096f6b0d",
@@ -3476,7 +4305,15 @@
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/ConsentRecordingTest.php",
         "tests/Integration/CustomerApplicationOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "public_operation_get": {
       "contract_hash": "209554d8d95bd70bcc7ead58c36022e145de16315816161b157ba165c0bee4f0",
@@ -3487,7 +4324,15 @@
         "tests/Integration/OAuthIntegrationTest.php",
         "tests/Integration/SettingsIdentityOperationsTest.php",
         "tests/Integration/WebhookOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "public_operation_recover": {
       "contract_hash": "3287679b8c361fd9d597f7922edb88c32ff477817cec7d41e2ca61c383f8ba85",
@@ -3498,15 +4343,32 @@
         "tests/Integration/OAuthIntegrationTest.php",
         "tests/Integration/SettingsIdentityOperationsTest.php",
         "tests/Integration/WebhookOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "resource_create": {
       "contract_hash": "05c36a4b0c3737be0a411984c256655cc4e9a90ef46925c79bc3b6e1fdedc0ad",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
-        "tests/Integration/ResourceBookingFlowTest.php"
-      ]
+        "tests/Integration/ResourceBookingFlowTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testResourceCreateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testResourceCreateOverHttpAndMcp"
+        ]
+      }
     },
     "resource_get": {
       "contract_hash": "5c1902fcd956ef039053552ca21b4d0124a748329f19cdad550cb68fffd3070d",
@@ -3514,31 +4376,66 @@
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/ResourceBookingFlowTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ]
+      }
     },
     "resource_reorder": {
       "contract_hash": "8e12839feb35cc07733a4e54088253c4ee5ee7457a892a7f22446a92637a583b",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
-        "tests/Integration/ResourceBookingFlowTest.php"
-      ]
+        "tests/Integration/ResourceBookingFlowTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testResourceReorderOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testResourceReorderOverHttpAndMcp"
+        ]
+      }
     },
     "resource_set_active": {
       "contract_hash": "af75e782546f13a7441d4584addb5aa83a455ec9ceb09e4c64dd656fbe1915d3",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
-        "tests/Integration/ResourceBookingFlowTest.php"
-      ]
+        "tests/Integration/ResourceBookingFlowTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testResourceSetActiveOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testResourceSetActiveOverHttpAndMcp"
+        ]
+      }
     },
     "resource_update": {
       "contract_hash": "d90e6931512d0c0b253fd9c0ada98e5b00f6efadfa67b7e7e93a1e6848e87953",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
-        "tests/Integration/ResourceBookingFlowTest.php"
-      ]
+        "tests/Integration/ResourceBookingFlowTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testResourceUpdateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testResourceUpdateOverHttpAndMcp"
+        ]
+      }
     },
     "resources_list": {
       "contract_hash": "97dbc7773ec9ea94fd41fa4585975a3b3ec722f10f0f554cf711bd9f2dc02c9e",
@@ -3546,7 +4443,15 @@
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/ResourceBookingFlowTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ]
+      }
     },
     "schedule_get": {
       "contract_hash": "654381de4117ecfa5fb40d390e60bf273ba1875896f6a3e2183566fe3e7e390e",
@@ -3554,31 +4459,66 @@
         "tests/Integration/AvailabilityManagementTest.php",
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllScheduleActionsUseVersionedContractsAndTransportParity"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllScheduleActionsUseVersionedContractsAndTransportParity"
+        ]
+      }
     },
     "schedule_replace": {
       "contract_hash": "b34bd331d69a93a750edd8598a4d0388756874118e31a9f3eae432262af7ab72",
       "tests": [
         "tests/Integration/AvailabilityManagementTest.php",
         "tests/Integration/CatalogOperationsTest.php",
-        "tests/Integration/OperationContractCoverageTest.php"
-      ]
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testScheduleReplaceOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testScheduleReplaceOverHttpAndMcp"
+        ]
+      }
     },
     "schedule_reset_staff": {
       "contract_hash": "151efbd08538f302f601931e0b72df5133568979c6d75848d334a3fdaa79709e",
       "tests": [
         "tests/Integration/AvailabilityManagementTest.php",
         "tests/Integration/CatalogOperationsTest.php",
-        "tests/Integration/OperationContractCoverageTest.php"
-      ]
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testScheduleResetStaffOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testScheduleResetStaffOverHttpAndMcp"
+        ]
+      }
     },
     "service_create": {
       "contract_hash": "ede3344f90475edc8d57fdca357afa09fa7493c6424299e27dbdb8244cbdf548",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
-        "tests/Integration/ServiceManagementTest.php"
-      ]
+        "tests/Integration/ServiceManagementTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testServiceCreateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testServiceCreateOverHttpAndMcp"
+        ]
+      }
     },
     "service_get": {
       "contract_hash": "d29bf4a2e43a2fe5021ab1485770fb301bf5046545267a2d1abfcbec6e2e3454",
@@ -3586,31 +4526,66 @@
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/ServiceManagementTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ]
+      }
     },
     "service_reorder": {
       "contract_hash": "44430512405eec0e2a9607d73b5e840d2e6838686e5a267ec3518fbb7c3a2aec",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
-        "tests/Integration/ServiceManagementTest.php"
-      ]
+        "tests/Integration/ServiceManagementTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testServiceReorderOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testServiceReorderOverHttpAndMcp"
+        ]
+      }
     },
     "service_set_active": {
       "contract_hash": "c4d0f5cbb8f9b495d1e20bbbfa864f6cff308aae3e66581d375482121ec04c99",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
-        "tests/Integration/ServiceManagementTest.php"
-      ]
+        "tests/Integration/ServiceManagementTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testServiceSetActiveOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testServiceSetActiveOverHttpAndMcp"
+        ]
+      }
     },
     "service_update": {
       "contract_hash": "34879340250fd627bafce17ed98b7574639e21d5c032d5442d33170c352820e2",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
-        "tests/Integration/ServiceManagementTest.php"
-      ]
+        "tests/Integration/ServiceManagementTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testServiceUpdateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testServiceUpdateOverHttpAndMcp"
+        ]
+      }
     },
     "services_list": {
       "contract_hash": "71dc5c266ffbdf3bacced6dad9979f161e3f5118efd00716c0d6e0cc02cb2eb5",
@@ -3618,7 +4593,15 @@
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/ServiceManagementTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ]
+      }
     },
     "staff_availability_search": {
       "contract_hash": "c3af7f20207031fe898befa07ee035ce1f579e0e01bdfaa83ab1b6b1f969ce8d",
@@ -3631,15 +4614,32 @@
         "tests/Integration/ManualBookingCreationTest.php",
         "tests/Integration/ReschedulePatternTest.php",
         "tests/Integration/SharedBookingOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ],
+        "mcp": [
+          "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+        ]
+      }
     },
     "staff_create": {
       "contract_hash": "7c94a09cf21b5d09969adab193bcfcba6e9fb95e72c6dfc500010cbc371ee599",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
-        "tests/Integration/StaffManagementTest.php"
-      ]
+        "tests/Integration/StaffManagementTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testStaffCreateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testStaffCreateOverHttpAndMcp"
+        ]
+      }
     },
     "staff_get": {
       "contract_hash": "0830e2c42d4e61c23821dd4e9dbff105944eb8bd79625316f815f5707bdc6d34",
@@ -3647,7 +4647,15 @@
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/StaffManagementTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ]
+      }
     },
     "staff_list": {
       "contract_hash": "11b407d590149445ef97cbe3d9b906f081b6fe4dcd6a71367875698bf9410b54",
@@ -3655,31 +4663,66 @@
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/StaffManagementTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract"
+        ]
+      }
     },
     "staff_reorder": {
       "contract_hash": "e3bd3b4e6726c6600f372efd774214a84101223fcacfe25ec455a4df010465ae",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
-        "tests/Integration/StaffManagementTest.php"
-      ]
+        "tests/Integration/StaffManagementTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testStaffReorderOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testStaffReorderOverHttpAndMcp"
+        ]
+      }
     },
     "staff_set_active": {
       "contract_hash": "f2bccdb2027227c9934e0c779757fcb05084679e1249b1a4b9e5d3fc1c4b728e",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
-        "tests/Integration/StaffManagementTest.php"
-      ]
+        "tests/Integration/StaffManagementTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testStaffSetActiveOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testStaffSetActiveOverHttpAndMcp"
+        ]
+      }
     },
     "staff_update": {
       "contract_hash": "7923f2533100aaa61244d452e45e4e3368575ae17244eac6629bd1377ae29ca6",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
-        "tests/Integration/StaffManagementTest.php"
-      ]
+        "tests/Integration/StaffManagementTest.php",
+        "tests/Integration/Transport/CatalogTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testStaffUpdateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/CatalogTransportTest.php::testStaffUpdateOverHttpAndMcp"
+        ]
+      }
     },
     "system_handoff": {
       "contract_hash": "52a05e92989c46a419501ac9a75b32174d362506948197578773d6653635a119",
@@ -3689,7 +4732,15 @@
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/SystemOperationsTest.php",
         "tests/Integration/UpdateRecoveryUiTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts"
+        ]
+      }
     },
     "system_settings_get": {
       "contract_hash": "f79c5e559d6d42630d72c8ff0911535656dffbcd94ed03910410312e6a71cd4f",
@@ -3697,15 +4748,32 @@
         "tests/Integration/EmailSettingsCredentialTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/SystemOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts"
+        ]
+      }
     },
     "system_settings_update": {
       "contract_hash": "555ff621db752e1dc769ab365aa9a808e000ed717e76cbe0a718421cd93fd904",
       "tests": [
         "tests/Integration/EmailSettingsCredentialTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
-        "tests/Integration/SystemOperationsTest.php"
-      ]
+        "tests/Integration/SystemOperationsTest.php",
+        "tests/Integration/Transport/SystemTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/SystemTransportTest.php::testSystemSettingsUpdateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/SystemTransportTest.php::testSystemSettingsUpdateOverHttpAndMcp"
+        ]
+      }
     },
     "system_status": {
       "contract_hash": "bb1b9de1c3607de2314da61e51b323c2ac8ca3575323fcbc5329bb48348e2803",
@@ -3714,15 +4782,32 @@
         "tests/Integration/OperationContractCoverageTest.php",
         "tests/Integration/SystemOperationsTest.php",
         "tests/Integration/UpdateRecoveryUiTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts"
+        ]
+      }
     },
     "team_invite": {
       "contract_hash": "b81630f03507c6e6f5788fc7eaea56706ee03f3a69be382249d10fe1a5ddcf56",
       "tests": [
         "tests/Integration/BusinessOperationsTest.php",
         "tests/Integration/BusinessUserCrudTest.php",
-        "tests/Integration/OperationContractCoverageTest.php"
-      ]
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/Transport/BusinessTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/BusinessTransportTest.php::testTeamInviteOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/BusinessTransportTest.php::testTeamInviteOverHttpAndMcp"
+        ]
+      }
     },
     "team_list": {
       "contract_hash": "63bf83a99020127efb7e716930040169ba5f2cc491c6a8253b1f6bd36f6e63a1",
@@ -3730,7 +4815,15 @@
         "tests/Integration/BusinessOperationsTest.php",
         "tests/Integration/BusinessUserCrudTest.php",
         "tests/Integration/OperationContractCoverageTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ]
+      }
     },
     "team_member_get": {
       "contract_hash": "95a7f98e506c7594451c5482739c5a3515ab757d8fe41979a807a703b4abd29a",
@@ -3738,63 +4831,775 @@
         "tests/Integration/BusinessOperationsTest.php",
         "tests/Integration/BusinessUserCrudTest.php",
         "tests/Integration/OperationContractCoverageTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ],
+        "mcp": [
+          "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning"
+        ]
+      }
     },
     "team_member_set_active": {
       "contract_hash": "a329ae45845620d8005535b392874a5bed480c68a6ad61a82e59598a1d09d825",
       "tests": [
         "tests/Integration/BusinessOperationsTest.php",
         "tests/Integration/BusinessUserCrudTest.php",
-        "tests/Integration/OperationContractCoverageTest.php"
-      ]
+        "tests/Integration/OperationContractCoverageTest.php",
+        "tests/Integration/Transport/BusinessTransportTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/BusinessTransportTest.php::testTeamMemberSetActiveOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/BusinessTransportTest.php::testTeamMemberSetActiveOverHttpAndMcp"
+        ]
+      }
     },
     "webhook_create": {
       "contract_hash": "8b1eb1a1145e3632fad51354e741374c0f08e704343dafa125fc85a7224f6921",
       "tests": [
         "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/Transport/WebhookTransportTest.php",
         "tests/Integration/WebhookOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/WebhookTransportTest.php::testWebhookCreateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/WebhookTransportTest.php::testWebhookCreateOverHttpAndMcp"
+        ]
+      }
     },
     "webhook_deliveries_list": {
       "contract_hash": "81576bd6e91aada16421a0ee25675853e330856f8483c0f24fb8c37d38cb4b0b",
       "tests": [
         "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/Transport/WebhookTransportTest.php",
         "tests/Integration/WebhookOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/WebhookTransportTest.php::testWebhookDeliveriesListOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/WebhookTransportTest.php::testWebhookDeliveriesListOverHttpAndMcp"
+        ]
+      }
     },
     "webhook_delivery_retry": {
       "contract_hash": "c46b11ea89209e1cc4aa07de98039ed61367bfa8f6fe367d1bae360ac73b2a3d",
       "tests": [
         "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/Transport/WebhookTransportTest.php",
         "tests/Integration/WebhookOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/WebhookTransportTest.php::testWebhookDeliveryRetryOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/WebhookTransportTest.php::testWebhookDeliveryRetryOverHttpAndMcp"
+        ]
+      }
     },
     "webhook_get": {
       "contract_hash": "beacf51dcf53e4c8044c7e815b665ad88e2f7325ddce8f2585675fa73d1336d2",
       "tests": [
         "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/Transport/WebhookTransportTest.php",
         "tests/Integration/WebhookOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/WebhookTransportTest.php::testWebhookGetOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/WebhookTransportTest.php::testWebhookGetOverHttpAndMcp"
+        ]
+      }
     },
     "webhook_secret_rotate": {
       "contract_hash": "68b00b7e04b1d9b74976a0ddeab8417576d94d5da002235fc4cdbaf0888d2046",
       "tests": [
         "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/Transport/WebhookTransportTest.php",
         "tests/Integration/WebhookOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/WebhookTransportTest.php::testWebhookSecretRotateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/WebhookTransportTest.php::testWebhookSecretRotateOverHttpAndMcp"
+        ]
+      }
     },
     "webhook_update": {
       "contract_hash": "7d70647933fe0f0f487ecc5ccd086c78d22345e805bde7869bbc431affa80adc",
       "tests": [
         "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/Transport/WebhookTransportTest.php",
         "tests/Integration/WebhookOperationsTest.php"
-      ]
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/WebhookTransportTest.php::testWebhookUpdateOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/WebhookTransportTest.php::testWebhookUpdateOverHttpAndMcp"
+        ]
+      }
     },
     "webhooks_list": {
       "contract_hash": "fdc2517624e131ffa14e3f3fdbbddbccd3bb11f6ba0916a9549011d00334864d",
       "tests": [
         "tests/Integration/AgentFoundationTest.php",
+        "tests/Integration/Transport/WebhookTransportTest.php",
         "tests/Integration/WebhookOperationsTest.php"
+      ],
+      "transport_evidence": {
+        "http": [
+          "tests/Integration/Transport/WebhookTransportTest.php::testWebhooksListOverHttpAndMcp"
+        ],
+        "mcp": [
+          "tests/Integration/Transport/WebhookTransportTest.php::testWebhooksListOverHttpAndMcp"
+        ]
+      }
+    }
+  },
+  "capabilities": {
+    "C01": {
+      "verdict": "verified",
+      "rationale": "Acting identity, business, scopes and connection are described; the own non-secret profile updates through the account page service. Password change and identity verification stay browser-only by design.",
+      "operations": [
+        "account_get",
+        "account_update",
+        "identity_get"
+      ],
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php::testIdentityAccountAndCurrentConnectionActivityNeverIncludeOtherConnections",
+        "tests/Integration/SettingsIdentityOperationsTest.php::testTemporaryPasswordCannotEstablishDelegationEvenWithStaleSession"
+      ]
+    },
+    "C02": {
+      "verdict": "verified",
+      "rationale": "Search, read, create, update, archive/activate and export share BusinessService with the tenant screens, including slug and pattern rules and the optional owner invitation. Creation and archive are operator-only.",
+      "operations": [
+        "business_create",
+        "business_get",
+        "business_set_status",
+        "business_update",
+        "businesses_export",
+        "businesses_list"
+      ],
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+        "tests/Integration/BusinessOperationsTest.php::testBusinessCreateAppliesDefaultsAndQueuesOwnerInviteWithoutCredentials",
+        "tests/Integration/BusinessOperationsTest.php::testBusinessStaleVersionFailsAndPatternCannotChange",
+        "tests/Integration/BusinessOperationsTest.php::testOwnerCannotCreateBusinessDespiteScope"
+      ]
+    },
+    "C03": {
+      "verdict": "verified",
+      "rationale": "Access requests are submitted with the public abuse controls and reviewed by operators; approval changes the application only, and provisioning stays a separate business_create.",
+      "operations": [
+        "application_get",
+        "application_review",
+        "application_submit",
+        "applications_list"
+      ],
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+        "tests/Integration/BusinessOperationsTest.php::testApplicationApprovalDoesNotProvisionBusiness"
+      ]
+    },
+    "C04": {
+      "verdict": "verified",
+      "rationale": "Both dashboards read the same DashboardService metrics, upcoming and today bookings and setup readiness as the UI, with the business timezone boundaries.",
+      "operations": [
+        "business_dashboard",
+        "operator_dashboard"
+      ],
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+        "tests/Integration/BusinessOperationsTest.php::testRegistrySchemasAndReplayReturnOneBusinessAndInvitation"
+      ]
+    },
+    "C05": {
+      "verdict": "verified",
+      "rationale": "Pattern-aware list, detail and bounded CSV export with the UI filters and stable cursor paging, per business and across granted businesses for operators.",
+      "operations": [
+        "booking_get",
+        "bookings_export",
+        "bookings_list",
+        "operator_bookings_export",
+        "operator_bookings_list"
+      ],
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+        "tests/Integration/SharedBookingReadTest.php::testOperatorReadAndCsvShareGrantedBusinessFiltersAndStableSort",
+        "tests/Integration/SharedBookingOperationsTest.php::testEveryPatternReceiptAndListingMatchDeclaredContracts"
+      ]
+    },
+    "C06": {
+      "verdict": "verified",
+      "rationale": "Staff creation for all four patterns runs the manual-booking validation, inventory lock and notifications behind a reviewed preview.",
+      "operations": [
+        "booking_create",
+        "staff_availability_search"
+      ],
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+        "tests/Integration/BookingOperationContractCoverageTest.php::testApprovedCreationPreviewRejectsChangedPriceOrCancellationPolicy",
+        "tests/Integration/SharedBookingOperationsTest.php::testFourPatternsShareCreationSnapshotsAndConsentRules",
+        "tests/Integration/AgentReviewIntegrityTest.php::testStaffBookingsNeverRecordCustomerConsent"
+      ]
+    },
+    "C07": {
+      "verdict": "verified",
+      "rationale": "Legal transitions come from the same transition table as the admin status action; restoring transitions recheck inventory and keep reminder and email behaviour.",
+      "operations": [
+        "booking_status_set"
+      ],
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+        "tests/Integration/SharedBookingOperationsTest.php::testCancellationJoinsTransactionAndDoesNotDoubleDecrement",
+        "tests/Integration/BookingConcurrencyTest.php::testEveryRestorationRechecksAllPatternInventory"
+      ]
+    },
+    "C08": {
+      "verdict": "verified",
+      "rationale": "Staff and customer moves preview and commit for every pattern, keep original and replacement history and the customer deadlines distinct from staff authority.",
+      "operations": [
+        "booking_reschedule",
+        "customer_availability_search",
+        "customer_booking_reschedule",
+        "staff_availability_search"
+      ],
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+        "tests/Integration/BookingOperationContractCoverageTest.php::testApprovedRescheduleRejectsPermissivePolicyChangeWithoutMovingBooking",
+        "tests/Integration/SharedBookingOperationsTest.php::testRescheduleRetainsOriginalOnConflictAndMovesOnlyExecutingGrant",
+        "tests/Integration/SharedBookingOperationsTest.php::testNativeCustomerRescheduleRetryReturnsSameReceiptAfterGrantMoves"
+      ]
+    },
+    "C09": {
+      "verdict": "verified",
+      "rationale": "Customer cancellation describes eligibility, cancels once under a manage grant bound to the booking and business, and returns the receipt and notification state.",
+      "operations": [
+        "customer_booking_cancel",
+        "customer_booking_get"
+      ],
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+        "tests/Integration/SharedBookingOperationsTest.php::testVerifiedBookingActorCannotCancelAnotherBooking",
+        "tests/Integration/SharedBookingOperationsTest.php::testCancellationJoinsTransactionAndDoesNotDoubleDecrement"
+      ]
+    },
+    "C10": {
+      "verdict": "verified",
+      "rationale": "calendar_summary returns the day, week or month the admin calendar shows: the week starts on the business’s week start, the month is the 42-cell grid, and each day carries the occupied-booking count, closure and opening state. CalendarController and calendar_summary share BookingCalendar for the window, the paged booking load and groupOccupiedDates. calendar_get pages the booking records behind any range of up to 93 days.",
+      "operations": [
+        "calendar_get",
+        "calendar_summary"
+      ],
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+        "tests/Integration/SharedBookingReadTest.php::testCalendarPagesPreserveNamesClosuresAndAllRecords",
+        "tests/Integration/SharedBookingReadTest.php::testCalendarShowsOccupiedLegacyRowsAndStaysOverlappingTheWindow",
+        "tests/Integration/CalendarSummaryTest.php::testMonthWeekAndDayTotalsEqualTheRenderedCalendarOnEveryTransport",
+        "tests/Integration/CalendarSummaryTest.php::testWindowsFollowTheBusinessWeekStartAndTheSixWeekGrid"
+      ]
+    },
+    "C11": {
+      "verdict": "verified",
+      "rationale": "Search, detail, history and export follow the customer screens with field minimisation; there is deliberately no customer-edit operation because the UI has none.",
+      "operations": [
+        "customer_export",
+        "customer_get",
+        "customer_history",
+        "customer_list"
+      ],
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+        "tests/Integration/CustomerDirectoryOperationsTest.php::testDirectoryProjectsOperationalFieldsWithoutConsentOrAuthority",
+        "tests/Integration/CustomerDirectoryOperationsTest.php::testCrossBusinessCustomerIsNotExposed",
+        "tests/Integration/CustomerDirectoryOperationsTest.php::testCsvFormulaCellsAreEscapedAndExportIsBounded"
+      ]
+    },
+    "C12": {
+      "verdict": "verified",
+      "rationale": "Services share CatalogService with the service forms, including staff assignments, explicit active state and versioned updates.",
+      "operations": [
+        "service_create",
+        "service_get",
+        "service_reorder",
+        "service_set_active",
+        "service_update",
+        "services_list"
+      ],
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+        "tests/Integration/CatalogOperationsTest.php::testServiceCreationAndUpdatePreserveAssignmentsAndAuditActor",
+        "tests/Integration/CatalogOperationsTest.php::testReorderCannotCrossActiveState",
+        "tests/Integration/CatalogOperationsTest.php::testManagerCannotManageCatalogEvenWithManageScope"
+      ]
+    },
+    "C13": {
+      "verdict": "verified",
+      "rationale": "Staff share CatalogService with the staff forms, including service assignment and explicit active state; images go through media_upload_prepare (C21).",
+      "operations": [
+        "staff_create",
+        "staff_get",
+        "staff_list",
+        "staff_reorder",
+        "staff_set_active",
+        "staff_update"
+      ],
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+        "tests/Integration/CatalogOperationsTest.php::testStaleVersionCannotOverwriteAnotherEdit",
+        "tests/Integration/CatalogOperationsTest.php::testAssignedRecordsMustBelongToBusiness",
+        "tests/Integration/CatalogOperationsTest.php::testReorderCannotCrossActiveState"
+      ]
+    },
+    "C14": {
+      "verdict": "verified",
+      "rationale": "Weekly rules, staff overrides and reset-to-business schedule are configuration operations, kept separate from computed availability (C30).",
+      "operations": [
+        "schedule_get",
+        "schedule_replace",
+        "schedule_reset_staff"
+      ],
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php::testAllScheduleActionsUseVersionedContractsAndTransportParity",
+        "tests/Integration/CatalogOperationsTest.php::testScheduleReplaceRejectsOverlapAndSupportsStaffReset",
+        "tests/Integration/CatalogOperationsTest.php::testStaffOverrideClosedWeekdayDoesNotInheritBusinessHours",
+        "tests/Integration/CatalogOperationsTest.php::testSchedulePreviewCountsExistingBookingsAndDoesNotWrite"
+      ]
+    },
+    "C15": {
+      "verdict": "verified",
+      "rationale": "Blocks are listed, added and removed with pattern-aware targets; the preview names affected bookings and never cancels them.",
+      "operations": [
+        "blocked_date_create",
+        "blocked_date_delete",
+        "blocked_date_get",
+        "blocked_dates_list"
+      ],
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+        "tests/Integration/CatalogOperationsTest.php::testBlockPreviewShowsExistingBookingsWithoutCancellingThem",
+        "tests/Integration/CatalogOperationsTest.php::testCapacityBusinessSupportsGlobalBlockAndRejectsStaffTarget"
+      ]
+    },
+    "C16": {
+      "verdict": "verified",
+      "rationale": "Resources, stay bounds, check-in/out days and seasonal rates share the resource forms; range price comes from availability_search. There is no resource delete because the UI has none.",
+      "operations": [
+        "availability_search",
+        "resource_create",
+        "resource_get",
+        "resource_reorder",
+        "resource_set_active",
+        "resource_update",
+        "resources_list"
+      ],
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+        "tests/Integration/CatalogOperationsTest.php::testResourceSeasonalRangesCannotOverlapAndRemainAtomic",
+        "tests/Integration/BookingOperationContractCoverageTest.php::testResourceStayCrossesDaylightSavingAndSeasonalPriceBoundary"
+      ]
+    },
+    "C17": {
+      "verdict": "verified",
+      "rationale": "Capacity slots are listed, created, toggled and deleted like the UI; there is no edit or per-slot price operation because the UI has none.",
+      "operations": [
+        "capacity_slot_create",
+        "capacity_slot_delete",
+        "capacity_slot_get",
+        "capacity_slot_set_active",
+        "capacity_slots_list"
+      ],
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+        "tests/Integration/CatalogOperationsTest.php::testCapacityEditsAndDeletePreserveOccupiedWindowsIncludingLegacyReservations",
+        "tests/Integration/CatalogOperationsTest.php::testCapacityRejectsImpossibleTimeAndPartyLimits"
+      ]
+    },
+    "C18": {
+      "verdict": "verified",
+      "rationale": "Events with recurrence, exclusions, capacity, spot bounds, location, pricing and waitlist settings share the event forms; occurrences come from availability_search.",
+      "operations": [
+        "availability_search",
+        "event_create",
+        "event_delete",
+        "event_get",
+        "event_set_active",
+        "event_update",
+        "events_list"
+      ],
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php::testEveryCatalogActionReturnsItsPublishedSuccessContract",
+        "tests/Integration/CatalogOperationsTest.php::testEventRejectsInvalidRecurrenceAndPreservesVenueTimezone",
+        "tests/Integration/CatalogOperationsTest.php::testEventEditCannotRemoveAnOccurrenceWithBookings",
+        "tests/Integration/SharedBookingReadTest.php::testEventDateMonthAndCursorRemainBoundToTheRequestedOccurrences"
+      ]
+    },
+    "C19": {
+      "verdict": "verified",
+      "rationale": "The waitlist maps to existing operations, with no dedicated tool. bookings_list with status=waitlisted and event_id (sort=id, direction=asc) lists an event’s waitlist in arrival order. booking_status_set from waitlisted to confirmed promotes under the inventory lock after trusted review, is refused with inventory_conflict while the event is full, and queues the promotion email to the customer only. A prospective customer joins a full event’s waitlist through public_booking_create, with consent recorded only on the customer’s review page; joining never overbooks.",
+      "operations": [
+        "booking_create",
+        "booking_status_set",
+        "bookings_list",
+        "public_booking_create"
+      ],
+      "tests": [
+        "tests/Integration/SharedBookingOperationsTest.php::testEventPromotionRechecksInventoryAndPreservesWaitlistedState",
+        "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+        "tests/Integration/WaitlistOperationsTest.php::testJoiningAFullEventWaitlistsWithTheCustomersReviewedConsent",
+        "tests/Integration/WaitlistOperationsTest.php::testWaitlistListsPromotesWithCustomerNoticeAndRefusesAFullEventOnEveryTransport"
+      ]
+    },
+    "C20": {
+      "verdict": "verified",
+      "rationale": "General and regional settings read and change the same fields as the settings tab; consequential changes need a reviewed preview.",
+      "operations": [
+        "business_general_get",
+        "business_general_update"
+      ],
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+        "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware",
+        "tests/Integration/SettingsIdentityOperationsTest.php::testExpiredOrChangedReviewedSettingsCannotCommitOrCreateReceipt"
+      ]
+    },
+    "C21": {
+      "verdict": "verified",
+      "rationale": "Branding fields and logo media use the branding tab rules; uploads use single-purpose grants with the same file limits. There is no business-cover editor because the UI has none.",
+      "operations": [
+        "business_branding_get",
+        "business_branding_update",
+        "media_upload_prepare"
+      ],
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+        "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware",
+        "tests/Integration/MediaUploadRecoveryTest.php::testActualMultipartUploadAndIdenticalRetryClearCommittedJournal",
+        "tests/Integration/MediaGrantSecurityTest.php::testMediaIsBoundToSourceConnectionAndRevocation"
+      ]
+    },
+    "C22": {
+      "verdict": "verified",
+      "rationale": "Confirmation text, cancellation policy, phone requirement, approval mode and cancel/reschedule permissions read and change through the booking-page tab rules for all patterns.",
+      "operations": [
+        "business_bookingpage_get",
+        "business_bookingpage_update"
+      ],
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+        "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+      ]
+    },
+    "C23": {
+      "verdict": "verified",
+      "rationale": "Advance limits, horizon, daily customer limit and timeslot step/buffer use the booking tab rules and stay gated to the patterns that screen supports.",
+      "operations": [
+        "business_booking_get",
+        "business_booking_update"
+      ],
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+        "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+      ]
+    },
+    "C24": {
+      "verdict": "verified",
+      "rationale": "Privacy policy, consent and retention settings use the privacy tab rules with a reviewed preview; historical consent records are untouched.",
+      "operations": [
+        "business_privacy_get",
+        "business_privacy_update"
+      ],
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+        "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware",
+        "tests/Integration/SettingsIdentityOperationsTest.php::testExpiredOrChangedReviewedSettingsCannotCommitOrCreateReceipt"
+      ]
+    },
+    "C25": {
+      "verdict": "verified",
+      "rationale": "Notification recipients and preferences use the notifications tab rules; delivery state is reported on each write receipt.",
+      "operations": [
+        "business_notifications_get",
+        "business_notifications_update"
+      ],
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+        "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+      ]
+    },
+    "C26": {
+      "verdict": "verified",
+      "rationale": "Template overrides, restore-to-default and synthetic previews share the email settings service; there is no mass-mail operation.",
+      "operations": [
+        "email_template_preview",
+        "email_templates_get",
+        "email_templates_update"
+      ],
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php::testAllEmailOverridesDefaultsAndSyntheticSamplesUseSharedContracts"
+      ]
+    },
+    "C27": {
+      "verdict": "verified",
+      "rationale": "Embed settings and the exact credential-free snippet come from the embed tab service with the derived host and business.",
+      "operations": [
+        "business_embed_get",
+        "business_embed_update"
+      ],
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php::testEverySettingsSectionUsesStrictContractsVersionAndReplay",
+        "tests/Integration/SettingsIdentityOperationsTest.php::testHttpAndMcpReadSameSettingsAndCredentialBudgetSurvivesIpMiddleware"
+      ]
+    },
+    "C28": {
+      "verdict": "verified",
+      "rationale": "List, invite and activate/deactivate follow the team screen under owner/operator policy, protect the last owner and never elevate a role through scopes.",
+      "operations": [
+        "team_invite",
+        "team_list",
+        "team_member_get",
+        "team_member_set_active"
+      ],
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php::testEveryBusinessAndTeamActionUsesPublishedContractsWithoutImplicitProvisioning",
+        "tests/Integration/BusinessOperationsTest.php::testTeamCannotDeactivateLastOwner",
+        "tests/Integration/BusinessOperationsTest.php::testTeamStateChangeUsesCurrentRoleEvenWithOldOwnerContext",
+        "tests/Integration/BusinessOperationsTest.php::testInvitationsMintOnlyWhenDeliveredAndUseWorkingBrowserRoute"
+      ]
+    },
+    "C29": {
+      "verdict": "verified",
+      "rationale": "Tenant-specific discovery of pattern, catalog and public policy matches the booking page; private and archived businesses stay undiscoverable.",
+      "operations": [
+        "public_business_get",
+        "public_catalog_list"
+      ],
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+        "tests/Integration/CustomerApplicationOperationsTest.php::testDiscoveryContractsMinimizeFieldsAndRejectForeignContext",
+        "tests/Integration/SharedBookingReadTest.php::testPublicCatalogCursorSupportsNewAnonymousRequestsAndRejectsChangedKind"
+      ]
+    },
+    "C30": {
+      "verdict": "verified",
+      "rationale": "All four calculators back public, staff and customer availability with the same timezone, staff, party, occurrence and reschedule rules as the booking page.",
+      "operations": [
+        "availability_search",
+        "customer_availability_search",
+        "staff_availability_search"
+      ],
+      "tests": [
+        "tests/Integration/AvailabilityAcceptanceTest.php::testTimeslotOverridesBuffersBlocksAndDeadlineHaveIdenticalOptionsAndOutcome",
+        "tests/Integration/AvailabilityAcceptanceTest.php::testCapacityMinimumMaximumAdjacentBoundariesAndRemainingArithmeticMatchAllTransports",
+        "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+        "tests/Integration/BookingOperationContractCoverageTest.php::testPublicHttpAndNativePaginationSurvivesIndependentAnonymousRequests"
+      ]
+    },
+    "C31": {
+      "verdict": "verified",
+      "rationale": "Prospective customers preview and create through the booking-page rules, with browser-recorded consent, approval and waitlist outcomes and a safe manage handoff. A confirmed result, and the customer’s own booking read, carry a calendar object with the booking page’s Google Calendar link and iCalendar file, built by CalendarLinks in the same format as the page’s client-side actions. Pending and waitlisted results carry calendar: null.",
+      "operations": [
+        "public_booking_create",
+        "customer_booking_get"
+      ],
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php::testPublishedAppointmentExampleSessionPreviewReviewCommitAndRetry",
+        "tests/Integration/AvailabilityAcceptanceTest.php::testTimeslotOverridesBuffersBlocksAndDeadlineHaveIdenticalOptionsAndOutcome",
+        "tests/Integration/AvailabilityAcceptanceTest.php::testCapacityMinimumMaximumAdjacentBoundariesAndRemainingArithmeticMatchAllTransports",
+        "tests/Integration/AgentReviewIntegrityTest.php::testSelfApprovedPublicBookingIsRecordedAsTheCustomersOwnApproval",
+        "tests/Integration/AgentReviewIntegrityTest.php::testAgentsCannotSupplyConsent",
+        "tests/Integration/BookingCalendarActionsTest.php::testActionsReproduceTheBookingPageFormatAndEscaping",
+        "tests/Integration/BookingCalendarActionsTest.php::testConfirmedPublicResultAndCustomerReadOfferCalendarActionsButPendingDoNot"
+      ]
+    },
+    "C32": {
+      "verdict": "verified",
+      "rationale": "Required fields, preparation text, virtual and timezone behaviour and consent text are discovered from the public operations and validated by the shared booking draft.",
+      "operations": [
+        "booking_create",
+        "public_booking_create",
+        "public_business_get",
+        "public_catalog_list"
+      ],
+      "tests": [
+        "tests/Integration/SharedBookingOperationsTest.php::testRequiredCustomAnswersAreValidatedBeforeCreatingCustomer",
+        "tests/Integration/CustomerApplicationOperationsTest.php::testDiscoveryContractsMinimizeFieldsAndRejectForeignContext",
+        "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts"
+      ]
+    },
+    "C33": {
+      "verdict": "verified",
+      "rationale": "Verified customers read, export and request deletion of their own data under a privacy grant separate from booking management; there is no directory search by email.",
+      "operations": [
+        "customer_deletion_request",
+        "customer_privacy_export",
+        "customer_privacy_get",
+        "customer_privacy_records"
+      ],
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+        "tests/Integration/CustomerApplicationOperationsTest.php::testPrivacyCommandsRequireIndependentGrantAndQueueAcknowledgmentOnce",
+        "tests/Integration/CustomerApplicationOperationsTest.php::testManageGrantCannotAccessPrivacyOperation",
+        "tests/Integration/CustomerApplicationOperationsTest.php::testPrivacyHistoryAndExportExcludeForeignBookingRelationsAndPageConsents"
+      ]
+    },
+    "C34": {
+      "verdict": "verified",
+      "rationale": "The operator queue, review, dismiss and irreversible confirm share the deletion queue service; confirmation is bound to the exact affected data.",
+      "operations": [
+        "deletion_confirm",
+        "deletion_dismiss",
+        "deletion_queue_list",
+        "deletion_review"
+      ],
+      "tests": [
+        "tests/Integration/BookingOperationContractCoverageTest.php::testAllFourPatternsAndEveryBookingDiscoveryAndCustomerOperationHaveSuccessfulContracts",
+        "tests/Integration/DeletionApplicationTest.php::testDeletionPreviewBindsExactDataAndRevokesCustomerAuthority",
+        "tests/Integration/DeletionApplicationTest.php::testQueueCursorIsStableAndBoundToStateAndBusiness"
+      ]
+    },
+    "C35": {
+      "verdict": "verified",
+      "rationale": "Redacted settings reads and non-secret updates share the settings screen; secrets report configured state only, and credential entry is an exact browser handoff.",
+      "operations": [
+        "system_handoff",
+        "system_settings_get",
+        "system_settings_update"
+      ],
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts",
+        "tests/Integration/SystemOperationsTest.php::testSettingsRedactSecretsAndRejectSecretApiFields",
+        "tests/Integration/SystemOperationsTest.php::testSettingsRejectStaleAndRefreshCurrentRole"
+      ]
+    },
+    "C36": {
+      "verdict": "verified",
+      "rationale": "Health, last and next run and failures are reported; run-now queues a durable request that shares the cron dispatcher and overlap lock, and never returns the cron secret.",
+      "operations": [
+        "job_request_get",
+        "jobs_run",
+        "jobs_status"
+      ],
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts",
+        "tests/Integration/SystemOperationsTest.php::testMaintenanceRequestIsDurableAndDoesNotRunInsideMutation",
+        "tests/Integration/SystemOperationsTest.php::testMaintenanceLockPreventsOverlapAndRecoversAfterRelease"
+      ]
+    },
+    "C37": {
+      "verdict": "verified",
+      "rationale": "Privileged, redacted and filtered audit reads and exports carry principal, connection, action, result and correlation; raw logs are a controlled operator handoff.",
+      "operations": [
+        "audit_export",
+        "audit_list",
+        "system_handoff"
+      ],
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts",
+        "tests/Integration/SystemOperationsTest.php::testAuditProjectionDoesNotLeakDetailsOrCrossBusiness"
+      ]
+    },
+    "C38": {
+      "verdict": "justified_handoff",
+      "rationale": "Agents read sanitized version and update readiness and receive a prepared handoff. Installing updates, installation credentials and arbitrary archives stay trusted human and host operations.",
+      "operations": [
+        "system_handoff",
+        "system_status"
+      ],
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts",
+        "tests/Integration/SystemOperationsTest.php::testSettingsAndJobContractsMatchActualExecutorResults"
+      ]
+    },
+    "C39": {
+      "verdict": "verified",
+      "rationale": "Operators resolve an explicit business context while keeping their own attribution; no impersonation cookie or browser session is created.",
+      "operations": [
+        "identity_get",
+        "operator_business_context"
+      ],
+      "tests": [
+        "tests/Integration/OperationContractCoverageTest.php::testAllOperatorSystemActionsUsePublishedNonsecretSuccessContracts",
+        "tests/Integration/SystemOperationsTest.php::testSettingsAndJobContractsMatchActualExecutorResults"
+      ]
+    },
+    "C40": {
+      "verdict": "verified",
+      "rationale": "A connection describes itself, tests itself, lists its own activity, brings its own expiry forward and revokes itself; the last two need the represented person’s browser review. connection_test reports whether the credential authenticates, its principal, businesses, scopes, expiry, transport and negotiated protocol, and which actions the role allows but the grant lacks. connection_expire mirrors the admin screen, which fixes expiry at creation and revokes: it may only shorten, never extend, and caps every token at the new end. Creating grants, showing a secret once and rotating raw tokens stay browser-only by design; connection_setup points there. Per-operation HTTP and MCP evidence is tracked in the operations ledger.",
+      "operations": [
+        "connection_activity",
+        "connection_expire",
+        "connection_get",
+        "connection_revoke",
+        "connection_setup",
+        "connection_test",
+        "operation_get",
+        "operation_recover",
+        "public_operation_get",
+        "public_operation_recover"
+      ],
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php::testIdentityAccountAndCurrentConnectionActivityNeverIncludeOtherConnections",
+        "tests/Integration/SettingsIdentityOperationsTest.php::testReviewedSelfRevocationCommitsItsReceiptAndImmediatelyEndsAccess",
+        "tests/Integration/SettingsIdentityOperationsTest.php::testBrowserActivityRetainsOwnRevokedHistoryAndBindsPagination",
+        "tests/Integration/AgentFoundationTest.php::testRevocationRoleChangesIdentityChangesAndAudienceTakeEffect",
+        "tests/Integration/ConnectionTestAndExpireTest.php::testConnectionTestReportsGrantExpiryTransportAndScopeCoverageOnEveryTransport",
+        "tests/Integration/ConnectionTestAndExpireTest.php::testExpireShortensAfterReviewAuditsAndCapsTokensButNeverExtends"
+      ]
+    },
+    "C41": {
+      "verdict": "verified",
+      "rationale": "A new enabling feature, not an existing-UI parity claim: signed business events, subscription management, delivery diagnostics and retries, and receipt status and recovery.",
+      "operations": [
+        "operation_get",
+        "operation_recover",
+        "public_operation_get",
+        "public_operation_recover",
+        "webhook_create",
+        "webhook_deliveries_list",
+        "webhook_delivery_retry",
+        "webhook_get",
+        "webhook_secret_rotate",
+        "webhook_update",
+        "webhooks_list"
+      ],
+      "tests": [
+        "tests/Integration/WebhookOperationsTest.php::testEveryWebhookOperationAndMediaReceiptHasARealValidatedSuccess",
+        "tests/Integration/WebhookOperationsTest.php::testFailureRetryPreservesEventAndExactSignedBodyWithoutPrivateFields",
+        "tests/Integration/WebhookOperationsTest.php::testRotationOverlapsAndStaleChangesConflict",
+        "tests/Integration/WebhookDeliveryIntegrityTest.php::testDeliveryToAnUnchangedEndpointIsSent",
+        "tests/Integration/AgentAdmissionRecoveryTest.php::testSimultaneousIdenticalCommandsHaveOneReceiptAndExpiredReplayCannotRepeat"
+      ]
+    },
+    "C42": {
+      "verdict": "verified",
+      "rationale": "capabilities_get lists the actor-visible operations, server version and supported protocol versions, and the generated OpenAPI and MCP tool catalog come from the same registry. Failures name their cause: unknown_endpoint (404, with discovery_url) for a wrong address under /api/agent/v2 or /mcp, authorization_required for a missing header, unauthorized for an unknown token, wrong_audience, connection_revoked, connection_expired, account_disabled (403), insufficient_scope (403, also as an MCP tool error for hidden tools) and unsupported_protocol_version in the MCP -32022 error data. connection_test is the authenticated self-check and reports scope coverage.",
+      "operations": [
+        "capabilities_get",
+        "connection_test"
+      ],
+      "tests": [
+        "tests/Integration/SettingsIdentityOperationsTest.php::testIdentityAccountAndCurrentConnectionActivityNeverIncludeOtherConnections",
+        "tests/Unit/Agent/Mcp/ContractGeneratorTest.php::testMcpToolsUseSameDefinitionsAndPreserveEmptyObjectMaps",
+        "tests/Unit/Agent/Mcp/HttpTransportTest.php::testUnsupportedModernVersionListsSupportedVersions",
+        "tests/Integration/ConnectionDiagnosticsTest.php::testEveryFailureCauseHasADistinctCodeAndNextActionOverHttpAndMcp",
+        "tests/Integration/ConnectionTestAndExpireTest.php::testConnectionTestReportsGrantExpiryTransportAndScopeCoverageOnEveryTransport"
       ]
     }
   }
