@@ -118,6 +118,7 @@ final class PrivacyEndpointTest extends TestCase
         $this->assertSame(200, $getResponse['code'], 'Privacy GET should return 200');
         $this->assertStringContainsString('test-privacy@example.com', $getResponse['body'], 'Page must show customer email');
         $this->assertStringContainsString('_csrf_token', $getResponse['body'], 'Page must contain CSRF token field');
+        $this->assertDoesNotMatchRegularExpression('/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', $getResponse['body'], 'Dates go through the Locale engine, never raw database values');
 
         // Extract CSRF token from form
         preg_match('/name="_csrf_token"\s+value="([^"]+)"/', $getResponse['body'], $matches);

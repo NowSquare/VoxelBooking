@@ -19,6 +19,9 @@ $csrfToken = $csrfToken ?? '';
 $brandColor = $tenant['brand_color'] ?? '#4F46E5';
 $slug = $tenant['slug'] ?? '';
 $customerId = $customer['id'] ?? '';
+// Stored instants are UTC; customers read them in the business's time zone and format.
+$businessZone = new DateTimeZone($tenant['timezone'] ?? 'UTC');
+$localInstant = static fn (string $utc): DateTimeImmutable => (new DateTimeImmutable($utc, new DateTimeZone('UTC')))->setTimezone($businessZone);
 ?>
 <!DOCTYPE html>
 <html lang="<?= \App\Engine\Locale::getLocale() ?>" dir="<?= \App\Engine\Locale::direction() ?>">
@@ -318,7 +321,7 @@ $customerId = $customer['id'] ?? '';
             <?php endif; ?>
             <div class="privacy-field">
                 <span class="privacy-field-label"><?= __('booking.privacy.customer_since') ?></span>
-                <span class="privacy-field-value"><?= View::e($customer['created_at'] ?? '') ?></span>
+                <span class="privacy-field-value"><?= empty($customer['created_at']) ? '' : View::e(\App\Engine\Locale::date($localInstant($customer['created_at']))) ?></span>
             </div>
         </div>
 
@@ -334,15 +337,15 @@ $customerId = $customer['id'] ?? '';
                 <?php foreach ($bookings as $booking): ?>
                 <div class="privacy-booking">
                     <div class="privacy-booking-row">
-                        <span class="privacy-booking-date"><?= View::e($booking['start_datetime'] ?? '') ?></span>
+                        <span class="privacy-booking-date"><?= empty($booking['start_datetime']) ? '' : View::e(\App\Engine\Locale::datetime(new DateTimeImmutable($booking['start_datetime'], $businessZone))) ?></span>
                         <span class="privacy-status privacy-status-<?= View::e($booking['status'] ?? 'confirmed') ?>">
                             <?= View::e($booking['status'] ?? '') ?>
                         </span>
                     </div>
                     <div class="privacy-booking-meta">
-                        <?= View::e($booking['booking_pattern'] ?? '') ?> · <?= __('booking.privacy.party_size') ?>: <?= View::e($booking['party_size'] ?? '1') ?>
+                        <?= View::e(__('booking.privacy.patterns.' . ($booking['booking_pattern'] ?? 'timeslot'))) ?> · <?= __('booking.privacy.party_size') ?>: <?= View::e($booking['party_size'] ?? '1') ?>
                         <?php if (!empty($booking['source'])): ?>
-                            · <?= __('booking.privacy.source') ?>: <?= View::e($booking['source']) ?>
+                            · <?= __('booking.privacy.source') ?>: <?= View::e(__('booking.privacy.sources.' . $booking['source'])) ?>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -361,7 +364,7 @@ $customerId = $customer['id'] ?? '';
             <div class="privacy-field">
                 <span class="privacy-field-label"><?= View::e($record['booking_date'] ?? '') ?></span>
                 <span class="privacy-field-value">
-                    <?= __('booking.privacy.consented') ?>: <?= View::e($record['consent_given_at'] ?? 'N/A') ?>
+                    <?= __('booking.privacy.consented') ?>: <?= empty($record['consent_given_at']) ? View::e(__('booking.privacy.not_recorded')) : View::e(\App\Engine\Locale::datetime($localInstant($record['consent_given_at']))) ?>
                     <?php if (!empty($record['consent_text_shown'])): ?>
                         <br><small>"<?= View::e($record['consent_text_shown']) ?>"</small>
                     <?php endif; ?>
