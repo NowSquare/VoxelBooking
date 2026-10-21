@@ -1,6 +1,6 @@
 # Shared catalog, business and operator implementation evidence
 
-Final status: both complete runtime matrices of the 1.3.0 source pass **1,974 tests and 29,225 assertions**, with no failures, errors, skips, warnings or deprecations. See the [retained final reports](matrix/README.md). The dated progression below preserves intermediate red and green evidence; earlier totals are historical snapshots.
+Final status: both complete runtime matrices of the 1.3.0 source pass **1,974 tests and 29,220 assertions**, with no failures, errors, skips, warnings or deprecations. See the [retained final reports](matrix/README.md). The dated progression below preserves intermediate red and green evidence; earlier totals are historical snapshots.
 
 ## Environment and commands
 

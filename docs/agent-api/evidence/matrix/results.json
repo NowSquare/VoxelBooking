@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "recorded_at": "2026-10-21T14:14:12.486240+00:00",
+  "recorded_at": "2026-10-21T15:16:50.868811+00:00",
   "state": "passed",
   "scope": "Complete PHPUnit unit and integration suite, including actual HTTP workers, native MCP, database concurrency, updater recovery and native form tests.",
   "isolation": "Each run owns a fresh loopback MySQL container, restricted database user and private application copy. Ordinary application .env, storage and uploaded files are never copied. All containers and HTTP workers stopped after the tests.",
@@ -16,7 +16,7 @@
       "phpunit": "11.5.55",
       "exit_code": 0,
       "tests": 1974,
-      "assertions": 29225,
+      "assertions": 29220,
       "errors": 0,
       "failures": 0,
       "skipped": 0,
@@ -34,7 +34,7 @@
         {
           "name": "Integration",
           "tests": 885,
-          "assertions": 8644,
+          "assertions": 8639,
           "errors": 0,
           "failures": 0,
           "skipped": 0
@@ -43,12 +43,12 @@
       "command": "php scripts/test-isolated.php --mysql-image=mysql:8.0 --display-skipped --display-deprecations --display-warnings --log-junit <absolute path>/php83-mysql80.xml > php83-mysql80.log 2>&1",
       "console": {
         "path": "php83-mysql80.log",
-        "sha256": "65a1390abde67048f96737fd9d25d5bc4c08174f6dea044de1bc6fd51cf86c25"
+        "sha256": "8a7b6377fca57649cbab567dfbcba58b905b83b023cc609d0b7d6a15b6434638"
       },
       "junit": {
         "path": "php83-mysql80.xml",
         "retained_in_repository": false,
-        "sha256": "66a9dc538de61b2c95f84bb7ac0117c24dbecf7b9861b30c849e6310c75b4b75"
+        "sha256": "ac45a86082abeb309a227aa0bb4da780e490dd878d2f4a5cea4ddd676782f9db"
       }
     },
     {
@@ -60,7 +60,7 @@
       "phpunit": "11.5.55",
       "exit_code": 0,
       "tests": 1974,
-      "assertions": 29225,
+      "assertions": 29220,
       "errors": 0,
       "failures": 0,
       "skipped": 0,
@@ -78,7 +78,7 @@
         {
           "name": "Integration",
           "tests": 885,
-          "assertions": 8644,
+          "assertions": 8639,
           "errors": 0,
           "failures": 0,
           "skipped": 0
@@ -87,12 +87,12 @@
       "command": "php scripts/test-isolated.php --mysql-image=mysql:8.4 --display-skipped --display-deprecations --display-warnings --log-junit <absolute path>/php85-mysql84.xml > php85-mysql84.log 2>&1",
       "console": {
         "path": "php85-mysql84.log",
-        "sha256": "df11b626171f5d39306dfc2f7c1f75199f6e265ce9964100bdf08aac0c1178e7"
+        "sha256": "76ea2dc71a4cea0694f2a04d96b041e403ab48139566b09aa1422928dbdb6830"
       },
       "junit": {
         "path": "php85-mysql84.xml",
         "retained_in_repository": false,
-        "sha256": "b04b27116237cdd797669f8a29fb403c8f5ea31fc8460c29d63387e888199d4e"
+        "sha256": "730d0c45289b2c76c27228423357980697f637228d1236e7f65271f5ed49a11e"
       }
     }
   ],
@@ -122,13 +122,14 @@
     "note": "Release 1.3.0 source, with VERSION 1.3.0 in place. The suites and rehearsals ran on these exact trees; the only later commits add these evidence files and VERSION.",
     "trees": {
       "app": "ab7eccac707970065bf1afecbd213f1bf8049798",
-      "tests": "4c293c9002140042b9755a4c5172bf0b4ed124e8",
+      "tests": "a78768d347ec584cf3d6a2720bdc351c19569b41",
       "lang": "63e0a99092c1506af921673a8f908ba4ff48ccc2",
       "templates": "d4ce0ce4b5cd083cb66ed41187a1c7ca1df49aff",
       "resources": "5586767d8f15dca9f34c0d6346ba63fcb021e1a1",
       "public": "27058b35a3e7a44c618bf61ba82630b3b8b168c9",
       "scripts": "a233271c840a4d75af6e241451962dc6246fd5f5"
     },
-    "version_file": "1.3.0"
+    "version_file": "1.3.0",
+    "random_order": "The suite also passes with --order-by=random under seeds 101, 202, 303, 404, 505 and 606."
   }
 }

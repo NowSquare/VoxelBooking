@@ -1,6 +1,6 @@
 # Final application compatibility matrix
 
-Both complete runs of the 1.3.0 source pass **1,974 tests and 29,225 assertions**, with zero failures, errors, skips, warnings or deprecations. Each contains 1,089 unit tests and 885 integration tests, including HTTP v2 and native MCP success tests for all 132 operations.
+Both complete runs of the 1.3.0 source pass **1,974 tests and 29,220 assertions**, with zero failures, errors, skips, warnings or deprecations. Each contains 1,089 unit tests and 885 integration tests, including HTTP v2 and native MCP success tests for all 132 operations.
 
 | Runtime | Console | Complete JUnit |
 | --- | --- | --- |
@@ -28,7 +28,7 @@ The real version-28 upgrade, interrupted-DDL repair and backup-restore rehearsal
 
 Reproduce these with `php scripts/test-isolated.php --upgrade-check --mysql-image=mysql:8.0` or `mysql:8.4`. They exercise the same migration engine and migration files. The final full matrix additionally covers retrying a migration after code is already current, retaining the updater lock inode, and displaying the native recovery form with CSRF protection.
 
-The first 1.3.0 matrix found two defects, both fixed before these runs. Calendar entries stamped `DTSTAMP` with the current clock, so two reads of one booking differed when they crossed a second; the stamp now comes from the booking's ULID. The upgrade rehearsal's failing probe migration was numbered 042, which the real review-secret migration now uses, so the migrator skipped it; the probe now takes the number after the newest migration. A later check found that the dashboard suite left staff on the shared fixture business, so some filtered subsets failed; the suites now restore what they change, and an event booking whose event was deleted no longer triggers a PHP 8.5 deprecation.
+The first 1.3.0 matrix found two defects, both fixed before these runs. Calendar entries stamped `DTSTAMP` with the current clock, so two reads of one booking differed when they crossed a second; the stamp now comes from the booking's ULID. The upgrade rehearsal's failing probe migration was numbered 042, which the real review-secret migration now uses, so the migrator skipped it; the probe now takes the number after the newest migration. A later check found that the dashboard suite left staff on the shared fixture business, so some filtered subsets failed; the suites now restore what they change, and an event booking whose event was deleted no longer triggers a PHP 8.5 deprecation. The suite also passes in random order (`--order-by=random`, seeds 101 to 606): forking tests close the database connection first, and each test starts with restored fixture accounts, business settings and request budgets.
 
 To verify report checksums from the repository root (a JUnit report is checked when you place the CI artifact beside the logs):
 

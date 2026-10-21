@@ -41,7 +41,7 @@ Configuration: isolated-run/app/phpunit.xml
 ............................................................. 1952 / 1974 ( 98%)
 ......................                                        1974 / 1974 (100%)
 
-Time: 02:49.256, Memory: 52.50 MB
+Time: 02:43.266, Memory: 52.50 MB
 
-OK (1974 tests, 29225 assertions)
+OK (1974 tests, 29220 assertions)
 exit 0
