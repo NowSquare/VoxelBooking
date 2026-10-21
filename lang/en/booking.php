@@ -377,6 +377,10 @@ return [
         'event_full'            => 'This event is full.',
         'event_cancelled'       => 'This event has been cancelled.',
         'waitlist_full'         => 'The waitlist for this event is full.',
+        'too_soon'              => 'This time is too soon to book online. Choose a later time.',
+        'too_far'               => 'This date is too far ahead to book. Choose an earlier date.',
+        'date_unavailable'      => "This date isn't available. Choose another date.",
+        'selection_unavailable' => 'This option is no longer available. Choose another one.',
     ],
 
     // ── Recovery ──

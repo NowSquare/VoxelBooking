@@ -31,24 +31,29 @@ final class BookingInventory
                 )['slots'];
 
                 // The calculator is the authority on bookable times; the SQL below only catches races.
+                // A booking without staff needs one free eligible staff member, or free
+                // opening hours when the business has no staff, just as a new booking would.
+                $staffId = $booking['staff_id'] ?? null;
                 $eligible = false;
-                foreach ($slots as $slot) if (
-                    $slot['time'] === substr($booking['start_datetime'], 11, 5)
-                    && $slot['end_time'] === substr($booking['end_datetime'], 11, 5)
-                    && $slot['staff_id'] === ($booking['staff_id'] ?? null)
-                ) {
-                    $eligible = true;
-                    break;
+                foreach ($slots as $slot) {
+                    if (
+                        $slot['time'] === substr($booking['start_datetime'], 11, 5)
+                        && $slot['end_time'] === substr($booking['end_datetime'], 11, 5)
+                        && ($staffId === null || $slot['staff_id'] === $staffId)
+                    ) {
+                        $eligible = true;
+                        break;
+                    }
                 }
                 if (!$eligible) throw new OperationException('inventory_conflict', 409);
 
                 $buffer = max(0, (int) ($tenant['buffer_minutes'] ?? 0));
                 $conflict = Database::query(
-                    "SELECT id FROM bookings WHERE $where AND (? IS NULL OR staff_id = ?) AND start_datetime < DATE_ADD(?, INTERVAL ? MINUTE) AND DATE_ADD(end_datetime, INTERVAL ? MINUTE) > ? LIMIT 1",
+                    // Null-safe equality: staffed and staff-less bookings occupy different schedules.
+                    "SELECT id FROM bookings WHERE $where AND staff_id <=> ? AND start_datetime < DATE_ADD(?, INTERVAL ? MINUTE) AND DATE_ADD(end_datetime, INTERVAL ? MINUTE) > ? LIMIT 1",
                     [
                         ...$bindings,
-                        $booking['staff_id'],
-                        $booking['staff_id'],
+                        $staffId,
                         $booking['end_datetime'],
                         $buffer,
                         $buffer,

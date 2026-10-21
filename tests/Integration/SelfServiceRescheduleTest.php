@@ -241,7 +241,9 @@ final class SelfServiceRescheduleTest extends TestCase
 
         $this->assertSame(409, $r['code']);
         $data = json_decode($r['body'], true);
-        $this->assertSame('too_late', $data['error'] ?? null);
+        // The booking page has always received `time_gate` with its own message.
+        $this->assertSame('time_gate', $data['error'] ?? null);
+        $this->assertSame((require dirname(__DIR__, 2) . '/lang/en/booking.php')['manage']['time_gate_reschedule'], $data['message'] ?? null);
     }
 
     // ════════════════════════════════════════════════════════════════

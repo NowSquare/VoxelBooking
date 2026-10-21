@@ -617,9 +617,9 @@ final class BookingFlowTest extends TestCase
         $manage = '//div[@data-book-step="manage"]';
         $this->assertSame(1, $xpath->query($confirmed . '//template[@x-if="booking"]//a[@*[name()="x-bind:href"]="manageUrl(booking.id)"]')->length,
             'Confirmation must link the newly created booking to its managed page');
-        $this->assertSame(1, $xpath->query($manage . '//template[@x-if="manageCanReschedule"]//button[@*[name()="@click"]="startReschedule"]')->length,
+        $this->assertSame(1, $xpath->query($manage . '//template[@x-if="manageCanReschedule"]//button[@*[name()="x-on:click"]="startReschedule"]')->length,
             'Managed rescheduling must follow the authorized API gate');
-        $this->assertSame(1, $xpath->query($manage . '//template[@x-if="manageCanCancel"]//button[@*[name()="@click"]="openCancellation"]')->length,
+        $this->assertSame(1, $xpath->query($manage . '//template[@x-if="manageCanCancel"]//button[@*[name()="x-on:click"]="openCancellation"]')->length,
             'Managed cancellation must follow the authorized API gate');
 
         // Book another action
@@ -1308,8 +1308,11 @@ final class BookingFlowTest extends TestCase
     {
         $previous = libxml_use_internal_errors(true);
         try {
+            // Some libxml versions drop attribute names that start with "@".
+            // Alpine's `@click` is shorthand for `x-on:click`, so query the
+            // long form and the result no longer depends on the parser.
             $document = new \DOMDocument();
-            $document->loadHTML($html);
+            $document->loadHTML((string) preg_replace('/(\s)@([a-z][\w.:-]*=)/i', '$1x-on:$2', $html));
             return new \DOMXPath($document);
         } finally {
             libxml_clear_errors();

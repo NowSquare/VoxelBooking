@@ -43,15 +43,13 @@ final class TimeSlotCalculator
 
         // Resolve service duration
         $serviceDuration = (int) ($tenant['slot_duration_minutes'] ?? 30);
-        $requiresStaff = false;
         if ($serviceId) {
             $service = Database::query(
-                'SELECT `duration_minutes`, `requires_staff` FROM `services` WHERE `id` = ? AND `tenant_id` = ? AND `is_active` = 1 LIMIT 1',
+                'SELECT `duration_minutes` FROM `services` WHERE `id` = ? AND `tenant_id` = ? AND `is_active` = 1 LIMIT 1',
                 [$serviceId, $tenantId]
             );
             if (!empty($service)) {
                 $serviceDuration = (int) $service[0]['duration_minutes'];
-                $requiresStaff = (bool) $service[0]['requires_staff'];
             } else {
                 return ['slots' => [], 'date' => $date, 'timezone' => $timezone];
             }
@@ -87,7 +85,13 @@ final class TimeSlotCalculator
         $eligibleStaff = self::resolveEligibleStaff($tenantId, $serviceId, $staffId);
 
         if (empty($eligibleStaff)) {
-            if ($staffId !== null || $requiresStaff) return ['slots' => [], 'date' => $date, 'timezone' => $timezone];
+            // A chosen staff member who cannot perform the service has no times.
+            // Without that choice, a business with no active staff books
+            // against its own opening hours. `requires_staff` is presentation
+            // metadata and never removes times.
+            if ($staffId !== null) {
+                return ['slots' => [], 'date' => $date, 'timezone' => $timezone];
+            }
             // No staff: use tenant-level availability
             $eligibleStaff = [null]; // null = no staff filter
         }
@@ -213,25 +217,7 @@ final class TimeSlotCalculator
     private static function resolveEligibleStaff(string $tenantId, ?string $serviceId, ?string $staffId): array
     {
         if ($staffId !== null) {
-            // Specific staff requested — verify they exist, are active,
-            // AND are linked to the service (if a service is specified)
-            if ($serviceId !== null) {
-                $staff = Database::query(
-                    'SELECT s.`id`
-                     FROM `staff` s
-                     JOIN `service_staff` ss ON ss.`staff_id` = s.`id`
-                     WHERE s.`id` = ? AND s.`tenant_id` = ? AND s.`is_active` = 1
-                       AND ss.`service_id` = ?
-                     LIMIT 1',
-                    [$staffId, $tenantId, $serviceId]
-                );
-            } else {
-                $staff = Database::query(
-                    'SELECT `id` FROM `staff` WHERE `id` = ? AND `tenant_id` = ? AND `is_active` = 1 LIMIT 1',
-                    [$staffId, $tenantId]
-                );
-            }
-            return !empty($staff) ? [$staffId] : [];
+            return self::staffCanPerform($tenantId, $serviceId, $staffId) ? [$staffId] : [];
         }
 
         if ($serviceId !== null) {
@@ -248,7 +234,7 @@ final class TimeSlotCalculator
             if (!empty($staffRows)) {
                 return array_column($staffRows, 'id');
             }
-            return [];
+            // No staff linked: any active staff member can perform the service.
         }
 
         // Fallback: all active staff for tenant
@@ -258,6 +244,31 @@ final class TimeSlotCalculator
         );
 
         return array_column($staffRows, 'id');
+    }
+
+    /**
+     * Whether an active staff member can perform a service.
+     *
+     * Linked staff define who performs a service. A service with no linked
+     * staff can be performed by any active staff member, so a booking that
+     * fell back to one of them stays valid when it is approved or moved.
+     */
+    public static function staffCanPerform(string $tenantId, ?string $serviceId, string $staffId): bool
+    {
+        $active = Database::query(
+            'SELECT 1 FROM `staff` WHERE `id` = ? AND `tenant_id` = ? AND `is_active` = 1 LIMIT 1',
+            [$staffId, $tenantId]
+        );
+        if (empty($active) || $serviceId === null) {
+            return !empty($active);
+        }
+
+        $links = Database::query(
+            'SELECT `staff_id` FROM `service_staff` WHERE `service_id` = ?',
+            [$serviceId]
+        );
+
+        return $links === [] || in_array($staffId, array_column($links, 'staff_id'), true);
     }
 
     /**

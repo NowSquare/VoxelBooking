@@ -238,18 +238,34 @@ final class BookingApiController
             $booking = BookingCommands::create($actor, array_replace($input, ['business_id' => $tenant['id']]));
             return CustomerCapability::protect(Response::json(['booking' => $booking], 201));
         } catch (OperationException $error) {
-            $errors = array_map(static fn($code) => __($code === 'required' ? 'booking.errors.required_field' : 'booking.errors.invalid_field'), $error->fieldErrors);
-            if($error->problemCode==='slot_unavailable' && $tenant['booking_pattern']==='timeslot') {
-                try {
-                    $date=$input['date']??substr(str_replace('T',' ',$input['start_datetime']??''),0,10);
-                    $choices=\App\Application\Availability\AvailabilityService::search($actor,array_replace($input,['business_id'=>$tenant['id'],'date'=>$date]))['choices'];
-                    return CustomerCapability::protect(Response::json(['error'=>$error->problemCode,'message'=>__('booking.api.booking_failed'),'alternatives'=>array_slice($choices,0,3)],409));
-                }catch(\Throwable) { /* The original conflict remains authoritative. */ }
+            $problem = BookingProblemResponse::forCreate($error, $tenant, $input);
+            if ($problem['body']['error'] === 'slot_unavailable' && $tenant['booking_pattern'] === 'timeslot') {
+                $problem['body']['alternatives'] = $this->refreshedTimes($actor, $tenant, $input);
             }
-            return CustomerCapability::protect(Response::json(['error' => $error->problemCode, 'message' => __('booking.api.booking_failed'), 'errors' => $errors], $error->status));
+
+            return CustomerCapability::protect(Response::json($problem['body'], $problem['status']));
         } catch (\Throwable) {
             Logger::error('Booking creation failed', ['tenant_id' => $tenant['id']]);
             return CustomerCapability::protect(Response::json(['error' => 'booking_failed', 'message' => __('booking.api.booking_failed')], 500));
+        }
+    }
+
+    /**
+     * Up to three other times on the same day, so a customer who lost a slot
+     * can pick again without leaving the review step. A failed lookup returns
+     * no times; the conflict message still explains what happened.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function refreshedTimes(ActorContext $actor, array $tenant, array $input): array
+    {
+        try {
+            $date = $input['date'] ?? substr(str_replace('T', ' ', (string) ($input['start_datetime'] ?? '')), 0, 10);
+            $search = AvailabilityService::search($actor, array_replace($input, ['business_id' => $tenant['id'], 'date' => $date]));
+
+            return array_slice($search['choices'], 0, 3);
+        } catch (\Throwable) {
+            return [];
         }
     }
 
@@ -472,7 +488,9 @@ final class BookingApiController
             $result = BookingCommands::cancel($actor, array_replace($request->json(), ['business_id' => $tenant['id'], 'booking_id' => $bookingId]));
             return CustomerCapability::protect(Response::json(['cancelled' => true, 'booking_id' => $bookingId, 'email_sent' => false, 'notification_state' => 'queued']));
         } catch (OperationException $error) {
-            return CustomerCapability::protect(Response::json(['error' => $error->problemCode, 'message' => __('booking.errors.generic')], $error->status));
+            $problem = BookingProblemResponse::forManage($error, 'cancel');
+
+            return CustomerCapability::protect(Response::json($problem['body'], $problem['status']));
         }
     }
 
@@ -510,7 +528,9 @@ final class BookingApiController
             if ($result['pattern'] === 'event') $replacement['event_name'] = BookingService::findByIdWithDetails($result['new_booking_id'], $tenant['id'])['event_name'];
             return CustomerCapability::protect(Response::json(['rescheduled' => true, 'new_booking_id' => $result['new_booking_id'], 'new_booking' => $replacement, 'email_sent' => false, 'notification_state' => 'queued']));
         } catch (OperationException $error) {
-            return CustomerCapability::protect(Response::json(['error' => $error->problemCode, 'message' => __('booking.errors.generic')], $error->status));
+            $problem = BookingProblemResponse::forManage($error, 'reschedule');
+
+            return CustomerCapability::protect(Response::json($problem['body'], $problem['status']));
         }
     }
 

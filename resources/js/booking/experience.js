@@ -298,8 +298,11 @@ export function createBookingExperience({ config, fmt, t, refreshIcons }) {
             }
             this.goToStep('review');
         },
+        // Only real field corrections send the customer back to the form. An
+        // empty collection means the conflict belongs to the chosen time, room,
+        // table or event, and the pattern handler explains it in place.
         applyServerErrors(data) {
-            if (!data.errors || typeof data.errors !== 'object') return false;
+            if (!data.errors || typeof data.errors !== 'object' || Object.keys(data.errors).length === 0) return false;
             const errors = {};
             for (const [key, value] of Object.entries(data.errors)) {
                 const field = key.replace(/^customer\./, '').replace(/^custom_fields\./, 'custom.');

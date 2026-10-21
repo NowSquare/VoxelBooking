@@ -219,10 +219,9 @@ final class AvailabilityService
                 if ($service !== null) self::reference($t, 'services', $service);
                 if ($staff !== null) {
                     self::reference($t, 'staff', $staff);
-                    if (
-                        $service !== null
-                        && !Database::query('SELECT 1 FROM service_staff WHERE service_id=? AND staff_id=?', [$service, $staff])
-                    ) throw new OperationException('staff_invalid', 422);
+                    if ($service !== null && !TimeSlotCalculator::staffCanPerform($t['id'], $service, $staff)) {
+                        throw new OperationException('staff_invalid', 422);
+                    }
                 }
                 if ($month !== null) $result['dates'] = TimeSlotCalculator::getAvailableDates(
                     $t,

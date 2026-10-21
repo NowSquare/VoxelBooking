@@ -29,10 +29,9 @@ final class BookingDraft
                 $staffId = BookingCommands::text($input, 'staff_id', 26) ?: null;
                 if ($staffId !== null) {
                     self::offering('staff', $staffId, $tenant['id']);
-                    if (!Database::query(
-                        'SELECT 1 FROM service_staff WHERE service_id = ? AND staff_id = ?',
-                        [$serviceId, $staffId]
-                    )) throw new OperationException('staff_invalid', 422);
+                    if (!TimeSlotCalculator::staffCanPerform($tenant['id'], $serviceId, $staffId)) {
+                        throw new OperationException('staff_invalid', 422);
+                    }
                 }
 
                 $date = $input['date'] ?? null;
@@ -67,7 +66,6 @@ final class BookingDraft
                     break;
                 }
                 if ($slot === null) throw new OperationException('slot_unavailable', 409);
-                if ((bool) $service['requires_staff'] && empty($slot['staff_id'])) throw new OperationException('staff_unavailable', 409);
 
                 $start = new \DateTimeImmutable("$date $time", $tz);
                 $end = $start->modify('+' . (int) $service['duration_minutes'] . ' minutes');

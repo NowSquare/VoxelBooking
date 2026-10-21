@@ -2378,7 +2378,7 @@
     },
     "POST /api/{slug}/bookings": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::createBooking",
-      "source_hash": "0fb6b5b457805ecb4baa24eaa02ff6f7e0bdccec5e59b52c03a786565628c3c9",
+      "source_hash": "a39d443a801e40554702d24415ba4ec2b4f7b7ac5019a0072a3a828eace6465d",
       "disposition": "operation",
       "operations": [
         "public_booking_create"
@@ -2575,7 +2575,7 @@
     },
     "POST /api/{slug}/bookings/{id}/cancel": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::cancelBookingAction",
-      "source_hash": "457c29c3692088292014fc8c159a6787ed09dfb486865fab6a6445ea3f317532",
+      "source_hash": "4afe940c83e46258312c315a89aed7e36b79996130513011d5634faa7990a6a8",
       "disposition": "operation",
       "operations": [
         "customer_booking_cancel"
@@ -2590,7 +2590,7 @@
     },
     "POST /api/{slug}/bookings/{id}/reschedule": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::rescheduleBookingAction",
-      "source_hash": "5b26c1d836572c8e37508b8aa1810a515f316b06aecc25905c0099b963b1f84b",
+      "source_hash": "06966f6705ed0faa14c8ea707c7da67bd5ba9f1f448147f2b39d83b79bfd9c8d",
       "disposition": "operation",
       "operations": [
         "customer_booking_reschedule"
