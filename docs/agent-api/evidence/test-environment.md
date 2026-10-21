@@ -1,6 +1,6 @@
 # Disposable test environment evidence
 
-Final status: both complete runtime matrices of the 1.3.0 source pass **1,973 tests and 29,224 assertions**, with no failures, errors, skips, warnings or deprecations. See the [retained final reports](matrix/README.md). The dated progression below preserves intermediate red and green evidence; earlier totals are historical snapshots.
+Final status: both complete runtime matrices of the 1.3.0 source pass **1,974 tests and 29,225 assertions**, with no failures, errors, skips, warnings or deprecations. See the [retained final reports](matrix/README.md). The dated progression below preserves intermediate red and green evidence; earlier totals are historical snapshots.
 
 The test runner uses a fresh MySQL Docker container and a private application copy for every invocation. It omits source `.env`, storage, uploads and repository metadata. A manifest binds PHP, the HTTP server and fixtures to the run's loopback database address and restricted account. Installer tests can write only the copy's `.env`. The database guard rejects changed credentials before PDO connects.
 

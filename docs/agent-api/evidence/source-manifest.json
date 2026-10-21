@@ -3,7 +3,7 @@
   "algorithm": "SHA-256 of sorted UTF-8 path + NUL + file SHA-256 + newline",
   "exclusions": "Runtime data except the explicit fictional demo fixture; .env, vendor, node_modules, and evidence reports",
   "application": {
-    "base_commit": "a7a45390ba6cc826a55479f0f1ada75c451eaf8f",
+    "base_commit": "c7b232dfad1dbf5fb732ebc54756eaba0f5e8aa5",
     "state": "working-tree source and compiled assets; not a release commit",
     "scopes": [
       "app",
@@ -33,7 +33,7 @@
       "README.md"
     ],
     "file_count": 598,
-    "sha256": "632f8dd450e68cb9b72be05446b59251975559ba13cbbfa1f757f0106c507219",
+    "sha256": "5b1ba82b792c5cc4bd9595425ce63356f5d2054ec0b4ffd9a80e9d4749e2302d",
     "files": {
       ".env.example": "b2b33a9c10cfe608cf4954fc59c22e4c1507497befa0d8e971d147810258e6e6",
       ".github/workflows/verify.yml": "f037da8bdf747dde96878f3975b29fb8cd5694f779634899224cf5571dff04dd",
@@ -206,7 +206,7 @@
       "app/Engine/DemoMode.php": "87484ed1ce2593da67dc28bfe49368d9c1f33a1219bf2c8428f2468641dce987",
       "app/Engine/EnvLoader.php": "b6a0d2de237be03e84d8aef4c28f4d491bfa1a162416e00d1fbb33d7466e8e45",
       "app/Engine/EnvWriter.php": "51d2cc38e702fdc8a0068e78af1128baa9ff9a2bc58eba5e4c5e93abf91507bf",
-      "app/Engine/EventCalculator.php": "00095da38dd6cd40fdf52c408e8e16b1be1bd3a1415feb47322c4c5437e93066",
+      "app/Engine/EventCalculator.php": "2b72bb73b7068cd6c17b0b419231df0dcb0352a0aa5f2e0ed786970aafe30f98",
       "app/Engine/Flash.php": "1b59a2b633a0c9cf7ba5500a5c79777b4047a9184ff98acbbdc8ad7765b42c3a",
       "app/Engine/FormState.php": "eae9377551d2c930e81653ad66a2e8192a72621e21a4639a74d6e5c840906475",
       "app/Engine/GitUpdater.php": "327d837ee9bd65c1b0a5dff7aa3ae1a7734ee8e86d5a4d3da773ed12c9e0d100",
@@ -456,7 +456,7 @@
       "tests/Integration/BookingDirectAuthorizationTest.php": "5af4bb481c6a864e3e5cc7b8b7163ca5da4f295afe83cffa59340dfdbd9aa98a",
       "tests/Integration/BookingFlowTest.php": "24d0a9cb14d9cdccdbf7b4a93fc12f74532234f530230c6a83b53361ded60524",
       "tests/Integration/BookingNotificationPolicyTest.php": "1316a8b038c8db586afa1db935cfa6c7937e00af72e368d162c212cf7f584af2",
-      "tests/Integration/BookingOperationContractCoverageTest.php": "2a11265118b2b72cf99c1bb4d1341de46034083780da96c451503f4bb1af9df5",
+      "tests/Integration/BookingOperationContractCoverageTest.php": "afe81f09f9bfcf8e4b011b5c0ba0b5e3b972a0418198823a8a61bae11e89abd9",
       "tests/Integration/BusinessApplicationsTest.php": "1d1cadd6e3fba7274bb061cac37b770cf34607eae97c0b310634178373217e35",
       "tests/Integration/BusinessOperationsTest.php": "3a526b209a26447d48e1263f549f7eb80bf199f00ac1e3103357e361f93ab1c2",
       "tests/Integration/BusinessUserCrudTest.php": "96c0b2f50b586837e315c9b102ce30550a8db5be2788c1ebb5af618f2cfcbbfd",
@@ -470,7 +470,7 @@
       "tests/Integration/CustomerApplicationOperationsTest.php": "1c88fbba21ef30855cafddee7911177b570e61ead8bfced36620fb403b7601d0",
       "tests/Integration/CustomerCapabilityBoundaryTest.php": "3addf9d718995914d6f9a81817a06123b18552f38a8c958de33c64be98e460d0",
       "tests/Integration/CustomerDirectoryOperationsTest.php": "920a57b8dec640f65670d349f6bf74319ee590e41a3e99e51ed5d71b54d860ec",
-      "tests/Integration/DashboardStaffTodayTest.php": "ff975ef4ffc91ea60eaf33abb8df3262cae4185c12974c127a344de1fe8de267",
+      "tests/Integration/DashboardStaffTodayTest.php": "6299aa56968c9e1a395e818351884246907feb3c0e037a5adc0c70043905ff68",
       "tests/Integration/DeletionApplicationTest.php": "3b0ca346143a4440858de344581b538ec263288efa9833304b7659cf7ef49cba",
       "tests/Integration/DeletionQueueTest.php": "fa0508086ccd31fafe99931c8c528695b59053875cd1571be808d809f8fc159e",
       "tests/Integration/DemoSchemaParityTest.php": "ff0daa81a3604f707722a6f41c2e33a77da90a21e8fc4b3e32a0f5f45351b185",
@@ -487,7 +487,7 @@
       "tests/Integration/OAuthCodeReplayTest.php": "7fe0fb02ec550a3ccb422136b9182293be44696753238ca39a4997b1ea79a203",
       "tests/Integration/OAuthHttpTest.php": "d9e725503f54fde522b718eddea077495ff7f7041b8d744eac222af4ae3d2c20",
       "tests/Integration/OAuthIntegrationTest.php": "47acaa826fd31100a2ef67b53df289c378d794efeb58eef173f00f09c262349c",
-      "tests/Integration/OperationContractCoverageTest.php": "bd21008f7b4fe2ab10401ff279288a66569d1d311f73d5d88281eb8fd9b5de79",
+      "tests/Integration/OperationContractCoverageTest.php": "571fb5f7477dd7bf13edfa1c5b779444efeb58d2797a50ff2dfe16269fe9d81f",
       "tests/Integration/OutboxDeliveryTest.php": "fa3fbd60af8f8a2ee70930e54ca1472c2fc3cf6aac5193fc53ad73f918393286",
       "tests/Integration/PrivacyEndpointTest.php": "e64754d6c81f594fc92dac091e25a59ef219c1b8fb236c688bb4335308c93cde",
       "tests/Integration/PrivacyPostLockAuthorizationTest.php": "98bc29ec26318b94e7e8b2e8d05a99f5a7cd3822089a2bccf8016cb03e8ad2c6",
@@ -591,7 +591,7 @@
       "tests/Unit/Engine/DemoModeTest.php": "d88b829fe75084c520a552bc019464de28eb9a76d59b236d4c94bd3d5b5c7190",
       "tests/Unit/Engine/EnvLoaderTest.php": "5d68ecaeba53638f81ab1b1086dd251350ea98cbf0b576eb2c2a715397c8497b",
       "tests/Unit/Engine/EnvWriterTest.php": "000b8444c9ac187a6b1be49c77dbae4928065a4172b1af3e62095975ff1ed630",
-      "tests/Unit/Engine/EventCalculatorTest.php": "f54dd6adef5ffb0dbf6bbb26a2a07a527c20e272798f84d72e48cdc44eecc2ee",
+      "tests/Unit/Engine/EventCalculatorTest.php": "cb6c2a1c294151606ac2da27c2dc24a3e145549bd553d1e1a2421bce6877de39",
       "tests/Unit/Engine/FormStateTest.php": "2a3df0e969e28ded60d5f0de25b2b635764b76fdc6e8ad2d3c768c857fc7206b",
       "tests/Unit/Engine/GitUpdaterTest.php": "bdd618f6934bfdd111ea200232ecbba05bd0a999a848ea92faaaf1f0985bfd72",
       "tests/Unit/Engine/LocaleInitTest.php": "cdceaf0193579c6c676714463131363fe58dd3c8abdb1af4098804a6eb35d7f4",
@@ -636,7 +636,7 @@
     }
   },
   "site": {
-    "base_commit": "8769b1a1bbfb8d68efed8bc259668fd49228998a",
+    "base_commit": "bbe46974668520f3f8597a7529ef35140b8c91e2",
     "state": "working-tree source and compiled assets; not a release commit",
     "scopes": [
       "app",
@@ -659,7 +659,7 @@
       "README.md"
     ],
     "file_count": 329,
-    "sha256": "ad68774b67361dc4358a306b1cd224ed86789e22c29602e9cec1c9569193016b",
+    "sha256": "c5f5ed188fe6e39ce1f497a0bbbefd57776c29b1d1988a1708f374eda44a0682",
     "files": {
       "Modules/Docs/app/Console/IndexDocsCommand.php": "1230c2e2cf5cf0d439812ff501d15898a495cff4d58b83d885c87a00755bc5db",
       "Modules/Docs/app/Http/Controllers/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -843,7 +843,7 @@
       "content/docs/capacity/capacity-slots.md": "3ca87a5b4a01dbdf9acb89d430c4409a73789eba5c7d3408175166544d075b9d",
       "content/docs/capacity/overview.md": "33e21ba0833975c8c2bf0c91447ac61bd52472b91b7d2a6c36c9def219fc4a0f",
       "content/docs/changelog/_meta.yml": "1a01c23a78a84868855a1494b5c5e0eed24f4f820dc8cdc3d67a8692f1e36fd2",
-      "content/docs/changelog/changelog.md": "4d88e8210d0407e6ada3319528265b2f3388c5ccd712397d8d99bcc1c8ef02ca",
+      "content/docs/changelog/changelog.md": "9cdcfaf31b6c4816d7351c04e7fe4beb3e943ed5c2b5904d1577158adfde3f23",
       "content/docs/customization/_meta.yml": "5a3b0ed98e7b9ae601a2ef00d2b5fd358a6f6a2204ca4bd30432cad32ee22bc9",
       "content/docs/customization/booking-settings.md": "bdc7075fc6be76a5052436c303561a5d8b56bcd17d899abd8164634636a8bd8d",
       "content/docs/customization/branding.md": "4dde5b7a53dea2c8fce2197640ff5e76e12a29ea0b87bff58ddc4623cc672c0b",

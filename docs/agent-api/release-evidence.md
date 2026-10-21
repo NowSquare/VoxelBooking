@@ -27,8 +27,8 @@ The baseline revisions are application `5ba99941c3c296716e7c9b7d49e3cb666de0d064
 
 | Check | Recorded result |
 | --- | --- |
-| Complete matrix: PHP 8.3.32 / MySQL 8.0.46 | **1,973 tests, 29,224 assertions passed**; zero failures, errors, skips, warnings or deprecations; exit 0 |
-| Complete matrix: PHP 8.5.10 / MySQL 8.4.11 | **1,973 tests, 29,224 assertions passed**; zero failures, errors, skips, warnings or deprecations; exit 0 |
+| Complete matrix: PHP 8.3.32 / MySQL 8.0.46 | **1,974 tests, 29,225 assertions passed**; zero failures, errors, skips, warnings or deprecations; exit 0 |
+| Complete matrix: PHP 8.5.10 / MySQL 8.4.11 | **1,974 tests, 29,225 assertions passed**; zero failures, errors, skips, warnings or deprecations; exit 0 |
 | Pure MCP/OAuth adapter suite | 86 tests, 270 assertions; PHP 8.5.7 |
 | Catalog/business/system operation success contracts | 9 tests, 634 assertions; PHP 8.5.7/MySQL 8.4.11 |
 | Booking/customer/privacy success contracts and related regressions | 54 tests, 1,287 assertions; subsequent privacy-lock and complete-contract run 14 tests, 1,053 assertions; final creation/reschedule policy, delivery, DST and retained-authority follow-up 27 tests, 1,361 assertions; PHP 8.5.7/MySQL 8.4.11 |

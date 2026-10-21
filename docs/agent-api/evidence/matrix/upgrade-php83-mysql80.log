@@ -1,6 +1,6 @@
 {
     "mysql": "8.0.46",
-    "php": "8.3.32",
+    "php": "8.3.33",
     "from": 28,
     "to": 42,
     "legacy_read_only": true,
