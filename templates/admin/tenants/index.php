@@ -10,32 +10,7 @@ ob_start();
 ?>
 
 <?php if ($flash): ?>
-    <?php if ($flash['type'] === 'owner_credentials'): ?>
-        <?php $creds = json_decode($flash['message'], true); ?>
-        <div class="vb-alert vb-alert-info vb-fade-in-up">
-            <i data-lucide="key"></i>
-            <div>
-                <div class="vb-mb-sm"><?= htmlspecialchars($creds['message'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
-                <div class="vb-credentials-card">
-                    <div class="vb-credentials-row">
-                        <span class="vb-credentials-label"><?= __('admin.tenants.owner_credentials_email') ?></span>
-                        <code class="vb-credentials-value"><?= htmlspecialchars($creds['email'] ?? '', ENT_QUOTES, 'UTF-8') ?></code>
-                    </div>
-                    <div class="vb-credentials-row">
-                        <span class="vb-credentials-label"><?= __('admin.tenants.owner_credentials_password') ?></span>
-                        <code class="vb-credentials-value"><?= htmlspecialchars($creds['password'] ?? '', ENT_QUOTES, 'UTF-8') ?></code>
-                    </div>
-                    <div class="vb-credentials-row">
-                        <span class="vb-credentials-label"><?= __('admin.tenants.owner_credentials_login') ?></span>
-                        <code class="vb-credentials-value"><?= htmlspecialchars($creds['login'] ?? '', ENT_QUOTES, 'UTF-8') ?></code>
-                    </div>
-                    <p class="vb-credentials-hint"><?= __('admin.tenants.owner_credentials_hint') ?></p>
-                </div>
-            </div>
-        </div>
-    <?php else: ?>
-        <?php include __DIR__ . '/../../partials/alert.php'; ?>
-    <?php endif; ?>
+    <?php include __DIR__ . '/../../partials/alert.php'; ?>
 <?php endif; ?>
 
 <?php
@@ -182,17 +157,20 @@ $currentSearch = $filters['search'] ?? '';
                                         </button>
                                         <form method="POST" action="/admin/tenants/<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>/impersonate">
                                             <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                                            <input type="hidden" name="_record_version" value="<?= e($tenant['version'] ?? '') ?>">
                                             <button type="submit"><i data-lucide="eye" aria-hidden="true"></i><?= __('admin.impersonation.start') ?></button>
                                         </form>
                                         <?php if ($tenant['status'] !== 'archived'): ?>
                                         <form method="POST" action="/admin/tenants/<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>/archive" class="vb-business-archive"
                                               data-confirm="<?= htmlspecialchars(__('admin.tenants.archive_confirm', ['name' => $tenant['name']]), ENT_QUOTES, 'UTF-8') ?>" data-confirm-text="<?= __('admin.tenants.archive') ?>">
                                             <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                                            <input type="hidden" name="_record_version" value="<?= e($tenant['version'] ?? '') ?>">
                                             <button type="submit"><i data-lucide="archive" aria-hidden="true"></i><?= __('admin.tenants.archive') ?></button>
                                         </form>
                                         <?php else: ?>
                                         <form method="POST" action="/admin/tenants/<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>/activate">
                                             <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                                            <input type="hidden" name="_record_version" value="<?= e($tenant['version'] ?? '') ?>">
                                             <button type="submit"><i data-lucide="rotate-ccw" aria-hidden="true"></i><?= __('admin.tenants.activate') ?></button>
                                         </form>
                                         <?php endif; ?>

@@ -22,6 +22,12 @@
       "_lucide-yUzxrzyY.js"
     ]
   },
+  "resources/js/agent-review.js": {
+    "file": "js/agent-review.js",
+    "name": "agent-review",
+    "src": "resources/js/agent-review.js",
+    "isEntry": true
+  },
   "resources/js/booking/app.js": {
     "file": "js/booking.js",
     "name": "booking",
@@ -30,5 +36,11 @@
     "imports": [
       "_lucide-yUzxrzyY.js"
     ]
+  },
+  "resources/js/booking/customer-access.js": {
+    "file": "js/customer-access.js",
+    "name": "customer-access",
+    "src": "resources/js/booking/customer-access.js",
+    "isEntry": true
   }
 }

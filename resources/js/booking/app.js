@@ -1038,7 +1038,8 @@ Alpine.data('bookingWizard', () => enhanceBookingWizard({
     get showCancel() { return config.allow_cancellation; },
     get bookingPageUrl() { return `/book/${config.slug}`; },
     manageUrl(bookingId) {
-        return `/book/${config.slug}/manage/${bookingId}`;
+        const receipt = [this.booking, this.rescheduleNewBooking].find(booking => booking?.id === bookingId);
+        return receipt?.manage_url || `/book/${config.slug}/manage/${bookingId}`;
     },
     get privacyUrl() {
         const cid = this.managedBooking?.customer_id;

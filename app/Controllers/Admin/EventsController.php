@@ -63,6 +63,7 @@ final class EventsController
         );
 
         return $this->render('admin.tenants.events.index', __('admin.events.title'), [
+            'recordVersions' => \App\Application\Catalog\CatalogUi::versions('events', $tenantId, $events),
             'documentTitle' => __('admin.events.title'),
             'tenant'        => $tenant,
             'tenantId'      => $tenantId,
@@ -98,136 +99,7 @@ final class EventsController
 
     public function store(Request $request): Response
     {
-        $tenantId = $request->getAttribute('tenant_id');
-
-        if (!Auth::canAccessTenant($tenantId) || !Auth::canManageTenant()) {
-            return $this->forbidden($request);
-        }
-
-        $tenant = $this->loadTenant($tenantId);
-        if ($tenant === null || ($tenant['booking_pattern'] ?? '') !== 'event') {
-            return Response::redirect('/admin/tenants');
-        }
-
-        // Store old input for re-display on validation failure
-        Auth::startSession();
-        FormState::flashInput([
-            'name'             => $request->string('name'),
-            'description'      => $request->string('description'),
-            'location'         => $request->string('location'),
-            'price'            => $request->string('price'),
-            'max_participants' => $request->string('max_participants'),
-            'min_spot_count'   => $request->string('min_spot_count'),
-            'max_spot_count'   => $request->string('max_spot_count'),
-            'start_date'       => $request->string('start_date'),
-            'start_time'       => $request->string('start_time'),
-            'end_date'         => $request->string('end_date'),
-            'end_time'         => $request->string('end_time'),
-            'is_recurring'     => $request->string('is_recurring'),
-            'frequency'        => $request->string('frequency'),
-            'count'            => $request->string('count'),
-            'exception_dates'  => $request->string('exception_dates'),
-            'allow_waitlist'   => $request->string('allow_waitlist'),
-            'waitlist_max'     => $request->string('waitlist_max'),
-        ]);
-
-        // Validation
-        $name = trim($request->string('name'));
-        if ($name === '') {
-            FormState::toast('error', __('admin.events.error_name_required'));
-            return Response::redirect("/admin/tenants/{$tenantId}/events/create");
-        }
-
-        $startDate = trim($request->string('start_date'));
-        $startTime = trim($request->string('start_time'));
-        $endDate   = trim($request->string('end_date'));
-        $endTime   = trim($request->string('end_time'));
-
-        if (!$startDate || !$startTime || !$endDate || !$endTime) {
-            FormState::toast('error', __('admin.events.error_date_required'));
-            return Response::redirect("/admin/tenants/{$tenantId}/events/create");
-        }
-
-        $startDt = $startDate . ' ' . $startTime . ':00';
-        $endDt   = $endDate . ' ' . $endTime . ':00';
-
-        if ($endDt <= $startDt) {
-            FormState::toast('error', __('admin.events.error_end_before_start'));
-            return Response::redirect("/admin/tenants/{$tenantId}/events/create");
-        }
-
-        $maxParticipants = max(1, (int) $request->string('max_participants'));
-        $minSpotCount = max(1, (int) ($request->string('min_spot_count') ?: '1'));
-        $maxSpotCountRaw = trim($request->string('max_spot_count'));
-        $maxSpotCount = $maxSpotCountRaw !== '' ? max(1, (int) $maxSpotCountRaw) : null;
-        if ($maxSpotCount !== null && $minSpotCount > $maxSpotCount) {
-            $minSpotCount = $maxSpotCount;
-        }
-        $price = $request->string('price') !== '' ? number_format((float) $request->string('price'), 2, '.', '') : null;
-
-        // Recurrence
-        $isRecurring = $request->string('is_recurring') === '1';
-        $rrule = null;
-        if ($isRecurring) {
-            $freq = strtoupper(trim($request->string('frequency')));
-            $count = max(1, (int) $request->string('count'));
-            if (in_array($freq, ['DAILY', 'WEEKLY', 'MONTHLY'], true)) {
-                $rrule = "FREQ={$freq};COUNT={$count}";
-            }
-        }
-
-        // Exception dates
-        $exceptionsRaw = trim($request->string('exception_dates'));
-        $exceptionDates = null;
-        if ($exceptionsRaw !== '') {
-            $dates = array_filter(array_map('trim', preg_split('/[\r\n]+/', $exceptionsRaw)));
-            $valid = array_filter($dates, fn($d) => preg_match('/^\d{4}-\d{2}-\d{2}$/', $d));
-            if (!empty($valid)) {
-                $exceptionDates = json_encode(array_values($valid));
-            }
-        }
-
-        // Waitlist
-        $allowWaitlist = $request->string('allow_waitlist') === '1' ? 1 : 0;
-        $waitlistMax = max(0, (int) $request->string('waitlist_max'));
-
-        // Cover image upload
-        $coverPath = null;
-        if (!empty($_FILES['cover_image']['tmp_name'])) {
-            $upload = ImageUpload::store('event', $_FILES['cover_image'], $tenant['slug']);
-            if ($upload['error']) {
-                FormState::toast('error', $upload['error']);
-                return Response::redirect("/admin/tenants/{$tenantId}/events/create");
-            }
-            $coverPath = $upload['path'];
-        }
-
-        $eventId = Ulid::generate();
-
-        Database::execute(
-            'INSERT INTO `events` (`id`, `tenant_id`, `name`, `description`, `location`, `price`,
-             `max_participants`, `min_spot_count`, `max_spot_count`, `start_datetime`, `end_datetime`, `is_recurring`, `rrule`,
-             `exception_dates`, `allow_waitlist`, `waitlist_max`, `cover_image_path`, `is_active`)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)',
-            [
-                $eventId, $tenantId, $name,
-                trim($request->string('description')) ?: null,
-                trim($request->string('location')) ?: null,
-                $price, $maxParticipants, $minSpotCount, $maxSpotCount, $startDt, $endDt,
-                $isRecurring ? 1 : 0, $rrule, $exceptionDates,
-                $allowWaitlist, $waitlistMax, $coverPath,
-            ]
-        );
-
-        AuditLog::log('event.created', 'event', $eventId, [
-            'name' => $name,
-            'start_datetime' => $startDt,
-            'is_recurring' => $isRecurring,
-        ], $tenantId);
-
-        FormState::clear();
-        FormState::toast('success', __('admin.events.flash_created'));
-        return Response::redirect("/admin/tenants/{$tenantId}/events");
+        return \App\Application\Catalog\CatalogUi::mutate($request, 'events', 'create');
     }
 
     public function edit(Request $request): Response
@@ -253,6 +125,7 @@ final class EventsController
         }
 
         return $this->render('admin.tenants.events.edit', __('admin.events.edit_title'), [
+            'recordVersion' => \App\Application\Catalog\CatalogUi::version('events', $tenantId, $eventId),
             'documentTitle' => __('admin.events.edit_title'),
             'tenant'        => $tenant,
             'tenantId'      => $tenantId,
@@ -263,179 +136,17 @@ final class EventsController
 
     public function update(Request $request): Response
     {
-        $tenantId = $request->getAttribute('tenant_id');
-        $eventId = $request->getAttribute('id');
-
-        if (!Auth::canAccessTenant($tenantId) || !Auth::canManageTenant()) {
-            return $this->forbidden($request);
-        }
-
-        $tenant = $this->loadTenant($tenantId);
-        if ($tenant === null || ($tenant['booking_pattern'] ?? '') !== 'event') {
-            return Response::redirect('/admin/tenants');
-        }
-
-        // Validate
-        $name = trim($request->string('name'));
-        if ($name === '') {
-            FormState::toast('error', __('admin.events.error_name_required'));
-            return Response::redirect("/admin/tenants/{$tenantId}/events/{$eventId}/edit");
-        }
-
-        $startDate = trim($request->string('start_date'));
-        $startTime = trim($request->string('start_time'));
-        $endDate   = trim($request->string('end_date'));
-        $endTime   = trim($request->string('end_time'));
-
-        if (!$startDate || !$startTime || !$endDate || !$endTime) {
-            FormState::toast('error', __('admin.events.error_date_required'));
-            return Response::redirect("/admin/tenants/{$tenantId}/events/{$eventId}/edit");
-        }
-
-        $startDt = $startDate . ' ' . $startTime . ':00';
-        $endDt   = $endDate . ' ' . $endTime . ':00';
-
-        if ($endDt <= $startDt) {
-            FormState::toast('error', __('admin.events.error_end_before_start'));
-            return Response::redirect("/admin/tenants/{$tenantId}/events/{$eventId}/edit");
-        }
-
-        $maxParticipants = max(1, (int) $request->string('max_participants'));
-        $minSpotCount = max(1, (int) ($request->string('min_spot_count') ?: '1'));
-        $maxSpotCountRaw = trim($request->string('max_spot_count'));
-        $maxSpotCount = $maxSpotCountRaw !== '' ? max(1, (int) $maxSpotCountRaw) : null;
-        if ($maxSpotCount !== null && $minSpotCount > $maxSpotCount) {
-            $minSpotCount = $maxSpotCount;
-        }
-        $price = $request->string('price') !== '' ? number_format((float) $request->string('price'), 2, '.', '') : null;
-
-        $isRecurring = $request->string('is_recurring') === '1';
-        $rrule = null;
-        if ($isRecurring) {
-            $freq = strtoupper(trim($request->string('frequency')));
-            $count = max(1, (int) $request->string('count'));
-            if (in_array($freq, ['DAILY', 'WEEKLY', 'MONTHLY'], true)) {
-                $rrule = "FREQ={$freq};COUNT={$count}";
-            }
-        }
-
-        $exceptionsRaw = trim($request->string('exception_dates'));
-        $exceptionDates = null;
-        if ($exceptionsRaw !== '') {
-            $dates = array_filter(array_map('trim', preg_split('/[\r\n]+/', $exceptionsRaw)));
-            $valid = array_filter($dates, fn($d) => preg_match('/^\d{4}-\d{2}-\d{2}$/', $d));
-            if (!empty($valid)) {
-                $exceptionDates = json_encode(array_values($valid));
-            }
-        }
-
-        $allowWaitlist = $request->string('allow_waitlist') === '1' ? 1 : 0;
-        $waitlistMax = max(0, (int) $request->string('waitlist_max'));
-
-        // Cover image handling
-        $events = Database::query('SELECT `cover_image_path` FROM `events` WHERE `id` = ? AND `tenant_id` = ?', [$eventId, $tenantId]);
-        $coverPath = $events[0]['cover_image_path'] ?? null;
-        $removeCover = ($request->string('remove_cover_image') === '1');
-
-        if (!empty($_FILES['cover_image']['tmp_name'])) {
-            $upload = ImageUpload::store('event', $_FILES['cover_image'], $tenant['slug'], $coverPath);
-            if ($upload['error']) {
-                FormState::toast('error', $upload['error']);
-                return Response::redirect("/admin/tenants/{$tenantId}/events/{$eventId}/edit");
-            }
-            $coverPath = $upload['path'];
-        } elseif ($removeCover && $coverPath) {
-            ImageUpload::delete($coverPath);
-            $coverPath = null;
-        }
-
-        Database::execute(
-            'UPDATE `events` SET `name` = ?, `description` = ?, `location` = ?, `price` = ?,
-             `max_participants` = ?, `min_spot_count` = ?, `max_spot_count` = ?,
-             `start_datetime` = ?, `end_datetime` = ?,
-             `is_recurring` = ?, `rrule` = ?, `exception_dates` = ?,
-             `allow_waitlist` = ?, `waitlist_max` = ?, `cover_image_path` = ?
-             WHERE `id` = ? AND `tenant_id` = ?',
-            [
-                $name,
-                trim($request->string('description')) ?: null,
-                trim($request->string('location')) ?: null,
-                $price, $maxParticipants, $minSpotCount, $maxSpotCount, $startDt, $endDt,
-                $isRecurring ? 1 : 0, $rrule, $exceptionDates,
-                $allowWaitlist, $waitlistMax, $coverPath,
-                $eventId, $tenantId,
-            ]
-        );
-
-        AuditLog::log('event.updated', 'event', $eventId, ['name' => $name], $tenantId);
-
-        FormState::toast('success', __('admin.events.flash_updated'));
-        return Response::redirect("/admin/tenants/{$tenantId}/events");
+        return \App\Application\Catalog\CatalogUi::mutate($request, 'events', 'update');
     }
 
     public function toggleActive(Request $request): Response
     {
-        $tenantId = $request->getAttribute('tenant_id');
-        $eventId = $request->getAttribute('id');
-
-        if (!Auth::canAccessTenant($tenantId) || !Auth::canManageTenant()) {
-            return $this->forbidden($request);
-        }
-
-        $events = Database::query(
-            'SELECT `is_active` FROM `events` WHERE `id` = ? AND `tenant_id` = ?',
-            [$eventId, $tenantId]
-        );
-
-        if (empty($events)) {
-            return Response::redirect("/admin/tenants/{$tenantId}/events");
-        }
-
-        $newState = (int) $events[0]['is_active'] === 1 ? 0 : 1;
-
-        Database::execute(
-            'UPDATE `events` SET `is_active` = ? WHERE `id` = ? AND `tenant_id` = ?',
-            [$newState, $eventId, $tenantId]
-        );
-
-        AuditLog::log(
-            $newState === 1 ? 'event.activated' : 'event.deactivated',
-            'event', $eventId, [], $tenantId
-        );
-
-        $msg = $newState === 1 ? __('admin.events.flash_activated') : __('admin.events.flash_deactivated');
-        FormState::toast('success', $msg);
-        return Response::redirect("/admin/tenants/{$tenantId}/events");
+        return \App\Application\Catalog\CatalogUi::mutate($request, 'events', 'toggle');
     }
 
     public function delete(Request $request): Response
     {
-        $tenantId = $request->getAttribute('tenant_id');
-        $eventId = $request->getAttribute('id');
-
-        if (!Auth::canAccessTenant($tenantId) || !Auth::canManageTenant()) {
-            return $this->forbidden($request);
-        }
-
-        // Guard: block delete if bookings reference this event
-        $bookingCount = Database::query(
-            'SELECT COUNT(*) as cnt FROM `bookings` WHERE `event_id` = ?',
-            [$eventId]
-        );
-        if ((int) ($bookingCount[0]['cnt'] ?? 0) > 0) {
-            FormState::toast('error', __('admin.events.error_has_bookings'));
-            return Response::redirect("/admin/tenants/{$tenantId}/events");
-        }
-
-        Database::execute(
-            'DELETE FROM `events` WHERE `id` = ? AND `tenant_id` = ?',
-            [$eventId, $tenantId]
-        );
-
-        AuditLog::log('event.deleted', 'event', $eventId, [], $tenantId);
-
-        FormState::toast('success', __('admin.events.flash_deleted'));
-        return Response::redirect("/admin/tenants/{$tenantId}/events");
+        return \App\Application\Catalog\CatalogUi::mutate($request, 'events', 'delete');
     }
 
     // ── Private helpers ──

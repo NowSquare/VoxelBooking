@@ -128,8 +128,8 @@ ob_start();
                 <tbody>
                     <?php foreach ($bookings as $i => $b): ?>
                     <?php
-                    $startDt = new DateTimeImmutable($b['start_datetime']);
-                    $endDt   = new DateTimeImmutable($b['end_datetime']);
+                    $startDt = (new DateTimeImmutable($b['start_datetime'],new DateTimeZone('UTC')))->setTimezone(new DateTimeZone($tenant['timezone']??'UTC'));
+                    $endDt   = (new DateTimeImmutable($b['end_datetime'],new DateTimeZone('UTC')))->setTimezone(new DateTimeZone($tenant['timezone']??'UTC'));
                     $detailUrl = $baseUrl . '/bookings/' . htmlspecialchars($b['id'], ENT_QUOTES, 'UTF-8');
                     ?>
                     <tr class="vb-fade-in-up vb-clickable-row stagger-<?= min($i + 1, 6) ?>"
@@ -166,6 +166,9 @@ ob_start();
             </table>
         </div>
     </div>
+<?php endif; ?>
+<?php if(!empty($nextHistoryCursor)): ?>
+<a class="vb-btn vb-btn-secondary" href="?cursor=<?= e(rawurlencode($nextHistoryCursor)) ?>"><?= e(__('agent.pagination.next')) ?></a>
 <?php endif; ?>
 
 <?php

@@ -37,8 +37,7 @@ if (!function_exists('bookingTimelineLabel')) {
 }
 
 // Reschedule eligibility (computed once, used in both card and modal rendering)
-$canReschedule = ($booking['status'] === 'confirmed')
-    && !\App\Engine\DemoMode::isActive();
+$canReschedule = ($booking['status'] === 'confirmed');
 
 ob_start();
 ?>

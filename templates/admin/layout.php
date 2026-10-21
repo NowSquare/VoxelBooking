@@ -84,7 +84,7 @@ $operatorInitials = htmlspecialchars(mb_strtoupper(mb_substr($operatorName, 0, 1
                 <polygon points="2,14 24,26 24,50 2,38" fill="currentColor" opacity="0.7"/>
                 <polygon points="46,14 24,26 24,50 46,38" fill="currentColor" opacity="0.4"/>
             </svg>
-            <span class="vb-sidebar-name"><?= htmlspecialchars(app_name(), ENT_QUOTES, 'UTF-8') ?></span>
+            <span class="vb-sidebar-name min-w-0 truncate" title="<?= e(app_name()) ?>"><?= htmlspecialchars(app_name(), ENT_QUOTES, 'UTF-8') ?></span>
         </a>
 
         <button type="button" class="vb-sidebar-close" @click="closeSidebar" aria-label="<?= __('admin.nav.close_sidebar') ?>"><i data-lucide="x" aria-hidden="true"></i></button>
@@ -181,6 +181,11 @@ $operatorInitials = htmlspecialchars(mb_strtoupper(mb_substr($operatorName, 0, 1
                         <i data-lucide="layout-grid"></i>
                         <?= __('admin.nav.capacity_slots') ?>
                     </a>
+                    <a href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>/blocked-dates"
+                       class="vb-sidebar-link <?= $activePage === 'blocked-dates' ? 'active' : '' ?>" <?= $activePage === 'blocked-dates' ? 'aria-current="page"' : '' ?>>
+                        <i data-lucide="calendar-x"></i>
+                        <?= __('admin.nav.blocked_dates') ?>
+                    </a>
                     <?php endif; ?>
                     <?php if ($canManage && $tenantPattern === 'event'): ?>
                     <a href="/admin/tenants/<?= htmlspecialchars($sidebarTenantId, ENT_QUOTES, 'UTF-8') ?>/events"
@@ -225,6 +230,11 @@ $operatorInitials = htmlspecialchars(mb_strtoupper(mb_substr($operatorName, 0, 1
                        class="vb-sidebar-link <?= $activePage === 'settings' ? 'active' : '' ?>" <?= $activePage === 'settings' ? 'aria-current="page"' : '' ?>>
                         <i data-lucide="settings"></i>
                         <?= __('admin.nav.settings') ?>
+                    </a>
+                    <a href="/admin/tenants/<?= e($sidebarTenantId) ?>/webhooks"
+                       class="vb-sidebar-link <?= $activePage === 'webhooks' ? 'active' : '' ?>" <?= $activePage === 'webhooks' ? 'aria-current="page"' : '' ?>>
+                        <i data-lucide="webhook"></i>
+                        <?= e(__('agent-webhooks.title')) ?>
                     </a>
                 </div>
                 <?php endif; ?>
@@ -367,6 +377,10 @@ $operatorInitials = htmlspecialchars(mb_strtoupper(mb_substr($operatorName, 0, 1
                                 <span class="vb-profile-dropdown-hint icon-moon"><?= __('admin.nav.theme_dark') ?></span>
                             </button>
                             <?php if (!$isImpersonating): ?>
+                            <a href="/admin/connections" class="vb-profile-dropdown-item" @click="closeProfile">
+                                <i data-lucide="plug" aria-hidden="true"></i>
+                                <span class="vb-profile-dropdown-label"><?= __('agent.connections.title') ?></span>
+                            </a>
                             <a href="/admin/account" class="vb-profile-dropdown-item" @click="closeProfile">
                                 <span class="vb-profile-dropdown-icon">
                                     <i data-lucide="user-cog"></i>

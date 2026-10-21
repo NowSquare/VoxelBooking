@@ -49,6 +49,7 @@ if ($isEdit && !$exceptionDates && $event['exception_dates']) {
 ?>
 
 <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+<input type="hidden" name="_record_version" value="<?= e($recordVersion ?? '') ?>">
 
 <!-- Name -->
 <div class="vb-form-group">

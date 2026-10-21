@@ -31,6 +31,7 @@ include __DIR__ . '/../../partials/page-header.php';
 
 <form method="POST" action="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/settings/privacy" class="vb-animate-in">
     <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+    <input type="hidden" name="expected_version" value="<?= htmlspecialchars(\App\Application\Settings\SettingsService::projection($tenant, 'privacy')['version'], ENT_QUOTES, 'UTF-8') ?>">
 
     <!-- Section 1: Consent -->
     <div class="vb-settings-section">

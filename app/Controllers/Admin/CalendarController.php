@@ -12,7 +12,7 @@ use App\Engine\Response;
 use App\Engine\Version;
 use App\Engine\View;
 use App\Middleware\CsrfMiddleware;
-use App\Models\Booking;
+use App\Application\Bookings\{BookingCommands,BookingQueries};
 
 /**
  * Calendar controller (tenant-scoped).
@@ -48,18 +48,16 @@ final class CalendarController
             return Response::redirect('/admin/tenants');
         }
 
-        $dateStr = $request->string('date') ?: date('Y-m-d');
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
-            $dateStr = date('Y-m-d');
-        }
+        $dateStr = $this->date($request, $tenant);
 
-        $date     = new \DateTimeImmutable($dateStr);
+        $date     = new \DateTimeImmutable($dateStr, new \DateTimeZone($tenant['timezone']));
         $prevDate = $date->modify('-1 day')->format('Y-m-d');
         $nextDate = $date->modify('+1 day')->format('Y-m-d');
-        $today    = date('Y-m-d');
+        $today    = (new \DateTimeImmutable('now', new \DateTimeZone($tenant['timezone'])))->format('Y-m-d');
         $isToday  = $dateStr === $today;
 
-        $bookings = Booking::forTenantDate($tenantId, $dateStr);
+        $calendar = $this->calendar($tenantId, $dateStr, $dateStr);
+        $bookings = $calendar['bookings'];
 
         // Assign columns for concurrent bookings (side-by-side layout)
         $bookings = $this->assignOverlapColumns($bookings);
@@ -71,9 +69,9 @@ final class CalendarController
         }
 
         // Availability / blocked state for this specific day
-        $isBlocked = $this->isDateBlocked($tenantId, $dateStr);
+        $isBlocked = in_array($dateStr, $calendar['blocked'], true);
         $dayOfWeek = $this->isoDayOfWeek($date);
-        $hasAvailability = $this->hasDayOfWeekAvailability($tenantId, $dayOfWeek);
+        $hasAvailability = in_array($dayOfWeek, $calendar['available_weekdays'], true);
 
         return $this->render('admin.tenants.calendar.day', __('admin.calendar.page_title'), [
             'documentTitle' => __('admin.calendar.page_title') . ' — ' . $tenant['name'],
@@ -108,14 +106,11 @@ final class CalendarController
             return Response::redirect('/admin/tenants');
         }
 
-        $dateStr = $request->string('date') ?: date('Y-m-d');
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
-            $dateStr = date('Y-m-d');
-        }
+        $dateStr = $this->date($request, $tenant);
 
-        $date      = new \DateTimeImmutable($dateStr);
+        $date      = new \DateTimeImmutable($dateStr, new \DateTimeZone($tenant['timezone']));
         $weekStart = Locale::weekStart(); // 0=Sunday, 1=Monday
-        $today     = date('Y-m-d');
+        $today     = (new \DateTimeImmutable('now', new \DateTimeZone($tenant['timezone'])))->format('Y-m-d');
 
         // Calculate week boundaries
         $currentDow = (int) $date->format('w'); // 0=Sun..6=Sat
@@ -127,8 +122,10 @@ final class CalendarController
 
         // Pre-load availability dow map and blocked dates for the week range
         $weekEndStr = $weekBegin->modify('+6 days')->format('Y-m-d');
-        $availableDows = $this->getAvailableDaysOfWeek($tenantId);
-        $blockedDatesInRange = $this->getBlockedDatesInRange($tenantId, $weekBegin->format('Y-m-d'), $weekEndStr);
+        $calendar = $this->calendar($tenantId, $weekBegin->format('Y-m-d'), $weekEndStr);
+        $availableDows = $calendar['available_weekdays'];
+        $blockedDatesInRange = $calendar['blocked'];
+        $bookingsByDate = $this->groupOccupiedDates($calendar['bookings'], $weekBegin->format('Y-m-d'), $weekEndStr);
 
         // Build 7 days with their bookings + state
         $days = [];
@@ -140,7 +137,7 @@ final class CalendarController
                 'date'            => $dayDate,
                 'dateStr'         => $dayStr,
                 'isToday'         => $dayStr === $today,
-                'bookings'        => Booking::forTenantDate($tenantId, $dayStr),
+                'bookings'        => $bookingsByDate[$dayStr] ?? [],
                 'isBlocked'       => in_array($dayStr, $blockedDatesInRange, true),
                 'hasAvailability' => in_array($dow, $availableDows, true),
             ];
@@ -174,13 +171,10 @@ final class CalendarController
             return Response::redirect('/admin/tenants');
         }
 
-        $dateStr = $request->string('date') ?: date('Y-m-d');
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
-            $dateStr = date('Y-m-d');
-        }
+        $dateStr = $this->date($request, $tenant);
 
-        $date      = new \DateTimeImmutable($dateStr);
-        $today     = date('Y-m-d');
+        $date      = new \DateTimeImmutable($dateStr, new \DateTimeZone($tenant['timezone']));
+        $today     = (new \DateTimeImmutable('now', new \DateTimeZone($tenant['timezone'])))->format('Y-m-d');
         $year      = (int) $date->format('Y');
         $month     = (int) $date->format('n');
         $weekStart = Locale::weekStart(); // 0=Sunday, 1=Monday
@@ -205,26 +199,18 @@ final class CalendarController
         $gridEnd      = $gridStart->modify('+' . ($totalCells - 1) . ' days');
 
         // Fetch all bookings in the visible range with a single query
-        $allBookings = Booking::forTenantDateRange(
+        $calendar = $this->calendar(
             $tenantId,
             $gridStart->format('Y-m-d'),
             $gridEnd->format('Y-m-d')
         );
 
         // Group bookings by date for O(1) lookup in template
-        $bookingsByDate = [];
-        foreach ($allBookings as $b) {
-            $bDate = substr($b['start_datetime'], 0, 10);
-            $bookingsByDate[$bDate][] = $b;
-        }
+        $bookingsByDate = $this->groupOccupiedDates($calendar['bookings'], $gridStart->format('Y-m-d'), $gridEnd->format('Y-m-d'));
 
         // Pre-load availability + blocked dates for the grid range
-        $availableDows = $this->getAvailableDaysOfWeek($tenantId);
-        $blockedDatesInRange = $this->getBlockedDatesInRange(
-            $tenantId,
-            $gridStart->format('Y-m-d'),
-            $gridEnd->format('Y-m-d')
-        );
+        $availableDows = $calendar['available_weekdays'];
+        $blockedDatesInRange = $calendar['blocked'];
 
         // Build the grid cells
         $cells = [];
@@ -259,93 +245,58 @@ final class CalendarController
         ], $tenantId);
     }
 
-    // ── Availability & Blocked Dates Helpers ──
-
-    /**
-     * Check if a specific date is blocked for the given tenant (tenant-level blocks only).
-     */
-    private function isDateBlocked(string $tenantId, string $dateStr): bool
+    /** The UI consumes the same paginated calendar projection as HTTP and MCP. */
+    /** A stay occupies every intersected local day, including arrivals before this page. */
+    private function groupOccupiedDates(array $bookings, string $from, string $to): array
     {
-        $rows = Database::query(
-            'SELECT 1 FROM `blocked_dates`
-             WHERE `tenant_id` = ? AND `staff_id` IS NULL AND `resource_id` IS NULL
-               AND `start_date` <= ? AND `end_date` >= ?
-             LIMIT 1',
-            [$tenantId, $dateStr, $dateStr]
-        );
-
-        return !empty($rows);
-    }
-
-    /**
-     * Check if any availability window exists for a given day of week.
-     * Checks both `availability` (timeslot) and `capacity_slots` (capacity) tables.
-     */
-    private function hasDayOfWeekAvailability(string $tenantId, int $dayOfWeek): bool
-    {
-        $rows = Database::query(
-            'SELECT 1 FROM `availability`
-             WHERE `tenant_id` = ? AND `staff_id` IS NULL AND `day_of_week` = ?
-             UNION ALL
-             SELECT 1 FROM `capacity_slots`
-             WHERE `tenant_id` = ? AND `day_of_week` = ? AND `is_active` = 1
-             LIMIT 1',
-            [$tenantId, $dayOfWeek, $tenantId, $dayOfWeek]
-        );
-
-        return !empty($rows);
-    }
-
-    /**
-     * Get all days-of-week that have at least one availability window.
-     * Checks both `availability` (timeslot) and `capacity_slots` (capacity) tables.
-     * Returns array of integers (0=Mon..6=Sun, matching ISO convention).
-     */
-    private function getAvailableDaysOfWeek(string $tenantId): array
-    {
-        $rows = Database::query(
-            'SELECT DISTINCT `day_of_week` FROM (
-                SELECT `day_of_week` FROM `availability`
-                WHERE `tenant_id` = ? AND `staff_id` IS NULL
-                UNION ALL
-                SELECT `day_of_week` FROM `capacity_slots`
-                WHERE `tenant_id` = ? AND `is_active` = 1
-             ) AS combined',
-            [$tenantId, $tenantId]
-        );
-
-        return array_map(fn($r) => (int) $r['day_of_week'], $rows);
-    }
-
-    /**
-     * Get all blocked dates (expanded) within a range for the tenant.
-     * Returns array of date strings ['2026-04-05', '2026-04-06', ...].
-     */
-    private function getBlockedDatesInRange(string $tenantId, string $startDate, string $endDate): array
-    {
-        $rows = Database::query(
-            'SELECT `start_date`, `end_date` FROM `blocked_dates`
-             WHERE `tenant_id` = ? AND `staff_id` IS NULL AND `resource_id` IS NULL
-               AND `start_date` <= ? AND `end_date` >= ?',
-            [$tenantId, $endDate, $startDate]
-        );
-
-        // Expand ranges into individual date strings
-        $blocked = [];
-        foreach ($rows as $r) {
-            $current = new \DateTimeImmutable($r['start_date']);
-            $end     = new \DateTimeImmutable($r['end_date']);
-            while ($current <= $end) {
-                $ds = $current->format('Y-m-d');
-                // Only include dates within the requested range
-                if ($ds >= $startDate && $ds <= $endDate) {
-                    $blocked[] = $ds;
-                }
-                $current = $current->modify('+1 day');
+        $days = [];
+        foreach ($bookings as $booking) {
+            $start = max($from, substr($booking['start_datetime'], 0, 10));
+            $last = min($to, (new \DateTimeImmutable($booking['end_datetime']))->modify('-1 second')->format('Y-m-d'));
+            for ($day = new \DateTimeImmutable($start); $day->format('Y-m-d') <= $last; $day = $day->modify('+1 day')) {
+                $days[$day->format('Y-m-d')][] = $booking;
             }
         }
+        return $days;
+    }
 
-        return array_unique($blocked);
+    private function calendar(string $tenantId, string $from, string $to): array
+    {
+        $actor = BookingCommands::sessionActor($tenantId);
+        $input = ['business_id'=>$tenantId, 'from'=>$from, 'to'=>$to, 'limit'=>100];
+        $result = null; $bookings = [];
+        do {
+            $page = BookingQueries::calendar($actor, $input);
+            $result ??= $page;
+            foreach ($page['bookings'] as $booking) {
+                $booking['customer_name'] = $booking['customer']['name'];
+                $booking['customer_email'] = $booking['customer']['email'];
+                $bookings[] = $booking;
+            }
+            $input['cursor'] = $page['next_cursor'];
+        } while ($input['cursor'] !== null);
+        usort($bookings, static fn($a, $b)=>[$a['start_datetime'],$a['id']] <=> [$b['start_datetime'],$b['id']]);
+        $result['bookings'] = $bookings;
+        $blocked = [];
+        foreach ($result['blocked_dates'] as $range) {
+            if ($range['staff_id'] !== null || $range['resource_id'] !== null) continue;
+            $day = new \DateTimeImmutable(max($from, $range['start_date']));
+            $end = min($to, $range['end_date']);
+            while ($day->format('Y-m-d') <= $end) {
+                $blocked[] = $day->format('Y-m-d');
+                $day = $day->modify('+1 day');
+            }
+        }
+        $result['blocked'] = array_values(array_unique($blocked));
+        return $result;
+    }
+
+    private function date(Request $request, array $tenant): string
+    {
+        $today = new \DateTimeImmutable('today', new \DateTimeZone($tenant['timezone']));
+        $input = $request->string('date');
+        $date = \DateTimeImmutable::createFromFormat('!Y-m-d', $input, $today->getTimezone());
+        return $date !== false && $date->format('Y-m-d') === $input ? $input : $today->format('Y-m-d');
     }
 
     // ── Shared Helpers ──

@@ -30,6 +30,7 @@ include __DIR__ . '/../../partials/page-header.php';
 
 <form method="POST" action="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/settings/booking" class="vb-animate-in">
     <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+    <input type="hidden" name="expected_version" value="<?= htmlspecialchars(\App\Application\Settings\SettingsService::projection($tenant, 'booking')['version'], ENT_QUOTES, 'UTF-8') ?>">
 
     <?php if (($tenant['booking_pattern'] ?? '') === 'timeslot'): ?>
     <!-- Section 1: Scheduling (timeslot only) -->

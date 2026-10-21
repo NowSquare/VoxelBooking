@@ -59,9 +59,9 @@ final class SchemaController
                         'x-required-scope' => 'bookings:read',
                         'parameters'  => [
                             ['name' => 'tenant_id', 'in' => 'query', 'required' => true, 'schema' => ['type' => 'string']],
-                            ['name' => 'status', 'in' => 'query', 'required' => false, 'schema' => ['type' => 'string', 'enum' => ['confirmed', 'completed', 'cancelled', 'no_show']]],
-                            ['name' => 'limit', 'in' => 'query', 'required' => false, 'schema' => ['type' => 'integer', 'default' => 50, 'maximum' => 100]],
-                            ['name' => 'offset', 'in' => 'query', 'required' => false, 'schema' => ['type' => 'integer', 'default' => 0]],
+                            ['name' => 'status', 'in' => 'query', 'required' => false, 'schema' => ['type' => 'string', 'enum' => ['pending', 'confirmed', 'waitlisted', 'completed', 'cancelled', 'no_show', 'rescheduled']]],
+                            ['name' => 'limit', 'in' => 'query', 'required' => false, 'schema' => ['type' => 'integer', 'default' => 50, 'minimum' => 1, 'maximum' => 100]],
+                            ['name' => 'offset', 'in' => 'query', 'required' => false, 'schema' => ['type' => 'integer', 'default' => 0, 'minimum' => 0, 'maximum' => 100000]],
                         ],
                         'responses' => [
                             '200' => [
@@ -90,13 +90,13 @@ final class SchemaController
                 ],
                 '/availability' => [
                     'get' => [
-                        'summary'     => 'Get availability for a tenant',
+                        'summary'     => 'Get weekly schedule configuration for a tenant',
+                        'description' => 'Returns at most 100 weekly rules, not computed bookable appointments. Legacy date arguments have no effect. Use v2 availability operations for bookable choices.',
                         'operationId' => 'getAvailability',
                         'tags'        => ['Availability'],
                         'x-required-scope' => 'availability:read',
                         'parameters'  => [
                             ['name' => 'tenant_id', 'in' => 'query', 'required' => true, 'schema' => ['type' => 'string']],
-                            ['name' => 'date', 'in' => 'query', 'required' => false, 'schema' => ['type' => 'string', 'format' => 'date']],
                         ],
                         'responses' => [
                             '200' => [
@@ -130,6 +130,9 @@ final class SchemaController
                             'status'   => ['type' => 'string'],
                             'timezone' => ['type' => 'string'],
                             'currency' => ['type' => 'string'],
+                            'locale' => ['type' => 'string'],
+                            'booking_pattern' => ['type' => 'string', 'enum' => ['timeslot', 'resource', 'capacity', 'event']],
+                            'created_at' => ['type' => 'string', 'description' => 'Stored application wall datetime, YYYY-MM-DD HH:MM:SS.'],
                         ],
                     ],
                     'BookingList' => [
@@ -144,15 +147,15 @@ final class SchemaController
                         'properties' => [
                             'id'             => ['type' => 'string'],
                             'tenant_id'      => ['type' => 'string'],
-                            'service_id'     => ['type' => 'string'],
+                            'service_id'     => ['type' => 'string', 'nullable' => true],
                             'staff_id'       => ['type' => 'string', 'nullable' => true],
                             'customer_id'    => ['type' => 'string'],
-                            'start_datetime' => ['type' => 'string', 'format' => 'date-time'],
-                            'end_datetime'   => ['type' => 'string', 'format' => 'date-time'],
+                            'start_datetime' => ['type' => 'string', 'description' => 'Venue-local wall datetime, YYYY-MM-DD HH:MM:SS.'],
+                            'end_datetime'   => ['type' => 'string', 'description' => 'Venue-local wall datetime, YYYY-MM-DD HH:MM:SS.'],
                             'status'         => ['type' => 'string'],
                             'source'         => ['type' => 'string'],
                             'has_consent'    => ['type' => 'boolean'],
-                            'created_at'     => ['type' => 'string', 'format' => 'date-time'],
+                            'created_at'     => ['type' => 'string', 'description' => 'Stored application wall datetime, YYYY-MM-DD HH:MM:SS.'],
                         ],
                     ],
                     'ServiceList' => [
@@ -168,7 +171,9 @@ final class SchemaController
                             'name'             => ['type' => 'string'],
                             'description'      => ['type' => 'string', 'nullable' => true],
                             'duration_minutes' => ['type' => 'integer'],
-                            'price'            => ['type' => 'number', 'nullable' => true],
+                            'price'            => ['type' => 'string', 'nullable' => true, 'pattern' => '^[0-9]+\\.[0-9]{2}$'],
+                            'color'            => ['type' => 'string', 'nullable' => true],
+                            'sort_order'       => ['type' => 'integer'],
                             'is_active'        => ['type' => 'boolean'],
                         ],
                     ],
@@ -176,6 +181,7 @@ final class SchemaController
                         'type' => 'object',
                         'properties' => [
                             'data' => ['type' => 'array', 'items' => ['$ref' => '#/components/schemas/Availability']],
+                            'kind' => ['type' => 'string', 'enum' => ['weekly_schedule']],
                         ],
                     ],
                     'Availability' => [
@@ -185,6 +191,7 @@ final class SchemaController
                             'day_of_week' => ['type' => 'integer'],
                             'start_time'  => ['type' => 'string'],
                             'end_time'    => ['type' => 'string'],
+                            'is_available' => ['type' => 'boolean'],
                         ],
                     ],
                 ],

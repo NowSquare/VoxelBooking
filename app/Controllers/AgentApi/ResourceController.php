@@ -31,7 +31,8 @@ final class ResourceController
         $tenants = Database::query(
             'SELECT `id`, `name`, `slug`, `status`, `timezone`, `locale`, `currency`, `booking_pattern`, `created_at`
              FROM `tenants`
-             ORDER BY `name` ASC'
+             ORDER BY `name` ASC, `id` ASC
+             LIMIT 100'
         );
 
         return Response::json(['data' => $tenants]);
@@ -54,8 +55,17 @@ final class ResourceController
         }
 
         $status = $request->query('status');
-        $limit  = min((int) ($request->query('limit') ?: 50), 100);
-        $offset = max((int) ($request->query('offset') ?: 0), 0);
+        $limitInput = $request->query('limit', '50');
+        $offsetInput = $request->query('offset', '0');
+        if (!ctype_digit($limitInput) || !ctype_digit($offsetInput)
+            || (int) $limitInput < 1 || (int) $limitInput > 100 || (int) $offsetInput > 100000) {
+            return Response::json(['error' => 'validation', 'message' => 'limit must be 1–100 and offset must be 0–100000.'], 422);
+        }
+        if ($status !== '' && !in_array($status, ['pending', 'confirmed', 'waitlisted', 'completed', 'cancelled', 'no_show', 'rescheduled'], true)) {
+            return Response::json(['error' => 'validation', 'message' => 'Unknown booking status.'], 422);
+        }
+        $limit = (int) $limitInput;
+        $offset = (int) $offsetInput;
 
         $where = ['`tenant_id` = ?'];
         $bindings = [$tenantId];
@@ -79,7 +89,7 @@ final class ResourceController
                     `created_at`
              FROM `bookings`
              WHERE {$whereClause}
-             ORDER BY `start_datetime` DESC
+             ORDER BY `start_datetime` DESC, `id` DESC
              LIMIT ? OFFSET ?",
             array_merge($bindings, [$limit, $offset])
         );
@@ -115,13 +125,17 @@ final class ResourceController
             'SELECT `id`, `name`, `description`, `duration_minutes`, `price`, `color`, `sort_order`, `is_active`
              FROM `services`
              WHERE `tenant_id` = ?
-             ORDER BY `sort_order` ASC',
+             ORDER BY `sort_order` ASC, `id` ASC
+             LIMIT 100',
             [$tenantId]
         );
 
         // Cast is_active to boolean
         foreach ($services as &$s) {
             $s['is_active'] = (bool) $s['is_active'];
+            $s['duration_minutes'] = (int) $s['duration_minutes'];
+            $s['sort_order'] = (int) $s['sort_order'];
+            $s['price'] = $s['price'] === null ? null : (string) $s['price'];
         }
 
         return Response::json(['data' => $services]);
@@ -147,11 +161,16 @@ final class ResourceController
             'SELECT `staff_id`, `day_of_week`, `start_time`, `end_time`, `is_available`
              FROM `availability`
              WHERE `tenant_id` = ? AND `is_available` = 1
-             ORDER BY `day_of_week` ASC, `start_time` ASC',
+             ORDER BY `day_of_week` ASC, `start_time` ASC, `staff_id` ASC
+             LIMIT 100',
             [$tenantId]
         );
 
-        return Response::json(['data' => $availability]);
+        foreach ($availability as &$rule) {
+            $rule['day_of_week'] = (int) $rule['day_of_week'];
+            $rule['is_available'] = (bool) $rule['is_available'];
+        }
+        return Response::json(['data' => $availability, 'kind' => 'weekly_schedule']);
     }
 
     // ── Helpers ──

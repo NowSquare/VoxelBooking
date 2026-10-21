@@ -43,6 +43,7 @@ return [
         'fileinfo'            => 'Fileinfo Extension',
         'openssl'             => 'OpenSSL Extension',
         'gd'                  => 'GD Extension',
+        'sodium'              => 'Sodium Extension',
         'zip'                 => 'Zip Extension',
         'loaded'              => 'Loaded',
         'enable_ext'          => 'Enable the :ext extension in your php.ini',

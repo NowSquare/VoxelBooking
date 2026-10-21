@@ -45,13 +45,7 @@ final class BusinessUsersController
             return Response::redirect('/admin/tenants');
         }
 
-        $users = Database::query(
-            'SELECT `id`, `name`, `email`, `role`, `is_active`, `last_login_at`, `created_at`
-             FROM `business_users`
-             WHERE `tenant_id` = ?
-             ORDER BY `created_at` ASC',
-            [$tenantId]
-        );
+        $users = \App\Application\Business\BusinessUi::all(\App\Application\Business\TeamService::list(...), ['business_id' => $tenantId]);
 
         return $this->render('admin.tenants.users.index', __('admin.users.page_title'), [
             'documentTitle' => __('admin.users.page_title') . ' — ' . $tenant['name'],
@@ -87,191 +81,21 @@ final class BusinessUsersController
 
     public function store(Request $request): Response
     {
-        $tenantId = $request->getAttribute('tenant_id');
-
-        if (!$this->canAccess($tenantId)) {
-            return $this->forbidden($request);
-        }
-
-        $tenant = $this->loadTenant($tenantId);
-        if ($tenant === null) {
-            return Response::redirect('/admin/tenants');
-        }
-
-        $name     = trim($request->string('name'));
-        $email    = trim($request->string('email'));
-        $role     = trim($request->string('role'));
-        $password = trim($request->string('password'));
-        $sendEmail = $request->string('send_email') === '1';
-
-        // Validate
-        $errors = [];
-        if ($name === '') {
-            $errors['name'] = __('admin.users.error_name_required');
-        }
-        if ($email === '') {
-            $errors['email'] = __('admin.users.error_email_required');
-        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = __('admin.users.error_email_invalid');
-        }
-        if (!in_array($role, ['owner', 'manager'], true)) {
-            $errors['role'] = __('admin.users.error_role_invalid');
-        }
-        if ($password === '' || strlen($password) < 8) {
-            $errors['password'] = __('admin.users.error_password_short');
-        }
-
-        // Check email uniqueness via auth_emails (PK enforces global uniqueness)
-        if ($email !== '' && empty($errors['email'])) {
-            $existing = Database::query(
-                'SELECT `email` FROM `auth_emails` WHERE `email` = ? LIMIT 1',
-                [$email]
-            );
-            if (!empty($existing)) {
-                $errors['email'] = __('admin.users.error_email_taken');
-            }
-        }
-
-        if (!empty($errors)) {
-            FormState::flash([
-                'name'  => $name,
-                'email' => $email,
-                'role'  => $role,
-            ], $errors);
-
-            $firstError = reset($errors);
-            FormState::toast('error', $firstError);
-            return Response::redirect("/admin/tenants/{$tenantId}/users/invite");
-        }
-
-        // Create user
-        $userId = Ulid::generate();
-        $passwordHash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
-
-        Database::execute(
-            "INSERT INTO `business_users`
-             (`id`, `tenant_id`, `name`, `email`, `password_hash`, `role`, `is_active`, `force_password_change`)
-             VALUES (?, ?, ?, ?, ?, ?, 1, 1)",
-            [$userId, $tenantId, $name, $email, $passwordHash, $role]
-        );
-
-        // Register in auth_emails for passwordless login
-        Database::execute(
-            "INSERT INTO `auth_emails` (`email`, `user_type`, `user_id`) VALUES (?, 'business_user', ?)",
-            [$email, $userId]
-        );
-
-        AuditLog::log('business_user.created', 'business_user', $userId, [
-            'tenant_id' => $tenantId,
-            'role'      => $role,
-            'email'     => AuditLog::hashEmail($email),
-        ]);
-
-        // Send welcome email
-        if ($sendEmail && Mailer::isConfigured()) {
-            $loginUrl = app_url('/admin/login');
-            $currentUser = Auth::user();
-            $emailResult = Mailer::sendBusinessUserWelcome(
-                $email,
-                $name,
-                $password,
-                $loginUrl,
-                $tenant['name'],
-                $tenantId,
-                $currentUser['email'] ?? null,
-                $tenant['slug'] ?? null,
-                $currentUser['name'] ?? null,
-            );
-
-            if ($emailResult['sent']) {
-                FormState::toast('success', __('admin.users.flash_invited') . ' ' . __('admin.users.flash_email_sent'));
-                return Response::redirect("/admin/tenants/{$tenantId}/users");
-            }
-
-            // Email failed — show credentials
-            FormState::toast('warning', __('admin.users.flash_email_failed'));
-            $_SESSION['owner_credentials'] = [
-                'email'    => $email,
-                'password' => $password,
-            ];
-            return Response::redirect("/admin/tenants/{$tenantId}/users");
-        }
-
-        // No email sent — show credentials
-        FormState::toast('success', __('admin.users.flash_invited'));
-        $_SESSION['owner_credentials'] = [
-            'email'    => $email,
-            'password' => $password,
-        ];
-        return Response::redirect("/admin/tenants/{$tenantId}/users");
+        return \App\Application\Business\BusinessUi::team($request, 'invite');
     }
 
     // ── Deactivate ──
 
     public function deactivate(Request $request): Response
     {
-        $tenantId = $request->getAttribute('tenant_id');
-        $userId   = $request->getAttribute('id');
-
-        if (!$this->canAccess($tenantId)) {
-            return $this->forbidden($request);
-        }
-
-        // Verify user belongs to tenant
-        $user = $this->loadUser($userId, $tenantId);
-        if ($user === null) {
-            return Response::redirect("/admin/tenants/{$tenantId}/users");
-        }
-
-        // Cannot deactivate yourself
-        $currentUser = Auth::user();
-        if ($currentUser !== null && $currentUser['id'] === $userId) {
-            FormState::toast('error', __('admin.users.error_self_deactivate'));
-            return Response::redirect("/admin/tenants/{$tenantId}/users");
-        }
-
-        Database::execute(
-            'UPDATE `business_users` SET `is_active` = 0 WHERE `id` = ? AND `tenant_id` = ?',
-            [$userId, $tenantId]
-        );
-
-        AuditLog::log('business_user.deactivated', 'business_user', $userId, [
-            'tenant_id' => $tenantId,
-            'email'     => AuditLog::hashEmail($user['email']),
-        ]);
-
-        FormState::toast('success', __('admin.users.flash_deactivated'));
-        return Response::redirect("/admin/tenants/{$tenantId}/users");
+        return \App\Application\Business\BusinessUi::team($request, 'deactivate');
     }
 
     // ── Activate ──
 
     public function activate(Request $request): Response
     {
-        $tenantId = $request->getAttribute('tenant_id');
-        $userId   = $request->getAttribute('id');
-
-        if (!$this->canAccess($tenantId)) {
-            return $this->forbidden($request);
-        }
-
-        $user = $this->loadUser($userId, $tenantId);
-        if ($user === null) {
-            return Response::redirect("/admin/tenants/{$tenantId}/users");
-        }
-
-        Database::execute(
-            'UPDATE `business_users` SET `is_active` = 1 WHERE `id` = ? AND `tenant_id` = ?',
-            [$userId, $tenantId]
-        );
-
-        AuditLog::log('business_user.activated', 'business_user', $userId, [
-            'tenant_id' => $tenantId,
-            'email'     => AuditLog::hashEmail($user['email']),
-        ]);
-
-        FormState::toast('success', __('admin.users.flash_activated'));
-        return Response::redirect("/admin/tenants/{$tenantId}/users");
+        return \App\Application\Business\BusinessUi::team($request, 'activate');
     }
 
     // ── Helpers ──

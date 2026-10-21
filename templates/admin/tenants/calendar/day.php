@@ -107,9 +107,10 @@ ob_start();
         <?php foreach ($bookings as $i => $b):
             $start     = new DateTimeImmutable($b['start_datetime']);
             $end       = new DateTimeImmutable($b['end_datetime']);
-            $startMins = ((int) $start->format('H') - $hourStart) * 60 + (int) $start->format('i');
-            $endMins   = ((int) $end->format('H') - $hourStart) * 60 + (int) $end->format('i');
-            $duration  = max($endMins - $startMins, 15);
+            $timelineStart = new DateTimeImmutable($dateStr . sprintf(' %02d:00:00', $hourStart));
+            $startMins = max(0, min($totalMinutes - 15, ($start->getTimestamp() - $timelineStart->getTimestamp()) / 60));
+            $endMins = max(0, min($totalMinutes, ($end->getTimestamp() - $timelineStart->getTimestamp()) / 60));
+            $duration  = min(max($endMins - $startMins, 15), $totalMinutes - $startMins);
             $topPct    = ($startMins / $totalMinutes) * 100;
             $heightPct = ($duration / $totalMinutes) * 100;
             $color = $b['service_color'] ?: $brandColor;

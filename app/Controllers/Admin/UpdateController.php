@@ -118,7 +118,7 @@ final class UpdateController
                 'migrations' => $migCount,
             ]);
 
-            if ($result['state'] === 'up_to_date') {
+            if ($result['state'] === 'up_to_date' && $migCount === 0) {
                 FormState::toast('success', __('admin.updates.git_already_current'));
             } else {
                 FormState::toast('success', str_replace(
@@ -157,7 +157,7 @@ final class UpdateController
     private function renderUpdatesPage(bool $fetchGit): Response
     {
         $projectRoot = dirname(__DIR__, 3);
-        $git = $this->gitUpdater($projectRoot)->status($fetchGit);
+        $git = $this->gitUpdater($projectRoot)->status($fetchGit, (new Migrator($projectRoot . '/app/Migrations'))->hasPending());
 
         // ext-zip is required for the ZIP flow, but Git updates work without it.
         if (!class_exists(\ZipArchive::class)) {

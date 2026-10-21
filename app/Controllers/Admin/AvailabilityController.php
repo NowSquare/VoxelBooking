@@ -6,11 +6,9 @@ namespace App\Controllers\Admin;
 
 use App\Engine\Auth;
 use App\Engine\FormState;
-use App\Engine\AuditLog;
 use App\Engine\Database;
 use App\Engine\Request;
 use App\Engine\Response;
-use App\Engine\Ulid;
 use App\Engine\Version;
 use App\Engine\View;
 use App\Middleware\CsrfMiddleware;
@@ -96,54 +94,7 @@ final class AvailabilityController
 
     public function save(Request $request): Response
     {
-        $tenantId = $request->getAttribute('tenant_id');
-
-        if (!$this->canAccess($tenantId)) {
-            return $this->forbidden($request);
-        }
-
-        $tenant = $this->loadTenant($tenantId);
-        if ($tenant === null) {
-            return Response::redirect('/admin/tenants');
-        }
-
-        if (($tenant['booking_pattern'] ?? '') !== 'timeslot') {
-            return Response::redirect("/admin/tenants/{$tenantId}");
-        }
-
-        $scheduleData = $_POST['schedule'] ?? [];
-        $parsed = $this->parseScheduleInput($scheduleData);
-
-        if ($parsed === null) {
-            FormState::flash([], ['schedule' => __('admin.availability.error_invalid_time')]);
-            FormState::toast('error', __('admin.availability.error_invalid_time'));
-            return Response::redirect("/admin/tenants/{$tenantId}/availability");
-        }
-
-        Database::transaction(function () use ($tenantId, $parsed) {
-            // Delete all tenant-level rows
-            Database::execute(
-                'DELETE FROM `availability` WHERE `tenant_id` = ? AND `staff_id` IS NULL',
-                [$tenantId]
-            );
-
-            // Insert new rows
-            foreach ($parsed as $row) {
-                Database::execute(
-                    'INSERT INTO `availability` (`id`, `tenant_id`, `staff_id`, `day_of_week`, `start_time`, `end_time`, `is_available`)
-                     VALUES (?, ?, NULL, ?, ?, ?, 1)',
-                    [Ulid::generate(), $tenantId, $row['day'], $row['start'], $row['end']]
-                );
-            }
-        });
-
-        AuditLog::log('availability.updated', 'availability', $tenantId, [
-            'scope'       => 'tenant',
-            'window_count' => count($parsed),
-        ]);
-
-        FormState::toast('success', __('admin.availability.saved'));
-        return Response::redirect("/admin/tenants/{$tenantId}/availability");
+        return \App\Application\Catalog\CatalogUi::schedule($request, 'save');
     }
 
     // ── Staff overrides ──
@@ -230,94 +181,12 @@ final class AvailabilityController
 
     public function saveStaffOverride(Request $request): Response
     {
-        $tenantId = $request->getAttribute('tenant_id');
-        $staffId  = $request->getAttribute('id');
-
-        if (!$this->canAccess($tenantId)) {
-            return $this->forbidden($request);
-        }
-
-        $tenant = $this->loadTenant($tenantId);
-        if ($tenant === null) {
-            return Response::redirect('/admin/tenants');
-        }
-
-        if (($tenant['booking_pattern'] ?? '') !== 'timeslot') {
-            return Response::redirect("/admin/tenants/{$tenantId}");
-        }
-
-        $staffMember = $this->loadStaff($tenantId, $staffId);
-        if ($staffMember === null) {
-            return Response::redirect("/admin/tenants/{$tenantId}/availability");
-        }
-
-        $scheduleData = $_POST['schedule'] ?? [];
-        $parsed = $this->parseScheduleInput($scheduleData);
-
-        if ($parsed === null) {
-            FormState::flash([], ['schedule' => __('admin.availability.error_invalid_time')]);
-            FormState::toast('error', __('admin.availability.error_invalid_time'));
-            return Response::redirect("/admin/tenants/{$tenantId}/availability/staff/{$staffId}");
-        }
-
-        Database::transaction(function () use ($tenantId, $staffId, $parsed) {
-            Database::execute(
-                'DELETE FROM `availability` WHERE `tenant_id` = ? AND `staff_id` = ?',
-                [$tenantId, $staffId]
-            );
-
-            foreach ($parsed as $row) {
-                Database::execute(
-                    'INSERT INTO `availability` (`id`, `tenant_id`, `staff_id`, `day_of_week`, `start_time`, `end_time`, `is_available`)
-                     VALUES (?, ?, ?, ?, ?, ?, 1)',
-                    [Ulid::generate(), $tenantId, $staffId, $row['day'], $row['start'], $row['end']]
-                );
-            }
-        });
-
-        AuditLog::log('availability.staff_override_set', 'availability', $staffId, [
-            'staff_name'   => $staffMember['name'],
-            'window_count' => count($parsed),
-        ]);
-
-        FormState::toast('success', __('admin.availability.staff_saved'));
-        return Response::redirect("/admin/tenants/{$tenantId}/availability/staff/{$staffId}");
+        return \App\Application\Catalog\CatalogUi::schedule($request, 'save');
     }
 
     public function resetStaffOverride(Request $request): Response
     {
-        $tenantId = $request->getAttribute('tenant_id');
-        $staffId  = $request->getAttribute('id');
-
-        if (!$this->canAccess($tenantId)) {
-            return $this->forbidden($request);
-        }
-
-        $tenant = $this->loadTenant($tenantId);
-        if ($tenant === null) {
-            return Response::redirect('/admin/tenants');
-        }
-
-        if (($tenant['booking_pattern'] ?? '') !== 'timeslot') {
-            return Response::redirect("/admin/tenants/{$tenantId}");
-        }
-
-        $staffMember = $this->loadStaff($tenantId, $staffId);
-        if ($staffMember === null) {
-            return Response::redirect("/admin/tenants/{$tenantId}/availability");
-        }
-
-        Database::execute(
-            'DELETE FROM `availability` WHERE `tenant_id` = ? AND `staff_id` = ?',
-            [$tenantId, $staffId]
-        );
-
-        AuditLog::log('availability.staff_override_reset', 'availability', $staffId, [
-            'staff_name' => $staffMember['name'],
-        ]);
-
-        FormState::toast('success', __('admin.availability.staff_reset'));
-        return Response::redirect("/admin/tenants/{$tenantId}/availability/staff/{$staffId}");
+        return \App\Application\Catalog\CatalogUi::schedule($request, 'reset');
     }
 
     // ── Helpers ──
@@ -343,73 +212,7 @@ final class AvailabilityController
         return $schedule;
     }
 
-    /**
-     * Parse schedule form input into validated rows.
-     * Returns null if any window has invalid times.
-     *
-     * @return list<array{day: int, start: string, end: string}>|null
-     */
-    private function parseScheduleInput(array $data): ?array
-    {
-        $parsed = [];
-        /** @var array<int, list<array{start: string, end: string}>> */
-        $dayWindows = array_fill(0, 7, []);
 
-        for ($day = 0; $day <= 6; $day++) {
-            $windows = $data[$day] ?? [];
-            if (!is_array($windows)) {
-                continue;
-            }
-
-            foreach ($windows as $window) {
-                $start = trim($window['start'] ?? '');
-                $end   = trim($window['end'] ?? '');
-
-                if ($start === '' || $end === '') {
-                    continue; // Skip empty windows
-                }
-
-                // Validate time format
-                if (!preg_match('/^\d{2}:\d{2}$/', $start) || !preg_match('/^\d{2}:\d{2}$/', $end)) {
-                    return null;
-                }
-
-                // End must be after start
-                if ($end <= $start) {
-                    return null;
-                }
-
-                $dayWindows[$day][] = ['start' => $start, 'end' => $end];
-            }
-        }
-
-        // Check for overlaps within each day
-        for ($day = 0; $day <= 6; $day++) {
-            $wins = $dayWindows[$day];
-            if (count($wins) <= 1) {
-                foreach ($wins as $w) {
-                    $parsed[] = ['day' => $day, 'start' => $w['start'], 'end' => $w['end']];
-                }
-                continue;
-            }
-
-            // Sort by start time
-            usort($wins, fn(array $a, array $b) => strcmp($a['start'], $b['start']));
-
-            // Check each window: start must be >= previous end
-            for ($i = 1; $i < count($wins); $i++) {
-                if ($wins[$i]['start'] < $wins[$i - 1]['end']) {
-                    return null; // Overlap detected
-                }
-            }
-
-            foreach ($wins as $w) {
-                $parsed[] = ['day' => $day, 'start' => $w['start'], 'end' => $w['end']];
-            }
-        }
-
-        return $parsed;
-    }
 
     private function canAccess(string $tenantId): bool
     {
@@ -433,6 +236,7 @@ final class AvailabilityController
 
     private function render(string $template, string $pageTitle, array $extra, string $tenantId): Response
     {
+        $extra['recordVersion'] = \App\Application\Catalog\CatalogUi::scheduleVersion($tenantId, $extra['currentStaffId'] ?? null);
         return View::response($template, array_merge([
             'user'       => Auth::user(),
             'version'    => Version::get(),

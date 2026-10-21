@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Controllers\Booking;
 
 use App\Engine\Database;
+use App\Application\Availability\AvailabilityService;
+use App\Engine\CustomerCapability;
 use App\Engine\BookingService;
 use App\Engine\BrandColorHelper;
 use App\Engine\DemoMode;
@@ -51,30 +53,32 @@ final class BookingPageController
         $acceptLang = $request->header('Accept-Language');
         $resolvedLocale = Locale::resolveForBooking($tenant, $acceptLang);
 
+        $publicBusiness=AvailabilityService::business(AvailabilityService::publicActor($tenant),[]);
+
         // Build tenant config for the JavaScript app
         $tenantConfig = [
-            'slug'                  => $tenant['slug'],
-            'name'                  => $tenant['name'],
-            'timezone'              => $tenant['timezone'],
+            'slug'                  => $publicBusiness['slug'],
+            'name'                  => $publicBusiness['name'],
+            'timezone'              => $publicBusiness['timezone'],
             'locale'                => $resolvedLocale,
-            'currency'              => $tenant['currency'],
-            'booking_pattern'       => $tenant['booking_pattern'],
-            'require_phone'         => (bool) $tenant['require_phone'],
-            'requires_consent'      => (bool) $tenant['requires_consent'],
-            'consent_text'          => $tenant['consent_text'] ?: __('booking.form.consent_default'),
-            'privacy_policy_url'    => $tenant['privacy_policy_url'] ?: null,
-            'custom_fields'         => json_decode($tenant['custom_fields'] ?? '[]', true) ?: [],
+            'currency'              => $publicBusiness['currency'],
+            'booking_pattern'       => $publicBusiness['booking_pattern'],
+            'require_phone'         => $publicBusiness['require_phone'],
+            'requires_consent'      => $publicBusiness['requires_consent'],
+            'consent_text'          => $publicBusiness['consent_text'],
+            'privacy_policy_url'    => $publicBusiness['privacy_policy_url'],
+            'custom_fields'         => $publicBusiness['custom_fields'],
             'brand_color'           => $tenant['brand_color'],
             'brand_text'            => $brandTokens['brand_text'],
             'show_powered_by'       => (bool) ($tenant['show_powered_by'] ?? true),
             'is_demo'               => DemoMode::isActive(),
             'booking_page_heading'  => $tenant['booking_page_heading'] ?: null,
             'booking_page_description' => $tenant['booking_page_description'] ?: null,
-            'confirmation_message'  => $tenant['confirmation_message'] ?: null,
-            'cancellation_policy'   => $tenant['cancellation_policy'] ?: null,
-            'allow_cancellation'    => (bool) ($tenant['allow_cancellation'] ?? true),
-            'allow_rescheduling'    => (bool) ($tenant['allow_rescheduling'] ?? true),
-            'requires_approval'     => (bool) ($tenant['booking_requires_approval'] ?? false),
+            'confirmation_message'  => $publicBusiness['confirmation_message'],
+            'cancellation_policy'   => $publicBusiness['cancellation_policy'],
+            'allow_cancellation'    => $publicBusiness['allow_cancellation'],
+            'allow_rescheduling'    => $publicBusiness['allow_rescheduling'],
+            'requires_approval'     => $publicBusiness['requires_approval'],
         ];
 
         // Capacity pattern: inject party size bounds from slot configuration
@@ -136,7 +140,7 @@ final class BookingPageController
      *
      * Uses the same page shell as the booking page but injects manage_mode
      * so the Alpine component loads the booking and presents cancel/reschedule UI.
-     * Authentication: booking ULID is the bearer token (128-bit entropy).
+     * An independent booking.manage capability authorizes access.
      */
     public function manage(Request $request): Response
     {
@@ -155,6 +159,14 @@ final class BookingPageController
         }
 
         $tenant = $tenant[0];
+
+        Locale::resolveForBooking($tenant, $request->header('Accept-Language'));
+        if (!CustomerCapability::requestAuthorized($request, CustomerCapability::MANAGE, $tenant['id'], $bookingId)) {
+            return CustomerAccessController::recoveryPage($tenant, CustomerCapability::MANAGE, $bookingId);
+        }
+        if ($continuation = CustomerCapability::verifiedContinuation(CustomerCapability::MANAGE, $tenant['id'], $bookingId)) {
+            return CustomerCapability::protect(Response::redirect($continuation));
+        }
 
         // Verify the booking exists and belongs to this tenant
         $booking = BookingService::findById($bookingId);
@@ -216,7 +228,7 @@ final class BookingPageController
         require __DIR__ . '/../../../templates/booking/page.php';
         $html = ob_get_clean();
 
-        return Response::html($html);
+        return CustomerCapability::protect(Response::html($html));
     }
 
     /**

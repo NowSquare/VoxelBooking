@@ -45,6 +45,7 @@ include __DIR__ . '/../../partials/page-header.php';
           action="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/staff/<?= htmlspecialchars($staffId, ENT_QUOTES, 'UTF-8') ?>/edit"
           id="edit-staff-form" enctype="multipart/form-data" novalidate>
         <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+        <input type="hidden" name="_record_version" value="<?= e($recordVersion ?? '') ?>">
 
         <div class="vb-form-row">
             <div class="vb-form-group">

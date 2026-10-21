@@ -35,6 +35,11 @@ final class CsrfMiddleware
         if (str_starts_with($request->path(), '/api/')) {
             return $next($request);
         }
+        // These endpoints never accept browser cookies as authorization.
+        if ($request->path() === '/mcp' || $request->path()==='/mcp/public' || str_starts_with($request->path(), '/mcp/public/')
+            || in_array($request->path(), ['/oauth/token', '/oauth/register', '/oauth/revoke'], true)) {
+            return $next($request);
+        }
 
         // Skip CSRF for cron endpoint (uses secret token)
         if (str_starts_with($request->path(), '/cron/')) {
@@ -48,6 +53,9 @@ final class CsrfMiddleware
             $path = $request->path();
             if (str_starts_with($path, '/admin')
                 || str_starts_with($path, '/auth/')
+                || $path === '/oauth/authorize'
+                || str_starts_with($path, '/book/')
+                || str_starts_with($path, '/agent-reviews/')
                 || $path === '/'
                 || $path === '/request-access') {
                 Auth::startSession();

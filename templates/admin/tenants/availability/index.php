@@ -93,6 +93,7 @@ include __DIR__ . '/../../partials/page-header.php';
               data-confirm="<?= __('admin.availability.reset_confirm') ?>" data-confirm-text="<?= __('admin.availability.reset_to_defaults') ?>"
               class="vb-ml-auto">
             <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+            <input type="hidden" name="_record_version" value="<?= e($recordVersion ?? '') ?>">
             <button type="submit" class="vb-btn vb-btn-ghost vb-btn-sm vb-btn-danger">
                 <i data-lucide="rotate-ccw" class="vb-icon-sm"></i>
                 <?= __('admin.availability.reset_to_defaults') ?>
@@ -112,6 +113,7 @@ include __DIR__ . '/../../partials/page-header.php';
       class="vb-animate-in"
       novalidate>
     <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+    <input type="hidden" name="_record_version" value="<?= e($recordVersion ?? '') ?>">
 
     <div class="vb-card vb-card-clip">
         <?php if (has_error('schedule')): ?>

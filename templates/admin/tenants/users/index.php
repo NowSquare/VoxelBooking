@@ -29,29 +29,7 @@ include __DIR__ . '/../../partials/page-header.php';
 <?php if (!empty($flash)): ?>
     <?php include __DIR__ . '/../../../partials/alert.php'; ?>
 
-    <?php if (!empty($flash['credentials'])): ?>
-        <div class="vb-card vb-credentials-card">
-            <div class="vb-card-header">
-                <i data-lucide="key" class="vb-icon-md"></i>
-                <strong><?= __('admin.users.credentials_title') ?></strong>
-            </div>
-            <p class="vb-hint vb-mb-md"><?= __('admin.users.credentials_hint') ?></p>
-            <div class="vb-credentials-grid">
-                <div class="vb-credentials-row">
-                    <span class="vb-credentials-label"><?= __('admin.users.credentials_email') ?></span>
-                    <code class="vb-credentials-value"><?= htmlspecialchars($flash['credentials']['email'] ?? '', ENT_QUOTES, 'UTF-8') ?></code>
-                </div>
-                <div class="vb-credentials-row">
-                    <span class="vb-credentials-label"><?= __('admin.users.credentials_password') ?></span>
-                    <code class="vb-credentials-value"><?= htmlspecialchars($flash['credentials']['password'] ?? '', ENT_QUOTES, 'UTF-8') ?></code>
-                </div>
-                <div class="vb-credentials-row">
-                    <span class="vb-credentials-label"><?= __('admin.users.credentials_login') ?></span>
-                    <code class="vb-credentials-value"><?= htmlspecialchars(app_url('/admin/login'), ENT_QUOTES, 'UTF-8') ?></code>
-                </div>
-            </div>
-        </div>
-    <?php endif; ?>
+
 <?php endif; ?>
 
 <?php if (empty($users)): ?>
@@ -112,6 +90,7 @@ include __DIR__ . '/../../partials/page-header.php';
                                       class="vb-form-flush"
                                       data-confirm="<?= __('admin.users.deactivate_confirm') ?>" data-confirm-text="<?= __('admin.users.deactivate') ?>">
                                     <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                                    <input type="hidden" name="_record_version" value="<?= e($bu['version'] ?? '') ?>">
                                     <button type="submit" class="vb-btn vb-btn-ghost vb-btn-sm vb-btn-danger-text">
                                         <?= __('admin.users.deactivate') ?>
                                     </button>
@@ -122,6 +101,7 @@ include __DIR__ . '/../../partials/page-header.php';
                                       class="vb-form-flush"
                                       data-confirm="<?= __('admin.users.activate_confirm') ?>" data-confirm-text="<?= __('admin.users.activate') ?>">
                                     <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                                    <input type="hidden" name="_record_version" value="<?= e($bu['version'] ?? '') ?>">
                                     <button type="submit" class="vb-btn vb-btn-ghost vb-btn-sm">
                                         <?= __('admin.users.activate') ?>
                                     </button>

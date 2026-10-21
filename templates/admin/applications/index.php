@@ -125,12 +125,14 @@ include __DIR__ . '/../partials/page-header.php';
                         <div class="vb-action-group">
                             <form method="POST" action="/admin/applications/<?= htmlspecialchars($app['id'], ENT_QUOTES, 'UTF-8') ?>/approve" class="vb-inline-form">
                                 <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                                <input type="hidden" name="_record_version" value="<?= e($app['version'] ?? '') ?>">
                                 <button type="submit" class="vb-btn vb-btn-sm vb-btn-success" title="<?= __('admin.applications.approve_btn') ?>">
                                     <i data-lucide="check"></i>
                                 </button>
                             </form>
                             <form method="POST" action="/admin/applications/<?= htmlspecialchars($app['id'], ENT_QUOTES, 'UTF-8') ?>/reject" class="vb-inline-form">
                                 <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                                <input type="hidden" name="_record_version" value="<?= e($app['version'] ?? '') ?>">
                                 <button type="submit" class="vb-btn vb-btn-sm vb-btn-destructive" title="<?= __('admin.applications.reject_btn') ?>">
                                     <i data-lucide="x"></i>
                                 </button>

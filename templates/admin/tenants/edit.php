@@ -45,6 +45,7 @@ include __DIR__ . '/../partials/page-header.php';
     <div class="vb-card" x-data="slugGenerator">
         <form method="POST" action="/admin/tenants/<?= htmlspecialchars($tenant['id'], ENT_QUOTES, 'UTF-8') ?>/edit" novalidate>
             <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+            <input type="hidden" name="_record_version" value="<?= e($recordVersion ?? '') ?>">
 
             <div class="vb-form-group">
                 <label for="tenant_name" class="vb-label"><?= __('admin.tenants.name') ?> <span class="vb-required">*</span></label>

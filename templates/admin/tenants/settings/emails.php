@@ -124,6 +124,7 @@ include __DIR__ . '/../../partials/page-header.php';
 
 <form method="POST" action="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/settings/emails" class="vb-animate-in">
     <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+    <input type="hidden" name="expected_version" value="<?= e(\App\Application\Settings\EmailTemplates::read(\App\Agent\SessionActor::resolve(\App\Agent\Operations::registry()),$tenantId)['version']) ?>">
 
     <div class="vb-settings-info">
         <i data-lucide="info"></i>

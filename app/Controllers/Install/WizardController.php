@@ -660,6 +660,14 @@ final class WizardController
                     : str_replace(':ext', 'gd', __('install.checks.enable_ext')),
             ],
             [
+                'name'     => __('install.checks.sodium'),
+                'required' => true,
+                'passed'   => extension_loaded('sodium'),
+                'message'  => extension_loaded('sodium')
+                    ? __('install.checks.loaded')
+                    : str_replace(':ext', 'sodium', __('install.checks.enable_ext')),
+            ],
+            [
                 'name'     => __('install.checks.zip'),
                 'required' => true,
                 'passed'   => extension_loaded('zip'),

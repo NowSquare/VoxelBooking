@@ -41,6 +41,7 @@ include __DIR__ . '/partials/page-header.php';
         <form method="POST" action="/admin/account" autocomplete="off" novalidate>
             <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
             <input type="hidden" name="_action" value="profile">
+            <input type="hidden" name="expected_version" value="<?= e(\App\Agent\CanonicalJson::hash([$currentUser['name']??'', $currentUser['email']??''])) ?>">
 
             <div class="vb-form-group">
                 <label for="account_name" class="vb-label"><?= __('admin.account.name_label') ?></label>

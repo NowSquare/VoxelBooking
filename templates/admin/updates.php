@@ -84,6 +84,7 @@ include __DIR__ . '/partials/page-header.php';
     if (!empty($git['is_repo'])):
         $gitBadge = match ($git['state'] ?? '') {
             'update_available' => 'vb-badge-success',
+            'migration_pending' => 'vb-badge-warning',
             'up_to_date'       => 'vb-badge-neutral',
             'dirty', 'ahead'   => 'vb-badge-warning',
             default            => 'vb-badge-muted',
@@ -130,13 +131,13 @@ include __DIR__ . '/partials/page-header.php';
             </a>
             <?php if (!empty($git['can_update'])): ?>
             <form method="post" action="/admin/updates/git-update" class="vb-inline-form"
-                  onsubmit="return confirm('<?= View::e(__('admin.updates.git_confirm')) ?>');">
+                  onsubmit="return confirm('<?= View::e(__($git['state'] === 'migration_pending' ? 'admin.updates.git_retry_migration_confirm' : 'admin.updates.git_confirm')) ?>');">
                 <input type="hidden" name="_csrf_token" value="<?= View::e($csrfToken) ?>">
                 <button type="submit"
                         class="vb-btn vb-btn-primary"
                         <?php if (\App\Engine\DemoMode::isActive()): ?>onclick="event.preventDefault(); showDemoToast()"<?php endif; ?>>
                     <i data-lucide="download"></i>
-                    <?= __('admin.updates.git_update_btn') ?>
+                    <?= __($git['state'] === 'migration_pending' ? 'admin.updates.git_retry_migration' : 'admin.updates.git_update_btn') ?>
                 </button>
             </form>
             <?php endif; ?>

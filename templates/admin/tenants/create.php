@@ -272,7 +272,7 @@ include __DIR__ . '/../partials/page-header.php';
                             <label for="send_owner_email_toggle" class="vb-toggle-label">
                                 <span class="vb-label vb-mb-0">
                                     <i data-lucide="mail" class="vb-icon-sm"></i>
-                                    <?= __('admin.tenants.owner_send_email') ?>
+                                    <?= __('agent-business.send_invitation') ?>
                                 </span>
                                 <?php if (!\App\Engine\Mailer::isConfigured()): ?>
                                     <span class="vb-hint vb-hint-warning">

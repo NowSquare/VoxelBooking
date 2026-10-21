@@ -31,6 +31,7 @@ final class ThrottleMiddleware
         'public_get'  => ['limit' => 60,  'window' => 60],
         'public_post' => ['limit' => 10,  'window' => 60],
         'cron'        => ['limit' => 4,   'window' => 60],
+        'agent'       => ['limit' => 120, 'window' => 60],
     ];
 
     public function handle(Request $request, callable $next): Response
@@ -68,17 +69,25 @@ final class ThrottleMiddleware
         /** @var Response $response */
         $response = $next($request);
 
-        // Add rate limit headers
-        $remaining = max(0, $config['limit'] - $this->getCount($ip, $group, $config['window']));
-        $response->header('X-RateLimit-Limit', (string) $config['limit']);
-        $response->header('X-RateLimit-Remaining', (string) $remaining);
-        $response->header('X-RateLimit-Reset', (string) (time() + $config['window']));
+        // The authenticated layer reports the tighter credential/principal budget.
+        // Do not replace it with the broader IP gate after the operation returns.
+        if (!array_key_exists('X-RateLimit-Limit', $response->getHeaders())) {
+            $remaining = max(0, $config['limit'] - $this->getCount($ip, $group, $config['window']));
+            $response->header('X-RateLimit-Limit', (string) $config['limit']);
+            $response->header('X-RateLimit-Remaining', (string) $remaining);
+            $response->header('X-RateLimit-Reset', (string) (time() + $config['window']));
+        }
 
         return $response;
     }
 
     private function resolveGroup(string $path, string $method): string
     {
+        // MCP carries both queries and commands over POST. The authenticated
+        // operation layer enforces credential/principal budgets after this IP gate.
+        if (str_starts_with($path, '/api/agent/') || $path === '/mcp' || str_starts_with($path, '/mcp/public')) {
+            return 'agent';
+        }
         // Auth verification endpoints — stricter than generic admin
         if ($path === '/admin/login/verify-code' && $method === 'POST') {
             return 'auth_verify';

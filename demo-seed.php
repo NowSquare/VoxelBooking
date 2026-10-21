@@ -42,7 +42,6 @@ $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 // 001: settings
 $pdo->exec("
 CREATE TABLE settings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
     `key` TEXT NOT NULL UNIQUE,
     value TEXT,
     updated_at TEXT DEFAULT (datetime('now'))
@@ -56,6 +55,7 @@ CREATE TABLE operators (
     name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
 )
 ");
@@ -134,6 +134,7 @@ CREATE TABLE tenants (
     embed_button_position TEXT NOT NULL DEFAULT 'bottom-right',
     embed_button_label TEXT NOT NULL DEFAULT 'Book Now',
     status TEXT NOT NULL DEFAULT 'active',
+    show_powered_by INTEGER NOT NULL DEFAULT 1,
     meta TEXT DEFAULT NULL,
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
@@ -206,7 +207,6 @@ CREATE TABLE staff (
 // 007: service_staff
 $pdo->exec("
 CREATE TABLE service_staff (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
     service_id TEXT NOT NULL,
     staff_id TEXT NOT NULL,
     UNIQUE(service_id, staff_id)
@@ -416,6 +416,12 @@ CREATE TABLE bookings (
     resource_id TEXT DEFAULT NULL,
     event_id TEXT DEFAULT NULL,
     customer_id TEXT NOT NULL,
+    customer_name_snapshot TEXT DEFAULT NULL,
+    customer_email_snapshot TEXT DEFAULT NULL,
+    customer_phone_snapshot TEXT DEFAULT NULL,
+    capacity_slot_id TEXT DEFAULT NULL,
+    price_total TEXT DEFAULT NULL,
+    price_currency TEXT DEFAULT NULL,
     start_datetime TEXT NOT NULL,
     end_datetime TEXT NOT NULL,
     party_size INTEGER NOT NULL DEFAULT 1,
@@ -471,6 +477,326 @@ CREATE TABLE tenant_email_templates (
 )
 ");
 
+// 020_create_bookings.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE reminders (
+    `id` TEXT NOT NULL,
+    `booking_id` TEXT NOT NULL,
+    `tenant_id` TEXT NOT NULL,
+    `scheduled_at` TEXT NOT NULL,
+    `sent_at` TEXT NULL DEFAULT NULL,
+    `attempts` INTEGER NOT NULL DEFAULT 0,
+    `last_error` TEXT NULL DEFAULT NULL,
+    `created_at` TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (`id`),
+    CONSTRAINT `reminders_booking_fk` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `reminders_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE
+);
+CREATE INDEX reminders_pending_idx ON reminders (`sent_at`, `scheduled_at`);
+CREATE INDEX reminders_booking_idx ON reminders (`booking_id`);
+SQL);
+
+// 029_agent_rate_budgets.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE agent_rate_budgets (
+    `budget_key` TEXT NOT NULL,
+    `window_start` INTEGER NOT NULL,
+    `attempts` INTEGER NOT NULL DEFAULT 0,
+    `expires_at` TEXT NOT NULL,
+    PRIMARY KEY (`budget_key`, `window_start`)
+);
+CREATE INDEX agent_rate_expiry ON agent_rate_budgets (`expires_at`);
+SQL);
+
+// 030_agent_connections.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE agent_connections (
+    `id` TEXT NOT NULL PRIMARY KEY,
+    `principal_type` TEXT NOT NULL,
+    `principal_id` TEXT NOT NULL,
+    `identity_hash` TEXT NOT NULL,
+    `customer_capability_id` TEXT NULL,
+    `name` TEXT NOT NULL,
+    `scopes` TEXT NOT NULL,
+    `business_ids` TEXT NOT NULL,
+    `client_id` TEXT NULL,
+    `purpose` TEXT NOT NULL,
+    `expires_at` TEXT NOT NULL,
+    `revoked_at` TEXT NULL,
+    `created_at` TEXT NOT NULL,
+    `last_used_at` TEXT NULL
+);
+CREATE INDEX connection_principal ON agent_connections (`principal_type`, `principal_id`);
+CREATE INDEX connection_expiry ON agent_connections (`expires_at`);
+SQL);
+
+// 030_agent_connections.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE agent_credentials (
+    `id` TEXT NOT NULL PRIMARY KEY,
+    `connection_id` TEXT NOT NULL,
+    `token_hash` TEXT NOT NULL,
+    `prefix` TEXT NOT NULL,
+    `audience` TEXT NOT NULL,
+    `scopes` TEXT NULL,
+    `expires_at` TEXT NOT NULL,
+    `revoked_at` TEXT NULL,
+    `created_at` TEXT NOT NULL,
+    CONSTRAINT `credential_connection_fk` FOREIGN KEY (`connection_id`) REFERENCES `agent_connections` (`id`) ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX credential_hash ON agent_credentials (`token_hash`);
+CREATE INDEX credential_connection ON agent_credentials (`connection_id`);
+SQL);
+
+// 031_agent_operations.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE agent_operation_receipts (
+    `id` TEXT NOT NULL PRIMARY KEY,
+    `dedupe_hash` TEXT NOT NULL,
+    `request_hash` TEXT NOT NULL,
+    `principal_type` TEXT NOT NULL,
+    `principal_id` TEXT NOT NULL,
+    `connection_id` TEXT NULL,
+    `credential_id` TEXT NULL,
+    `tenant_id` TEXT NULL,
+    `operation_id` TEXT NOT NULL,
+    `result_cipher` TEXT NULL,
+    `resource_id` TEXT NULL,
+    `created_at` TEXT NOT NULL,
+    `replay_until` TEXT NOT NULL
+);
+CREATE UNIQUE INDEX receipt_dedupe ON agent_operation_receipts (`dedupe_hash`);
+CREATE INDEX receipt_principal ON agent_operation_receipts (`principal_type`, `principal_id`);
+CREATE INDEX receipt_tenant ON agent_operation_receipts (`tenant_id`);
+CREATE INDEX receipt_retention ON agent_operation_receipts (`replay_until`);
+SQL);
+
+// 031_agent_operations.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE agent_previews (
+    `id` TEXT NOT NULL PRIMARY KEY,
+    `handle_hash` TEXT NOT NULL,
+    `principal_type` TEXT NOT NULL,
+    `principal_id` TEXT NOT NULL,
+    `connection_id` TEXT NULL,
+    `credential_id` TEXT NULL,
+    `tenant_id` TEXT NULL,
+    `operation_id` TEXT NOT NULL,
+    `request_hash` TEXT NOT NULL,
+    `payload_cipher` TEXT NOT NULL,
+    `review_cipher` TEXT NOT NULL,
+    `approved_at` TEXT NULL,
+    `approval_source` TEXT NULL,
+    `consumed_at` TEXT NULL,
+    `expires_at` TEXT NOT NULL,
+    `created_at` TEXT NOT NULL
+);
+CREATE UNIQUE INDEX preview_handle ON agent_previews (`handle_hash`);
+CREATE INDEX preview_expiry ON agent_previews (`expires_at`);
+SQL);
+
+// 032_oauth.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE oauth_clients (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    redirect_uris TEXT NOT NULL,
+    secret_hash TEXT NULL,
+    auth_method TEXT NOT NULL,
+    registration_type TEXT NOT NULL,
+    metadata_expires_at TEXT NULL,
+    revoked_at TEXT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX oauth_client_expiry ON oauth_clients (metadata_expires_at);
+SQL);
+
+// 032_oauth.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE oauth_grants (
+    connection_id TEXT NOT NULL PRIMARY KEY,
+    audience TEXT NOT NULL,
+    CONSTRAINT oauth_grant_connection_fk FOREIGN KEY (connection_id) REFERENCES agent_connections(id) ON DELETE CASCADE
+);
+
+SQL);
+
+// 032_oauth.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE oauth_auth_codes (
+    id_hash TEXT NOT NULL PRIMARY KEY,
+    connection_id TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    revoked_at TEXT NULL,
+    CONSTRAINT oauth_code_connection_fk FOREIGN KEY (connection_id) REFERENCES agent_connections(id) ON DELETE CASCADE
+);
+CREATE INDEX oauth_code_expiry ON oauth_auth_codes (expires_at);
+SQL);
+
+// 032_oauth.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE oauth_access_tokens (
+    id_hash TEXT NOT NULL PRIMARY KEY,
+    connection_id TEXT NOT NULL,
+    credential_id TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    revoked_at TEXT NULL,
+    CONSTRAINT oauth_access_connection_fk FOREIGN KEY (connection_id) REFERENCES agent_connections(id) ON DELETE CASCADE,
+    CONSTRAINT oauth_access_credential_fk FOREIGN KEY (credential_id) REFERENCES agent_credentials(id) ON DELETE CASCADE
+);
+CREATE INDEX oauth_access_expiry ON oauth_access_tokens (expires_at);
+SQL);
+
+// 032_oauth.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE oauth_refresh_tokens (
+    id_hash TEXT NOT NULL PRIMARY KEY,
+    connection_id TEXT NOT NULL,
+    access_id_hash TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    revoked_at TEXT NULL,
+    CONSTRAINT oauth_refresh_connection_fk FOREIGN KEY (connection_id) REFERENCES agent_connections(id) ON DELETE CASCADE
+);
+CREATE INDEX oauth_refresh_expiry ON oauth_refresh_tokens (expires_at);
+SQL);
+
+// 033_delivery_outbox.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE delivery_outbox (
+    `id` TEXT NOT NULL PRIMARY KEY,
+    `topic` TEXT NOT NULL,
+    `tenant_id` TEXT NULL,
+    `operation_receipt_id` TEXT NULL,
+    `dedupe_hash` TEXT NOT NULL,
+    `payload_cipher` TEXT NOT NULL,
+    `status` TEXT NOT NULL DEFAULT 'pending',
+    `attempts` INTEGER NOT NULL DEFAULT 0,
+    `available_at` TEXT NOT NULL,
+    `lease_until` TEXT NULL,
+    `lease_token` TEXT NULL,
+    `delivered_at` TEXT NULL,
+    `last_error_code` TEXT NULL,
+    `created_at` TEXT NOT NULL
+);
+CREATE UNIQUE INDEX outbox_dedupe ON delivery_outbox (`dedupe_hash`);
+CREATE INDEX outbox_ready ON delivery_outbox (`status`, `available_at`, `lease_until`);
+CREATE INDEX outbox_tenant ON delivery_outbox (`tenant_id`);
+CREATE INDEX outbox_receipt ON delivery_outbox (`operation_receipt_id`);
+SQL);
+
+// 035_media_grants.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE agent_media_grants (
+    `id` TEXT NOT NULL PRIMARY KEY,
+    `tenant_id` TEXT NOT NULL,
+    `principal_type` TEXT NOT NULL,
+    `principal_id` TEXT NOT NULL,
+    `connection_id` TEXT NULL,
+    `credential_id` TEXT NULL,
+    `identity_hash` TEXT NOT NULL,
+    `purpose` TEXT NOT NULL,
+    `token_hash` TEXT NOT NULL,
+    `path` TEXT NULL,
+    `content_hash` TEXT NULL,
+    `consumed_at` TEXT NULL,
+    `expires_at` TEXT NOT NULL,
+    `created_at` TEXT NOT NULL
+);
+CREATE INDEX media_tenant ON agent_media_grants (`tenant_id`);
+CREATE INDEX media_expiry ON agent_media_grants (`expires_at`);
+SQL);
+
+// 038_system_jobs.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE system_job_requests (
+    `id` TEXT NOT NULL PRIMARY KEY,
+    `status` TEXT NOT NULL DEFAULT 'queued',
+    `jobs_json` TEXT NOT NULL,
+    `principal_type` TEXT NOT NULL,
+    `principal_id` TEXT NOT NULL,
+    `connection_id` TEXT NULL,
+    `credential_id` TEXT NULL,
+    `auth_mode` TEXT NOT NULL,
+    `requested_at` TEXT NOT NULL,
+    `started_at` TEXT NULL,
+    `finished_at` TEXT NULL,
+    `attempts` INTEGER NOT NULL DEFAULT 0,
+    `results_json` TEXT NULL,
+    `last_error_code` TEXT NULL
+);
+CREATE INDEX jobs_status ON system_job_requests (`status`,`requested_at`);
+SQL);
+
+// 039_webhooks.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE webhook_subscriptions (
+    id TEXT NOT NULL PRIMARY KEY,
+    tenant_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    endpoint TEXT NOT NULL,
+    event_types TEXT NOT NULL,
+    is_active INTEGER(1) NOT NULL DEFAULT 1,
+    secret_cipher TEXT NOT NULL,
+    previous_secret_cipher TEXT NULL,
+    previous_secret_until TEXT NULL,
+    secret_revealed_at TEXT NULL,
+    generation INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX webhook_business ON webhook_subscriptions (tenant_id,is_active,id);
+SQL);
+
+// 039_webhooks.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE webhook_deliveries (
+    id TEXT NOT NULL PRIMARY KEY,
+    tenant_id TEXT NOT NULL,
+    subscription_id TEXT NOT NULL,
+    event_id TEXT NOT NULL,
+    event_type TEXT NOT NULL,
+    payload_cipher TEXT NULL,
+    outbox_id TEXT NULL,
+    last_http_status INTEGER NULL,
+    last_error_code TEXT NULL,
+    last_attempt_at TEXT NULL,
+    manual_retries INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX webhook_event ON webhook_deliveries (subscription_id,event_id);
+CREATE INDEX webhook_delivery_business ON webhook_deliveries (tenant_id,id);
+CREATE INDEX webhook_delivery_subscription ON webhook_deliveries (subscription_id,id);
+SQL);
+
+// 041_customer_capabilities.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE customer_capabilities (
+    `id` TEXT NOT NULL PRIMARY KEY,
+    `token_hash` TEXT NOT NULL,
+    `purpose` TEXT NOT NULL,
+    `tenant_id` TEXT NOT NULL,
+    `subject_id` TEXT NOT NULL,
+    `customer_id` TEXT NOT NULL,
+    `created_at` TEXT NOT NULL,
+    `expires_at` TEXT NOT NULL,
+    `revoked_at` TEXT NULL
+);
+CREATE UNIQUE INDEX uq_customer_capability_hash ON customer_capabilities (`token_hash`);
+CREATE INDEX idx_customer_capability_subject ON customer_capabilities (`tenant_id`, `purpose`, `subject_id`);
+CREATE INDEX idx_customer_capability_customer ON customer_capabilities (`tenant_id`, `customer_id`);
+CREATE INDEX idx_customer_capability_expiry ON customer_capabilities (`expires_at`);
+SQL);
+
+// 041_customer_capabilities.php
+$pdo->exec(<<<'SQL'
+CREATE TABLE customer_recovery_limits (
+    `bucket_hash` TEXT NOT NULL PRIMARY KEY,
+    `attempts` INTEGER NOT NULL,
+    `expires_at` TEXT NOT NULL
+);
+CREATE INDEX idx_customer_recovery_expiry ON customer_recovery_limits (`expires_at`);
+SQL);
+
 // ══════════════════════════════════════════════════════════════════════
 // Seed Data
 // ══════════════════════════════════════════════════════════════════════
@@ -479,7 +805,8 @@ $today = new DateTime();
 // Settings
 $settings = [
     ['installed_at', date('Y-m-d H:i:s')],
-    ['db_version', '28'],
+    ['db_version', '41'],
+    ['system_settings_revision', '0'],
     ['app_name', 'VoxelBooking Demo'],
     ['timezone', 'Europe/Amsterdam'],
     ['locale', 'en'],

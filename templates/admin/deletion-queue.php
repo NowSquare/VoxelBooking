@@ -76,6 +76,11 @@ include __DIR__ . '/partials/page-header.php';
                         <span class="vb-nums vb-text-xs"><?= (int) ($req['booking_count'] ?? 0) ?></span>
                     </td>
                     <td>
+                        <details>
+                            <summary class="vb-btn vb-btn-secondary vb-btn-sm"><?= __('agent-booking.deletion.review_effects') ?></summary>
+                            <p class="vb-cell-sub"><?= View::e(__('agent-booking.deletion.effects', ['bookings'=>(string)$req['review']['effects']['bookings'],'emails'=>(string)$req['review']['effects']['email_logs']])) ?></p>
+                            <p class="vb-cell-sub"><?= __('agent-booking.deletion.retained') ?></p>
+                            <p class="vb-cell-sub"><?= __('agent-booking.deletion.agent_cleanup') ?></p>
                         <div class="vb-table-actions">
                             <input type="checkbox" id="dq-confirm-<?= View::e($req['id']) ?>" class="vb-confirm-toggle">
                             <span class="vb-confirm-step-1">
@@ -87,6 +92,7 @@ include __DIR__ . '/partials/page-header.php';
                                 <form method="post" action="/admin/deletion-queue/confirm" class="vb-inline-form">
                                     <input type="hidden" name="_csrf_token" value="<?= View::e($csrfToken) ?>">
                                     <input type="hidden" name="customer_id" value="<?= View::e($req['id']) ?>">
+                                    <input type="hidden" name="_review_version" value="<?= View::e($req['review']['version']) ?>">
                                     <button type="submit" class="vb-btn vb-btn-danger vb-btn-sm"><?= __('admin.deletion.btn_confirm') ?></button>
                                 </form>
                                 <label for="dq-confirm-<?= View::e($req['id']) ?>" class="vb-btn vb-btn-ghost vb-btn-sm vb-label-clickable">
@@ -97,9 +103,13 @@ include __DIR__ . '/partials/page-header.php';
                             <form method="post" action="/admin/deletion-queue/dismiss" class="vb-inline-form">
                                 <input type="hidden" name="_csrf_token" value="<?= View::e($csrfToken) ?>">
                                 <input type="hidden" name="customer_id" value="<?= View::e($req['id']) ?>">
+                                <input type="hidden" name="_review_version" value="<?= View::e($req['review']['version']) ?>">
+                                <label class="vb-label" for="dismiss-reason-<?= View::e($req['id']) ?>"><?= __('agent-booking.deletion.reason') ?></label>
+                                <input class="vb-input" id="dismiss-reason-<?= View::e($req['id']) ?>" name="reason" type="text" maxlength="1000">
                                 <button type="submit" class="vb-btn vb-btn-secondary vb-btn-sm"><?= __('admin.deletion.btn_dismiss') ?></button>
                             </form>
                         </div>
+                        </details>
                     </td>
                 </tr>
                 <?php endforeach; ?>

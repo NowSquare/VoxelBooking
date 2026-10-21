@@ -72,10 +72,10 @@ include __DIR__ . '/../../partials/page-header.php';
 
         <!-- Password -->
         <div class="vb-form-group">
-            <label for="invite_password" class="vb-label"><?= __('admin.users.invite_password') ?> <span class="vb-required">*</span></label>
+            <label for="invite_password" class="vb-label"><?= __('agent-business.optional_password') ?></label>
             <div class="vb-password-field">
                 <input type="password" id="invite_password" name="password" class="vb-input<?= error_class('password') ?>"
-                       x-ref="passwordField" autocomplete="new-password" required minlength="8">
+                       x-ref="passwordField" autocomplete="new-password" minlength="8">
                 <button type="button" class="vb-btn vb-btn-ghost vb-btn-sm" @click="togglePasswordVisibility"
                         title="<?= __('admin.users.invite_toggle_visibility') ?>">
                     <i data-lucide="eye" x-show="!showPassword"></i>
@@ -102,7 +102,7 @@ include __DIR__ . '/../../partials/page-header.php';
                 <label for="invite_send_email" class="vb-toggle-label">
                     <span class="vb-label vb-mb-0">
                         <i data-lucide="mail" class="vb-icon-sm"></i>
-                        <?= __('admin.users.invite_send_email') ?>
+                        <?= __('agent-business.send_invitation') ?>
                     </span>
                     <?php if (!\App\Engine\Mailer::isConfigured()): ?>
                         <span class="vb-hint vb-hint-warning">

@@ -160,6 +160,7 @@ include __DIR__ . '/../../partials/page-header.php';
                                       action="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/capacity-slots/<?= htmlspecialchars($slot['id'], ENT_QUOTES, 'UTF-8') ?>/toggle"
                                       class="vb-form-flush">
                                     <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                                    <input type="hidden" name="_record_version" value="<?= htmlspecialchars($recordVersions[$slot['id']] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                                     <button type="submit" class="vb-btn vb-btn-ghost vb-btn-sm"
                                             title="<?= (int) $slot['is_active'] ? __('admin.capacity_slots.btn_deactivate') : __('admin.capacity_slots.btn_activate') ?>">
                                         <i data-lucide="<?= (int) $slot['is_active'] ? 'eye-off' : 'eye' ?>" class="vb-icon-sm"></i>
@@ -170,6 +171,7 @@ include __DIR__ . '/../../partials/page-header.php';
                                       class="vb-form-flush"
                                       data-confirm="<?= __('admin.capacity_slots.confirm_delete') ?>" data-confirm-text="<?= __('admin.common.delete') ?>">
                                     <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                                    <input type="hidden" name="_record_version" value="<?= htmlspecialchars($recordVersions[$slot['id']] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                                     <button type="submit" class="vb-btn vb-btn-ghost vb-btn-sm vb-btn-destructive"
                                             title="<?= __('admin.capacity_slots.btn_delete') ?>">
                                         <i data-lucide="trash-2" class="vb-icon-sm"></i>

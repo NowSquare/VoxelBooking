@@ -76,7 +76,7 @@ final class BlockedDatesController
 
         // Load active staff for the "per staff" selector (timeslot pattern)
         $staff = [];
-        if (!$isResourcePattern) {
+        if (($tenant['booking_pattern'] ?? '') === 'timeslot') {
             $staff = Database::query(
                 'SELECT `id`, `name`, `title` FROM `staff`
                  WHERE `tenant_id` = ? AND `is_active` = 1
@@ -97,6 +97,7 @@ final class BlockedDatesController
         }
 
         return $this->render('admin.tenants.blocked-dates.index', __('admin.blocked_dates.title'), [
+            'recordVersions' => \App\Application\Catalog\CatalogUi::versions('blocked_dates', $tenantId, $blockedDates),
             'tenant'    => $tenant,
             'upcoming'  => $upcoming,
             'past'      => $past,
@@ -110,188 +111,14 @@ final class BlockedDatesController
 
     public function store(Request $request): Response
     {
-        $tenantId = $request->getAttribute('tenant_id');
-
-        if (!$this->canAccess($tenantId)) {
-            return $this->forbidden($request);
-        }
-
-        $tenant = $this->loadTenant($tenantId);
-        if ($tenant === null) {
-            return Response::redirect('/admin/tenants');
-        }
-
-        if (!$this->supportsBlockedDates($tenant)) {
-            return Response::redirect("/admin/tenants/{$tenantId}");
-        }
-
-        $isResourcePattern = ($tenant['booking_pattern'] ?? '') === 'resource';
-
-        $startDate  = trim($request->string('start_date'));
-        $endDate    = trim($request->string('end_date'));
-        $reason     = trim($request->string('reason')) ?: null;
-        $staffId    = $isResourcePattern ? null : (trim($request->string('staff_id')) ?: null);
-        $resourceId = $isResourcePattern ? (trim($request->string('resource_id')) ?: null) : null;
-
-        $redirectUrl = "/admin/tenants/{$tenantId}/blocked-dates";
-        $oldInput = [
-            'start_date'  => $startDate,
-            'end_date'    => $endDate,
-            'reason'      => $reason ?? '',
-            'staff_id'    => $staffId ?? '',
-            'resource_id' => $resourceId ?? '',
-        ];
-
-        // Validate dates
-        $errors = [];
-        if (!$this->isValidDate($startDate)) {
-            $errors['start_date'] = __('admin.blocked_dates.error_invalid_date');
-        }
-        if (!$this->isValidDate($endDate)) {
-            $errors['end_date'] = __('admin.blocked_dates.error_invalid_date');
-        }
-
-        if (empty($errors) && $endDate < $startDate) {
-            $errors['end_date'] = __('admin.blocked_dates.error_end_before_start');
-        }
-
-        if (empty($errors['start_date']) && $startDate < date('Y-m-d')) {
-            $errors['start_date'] = __('admin.blocked_dates.error_past_date');
-        }
-
-        // Validate staff belongs to this tenant (timeslot pattern)
-        if ($staffId !== null && empty($errors)) {
-            $staffRow = Database::query(
-                'SELECT `id` FROM `staff` WHERE `id` = ? AND `tenant_id` = ? LIMIT 1',
-                [$staffId, $tenantId]
-            );
-            if (empty($staffRow)) {
-                $errors['start_date'] = __('admin.blocked_dates.error_invalid_staff');
-            }
-        }
-
-        // Validate resource belongs to this tenant (resource pattern)
-        if ($resourceId !== null && empty($errors)) {
-            $resRow = Database::query(
-                'SELECT `id` FROM `resources` WHERE `id` = ? AND `tenant_id` = ? LIMIT 1',
-                [$resourceId, $tenantId]
-            );
-            if (empty($resRow)) {
-                $errors['start_date'] = __('admin.blocked_dates.error_invalid_resource');
-            }
-        }
-
-        // Check for overlapping dates in same scope
-        if (empty($errors)) {
-            $scopeClauses = [];
-            $overlapParams = [$tenantId];
-
-            if ($staffId !== null) {
-                $scopeClauses[] = '`staff_id` = ?';
-                $overlapParams[] = $staffId;
-            } else {
-                $scopeClauses[] = '`staff_id` IS NULL';
-            }
-
-            if ($resourceId !== null) {
-                $scopeClauses[] = '`resource_id` = ?';
-                $overlapParams[] = $resourceId;
-            } else {
-                $scopeClauses[] = '`resource_id` IS NULL';
-            }
-
-            $scopeWhere = implode(' AND ', $scopeClauses);
-            $overlapParams = array_merge($overlapParams, [$endDate, $startDate, $endDate, $startDate, $startDate, $endDate]);
-
-            $existing = Database::query(
-                "SELECT `id` FROM `blocked_dates`
-                 WHERE `tenant_id` = ? AND {$scopeWhere}
-                   AND (
-                       (`start_date` <= ? AND `end_date` >= ?)
-                       OR (`start_date` <= ? AND `end_date` >= ?)
-                       OR (`start_date` >= ? AND `end_date` <= ?)
-                   )
-                 LIMIT 1",
-                $overlapParams
-            );
-
-            if (!empty($existing)) {
-                $errors['start_date'] = __('admin.blocked_dates.error_overlap');
-            }
-        }
-
-        if (!empty($errors)) {
-            FormState::flash($oldInput, $errors);
-            $firstError = reset($errors);
-            FormState::toast('error', $firstError);
-            return Response::redirect($redirectUrl);
-        }
-
-        $id = Ulid::generate();
-        Database::execute(
-            'INSERT INTO `blocked_dates` (`id`, `tenant_id`, `staff_id`, `resource_id`, `start_date`, `end_date`, `reason`)
-             VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [$id, $tenantId, $staffId, $resourceId, $startDate, $endDate, $reason]
-        );
-
-        AuditLog::log('blocked_date.created', 'blocked_date', $id, [
-            'tenant_id'   => $tenantId,
-            'staff_id'    => $staffId,
-            'resource_id' => $resourceId,
-            'start_date'  => $startDate,
-            'end_date'    => $endDate,
-            'reason'      => $reason,
-        ]);
-
-        FormState::toast('success', __('admin.blocked_dates.created'));
-        return Response::redirect("/admin/tenants/{$tenantId}/blocked-dates");
+        return \App\Application\Catalog\CatalogUi::mutate($request, 'blocked_dates', 'create');
     }
 
     // ── Delete ──
 
     public function delete(Request $request): Response
     {
-        $tenantId = $request->getAttribute('tenant_id');
-        $id       = $request->getAttribute('id');
-
-        if (!$this->canAccess($tenantId)) {
-            return $this->forbidden($request);
-        }
-
-        $tenant = $this->loadTenant($tenantId);
-        if ($tenant === null) {
-            return Response::redirect('/admin/tenants');
-        }
-
-        if (!$this->supportsBlockedDates($tenant)) {
-            return Response::redirect("/admin/tenants/{$tenantId}");
-        }
-
-        // Verify the blocked date belongs to this tenant
-        $bd = Database::query(
-            'SELECT * FROM `blocked_dates` WHERE `id` = ? AND `tenant_id` = ? LIMIT 1',
-            [$id, $tenantId]
-        );
-
-        if (empty($bd)) {
-            FormState::toast('error', __('admin.blocked_dates.not_found'));
-            return Response::redirect("/admin/tenants/{$tenantId}/blocked-dates");
-        }
-
-        Database::execute(
-            'DELETE FROM `blocked_dates` WHERE `id` = ? AND `tenant_id` = ?',
-            [$id, $tenantId]
-        );
-
-        AuditLog::log('blocked_date.deleted', 'blocked_date', $id, [
-            'tenant_id'  => $tenantId,
-            'start_date' => $bd[0]['start_date'],
-            'end_date'   => $bd[0]['end_date'],
-            'reason'     => $bd[0]['reason'],
-        ]);
-
-        FormState::toast('success', __('admin.blocked_dates.deleted'));
-        return Response::redirect("/admin/tenants/{$tenantId}/blocked-dates");
+        return \App\Application\Catalog\CatalogUi::mutate($request, 'blocked_dates', 'delete');
     }
 
     // ── Helpers ──
@@ -303,7 +130,7 @@ final class BlockedDatesController
 
     private function supportsBlockedDates(array $tenant): bool
     {
-        return in_array($tenant['booking_pattern'] ?? '', ['timeslot', 'resource'], true);
+        return in_array($tenant['booking_pattern'] ?? '', ['timeslot', 'resource', 'capacity'], true);
     }
 
     private function isValidDate(string $date): bool

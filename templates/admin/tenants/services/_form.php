@@ -28,6 +28,7 @@ $currentStaffIds = old('staff_ids', $linkedStaffIds);
 
 <form method="POST" action="<?= htmlspecialchars($formAction, ENT_QUOTES, 'UTF-8') ?>" class="vb-animate-in" enctype="multipart/form-data" novalidate>
     <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+    <input type="hidden" name="_record_version" value="<?= e($recordVersion ?? '') ?>">
 
     <div class="vb-card p-6">
 
@@ -137,7 +138,7 @@ $currentStaffIds = old('staff_ids', $linkedStaffIds);
         <div class="vb-form-actions mt-8">
             <button type="submit" class="vb-btn vb-btn-primary" id="save-service-btn">
                 <i data-lucide="save" class="w-4 h-4"></i>
-                <?= $service ? __('admin.services.updated') : __('admin.services.created') ?>
+                <?= $service ? __('admin.common.save') : __('admin.common.create') ?>
             </button>
             <a href="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/services"
                class="vb-btn vb-btn-ghost"><?= __('admin.common.cancel') ?></a>

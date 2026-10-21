@@ -8,6 +8,7 @@ use App\Engine\AgentAuth;
 use App\Engine\AuditLog;
 use App\Engine\Request;
 use App\Engine\Response;
+use App\Agent\RateBudget;
 
 /**
  * Agent API authentication middleware.
@@ -58,13 +59,23 @@ final class AgentAuthMiddleware
             ], 401);
         }
 
-        // Rate limiting (simple in-memory check per key via rate_limits table)
-        if (!$this->checkRateLimit($key['id'])) {
+        try {
+            $budget = (new RateBudget())->consume(['legacy-credential:' . $key['id'] => self::RATE_LIMIT]);
+        } catch (\Throwable) {
+            return Response::json([
+                'error' => 'rate_limiter_unavailable',
+                'message' => 'Request admission is unavailable. Retry later.',
+            ], 503)->header('Retry-After', '60')->header('Cache-Control', 'no-store');
+        }
+        if (!$budget['allowed']) {
             return Response::json([
                 'error'   => 'rate_limited',
                 'message' => 'Rate limit exceeded. Please wait before making more requests.',
-                'retry_after' => self::RATE_WINDOW,
-            ], 429);
+                'retry_after' => $budget['retry_after'],
+            ], 429)->header('Retry-After', (string) $budget['retry_after'])
+                ->header('X-RateLimit-Limit', (string) $budget['limit'])
+                ->header('X-RateLimit-Remaining', '0')
+                ->header('X-RateLimit-Reset', (string) $budget['reset']);
         }
 
         // Store key info on request for controllers to use
@@ -72,55 +83,9 @@ final class AgentAuthMiddleware
         $request->setAttribute('api_key_id', $key['id']);
         $request->setAttribute('api_scopes', $key['scopes_array']);
 
-        return $next($request);
-    }
-
-    /**
-     * Check and increment rate limit for an API key.
-     */
-    private function checkRateLimit(string $keyId): bool
-    {
-        $rateLimitKey = 'api:' . $keyId;
-
-        try {
-            // Clean expired entries
-            \App\Engine\Database::execute(
-                "DELETE FROM `rate_limits` WHERE `key` = ? AND `expires_at` < NOW()",
-                [$rateLimitKey]
-            );
-
-            // Check current count
-            $rows = \App\Engine\Database::query(
-                "SELECT `attempts` FROM `rate_limits` WHERE `key` = ? LIMIT 1",
-                [$rateLimitKey]
-            );
-
-            if (empty($rows)) {
-                // First request in window
-                \App\Engine\Database::execute(
-                    "INSERT INTO `rate_limits` (`key`, `attempts`, `expires_at`)
-                     VALUES (?, 1, DATE_ADD(NOW(), INTERVAL ? SECOND))",
-                    [$rateLimitKey, self::RATE_WINDOW]
-                );
-                return true;
-            }
-
-            $attempts = (int) $rows[0]['attempts'];
-
-            if ($attempts >= self::RATE_LIMIT) {
-                return false;
-            }
-
-            // Increment
-            \App\Engine\Database::execute(
-                "UPDATE `rate_limits` SET `attempts` = `attempts` + 1 WHERE `key` = ?",
-                [$rateLimitKey]
-            );
-
-            return true;
-        } catch (\Throwable) {
-            // On DB error, allow the request (fail-open for rate limiting)
-            return true;
-        }
+        return $next($request)->header('Cache-Control', 'no-store')
+            ->header('X-RateLimit-Limit', (string) $budget['limit'])
+            ->header('X-RateLimit-Remaining', (string) $budget['remaining'])
+            ->header('X-RateLimit-Reset', (string) $budget['reset']);
     }
 }

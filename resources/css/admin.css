@@ -3744,6 +3744,23 @@
     padding: 1.25rem;
 }
 
+/* Connection and destination settings keep their controls usable at mobile width. */
+.vb-agent-panel .vb-card-header { margin-bottom: 0; flex-wrap: wrap; gap: 0.5rem; }
+.vb-agent-panel:not(.vb-card) { display: grid; gap: 1.5rem; }
+.vb-agent-panel .vb-card-body { display: grid; gap: 1rem; }
+.vb-agent-panel .vb-form-group { margin: 0; }
+.vb-agent-panel .vb-card-body > article + article { border-top: 1px solid var(--vb-border-subtle); padding-top: 1rem; }
+.vb-agent-panel summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; cursor: pointer; min-height: 44px; list-style: none; }
+.vb-agent-panel summary::-webkit-details-marker { display: none; }
+.vb-agent-panel summary::after { content: ''; flex: 0 0 0.45rem; width: 0.45rem; height: 0.45rem; margin-inline: auto 0.25rem; border-inline-end: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); }
+.vb-agent-panel details[open] > summary::after { transform: rotate(225deg); }
+.vb-agent-panel summary:focus-visible { outline: 2px solid var(--vb-accent); outline-offset: -2px; }
+.vb-agent-panel .vb-checkbox-label { min-height: 44px; align-items: center; }
+.vb-agent-panel .vb-checkbox-label input { flex-shrink: 0; accent-color: var(--vb-accent); }
+.vb-agent-panel .vb-btn { min-height: 44px; }
+.vb-agent-panel .vb-form-actions { flex-wrap: wrap; }
+.vb-agent-panel code, .vb-agent-panel .vb-card-desc { overflow-wrap: anywhere; }
+
 .vb-card-actions {
     padding: 1rem;
     display: flex;

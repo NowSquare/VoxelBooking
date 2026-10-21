@@ -18,6 +18,7 @@ include dirname(__DIR__, 2) . '/partials/settings-tabs.php';
 
 <form method="POST" action="/admin/settings/email">
     <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+    <input type="hidden" name="_record_version" value="<?= htmlspecialchars($recordVersion, ENT_QUOTES, 'UTF-8') ?>">
 
     <div class="vb-grid vb-grid-2">
         <!-- Email Delivery Configuration -->

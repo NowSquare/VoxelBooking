@@ -26,6 +26,7 @@ return function (Router $router): void {
     // ── Global middleware (all routes) ──
     $router->group([
         SecurityMiddleware::class,
+        \App\Middleware\AgentCorsMiddleware::class,
         InstalledMiddleware::class,
         DemoMiddleware::class,
         ThrottleMiddleware::class,
@@ -34,6 +35,48 @@ return function (Router $router): void {
 
         // ── Health check ──
         $router->get('/health', \App\Controllers\HealthController::class, 'index');
+
+        // OAuth authorization is a browser consent flow. Resource access is independently checked.
+        $router->get('/.well-known/oauth-authorization-server', \App\Controllers\OAuth\OAuthController::class, 'metadata');
+        foreach (['', '/mcp', '/api/agent/v2'] as $resource) {
+            $router->get('/.well-known/oauth-protected-resource' . $resource, \App\Controllers\OAuth\OAuthController::class, 'resourceMetadata');
+        }
+        $router->get('/oauth/authorize', \App\Controllers\OAuth\OAuthController::class, 'authorize');
+        $router->post('/oauth/authorize', \App\Controllers\OAuth\OAuthController::class, 'approve');
+        $router->post('/oauth/token', \App\Controllers\OAuth\OAuthController::class, 'token');
+        $router->post('/oauth/register', \App\Controllers\OAuth\OAuthController::class, 'register');
+        $router->post('/oauth/revoke', \App\Controllers\OAuth\OAuthController::class, 'revoke');
+        $router->get('/agent-reviews/{id}', \App\Controllers\AgentReviewController::class, 'show');
+        $router->post('/agent-reviews/{id}', \App\Controllers\AgentReviewController::class, 'approve');
+        $router->post('/agent-reviews/{id}/exchange', \App\Controllers\AgentReviewController::class, 'exchange');
+
+        $router->get('/api/agent/v2/schema', \App\Controllers\AgentApi\V2\OperationController::class, 'schema');
+        $router->post('/api/agent/v2/public/session', \App\Controllers\AgentApi\V2\PublicSessionController::class, 'start');
+        $router->post('/api/agent/v2/public/{slug}/session', \App\Controllers\AgentApi\V2\PublicSessionController::class, 'start');
+        $router->post('/api/agent/v2/uploads/{id}', \App\Controllers\AgentApi\V2\UploadController::class, 'receive');
+        $operations = \App\Agent\Operations::registry()->all();
+        // Literal actions such as /receipts/recover must precede record parameters.
+        usort($operations, static fn($left,$right) =>
+            substr_count($left->httpPath,'{') <=> substr_count($right->httpPath,'{')
+            ?: strlen($right->httpPath) <=> strlen($left->httpPath)
+            ?: strcmp($left->httpPath,$right->httpPath));
+        foreach ($operations as $operation) {
+            $method = strtolower($operation->httpMethod);
+            $router->$method('/api/agent/v2' . $operation->httpPath, \App\Controllers\AgentApi\V2\OperationController::class, 'invoke');
+            if (!$operation->readOnly && $operation->confirmationPolicy !== 'none') {
+                $router->post('/api/agent/v2' . $operation->httpPath . '/preview', \App\Controllers\AgentApi\V2\OperationController::class, 'preview');
+            }
+        }
+        foreach (['get', 'post', 'delete'] as $method) {
+            $router->$method('/mcp', \App\Controllers\Mcp\McpController::class, 'handle');
+            $router->$method('/mcp/public', \App\Controllers\Mcp\McpController::class, 'handle');
+            $router->$method('/mcp/public/{slug}', \App\Controllers\Mcp\McpController::class, 'handle');
+        }
+        $router->corsOptionsFor(
+            \App\Middleware\AgentCorsMiddleware::applies(...),
+            \App\Middleware\AgentCorsMiddleware::class,
+            'preflight',
+        );
 
         // ── SEO (PRD §XIII) ──
         $router->get('/robots.txt', \App\Controllers\SeoController::class, 'robots');
@@ -75,6 +118,21 @@ return function (Router $router): void {
 
             // Dashboard
             $router->get('/admin', \App\Controllers\Admin\DashboardController::class, 'index');
+            $router->get('/admin/connections', \App\Controllers\Admin\ConnectionsController::class, 'index');
+            $router->get('/admin/connections/{id}/activity', \App\Controllers\Admin\ConnectionsController::class, 'activity');
+            $router->post('/admin/connections', \App\Controllers\Admin\ConnectionsController::class, 'create');
+            $router->post('/admin/connections/{id}/revoke', \App\Controllers\Admin\ConnectionsController::class, 'revoke');
+            $router->post('/admin/connections/{id}/rotate', \App\Controllers\Admin\ConnectionsController::class, 'rotate');
+            $router->get('/admin/agent-reviews/{id}', \App\Controllers\AgentReviewController::class, 'show');
+            $router->post('/admin/agent-reviews/{id}', \App\Controllers\AgentReviewController::class, 'approve');
+            $router->get('/admin/tenants/{tenant_id}/webhooks', \App\Controllers\Admin\WebhooksController::class, 'index');
+            $router->post('/admin/tenants/{tenant_id}/webhooks', \App\Controllers\Admin\WebhooksController::class, 'create');
+            $router->post('/admin/tenants/{tenant_id}/webhooks/{id}', \App\Controllers\Admin\WebhooksController::class, 'update');
+            $router->get('/admin/tenants/{tenant_id}/webhooks/{id}/secret', \App\Controllers\Admin\WebhooksController::class, 'secret');
+            $router->post('/admin/tenants/{tenant_id}/webhooks/{id}/secret', \App\Controllers\Admin\WebhooksController::class, 'secret');
+            $router->post('/admin/tenants/{tenant_id}/webhooks/{id}/rotate', \App\Controllers\Admin\WebhooksController::class, 'rotate');
+            $router->get('/admin/tenants/{tenant_id}/webhooks/{id}/deliveries', \App\Controllers\Admin\WebhooksController::class, 'deliveries');
+            $router->post('/admin/tenants/{tenant_id}/webhook-deliveries/{id}/retry', \App\Controllers\Admin\WebhooksController::class, 'retry');
 
             // Settings (operator-only — AuthMiddleware enforces this)
             $router->get('/admin/settings', \App\Controllers\Admin\SettingsController::class, 'general');
@@ -261,13 +319,16 @@ return function (Router $router): void {
         $router->get('/api/{slug}/events', \App\Controllers\Booking\BookingApiController::class, 'events');
         $router->get('/api/{slug}/events/{id}', \App\Controllers\Booking\BookingApiController::class, 'eventDetail');
 
+        $router->post('/api/{slug}/customer-access', \App\Controllers\Booking\CustomerAccessController::class, 'exchange');
+        $router->post('/book/{slug}/access-recovery', \App\Controllers\Booking\CustomerAccessController::class, 'recover');
+
         // ── Privacy endpoint (GDPR data-subject rights) ──
-        // No auth — customer ULID is the bearer token (128-bit entropy)
+        // Independent customer.privacy capability; legacy IDs enter email verification.
         $router->get('/book/{slug}/privacy/{customer_id}', \App\Controllers\Booking\PrivacyController::class, 'show');
         $router->post('/book/{slug}/privacy/{customer_id}', \App\Controllers\Booking\PrivacyController::class, 'action');
 
         // ── Self-service booking management ──
-        // No auth — booking ULID is the bearer token (128-bit entropy, same as privacy page)
+        // Independent booking.manage capability, restricted to this booking.
         $router->get('/book/{slug}/manage/{booking_id}', \App\Controllers\Booking\BookingPageController::class, 'manage');
         $router->get('/api/{slug}/bookings/{id}', \App\Controllers\Booking\BookingApiController::class, 'bookingDetail');
         $router->post('/api/{slug}/bookings/{id}/cancel', \App\Controllers\Booking\BookingApiController::class, 'cancelBookingAction');

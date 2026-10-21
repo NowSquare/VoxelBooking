@@ -122,6 +122,8 @@ include __DIR__ . '/../../partials/page-header.php';
         </div>
     </div>
 
+    <?php include __DIR__ . '/custom-fields.php'; ?>
+
     <!-- Section 3: Internal Notes -->
     <div class="vb-settings-section">
         <div class="vb-card">

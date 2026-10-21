@@ -31,32 +31,31 @@ final class DeletionQueueController
      */
     public function index(Request $request): Response
     {
-        $pendingRequests = Database::query(
-            'SELECT c.*, t.`name` AS `tenant_name`, t.`slug` AS `tenant_slug`,
-                    (SELECT COUNT(*) FROM `bookings` WHERE `customer_id` = c.`id`) AS `booking_count`
-             FROM `customers` c
-             JOIN `tenants` t ON t.`id` = c.`tenant_id`
-             WHERE c.`deletion_requested_at` IS NOT NULL
-               AND c.`is_anonymized` = 0
-             ORDER BY c.`deletion_requested_at` ASC'
-        );
-
-        $processedRequests = Database::query(
-            'SELECT c.*, t.`name` AS `tenant_name`, t.`slug` AS `tenant_slug`
-             FROM `customers` c
-             JOIN `tenants` t ON t.`id` = c.`tenant_id`
-             WHERE c.`deletion_requested_at` IS NOT NULL
-               AND c.`is_anonymized` = 1
-             ORDER BY c.`anonymized_at` DESC
-             LIMIT 25'
-        );
-
-        return View::response('admin.deletion-queue', [
-            'pendingRequests'   => $pendingRequests,
-            'processedRequests' => $processedRequests,
-            'pageTitle'         => __('admin.deletion.page_title'),
-            'flash'             => FormState::getToast(),
-        ]);
+        $actor = \App\Agent\SessionActor::resolve(\App\Agent\Operations::registry());
+        $pendingRequests = []; $processedRequests = [];
+        foreach ($actor->businessIds as $businessId) {
+            $tenant = Database::query('SELECT name,slug FROM tenants WHERE id=?', [$businessId])[0] ?? null;
+            if ($tenant === null) continue;
+            foreach (['pending','processed'] as $state) {
+                $cursor = null;
+                do {
+                    $input = ['business_id'=>$businessId,'state'=>$state,'limit'=>100];
+                    if ($cursor !== null) $input['cursor']=$cursor;
+                    $result = \App\Application\Privacy\DeletionService::queue($actor,$input);
+                    foreach ($result['requests'] as $row) {
+                    $row += ['tenant_name'=>$tenant['name'],'tenant_slug'=>$tenant['slug']];
+                    if ($state === 'pending') {
+                        $row['review'] = \App\Application\Privacy\DeletionService::preview($actor,['business_id'=>$businessId,'customer_id'=>$row['id']]);
+                        $pendingRequests[]=$row;
+                    } else $processedRequests[]=$row;
+                    }
+                    $cursor=$result['next_cursor'];
+                } while ($cursor !== null);
+            }
+        }
+        usort($pendingRequests, static fn($a,$b)=>strcmp($a['deletion_requested_at'],$b['deletion_requested_at']));
+        usort($processedRequests, static fn($a,$b)=>strcmp($b['anonymized_at'],$a['anonymized_at']));
+        return View::response('admin.deletion-queue', ['pendingRequests'=>$pendingRequests,'processedRequests'=>array_slice($processedRequests,0,25),'pageTitle'=>__('admin.deletion.page_title'),'flash'=>FormState::getToast()]);
     }
 
     /**
@@ -64,63 +63,21 @@ final class DeletionQueueController
      */
     public function confirm(Request $request): Response
     {
-        $customerId = $request->string('customer_id');
-
-        if (empty($customerId)) {
-            FormState::toast('error', __('admin.deletion.missing_customer_id'));
-            return Response::redirect('/admin/deletion-queue');
-        }
-
-        // Verify the customer exists and has a pending deletion request
-        $rows = Database::query(
-            'SELECT c.*, t.`id` AS `tid`
-             FROM `customers` c
-             JOIN `tenants` t ON t.`id` = c.`tenant_id`
-             WHERE c.`id` = ?
-               AND c.`deletion_requested_at` IS NOT NULL
-               AND c.`is_anonymized` = 0
-             LIMIT 1',
-            [$customerId]
-        );
-
-        if (empty($rows)) {
-            FormState::toast('error', __('admin.deletion.not_found'));
-            return Response::redirect('/admin/deletion-queue');
-        }
-
-        $customer = $rows[0];
-
         try {
-            // Perform the anonymization
-            $result = CustomerAnonymizer::anonymize($customerId);
-
-            if (!$result['anonymized']) {
-                FormState::toast('error', str_replace(':reason', $result['reason'] ?? 'unknown', __('admin.deletion.anonymize_failed')));
-                return Response::redirect('/admin/deletion-queue');
-            }
-
-            // Audit log the operator decision
-            AuditLog::log(
-                'privacy.deletion_confirmed',
-                'customer',
-                $customerId,
-                [
-                    'email_hash'   => AuditLog::hashEmail($customer['email']),
-                    'operator_email' => Auth::user()['email'] ?? 'unknown',
-                    'requested_at' => $customer['deletion_requested_at'],
-                ],
-                $customer['tenant_id'],
-            );
-
-            FormState::toast('success', __('admin.deletion.anonymized_success'));
-        } catch (\Throwable $e) {
-            Logger::error('Deletion confirmation failed', [
-                'customer_id' => $customerId,
-                'error'       => $e->getMessage(),
-            ]);
-            FormState::toast('error', str_replace(':error', $e->getMessage(), __('admin.deletion.confirm_failed')));
+            $actor=\App\Agent\SessionActor::resolve(\App\Agent\Operations::registry());
+            $id=$request->string('customer_id');
+            $customer=Database::query('SELECT tenant_id FROM customers WHERE id=?',[$id])[0]??null;
+            if ($customer===null) throw new \App\Agent\OperationException('not_found',404);
+            $version=$request->string('_review_version');
+            if (!preg_match('/^[a-f0-9]{64}$/D',$version)) throw new \App\Agent\OperationException('preview_required',422);
+            \App\Application\Privacy\DeletionService::confirm($actor,['business_id'=>$customer['tenant_id'],'customer_id'=>$id,'expected_version'=>$version]);
+            FormState::toast('success',__('admin.deletion.anonymized_success'));
+        } catch (\App\Agent\OperationException $error) {
+            FormState::toast('error',__('agent-booking.deletion.review_again'));
+        } catch (\Throwable) {
+            Logger::error('Deletion decision unavailable');
+            FormState::toast('error',__('admin.deletion.dismiss_failed'));
         }
-
         return Response::redirect('/admin/deletion-queue');
     }
 
@@ -129,69 +86,21 @@ final class DeletionQueueController
      */
     public function dismiss(Request $request): Response
     {
-        $customerId = $request->string('customer_id');
-        $reason = $request->string('reason');
-
-        if (empty($customerId)) {
-            FormState::toast('error', __('admin.deletion.missing_customer_id'));
-            return Response::redirect('/admin/deletion-queue');
-        }
-
-        // Verify the customer exists and has a pending deletion request
-        $rows = Database::query(
-            'SELECT c.*, t.`id` AS `tid`
-             FROM `customers` c
-             JOIN `tenants` t ON t.`id` = c.`tenant_id`
-             WHERE c.`id` = ?
-               AND c.`deletion_requested_at` IS NOT NULL
-               AND c.`is_anonymized` = 0
-             LIMIT 1',
-            [$customerId]
-        );
-
-        if (empty($rows)) {
-            FormState::toast('error', __('admin.deletion.not_found'));
-            return Response::redirect('/admin/deletion-queue');
-        }
-
-        $customer = $rows[0];
-
         try {
-            // Clear the deletion request (keep the customer data)
-            // WHERE guards: only clear if request is still pending and customer is not anonymized
-            $affectedRows = Database::execute(
-                'UPDATE `customers` SET `deletion_requested_at` = NULL, `updated_at` = NOW()
-                 WHERE `id` = ? AND `deletion_requested_at` IS NOT NULL AND `is_anonymized` = 0',
-                [$customerId]
-            );
-
-            // Only audit-log if a row was actually changed
-            if ($affectedRows > 0) {
-                AuditLog::log(
-                    'privacy.deletion_dismissed',
-                    'customer',
-                    $customerId,
-                    [
-                        'email_hash'   => AuditLog::hashEmail($customer['email']),
-                        'operator_email' => Auth::user()['email'] ?? 'unknown',
-                        'reason'       => $reason ?: __('admin.deletion.no_reason'),
-                        'requested_at' => $customer['deletion_requested_at'],
-                    ],
-                    $customer['tenant_id'],
-                );
-
-                FormState::toast('success', __('admin.deletion.dismissed_success'));
-            } else {
-                FormState::toast('error', __('admin.deletion.dismiss_race'));
-            }
-        } catch (\Throwable $e) {
-            Logger::error('Deletion dismissal failed', [
-                'customer_id' => $customerId,
-                'error'       => $e->getMessage(),
-            ]);
-            FormState::toast('error', __('admin.deletion.dismiss_failed'));
+            $actor=\App\Agent\SessionActor::resolve(\App\Agent\Operations::registry());
+            $id=$request->string('customer_id');
+            $customer=Database::query('SELECT tenant_id FROM customers WHERE id=?',[$id])[0]??null;
+            if ($customer===null) throw new \App\Agent\OperationException('not_found',404);
+            $version=$request->string('_review_version');
+            if (!preg_match('/^[a-f0-9]{64}$/D',$version)) throw new \App\Agent\OperationException('preview_required',422);
+            \App\Application\Privacy\DeletionService::dismiss($actor,['business_id'=>$customer['tenant_id'],'customer_id'=>$id,'expected_version'=>$version,'reason'=>$request->string('reason')]);
+            FormState::toast('success',__('admin.deletion.dismissed_success'));
+        } catch (\App\Agent\OperationException $error) {
+            FormState::toast('error',__('agent-booking.deletion.review_again'));
+        } catch (\Throwable) {
+            Logger::error('Deletion decision unavailable');
+            FormState::toast('error',__('admin.deletion.dismiss_failed'));
         }
-
         return Response::redirect('/admin/deletion-queue');
     }
 }

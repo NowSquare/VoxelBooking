@@ -477,6 +477,12 @@ final class AuthController
      */
     private function redirectAfterLogin(): Response
     {
+        $returnTo = $_SESSION['oauth_return_to'] ?? null;
+        unset($_SESSION['oauth_return_to']);
+        if (is_string($returnTo) && preg_match('~^/oauth/authorize\?request=([a-f0-9]{64})$~D', $returnTo, $match)
+            && ($_SESSION['oauth_pending'][$match[1]]['expires_at'] ?? 0) > time()) {
+            return Response::redirect($returnTo);
+        }
         if (Auth::isBusinessUser()) {
             $user = Auth::user();
             $tenantId = $user['tenant_id'] ?? '';

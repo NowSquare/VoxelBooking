@@ -126,6 +126,8 @@ import {
     Inbox,
     XCircle,
     FlaskConical,
+    Plug,
+    Webhook,
 } from 'lucide';
 
 const ICON_SET = {
@@ -149,6 +151,7 @@ const ICON_SET = {
     Languages,
     Inbox, XCircle,
     FlaskConical,
+    Plug, Webhook,
 };
 
 // ── Alpine: CSP-safe component registration ──

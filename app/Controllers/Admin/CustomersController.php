@@ -11,6 +11,8 @@ use App\Engine\Version;
 use App\Engine\View;
 use App\Middleware\CsrfMiddleware;
 use App\Models\Customer;
+use App\Agent\{Operations,SessionActor,OperationException};
+use App\Application\Customers\CustomerDirectory;
 
 /**
  * Customer list & detail controller (tenant-scoped).
@@ -44,8 +46,10 @@ final class CustomersController
         $page   = max(1, (int) ($request->string('page') ?: 1));
         $offset = ($page - 1) * self::PER_PAGE;
 
-        $customers = Customer::forTenant($tenantId, $search, self::PER_PAGE, $offset);
-        $total     = Customer::countForTenant($tenantId, $search);
+        $result = CustomerDirectory::search(SessionActor::resolve(Operations::registry()),
+            ['business_id'=>$tenantId,'search'=>$search,'limit'=>self::PER_PAGE],$offset);
+        $customers = $result['items'];
+        $total = $result['total'];
 
         return $this->render('admin.tenants.customers.index', __('admin.customers.page_title'), [
             'documentTitle' => __('admin.customers.page_title') . ' — ' . $tenant['name'],
@@ -74,22 +78,19 @@ final class CustomersController
             return Response::redirect('/admin/tenants');
         }
 
-        $customer = Customer::find($customerId);
-        if ($customer === null || $customer['tenant_id'] !== $tenantId) {
+        $actor=SessionActor::resolve(Operations::registry());
+        try { $customer=CustomerDirectory::detail($actor,$tenantId,$customerId); }
+        catch(OperationException) {
             return Response::redirect("/admin/tenants/{$tenantId}/customers");
         }
 
-        $bookings = Customer::bookingsForCustomer($customerId);
+        $history=CustomerDirectory::history($actor,['business_id'=>$tenantId,'customer_id'=>$customerId,'cursor'=>$request->string('cursor')]);
+        $bookings=$history['items'];
 
         // Derive stats from live bookings so the stat cards and the
         // history table below them are always self-consistent.
-        $liveBookingCount = count($bookings);
-        $liveLastBookingAt = null;
-        if ($liveBookingCount > 0) {
-            // Bookings are ordered DESC by start_datetime —
-            // first row is the most recent.
-            $liveLastBookingAt = $bookings[0]['start_datetime'];
-        }
+        $liveBookingCount = $customer['booking_count'];
+        $liveLastBookingAt = $customer['last_booking_at'];
 
         return $this->render('admin.tenants.customers.show', $customer['name'], [
             'documentTitle'     => $customer['name'] . ' — ' . __('admin.customers.page_title'),
@@ -98,6 +99,7 @@ final class CustomersController
             'bookings'          => $bookings,
             'liveBookingCount'  => $liveBookingCount,
             'liveLastBookingAt' => $liveLastBookingAt,
+            'nextHistoryCursor' => $history['next_cursor'],
         ], $tenantId);
     }
 
@@ -154,36 +156,22 @@ final class CustomersController
             return $this->forbidden($request);
         }
 
-        $search = $request->string('search') ?: null;
-        $customers = Customer::forTenantExport($tenantId, $search);
-
-        $filename = 'customers-export-' . date('Y-m-d') . '.csv';
-        $headers = ['Name', 'Email', 'Phone', 'Bookings', 'Last Booking', 'Registered'];
-
-        $output = fopen('php://temp', 'r+');
-        fwrite($output, "\xEF\xBB\xBF");
-        fputcsv($output, $headers, escape: '\\');
-
-        foreach ($customers as $c) {
-            fputcsv($output, [
-                $c['name'] ?? '',
-                $c['email'] ?? '',
-                $c['phone'] ?? '',
-                $c['booking_count'] ?? 0,
-                substr($c['last_booking_at'] ?? '', 0, 10),
-                substr($c['created_at'] ?? '', 0, 10),
-            ], escape: '\\');
+        $actor=SessionActor::resolve(Operations::registry());
+        $cursor=$request->string('cursor')?:null;$csv='';
+        // Keep the existing browser export bound while sharing query/projection/CSV safety.
+        for($page=0;$page<10;$page++) {
+            $chunk=CustomerDirectory::export($actor,['business_id'=>$tenantId,'search'=>$request->string('search'),'cursor'=>$cursor]);
+            $csv.=$page===0?$chunk['content']:substr($chunk['content'],strpos($chunk['content'],"\n")+1);
+            $cursor=$chunk['next_cursor'];if($cursor===null) { break; }
         }
-
-        rewind($output);
-        $csv = stream_get_contents($output);
-        fclose($output);
+        $filename='customers-export-'.gmdate('Y-m-d').'.csv';
 
         $response = new Response();
         return $response
             ->header('Content-Type', 'text/csv; charset=UTF-8')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
             ->header('Cache-Control', 'no-store')
+            ->header('X-Next-Cursor', $cursor??'')
             ->body($csv);
     }
 

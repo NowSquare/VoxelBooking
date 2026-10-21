@@ -6,6 +6,7 @@ namespace App\Controllers\Booking;
 
 use App\Engine\AuditLog;
 use App\Engine\CustomerAnonymizer;
+use App\Engine\CustomerCapability;
 use App\Engine\Database;
 use App\Engine\DataExporter;
 use App\Engine\Locale;
@@ -24,9 +25,8 @@ use App\Middleware\CsrfMiddleware;
  * GET  /book/{slug}/privacy/{customer-id}    → View customer data
  * POST /book/{slug}/privacy/{customer-id}    → Request deletion or export
  *
- * No authentication required — the customer ID (ULID) acts as a
- * bearer token. The ULID's 128-bit entropy makes brute-force impractical.
- * The URL should only be shared via email to the customer.
+ * An independent customer.privacy capability is required. Booking grants and
+ * customer identifiers do not authorize access. Legacy links enter verification.
  *
  * Action flow:
  * - View: shows what data is held (name, email, booking history, consent)
@@ -51,19 +51,23 @@ final class PrivacyController
         // Resolve locale for this tenant context (sets direction for RTL templates + emails)
         Locale::resolveForBooking($tenant, $request->header('Accept-Language'));
 
-        $customer = $this->loadCustomer($customerId, $tenant['id']);
-        if ($customer === null) {
-            return Response::html(__('booking.privacy.not_found'), 404);
+        if (!CustomerCapability::requestAuthorized($request, CustomerCapability::PRIVACY, $tenant['id'], $customerId)) {
+            return CustomerAccessController::recoveryPage($tenant, CustomerCapability::PRIVACY, $customerId);
+        }
+        if ($continuation = CustomerCapability::verifiedContinuation(CustomerCapability::PRIVACY, $tenant['id'], $customerId)) {
+            return CustomerCapability::protect(Response::redirect($continuation));
         }
 
-        if ((int) ($customer['is_anonymized'] ?? 0) === 1) {
-            return View::response('booking.privacy-anonymized', [
-                'tenant'   => $tenant,
-                'pageTitle' => __('booking.privacy.anonymized_page_title') . ' — ' . $tenant['name'],
-            ]);
-        }
-
-        $bookings = $this->loadBookings($customerId);
+        $actor = CustomerCapability::actor($request, CustomerCapability::PRIVACY, $tenant['id'], $customerId);
+        $summary = \App\Application\Privacy\PrivacyService::summary($actor, ['business_id'=>$tenant['id']]);
+        $customer = $summary['customer'] + ['id'=>$customerId,'deletion_requested_at'=>$summary['deletion_requested_at']];
+        $bookings = []; $cursor = null;
+        do {
+            $input = ['business_id'=>$tenant['id'],'limit'=>100];
+            if ($cursor !== null) $input['cursor']=$cursor;
+            $page = \App\Application\Privacy\PrivacyService::records($actor,$input);
+            array_push($bookings,...$page['bookings']); $cursor=$page['next_cursor'];
+        } while ($cursor !== null);
         $consentRecords = $this->extractConsentRecords($bookings);
 
         // Start public session and generate CSRF token for POST forms
@@ -80,14 +84,14 @@ final class PrivacyController
             actorId: $customerId,
         );
 
-        return View::response('booking.privacy', [
+        return CustomerCapability::protect(View::response('booking.privacy', [
             'tenant'         => $tenant,
             'customer'       => $customer,
             'bookings'       => $bookings,
             'consentRecords' => $consentRecords,
             'csrfToken'      => $csrfToken,
             'pageTitle'      => __('booking.privacy.page_title') . ' — ' . $tenant['name'],
-        ]);
+        ]));
     }
 
     /**
@@ -108,6 +112,10 @@ final class PrivacyController
         // Resolve locale for this tenant context (sets direction for RTL templates + emails)
         Locale::resolveForBooking($tenant, $request->header('Accept-Language'));
 
+        if (!CustomerCapability::requestAuthorized($request, CustomerCapability::PRIVACY, $tenant['id'], $customerId)) {
+            return CustomerAccessController::recoveryPage($tenant, CustomerCapability::PRIVACY, $customerId);
+        }
+
         $customer = $this->loadCustomer($customerId, $tenant['id']);
         if ($customer === null) {
             return Response::html(__('booking.privacy.not_found'), 404);
@@ -118,7 +126,7 @@ final class PrivacyController
         }
 
         if ($actionType === 'export') {
-            return $this->handleExport($customer, $tenant);
+            return CustomerCapability::protect($this->handleExport($customer, $tenant, CustomerCapability::actor($request, CustomerCapability::PRIVACY, $tenant['id'], $customerId)));
         }
 
         if ($actionType === 'delete') {
@@ -126,7 +134,7 @@ final class PrivacyController
             if (\App\Engine\DemoMode::isActive()) {
                 return Response::redirect("/book/{$slug}/privacy/{$customerId}");
             }
-            return $this->handleDeletionRequest($customer, $tenant, $slug);
+            return CustomerCapability::protect($this->handleDeletionRequest($customer, $tenant, $slug, CustomerCapability::actor($request, CustomerCapability::PRIVACY, $tenant['id'], $customerId)));
         }
 
         return Response::redirect("/book/{$slug}/privacy/{$customerId}");
@@ -135,41 +143,15 @@ final class PrivacyController
     /**
      * Generate and return a JSON export (Right to Data Portability, GDPR Art. 20).
      */
-    private function handleExport(array $customer, array $tenant): Response
+    private function handleExport(array $customer, array $tenant, \App\Agent\ActorContext $actor): Response
     {
         try {
-            $json = DataExporter::exportJson($customer['id']);
-        } catch (\Throwable $e) {
-            Logger::error('Data export failed', [
-                'customer_id' => $customer['id'],
-                'error'       => $e->getMessage(),
-            ]);
+            $data = \App\Application\Privacy\PrivacyService::export($actor, ['business_id' => $tenant['id']]);
+            return Response::json($data)->header('Content-Disposition', 'attachment; filename="voxelbooking-data-' . gmdate('Y-m-d') . '.json"');
+        } catch (\Throwable) {
+            Logger::error('Customer data export unavailable', ['tenant_id' => $tenant['id']]);
             return Response::html(__('booking.privacy.export_failed'), 500);
         }
-
-        AuditLog::log(
-            'privacy.data_exported',
-            'customer',
-            $customer['id'],
-            ['email_prefix' => AuditLog::hashEmail($customer['email'])],
-            $tenant['id'],
-            actorType: 'customer',
-            actorId: $customer['id'],
-        );
-
-        // Send export acknowledgment email (synchronous, 10s SMTP timeout; failure does not affect the download)
-        Mailer::sendExportAcknowledgment(
-            $customer['email'],
-            $tenant['name'],
-            $tenant['id'],
-        );
-
-        $filename = 'voxelbooking-data-' . date('Y-m-d') . '.json';
-
-        $response = Response::json(json_decode($json, true));
-        $response->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
-
-        return $response;
     }
 
     /**
@@ -181,61 +163,16 @@ final class PrivacyController
      *
      * Only emits an audit event if a row was actually changed (idempotent).
      */
-    private function handleDeletionRequest(array $customer, array $tenant, string $slug): Response
+    private function handleDeletionRequest(array $customer, array $tenant, string $slug, \App\Agent\ActorContext $actor): Response
     {
         try {
-            // Mark customer as pending deletion with proper state column
-            $affectedRows = Database::execute(
-                'UPDATE `customers` SET
-                    `deletion_requested_at` = NOW(),
-                    `updated_at` = NOW()
-                WHERE `id` = ? AND `deletion_requested_at` IS NULL',
-                [$customer['id']]
-            );
-
-            // Only audit-log if the request was newly recorded
-            if ($affectedRows > 0) {
-                AuditLog::log(
-                    'privacy.deletion_requested',
-                    'customer',
-                    $customer['id'],
-                    ['email_prefix' => AuditLog::hashEmail($customer['email'])],
-                    $tenant['id'],
-                    actorType: 'customer',
-                    actorId: $customer['id'],
-                );
-
-                // Send deletion acknowledgment to customer (synchronous, 10s timeout; failure does not affect the request)
-                Mailer::sendDeletionAcknowledgment(
-                    $customer['email'],
-                    $tenant['name'],
-                    $tenant['id'],
-                );
-
-                // Notify the operator about the new deletion request
-                // Uses tenant notification_email if set, otherwise tenant contact email
-                $operatorRecipient = !empty($tenant['notification_email'])
-                    ? $tenant['notification_email']
-                    : ($tenant['email'] ?? '');
-
-                Mailer::notifyOperatorDeletionRequest(
-                    $operatorRecipient,
-                    $customer['name'],
-                    $customer['email'],
-                    $tenant['name'],
-                    $tenant['id'],
-                );
-            }
-        } catch (\Throwable $e) {
-            Logger::error('Deletion request failed', [
-                'customer_id' => $customer['id'],
-                'error'       => $e->getMessage(),
-            ]);
+            \App\Application\Privacy\PrivacyService::requestDeletion($actor, ['business_id' => $tenant['id']]);
+        } catch (\Throwable) {
+            Logger::error('Customer deletion request unavailable', ['tenant_id' => $tenant['id']]);
+            return Response::html(__('booking.access.unavailable'), 503);
         }
-
         return View::response('booking.privacy-deletion-requested', [
-            'tenant'    => $tenant,
-            'customer'  => $customer,
+            'tenant' => $tenant, 'customer' => $customer,
             'pageTitle' => __('booking.privacy.deletion_req_page_title') . ' — ' . $tenant['name'],
         ]);
     }
@@ -266,17 +203,6 @@ final class PrivacyController
         );
 
         return $rows[0] ?? null;
-    }
-
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    private function loadBookings(string $customerId): array
-    {
-        return Database::query(
-            'SELECT * FROM `bookings` WHERE `customer_id` = ? ORDER BY `start_datetime` DESC',
-            [$customerId]
-        );
     }
 
     /**

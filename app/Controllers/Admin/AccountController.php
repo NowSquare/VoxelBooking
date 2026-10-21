@@ -52,77 +52,22 @@ final class AccountController
 
     private function saveProfile(Request $request): Response
     {
-        $name  = trim($request->string('name'));
-        $email = trim(strtolower($request->string('email')));
-
-        $errors = [];
-        if ($name === '') {
-            $errors['name'] = __('admin.flash.profile_name_required');
-        }
-        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = __('admin.flash.profile_email_invalid');
-        }
-
-        $user = Auth::user();
-        if ($user === null) {
-            return Response::redirect('/admin/login');
-        }
-
-        $oldEmail = $user['email'] ?? '';
-        $emailChanged = ($email !== strtolower($oldEmail));
-
-        // Check email uniqueness if changing and no prior email error
-        if ($emailChanged && empty($errors['email'])) {
-            $exists = Database::query(
-                "SELECT 1 FROM `auth_emails` WHERE `email` = ? AND `user_id` != ? LIMIT 1",
-                [$email, $user['id']]
-            );
-            if (!empty($exists)) {
-                $errors['email'] = __('admin.flash.profile_email_taken');
-            }
-        }
-
-        if (!empty($errors)) {
-            FormState::flash(['name' => $name, 'email' => $email], $errors);
-            $firstError = reset($errors);
-            FormState::toast('error', $firstError);
-            return Response::redirect('/admin/account');
-        }
-
-        $table   = $user['type'] === 'operator' ? 'operators' : 'business_users';
-        $oldName = $user['name'] ?? '';
-
         try {
-            Database::execute(
-                "UPDATE `{$table}` SET `name` = ?, `email` = ?, `updated_at` = NOW() WHERE `id` = ?",
-                [$name, $email, $user['id']]
-            );
-
-            if ($emailChanged) {
-                Database::execute(
-                    "UPDATE `auth_emails` SET `email` = ? WHERE `user_type` = ? AND `user_id` = ?",
-                    [$email, $user['type'], $user['id']]
-                );
-            }
-
-            // Refresh session user data so the header reflects the change immediately
-            $_SESSION['auth_name']  = $name;
-            $_SESSION['auth_email'] = $email;
-
-            // Audit log
-            $changes = [];
-            if ($name !== $oldName)  $changes['name']  = ['old' => $oldName, 'new' => $name];
-            if ($emailChanged)       $changes['email'] = ['old' => $oldEmail, 'new' => $email];
-
-            if (!empty($changes)) {
-                AuditLog::log('account.profile_updated', $user['type'], $user['id'], $changes);
-            }
-
+            $actor = \App\Agent\SessionActor::resolve(\App\Agent\Operations::registry());
+            $profile = \App\Application\Identity\AccountService::update($actor, [
+                'name'=>$request->string('name'), 'expected_version'=>$request->string('expected_version'),
+            ], $request->string('email'));
+            $_SESSION['auth_name'] = $profile['name'];
+            $_SESSION['auth_email'] = $profile['email'];
             FormState::toast('success', __('admin.flash.profile_updated'));
-        } catch (\Throwable $e) {
-            FormState::toast('error', __('admin.flash.profile_failed'));
+        } catch (\App\Agent\OperationException $error) {
+            $fields=[];
+            if(isset($error->fieldErrors['name'])) { $fields['name']=__('admin.flash.profile_name_required'); }
+            if(isset($error->fieldErrors['email'])) { $fields['email']=__('admin.flash.profile_email_invalid'); }
+            if($error->problemCode==='identity_unavailable') { $fields['email']=__('admin.flash.profile_email_taken'); }
+            FormState::flash(['name'=>$request->string('name'),'email'=>$request->string('email')],$fields);
+            FormState::toast('error', $fields!==[]?reset($fields):__('agent.errors.'.$error->problemCode));
         }
-
         return Response::redirect('/admin/account');
     }
 

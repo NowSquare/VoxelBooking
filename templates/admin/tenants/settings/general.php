@@ -38,6 +38,7 @@ include __DIR__ . '/../../partials/page-header.php';
 
 <form method="POST" action="/admin/tenants/<?= htmlspecialchars($tenantId, ENT_QUOTES, 'UTF-8') ?>/settings" class="vb-animate-in" novalidate>
     <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+    <input type="hidden" name="expected_version" value="<?= htmlspecialchars(\App\Application\Settings\SettingsService::projection($tenant, 'general')['version'], ENT_QUOTES, 'UTF-8') ?>">
 
     <!-- Section 1: Identity -->
     <div class="vb-settings-section">

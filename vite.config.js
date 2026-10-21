@@ -14,6 +14,8 @@ export default defineConfig({
             input: {
                 admin: 'resources/js/admin/app.js',
                 booking: 'resources/js/booking/app.js',
+                'customer-access': 'resources/js/booking/customer-access.js',
+                'agent-review': 'resources/js/agent-review.js',
                 'admin-css': 'resources/css/admin.css',
                 'booking-css': 'resources/css/booking.css',
             },

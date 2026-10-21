@@ -193,6 +193,7 @@ if ($oldStaffId !== '' && $oldStaffId !== null) {
                               class="vb-form-flush"
                               data-confirm="<?= __('admin.blocked_dates.delete_confirm') ?>" data-confirm-text="<?= __('admin.common.delete') ?>">
                             <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                            <input type="hidden" name="_record_version" value="<?= htmlspecialchars($recordVersions[$bd['id']] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                             <button type="submit" class="vb-btn vb-btn-ghost vb-btn-sm vb-btn-destructive"
                                     title="<?= __('admin.blocked_dates.delete') ?>">
                                 <i data-lucide="trash-2" class="vb-icon-sm"></i>
@@ -264,6 +265,7 @@ if ($oldStaffId !== '' && $oldStaffId !== null) {
                               class="vb-form-flush"
                               data-confirm="<?= __('admin.blocked_dates.delete_confirm') ?>" data-confirm-text="<?= __('admin.common.delete') ?>">
                             <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                            <input type="hidden" name="_record_version" value="<?= htmlspecialchars($recordVersions[$bd['id']] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                             <button type="submit" class="vb-btn vb-btn-ghost vb-btn-sm vb-btn-destructive"
                                     title="<?= __('admin.blocked_dates.delete') ?>">
                                 <i data-lucide="trash-2" class="vb-icon-sm"></i>

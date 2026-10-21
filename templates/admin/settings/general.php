@@ -34,6 +34,7 @@ include dirname(__DIR__, 2) . '/partials/settings-tabs.php';
         </div>
         <form method="POST" action="/admin/settings">
             <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+    <input type="hidden" name="_record_version" value="<?= htmlspecialchars($recordVersion, ENT_QUOTES, 'UTF-8') ?>">
 
             <div class="vb-form-group">
                 <label for="app_name" class="vb-label"><?= __('admin.settings.app_name_label') ?></label>

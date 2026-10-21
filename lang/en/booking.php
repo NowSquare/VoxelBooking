@@ -10,6 +10,25 @@ declare(strict_types=1);
  * Plurals: {0} None|{1} One|[2,*] :count items
  */
 return [
+    'access' => [
+        'manage_description' => 'Enter the email address used for this booking. We will email a fresh link to manage it.',
+        'privacy_description' => 'Enter your email address. We will email a secure link to review your personal data and privacy choices.',
+        'title' => 'Open your secure link',
+        'secure_access' => 'Customer access',
+        'description' => 'Enter the email address you used to book. We will send a fresh link to manage this booking or review your personal data.',
+        'send' => 'Email me a secure link',
+        'sent_title' => 'Check your email',
+        'sent' => 'If these details match a customer record, a secure link will arrive in a few minutes. Check your spam folder too.',
+        'verifying' => 'Opening your secure link…',
+        'expired' => 'This link has expired or is no longer available. Enter your booking email to request a fresh link.',
+        'unavailable' => 'We cannot send a secure link right now. Please try again in a minute.',
+        'back' => 'Back to booking',
+        'email_subject' => 'Your secure link for :business',
+        'email_body' => 'Use this private link to continue. Only share it with someone you trust to act for you.',
+        'email_manage' => 'Manage this booking',
+        'email_privacy' => 'Review my personal data',
+        'email_footer' => 'If you did not request this link, you can ignore this email. Privacy links expire after one hour; booking links expire after 90 days.',
+    ],
     // ── Step Titles ──
     'steps' => [
         'service_title'    => 'Choose a service',

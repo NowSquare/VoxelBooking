@@ -38,16 +38,7 @@ final class ApplicationsController
             $statusFilter = 'pending';
         }
 
-        if ($statusFilter === 'all') {
-            $applications = Database::query(
-                'SELECT * FROM `business_applications` ORDER BY `created_at` DESC LIMIT 200'
-            );
-        } else {
-            $applications = Database::query(
-                'SELECT * FROM `business_applications` WHERE `status` = ? ORDER BY `created_at` DESC LIMIT 200',
-                [$statusFilter]
-            );
-        }
+        $applications = \App\Application\Business\BusinessUi::all(\App\Application\Business\ApplicationService::list(...), ['status' => $statusFilter]);
 
         // Pending count for badge
         $pendingCount = Database::query(
@@ -73,35 +64,7 @@ final class ApplicationsController
      */
     public function approve(Request $request): Response
     {
-        if (!Auth::isOperator()) {
-            return Response::html('Forbidden', 403);
-        }
-
-        $id = $request->getAttribute('id');
-        $app = $this->findApplication($id);
-
-        if (!$app) {
-            FormState::toast('error', __('admin.applications.not_found'));
-            return Response::redirect('/admin/applications');
-        }
-
-        if ($app['status'] !== 'pending') {
-            FormState::toast('error', __('admin.applications.already_reviewed'));
-            return Response::redirect('/admin/applications');
-        }
-
-        Database::execute(
-            "UPDATE `business_applications` SET `status` = 'approved', `reviewed_at` = ?, `reviewed_by` = ? WHERE `id` = ?",
-            [date('Y-m-d H:i:s'), Auth::user()['id'] ?? null, $id]
-        );
-
-        AuditLog::log('application.approved', 'business_application', $id, [
-            'business_name' => $app['business_name'],
-            'email'         => $app['email'],
-        ]);
-
-        FormState::toast('success', __('admin.applications.approved', ['name' => $app['business_name']]));
-        return Response::redirect('/admin/applications');
+        return \App\Application\Business\BusinessUi::application($request, 'approved');
     }
 
     /**
@@ -109,37 +72,7 @@ final class ApplicationsController
      */
     public function reject(Request $request): Response
     {
-        if (!Auth::isOperator()) {
-            return Response::html('Forbidden', 403);
-        }
-
-        $id = $request->getAttribute('id');
-        $app = $this->findApplication($id);
-
-        if (!$app) {
-            FormState::toast('error', __('admin.applications.not_found'));
-            return Response::redirect('/admin/applications');
-        }
-
-        if ($app['status'] !== 'pending') {
-            FormState::toast('error', __('admin.applications.already_reviewed'));
-            return Response::redirect('/admin/applications');
-        }
-
-        $notes = trim($request->string('admin_notes')) ?: null;
-
-        Database::execute(
-            "UPDATE `business_applications` SET `status` = 'rejected', `admin_notes` = ?, `reviewed_at` = ?, `reviewed_by` = ? WHERE `id` = ?",
-            [$notes, date('Y-m-d H:i:s'), Auth::user()['id'] ?? null, $id]
-        );
-
-        AuditLog::log('application.rejected', 'business_application', $id, [
-            'business_name' => $app['business_name'],
-            'email'         => $app['email'],
-        ]);
-
-        FormState::toast('success', __('admin.applications.rejected', ['name' => $app['business_name']]));
-        return Response::redirect('/admin/applications');
+        return \App\Application\Business\BusinessUi::application($request, 'rejected');
     }
 
     private function findApplication(string $id): ?array

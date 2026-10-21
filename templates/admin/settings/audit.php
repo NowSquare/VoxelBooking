@@ -121,7 +121,7 @@ include dirname(__DIR__, 2) . '/partials/settings-tabs.php';
                     <?php foreach ($entries as $entry): ?>
                         <?php
                         $meta = $actionLabels[$entry['action']] ?? ['label' => $entry['action'], 'variant' => 'default'];
-                        $details = $entry['details'] ? json_decode($entry['details'], true) : null;
+                        $details = array_filter(['connection'=>$entry['connection_id'],'receipt'=>$entry['receipt_id'],'result'=>$entry['result']]);
                         $createdAt = new \DateTime($entry['created_at']);
                         $actorIcon = $actorIcons[$entry['actor_type']] ?? 'help-circle';
                         ?>
@@ -173,7 +173,7 @@ include dirname(__DIR__, 2) . '/partials/settings-tabs.php';
                             </td>
                             <td data-label="<?= __('admin.audit.th_request') ?>">
                                 <span class="vb-mono vb-cell-micro">
-                                    <?= htmlspecialchars(substr($entry['request_id'], 0, 8), ENT_QUOTES, 'UTF-8') ?>…
+                                    <?= htmlspecialchars(substr(($entry['correlation_id'] ?? ''), 0, 8), ENT_QUOTES, 'UTF-8') ?>…
                                 </span>
                             </td>
                         </tr>

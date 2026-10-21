@@ -31,6 +31,7 @@ include __DIR__ . '/../../partials/page-header.php';
           id="resource-form"
           enctype="multipart/form-data">
         <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+        <input type="hidden" name="_record_version" value="<?= e($recordVersion ?? '') ?>">
 
         <?php include __DIR__ . '/_form.php'; ?>
 
