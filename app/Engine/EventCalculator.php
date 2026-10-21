@@ -44,13 +44,16 @@ final class EventCalculator
      *   can_waitlist: bool
      * }>}
      */
-    public static function getUpcomingEvents(array $tenant, int $limit = 50): array
+    public static function getUpcomingEvents(array $tenant, int $limit = 50, array $window = []): array
     {
         $tenantId = $tenant['id'];
         $tz = new \DateTimeZone($tenant['timezone'] ?? 'UTC');
         $now = new \DateTimeImmutable('now', $tz);
         $maxAdvance = (int) ($tenant['max_advance_days'] ?? 90);
-        $maxDate = $now->modify("+{$maxAdvance} days");
+        $maxDate = $now->modify("+{$maxAdvance} days")->setTime(23,59,59);
+        if (!empty($window['from'])) $now = max($now, new \DateTimeImmutable($window['from'].' 00:00:00', $tz));
+        if (!empty($window['to'])) $maxDate = min($maxDate, new \DateTimeImmutable($window['to'].' 23:59:59', $tz));
+        if ($maxDate < $now) return ['events'=>[]];
 
         // Load all active events for this tenant
         $events = Database::query(
@@ -67,6 +70,8 @@ final class EventCalculator
         // Expand events into concrete instances
         $instances = [];
         foreach ($events as $event) {
+            if (isset($window['event_id']) && $event['id'] !== $window['event_id']) continue;
+            if (isset($window['snapshot']) && $event['id'] > $window['snapshot']) continue;
             if ((int) $event['is_recurring'] && !empty($event['rrule'])) {
                 $expanded = self::expandRecurring($event, $tz, $now, $maxDate);
                 $instances = array_merge($instances, $expanded);
@@ -83,7 +88,8 @@ final class EventCalculator
         }
 
         // Sort by start datetime
-        usort($instances, fn($a, $b) => strcmp($a['start_datetime'], $b['start_datetime']));
+        usort($instances, fn($a, $b) => [$a['start_datetime'],$a['id']] <=> [$b['start_datetime'],$b['id']]);
+        if (isset($window['after'])) $instances=array_values(array_filter($instances,static fn($row)=>[$row['start_datetime'],$row['id']]>$window['after']));
 
         // Limit
         $instances = array_slice($instances, 0, $limit);
@@ -172,6 +178,11 @@ final class EventCalculator
         $event = $events[0];
 
         // Determine the instance date
+        if ($date !== null && (!preg_match('/^\d{4}-\d{2}-\d{2}$/D', $date)
+            || ((int)$event['is_recurring'] && !self::isValidOccurrence($event, $date, $tz))
+            || (!(int)$event['is_recurring'] && $date !== substr($event['start_datetime'],0,10)))) {
+            return ['event' => null];
+        }
         if ((int) $event['is_recurring'] && $date) {
             $instanceDate = new \DateTimeImmutable($date, $tz);
         } else {
@@ -239,6 +250,7 @@ final class EventCalculator
         string $eventId,
         string $date,
         int $spotCount,
+        ?string $excludeBookingId = null,
     ): array {
         $tenantId = $tenant['id'];
         $tz = new \DateTimeZone($tenant['timezone'] ?? 'UTC');
@@ -283,8 +295,8 @@ final class EventCalculator
              FROM `bookings`
              WHERE `tenant_id` = ? AND `event_id` = ? AND `booking_pattern` = \'event\'
              AND DATE(`start_datetime`) = ? AND `status` IN (\'confirmed\', \'rescheduled\')
-             AND (`status` <> \'rescheduled\' OR NULLIF(`rescheduled_to_id`, \'\') IS NULL)',
-            [$tenantId, $eventId, $date]
+             AND (`status` <> \'rescheduled\' OR NULLIF(`rescheduled_to_id`, \'\') IS NULL) AND (? IS NULL OR id <> ?)',
+            [$tenantId, $eventId, $date, $excludeBookingId, $excludeBookingId]
         );
 
         $totalBooked = (int) ($booked[0]['total'] ?? 0);
@@ -393,7 +405,8 @@ final class EventCalculator
                 $startDt
             );
 
-            $target = new \DateTimeImmutable($date . ' ' . $startDt->format('H:i:s'), $tz);
+            // RRule::occursAt mutates its date argument when normalizing the timezone.
+            $target = new \DateTime($date . ' ' . $startDt->format('H:i:s'), $tz);
             return $rrule->occursAt($target);
         } catch (\Exception) {
             return false;

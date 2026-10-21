@@ -42,6 +42,18 @@ function env(string $key, string $default = ''): string
  */
 function app_url(string $path = ''): string
 {
+    // Explicit public origin supports CLI jobs and reverse proxies without trusting request headers.
+    $configured = rtrim($_ENV['APP_URL'] ?? '', '/');
+    if ($configured !== '') {
+        $parts = parse_url($configured);
+        if (is_array($parts) && in_array($parts['scheme'] ?? null, ['http', 'https'], true)
+            && isset($parts['host']) && !isset($parts['user']) && !isset($parts['pass'])
+            && !isset($parts['query']) && !isset($parts['fragment']) && empty($parts['path'])
+            && !preg_match('/[\x00-\x20\x7f\\\\]/', $configured)) {
+            return $configured . ($path === '' ? '' : '/' . ltrim($path, '/'));
+        }
+        throw new \RuntimeException('APP_URL must be an HTTP(S) origin.');
+    }
     // Scheme: prefer server-level HTTPS flag
     $isHttps = ($_SERVER['HTTPS'] ?? '') === 'on';
 
@@ -68,6 +80,10 @@ function app_url(string $path = ''): string
     // Validate: hostname must be alphanumeric/dots/hyphens with optional port
     if (!preg_match('/^[a-zA-Z0-9]([a-zA-Z0-9\-\.]*[a-zA-Z0-9])?(:\d{1,5})?$/', $host)) {
         $host = 'localhost';
+    }
+    $serverPort = filter_var($_SERVER['SERVER_PORT'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1,'max_range'=>65535]]);
+    if (!str_contains($host, ':') && $serverPort && !in_array($serverPort, [80, 443], true)) {
+        $host .= ':' . $serverPort;
     }
 
     $base = $scheme . '://' . $host;

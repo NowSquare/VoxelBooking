@@ -30,6 +30,21 @@ use PHPMailer\PHPMailer\Exception as PHPMailerException;
 final class Mailer
 {
     private static ?array $configCache = null;
+    private static ?string $deliveryId = null;
+
+    /** Stable message identity across retry attempts; SMTP remains at-least-once. */
+    public static function duringDelivery(string $id, callable $send): mixed
+    {
+        $previous = self::$deliveryId;
+        self::$deliveryId = $id;
+        try { return $send(); }
+        finally { self::$deliveryId = $previous; }
+    }
+
+    private static function messageId(): ?string
+    {
+        return self::$deliveryId === null ? null : '<vb.' . hash('sha256', self::$deliveryId) . '@notifications.voxelbooking.local>';
+    }
 
     /**
      * Send an email and log the result.
@@ -59,6 +74,25 @@ final class Mailer
         $config = self::loadConfig();
         $logId = Ulid::generate();
         $transport = strtolower(trim($config['mail_transport'] ?? 'smtp'));
+
+        // Settings tests may switch transports. A test process always captures
+        // the message in its private run directory before any network action.
+        if (defined('VOXELBOOKING_TEST_PROCESS')) {
+            $sinkError = \Tests\Support\TestEnvironment::mailFailure();
+            if ($sinkError === null && $transport === 'resend' && empty($config['smtp_password'])) {
+                $sinkError = 'Resend API key not configured';
+            }
+            if ($sinkError === null && !in_array($transport, ['resend', 'log', 'mailpit'], true) && empty($config['smtp_host'])) {
+                $sinkError = 'SMTP not configured';
+            }
+            \Tests\Support\TestEnvironment::captureMail([
+                'to' => $to, 'subject' => $subject, 'html' => $htmlBody,
+                'text' => $plainBody, 'type' => $type, 'tenant_id' => $tenantId,
+                'booking_id' => $bookingId, 'log_id' => $logId, 'error' => $sinkError, 'message_id' => self::messageId(),
+            ]);
+            self::logEmail($logId, $tenantId, $bookingId, $type, $to, $subject, $sinkError === null ? 'sent' : 'failed', $sinkError);
+            return ['sent' => $sinkError === null, 'error' => $sinkError, 'log_id' => $logId];
+        }
 
         // ── Demo mode: suppress emails to seeded/demo domains ──
         // Real reviewer addresses receive emails normally.
@@ -99,6 +133,7 @@ final class Mailer
         }
 
         $mail = new PHPMailer(true);
+        if (self::messageId() !== null) { $mail->MessageID = self::messageId(); }
 
         try {
             // SMTP configuration
@@ -158,18 +193,26 @@ final class Mailer
         }
     }
 
-    /**
-     * Build the customer-facing manage-booking URL.
-     *
-     * This is a bearer-link: the booking ULID is unguessable and acts as
-     * the access token. See .ai/23-VoxelBooking-Legal-Logging.md §Manage Link.
-     */
-    private static function buildManageUrl(string $tenantSlug, string $bookingId): string
+    /** Mint a booking-only capability; the record identifier remains public metadata. */
+    private static function buildManageUrl(string $tenantSlug, string $bookingId, ?string $tenantId = null): string
     {
-        if ($tenantSlug === '' || $bookingId === '') {
-            return '';
-        }
-        return app_url('/book/' . $tenantSlug . '/manage/' . $bookingId);
+        if ($tenantSlug === '' || $bookingId === '' || $tenantId === null) return '';
+        return app_url(CustomerCapability::manageLink(['id' => $tenantId, 'slug' => $tenantSlug], $bookingId));
+    }
+
+    public static function sendCustomerAccessLink(string $to, array $tenant, string $url, string $purpose): array
+    {
+        $subject = __('booking.access.email_subject', ['business' => $tenant['name']]);
+        $label = __($purpose === CustomerCapability::MANAGE ? 'booking.access.email_manage' : 'booking.access.email_privacy');
+        $body = htmlspecialchars(__('booking.access.email_body'), ENT_QUOTES, 'UTF-8')
+            . '<br><br><a href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '">'
+            . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</a>';
+        $html = self::renderPrivacyEmail(htmlspecialchars($subject, ENT_QUOTES, 'UTF-8'), $body,
+            htmlspecialchars(__('booking.access.email_footer'), ENT_QUOTES, 'UTF-8'));
+        $replyTo = self::resolveTenantReplyTo($tenant['id']);
+        return self::send($to, $subject, $html, 'customer_access', $tenant['id'], null,
+            __('booking.access.email_body') . "\n\n" . $label . ': ' . $url . "\n\n" . __('booking.access.email_footer'),
+            $replyTo['email'], $replyTo['name'], $tenant['name']);
     }
 
     /**
@@ -286,7 +329,7 @@ final class Mailer
             }
         }
 
-        $manageUrl = self::buildManageUrl($tenantSlug, $bookingId);
+        $manageUrl = self::buildManageUrl($tenantSlug, $bookingId, $tenantId);
 
         $html = self::renderConfirmationEmail(
             $safeBrandColor, $heading, $greeting, $bodyText,
@@ -348,7 +391,7 @@ final class Mailer
             $details[__('email.common.service')] = $eventName;
         }
 
-        $manageUrl = self::buildManageUrl($tenantSlug, $bookingId);
+        $manageUrl = self::buildManageUrl($tenantSlug, $bookingId, $tenantId);
 
         $html = self::renderConfirmationEmail(
             $safeBrandColor, $heading, $greeting, $bodyText,
@@ -812,7 +855,7 @@ final class Mailer
             $details[__('email.common.staff')] = $staffName;
         }
 
-        $manageUrl = self::buildManageUrl($tenantSlug, $bookingId);
+        $manageUrl = self::buildManageUrl($tenantSlug, $bookingId, $tenantId);
 
         $html = self::renderConfirmationEmail(
             $safeBrandColor, $heading, $greeting, $bodyText,
@@ -898,7 +941,7 @@ final class Mailer
             }
         }
 
-        $manageUrl = self::buildManageUrl($tenantSlug, $bookingId);
+        $manageUrl = self::buildManageUrl($tenantSlug, $bookingId, $tenantId);
 
         // Uses confirmation layout but without calendar CTA
         $html = self::renderConfirmationEmail(
@@ -978,7 +1021,7 @@ final class Mailer
             $details[__('email.common.staff')] = $staffName;
         }
 
-        $manageUrl = self::buildManageUrl($tenantSlug, $bookingId);
+        $manageUrl = self::buildManageUrl($tenantSlug, $bookingId, $tenantId);
 
         $html = self::renderConfirmationEmail(
             $safeBrandColor, $heading, $greeting, $bodyText,
@@ -1057,7 +1100,7 @@ final class Mailer
             $details[__('email.common.staff')] = $staffName;
         }
 
-        $manageUrl = self::buildManageUrl($tenantSlug, $bookingId);
+        $manageUrl = self::buildManageUrl($tenantSlug, $bookingId, $tenantId);
 
         $html = self::renderConfirmationEmail(
             $safeBrandColor, $heading, $greeting, $bodyText,
@@ -1531,7 +1574,7 @@ final class Mailer
         $response  = curl_exec($ch);
         $httpCode  = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
-        curl_close($ch);
+        unset($ch);
 
         // cURL-level failure (DNS, TLS, timeout)
         if ($curlError !== '') {

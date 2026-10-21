@@ -8,8 +8,8 @@ namespace App\Engine;
  * Customer find-or-create logic, shared between public booking API
  * and admin manual booking creation.
  *
- * Deduplicates by (tenant_id, email). Always updates name/phone
- * on existing customers to keep data fresh.
+ * Deduplicates by (tenant_id, email). Public submissions never overwrite an
+ * existing profile; submitted contact details belong to the booking snapshot.
  */
 final class CustomerService
 {
@@ -35,10 +35,6 @@ final class CustomerService
         );
 
         if (!empty($existing)) {
-            Database::execute(
-                'UPDATE `customers` SET `name` = ?, `phone` = ?, `updated_at` = NOW() WHERE `id` = ?',
-                [$name, $phone ?: null, $existing[0]['id']]
-            );
             return $existing[0]['id'];
         }
 

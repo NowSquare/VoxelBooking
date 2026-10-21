@@ -1,189 +1,57 @@
 <?php
 
 declare(strict_types=1);
-
 namespace App\Engine;
 
-/**
- * Reminder processing cron job.
- *
- * Per PRD §VII — sends customer reminder emails for upcoming bookings.
- *
- * Processing rules:
- * - Queries reminders where sent_at IS NULL and scheduled_at <= NOW()
- * - Batches up to 20 per run to avoid long-running cron
- * - Increments attempts on failure, caps at 3 attempts
- * - Sends via Mailer::sendReminder() using the confirmation email layout
- * - Skips cancelled/completed bookings
- */
+/** Due reminders enqueue once. Delivery retries share the durable outbox policy. */
 final class ReminderJob
 {
-    private const BATCH_SIZE   = 20;
-    private const MAX_ATTEMPTS = 3;
-
-    /**
-     * Run reminder processing.
-     *
-     * @return array{sent: int, skipped: int, failed: int, errors: string[]}
-     */
-    public static function run(): array
+    public static function run():array
     {
-        $result = [
-            'sent'    => 0,
-            'skipped' => 0,
-            'failed'  => 0,
-            'errors'  => [],
-        ];
-
-        try {
-            $pending = Database::query(
-                "SELECT r.`id`, r.`booking_id`, r.`tenant_id`, r.`attempts`
-                 FROM `reminders` r
-                 WHERE r.`sent_at` IS NULL
-                   AND r.`scheduled_at` <= NOW()
-                   AND r.`attempts` < ?
-                 ORDER BY r.`scheduled_at` ASC
-                 LIMIT ?",
-                [self::MAX_ATTEMPTS, self::BATCH_SIZE]
-            );
-        } catch (\Throwable $e) {
-            $result['errors'][] = 'Query failed: ' . $e->getMessage();
-            Logger::error('ReminderJob: query failed', ['error' => $e->getMessage()]);
-            return $result;
-        }
-
-        foreach ($pending as $reminder) {
-            try {
-                self::processReminder($reminder, $result);
-            } catch (\Throwable $e) {
-                $result['failed']++;
-                $result['errors'][] = "Reminder {$reminder['id']}: " . $e->getMessage();
-                Logger::error('ReminderJob: unhandled error', [
-                    'reminder_id' => $reminder['id'],
-                    'error'       => $e->getMessage(),
-                ]);
+        $queued=0;
+        Database::transaction(static function()use(&$queued):void{
+            // Historical scheduled_at values are tenant-local wall times. Match
+            // them to that timezone instead of the host/database timezone.
+            $clauses=[];$bindings=[];
+            foreach(Database::query("SELECT DISTINCT timezone FROM tenants WHERE status!='archived'") as $zone){
+                $timezone=new \DateTimeZone($zone['timezone']);
+                $clauses[]='(t.timezone=? AND r.scheduled_at<=?)';
+                array_push($bindings,$zone['timezone'],(new \DateTimeImmutable('now',$timezone))->format('Y-m-d H:i:s'));
             }
+            if($clauses===[]){return;}
+            $rows=Database::query("SELECT r.id,r.booking_id,r.tenant_id FROM reminders r JOIN tenants t ON t.id=r.tenant_id WHERE r.sent_at IS NULL AND t.status!='archived' AND (".implode(' OR ',$clauses).") AND r.attempts<8 AND NOT EXISTS (SELECT 1 FROM delivery_outbox d WHERE d.dedupe_hash=SHA2(CONCAT('booking.reminder',CHAR(0),r.tenant_id,CHAR(0),r.id),256)) ORDER BY r.scheduled_at,r.id LIMIT 20 FOR UPDATE SKIP LOCKED",$bindings);
+            foreach($rows as $row){
+                Outbox::enqueue('booking.reminder',['reminder_id'=>$row['id'],'booking_id'=>$row['booking_id'],'tenant_id'=>$row['tenant_id'],'demo_suppressed'=>DemoMode::isActive()],$row['tenant_id'],$row['id']);
+                $queued++;
+            }
+        });
+        return ['queued'=>$queued,'sent'=>0,'skipped'=>0,'failed'=>0,'errors'=>[]];
+    }
+    public static function deliver(array $payload):array
+    {
+        $tenantId=(string)($payload['tenant_id']??'');$bookingId=(string)($payload['booking_id']??'');
+        $reminder=Database::query('SELECT * FROM reminders WHERE id=? AND booking_id=? AND tenant_id=?',[(string)($payload['reminder_id']??''),$bookingId,$tenantId])[0]??null;
+        if($reminder===null||$reminder['sent_at']!==null){return ['sent'=>true,'skipped'=>true];}
+        if(!empty($payload['demo_suppressed'])||DemoMode::isActive()){
+            self::markSent($reminder['id']);return ['sent'=>false,'demo_suppressed'=>true];
         }
-
+        $tenant=Database::query("SELECT * FROM tenants WHERE id=? AND status!='archived'",[$tenantId])[0]??null;
+        $booking=BookingService::findByIdWithDetails($bookingId,$tenantId);
+        $customer=$booking!==null?Database::query('SELECT is_anonymized FROM customers WHERE id=? AND tenant_id=?',[$booking['customer_id'],$tenantId])[0]??null:null;
+        if($tenant===null||$booking===null||$customer===null||(bool)$customer['is_anonymized']||$booking['status']!=='confirmed'||!(bool)$tenant['send_reminders']||empty($booking['customer_email'])){
+            self::markSent($reminder['id']);return ['sent'=>true,'skipped'=>true];
+        }
+        Locale::resolveForBooking($tenant,null);
+        $zone=new \DateTimeZone($tenant['timezone']);$start=new \DateTimeImmutable($booking['start_datetime'],$zone);$end=new \DateTimeImmutable($booking['end_datetime'],$zone);
+        if($start<=new \DateTimeImmutable('now',$zone)){self::markSent($reminder['id']);return ['sent'=>true,'skipped'=>true];}
+        $result=Mailer::sendReminder($booking['customer_email'],$booking['customer_name'],['date'=>$start->format('Y-m-d'),'formatted_date'=>Locale::dateLong($start),'time'=>$start->format('H:i'),'end_time'=>$end->format('H:i')],
+            $booking['service_name']??$booking['resource_name']??$booking['event_name']??null,$booking['staff_name']??null,$tenant['name'],$tenantId,$bookingId,$tenant['brand_color']??'#2563EB',$tenant['slug']);
+        if(!empty($result['sent'])||!empty($result['skipped'])||!empty($result['demo_suppressed'])||!empty($result['logged'])){self::markSent($reminder['id']);}
+        else{Database::execute("UPDATE reminders SET attempts=attempts+1,last_error='delivery_failed' WHERE id=?",[$reminder['id']]);}
         return $result;
     }
-
-    /**
-     * Process a single reminder row.
-     */
-    private static function processReminder(array $reminder, array &$result): void
+    private static function markSent(string $id):void
     {
-        // Load booking with joined data
-        $rows = Database::query(
-            "SELECT b.`id`, b.`status`, b.`start_datetime`, b.`end_datetime`,
-                    b.`service_id`, b.`staff_id`, b.`customer_id`,
-                    b.`booking_pattern`,
-                    c.`name` AS customer_name, c.`email` AS customer_email,
-                    t.`name` AS tenant_name, t.`brand_color`,
-                    t.`send_reminders`, t.`slug` AS tenant_slug
-             FROM `bookings` b
-             JOIN `customers` c ON c.`id` = b.`customer_id`
-             JOIN `tenants` t ON t.`id` = b.`tenant_id`
-             WHERE b.`id` = ?
-             LIMIT 1",
-            [$reminder['booking_id']]
-        );
-
-        if (empty($rows)) {
-            // Booking deleted — mark as sent to skip permanently
-            self::markSent($reminder['id']);
-            $result['skipped']++;
-            return;
-        }
-
-        $booking = $rows[0];
-
-        // Skip if booking is cancelled, completed, rescheduled, no_show, or still pending approval
-        if (in_array($booking['status'], ['cancelled', 'completed', 'rescheduled', 'no_show', 'pending'], true)) {
-            self::markSent($reminder['id']);
-            $result['skipped']++;
-            return;
-        }
-
-        // Skip if tenant disabled reminders since the booking was created
-        if ((int) ($booking['send_reminders'] ?? 0) !== 1) {
-            self::markSent($reminder['id']);
-            $result['skipped']++;
-            return;
-        }
-
-        // Skip if customer has no email
-        $email = trim($booking['customer_email'] ?? '');
-        if ($email === '' || str_starts_with($email, 'anon_')) {
-            self::markSent($reminder['id']);
-            $result['skipped']++;
-            return;
-        }
-
-        // Resolve service and staff names
-        $serviceName = null;
-        if ($booking['service_id']) {
-            $svc = Database::query('SELECT `name` FROM `services` WHERE `id` = ? LIMIT 1', [$booking['service_id']]);
-            $serviceName = $svc[0]['name'] ?? null;
-        }
-
-        $staffName = null;
-        if ($booking['staff_id']) {
-            $stf = Database::query('SELECT `name` FROM `staff` WHERE `id` = ? LIMIT 1', [$booking['staff_id']]);
-            $staffName = $stf[0]['name'] ?? null;
-        }
-
-        // Build booking data for the email
-        $startDt = new \DateTimeImmutable($booking['start_datetime']);
-        $endDt   = new \DateTimeImmutable($booking['end_datetime']);
-
-        $emailResult = Mailer::sendReminder(
-            $email,
-            $booking['customer_name'],
-            [
-                'date'           => $startDt->format('Y-m-d'),
-                'formatted_date' => Locale::dateLong($startDt),
-                'time'           => $startDt->format('H:i'),
-                'end_time'       => $endDt->format('H:i'),
-            ],
-            $serviceName,
-            $staffName,
-            $booking['tenant_name'],
-            $reminder['tenant_id'],
-            $reminder['booking_id'],
-            $booking['brand_color'] ?? '#2563EB',
-            $booking['tenant_slug'] ?? '',
-        );
-
-        // Handle disabled-by-tenant (skipped emails return ['skipped' => true])
-        if ($emailResult['skipped'] ?? false) {
-            self::markSent($reminder['id']);
-            $result['skipped']++;
-            return;
-        }
-
-        if ($emailResult['sent'] ?? false) {
-            self::markSent($reminder['id']);
-            $result['sent']++;
-        } else {
-            // Increment attempt counter
-            Database::execute(
-                "UPDATE `reminders` SET `attempts` = `attempts` + 1, `last_error` = ? WHERE `id` = ?",
-                [mb_substr($emailResult['error'] ?? 'Unknown', 0, 500), $reminder['id']]
-            );
-            $result['failed']++;
-            $result['errors'][] = "Reminder {$reminder['id']}: " . ($emailResult['error'] ?? 'send failed');
-        }
-    }
-
-    /**
-     * Mark a reminder as sent.
-     */
-    private static function markSent(string $reminderId): void
-    {
-        Database::execute(
-            "UPDATE `reminders` SET `sent_at` = NOW() WHERE `id` = ?",
-            [$reminderId]
-        );
+        Database::execute('UPDATE reminders SET sent_at=UTC_TIMESTAMP(),last_error=NULL WHERE id=?',[$id]);
     }
 }

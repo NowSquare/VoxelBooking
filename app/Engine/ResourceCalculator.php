@@ -138,6 +138,7 @@ final class ResourceCalculator
         string $checkOut,
         int $guestCount = 1,
         ?string $excludeBookingId = null,
+        bool $ignoreAdvanceWindow = false,
     ): array {
         $tenantId = $tenant['id'];
         $timezone = $tenant['timezone'] ?? 'UTC';
@@ -201,14 +202,14 @@ final class ResourceCalculator
         // Min advance
         $minAdvance = (int) ($tenant['min_advance_hours'] ?? 1);
         $earliest = $now->modify("+{$minAdvance} hours");
-        if ($checkInDate < $earliest->setTime(0, 0, 0)) {
+        if (!$ignoreAdvanceWindow && $checkInDate < $earliest->setTime(0, 0, 0)) {
             return self::unavailable('too_soon');
         }
 
         // Max advance
         $maxAdvanceDays = (int) ($tenant['max_advance_days'] ?? 90);
         $latest = $now->modify("+{$maxAdvanceDays} days");
-        if ($checkInDate > $latest) {
+        if (!$ignoreAdvanceWindow && $checkInDate > $latest) {
             return self::unavailable('too_far');
         }
 

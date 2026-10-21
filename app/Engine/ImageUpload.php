@@ -40,9 +40,10 @@ final class ImageUpload
      * @param array  $file      $_FILES entry (must have tmp_name, error, size, name, type)
      * @param string $tenantSlug  Tenant slug for directory scoping
      * @param string|null $oldPath  Optional path of previous file to delete on success
+     * @param string|null $fileId  Preallocated ULID for a durable upload intent
      * @return array{path: string|null, error: string|null}
      */
-    public static function store(string $type, array $file, string $tenantSlug, ?string $oldPath = null): array
+    public static function store(string $type, array $file, string $tenantSlug, ?string $oldPath = null, ?string $fileId = null): array
     {
         // No file uploaded
         if (!isset($file['tmp_name']) || $file['error'] === UPLOAD_ERR_NO_FILE) {
@@ -81,7 +82,7 @@ final class ImageUpload
 
         // Build target directory
         $slug = preg_replace('/[^a-z0-9\-]/', '', strtolower($tenantSlug));
-        $dir = rtrim($_SERVER['DOCUMENT_ROOT'] ?? dirname(__DIR__, 2) . '/public', '/');
+        $dir = rtrim(($_SERVER['DOCUMENT_ROOT'] ?? '') ?: dirname(__DIR__, 2) . '/public', '/');
         $relativeDir = "uploads/{$slug}/{$type}";
         $absoluteDir = "{$dir}/{$relativeDir}";
 
@@ -90,7 +91,10 @@ final class ImageUpload
         }
 
         // Generate unique filename
-        $filename = Ulid::generate() . '.' . $extension;
+        if ($fileId !== null && !preg_match('/\A[0-9A-Z]{26}\z/D', $fileId)) {
+            return ['path' => null, 'error' => __('admin.upload.error_invalid_type')];
+        }
+        $filename = ($fileId ?? Ulid::generate()) . '.' . $extension;
         $absolutePath = "{$absoluteDir}/{$filename}";
         $relativePath = "{$relativeDir}/{$filename}";
 
@@ -118,7 +122,7 @@ final class ImageUpload
             return;
         }
 
-        $dir = rtrim($_SERVER['DOCUMENT_ROOT'] ?? dirname(__DIR__, 2) . '/public', '/');
+        $dir = rtrim(($_SERVER['DOCUMENT_ROOT'] ?? '') ?: dirname(__DIR__, 2) . '/public', '/');
         $absolutePath = "{$dir}/{$relativePath}";
 
         if (is_file($absolutePath)) {

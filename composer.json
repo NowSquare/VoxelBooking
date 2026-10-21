@@ -5,10 +5,22 @@
     "license": "AGPL-3.0-only",
     "require": {
         "php": "^8.3",
+        "ext-curl": "*",
+        "ext-fileinfo": "*",
+        "ext-gd": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "ext-sodium": "*",
+        "ext-zip": "*",
+        "league/oauth2-server": "^9.3",
+        "nikic/fast-route": "^1.3",
+        "nyholm/psr7": "^1.8",
+        "opis/json-schema": "^2.6",
         "phpmailer/phpmailer": "^6.9",
-        "robinvdvleuten/ulid": "^5.0",
         "rlanvin/php-rrule": "^2.4",
-        "nikic/fast-route": "^1.3"
+        "robinvdvleuten/ulid": "^5.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0"

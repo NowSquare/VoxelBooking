@@ -42,6 +42,25 @@ final class Router
         return $this->addRoute('DELETE', $path, $controller, $method);
     }
 
+    public function options(string $path, string $controller, string $method): self
+    {
+        return $this->addRoute('OPTIONS', $path, $controller, $method);
+    }
+
+    /** Register one preflight per selected real route; never create a catch-all endpoint. */
+    public function corsOptionsFor(callable $select, string $controller, string $action): void
+    {
+        $paths = [];
+        foreach ($this->routes as $route) {
+            if ($route['method'] !== 'OPTIONS' && $select($route['path'])) {
+                $paths[$route['path']] = true;
+            }
+        }
+        foreach (array_keys($paths) as $path) {
+            $this->options($path, $controller, $action);
+        }
+    }
+
     /**
      * Group routes with shared middleware.
      */
@@ -91,6 +110,14 @@ final class Router
 
     private function handleFound(Request $request, array $routeData, array $vars): Response
     {
+        $request->setAttribute('_route_pattern', $routeData['path']);
+        $allowedMethods = [];
+        foreach ($this->routes as $route) {
+            if ($route['path'] === $routeData['path'] && $route['method'] !== 'OPTIONS') {
+                $allowedMethods[] = $route['method'];
+            }
+        }
+        $request->setAttribute('_route_allowed_methods', array_values(array_unique($allowedMethods)));
         // Inject route parameters into request attributes
         foreach ($vars as $key => $value) {
             $request->setAttribute($key, $value);

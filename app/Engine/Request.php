@@ -17,6 +17,7 @@ final class Request
     private array $server;
     private array $files;
     private array $attributes = [];
+    private ?string $rawBody = null;
 
     public function __construct()
     {
@@ -84,9 +85,47 @@ final class Request
 
     public function header(string $name): ?string
     {
+        if (strcasecmp($name, 'Content-Type') === 0) {
+            return $this->server['CONTENT_TYPE'] ?? $this->server['HTTP_CONTENT_TYPE'] ?? null;
+        }
         $key = 'HTTP_' . strtoupper(str_replace('-', '_', $name));
 
         return $this->server[$key] ?? null;
+    }
+
+    /** @return array<string, string> */
+    public function headers(): array
+    {
+        $headers = [];
+        foreach ($this->server as $key => $value) {
+            if (str_starts_with($key, 'HTTP_') && is_string($value)) {
+                $headers[strtolower(str_replace('_', '-', substr($key, 5)))] = $value;
+            }
+        }
+        if ($type = $this->header('Content-Type')) { $headers['content-type'] = $type; }
+        return $headers;
+    }
+
+    public function rawBody(int $maximumBytes = 1048577): string
+    {
+        if ($this->rawBody === null) {
+            $this->rawBody = file_get_contents('php://input', false, null, 0, $maximumBytes) ?: '';
+        }
+        return $this->rawBody;
+    }
+
+    public function jsonObject(): array
+    {
+        $body = $this->rawBody();
+        if (strlen($body) > 1048576
+            || strtolower(trim(explode(';', $this->header('Content-Type') ?? '')[0])) !== 'application/json') {
+            throw new \UnexpectedValueException('A bounded JSON object is required.');
+        }
+        $decoded = json_decode($body, false, 64, JSON_THROW_ON_ERROR);
+        if (!$decoded instanceof \stdClass) {
+            throw new \UnexpectedValueException('A JSON object is required.');
+        }
+        return json_decode($body, true, 64, JSON_THROW_ON_ERROR);
     }
 
     public function ip(): string

@@ -67,7 +67,7 @@ final class GitUpdater
      *
      * @return array<string,mixed>
      */
-    public function status(bool $fetch = false): array
+    public function status(bool $fetch = false, bool $schemaPending = false): array
     {
         $s = [
             'is_repo'     => false,
@@ -160,12 +160,15 @@ final class GitUpdater
         } elseif ($s['behind'] > 0) {
             $s['state']   = 'update_available';
             $s['message'] = __p('admin.updates.git_msg_update_available', $s['behind']);
+        } elseif ($schemaPending) {
+            $s['state'] = 'migration_pending';
+            $s['message'] = __('admin.updates.git_msg_migration_pending');
         } else {
             $s['state']   = 'up_to_date';
             $s['message'] = __('admin.updates.git_msg_up_to_date');
         }
 
-        $s['can_update'] = $s['state'] === 'update_available';
+        $s['can_update'] = in_array($s['state'], ['update_available', 'migration_pending'], true);
         return $s;
     }
 
@@ -230,33 +233,30 @@ final class GitUpdater
 
             $res['from_sha'] = $st['short_sha'];
 
-            if ($st['behind'] === 0) {
-                $res['ok']         = true;
-                $res['state']      = 'up_to_date';
-                $res['message']    = __('admin.updates.git_msg_already_current');
+            $alreadyCurrent = $st['behind'] === 0;
+            if ($alreadyCurrent) {
                 $res['to_sha']     = $st['short_sha'];
                 $res['to_version'] = $this->versionFile();
-                return $res;
-            }
+            } else {
+                // Apply — tracked files only. No `git clean`: untracked user data stays.
+                $reset = $this->git(['reset', '--hard', '@{u}'], 120);
+                $res['output'] = trim($reset['out'] . "\n" . $reset['err']);
+                if ($reset['code'] !== 0) {
+                    $res['state']   = 'failed';
+                    $res['message'] = __('admin.updates.git_msg_reset_failed', [
+                        'detail' => self::firstLine($reset['err']) ?: __('admin.updates.git_msg_see_output'),
+                    ]);
+                    return $res;
+                }
 
-            // Apply — tracked files only. No `git clean`: untracked user data stays.
-            $reset = $this->git(['reset', '--hard', '@{u}'], 120);
-            $res['output'] = trim($reset['out'] . "\n" . $reset['err']);
-            if ($reset['code'] !== 0) {
-                $res['state']   = 'failed';
-                $res['message'] = __('admin.updates.git_msg_reset_failed', [
-                    'detail' => self::firstLine($reset['err']) ?: __('admin.updates.git_msg_see_output'),
-                ]);
-                return $res;
-            }
+                $to = $this->git(['rev-parse', 'HEAD']);
+                $res['to_sha']     = $to['code'] === 0 ? substr($to['out'], 0, 12) : null;
+                $res['to_version'] = $this->versionFile();
 
-            $to = $this->git(['rev-parse', 'HEAD']);
-            $res['to_sha']     = $to['code'] === 0 ? substr($to['out'], 0, 12) : null;
-            $res['to_version'] = $this->versionFile();
-
-            // Recompile bytecode so the new PHP is used on the next request.
-            if (function_exists('opcache_reset')) {
-                @opcache_reset();
+                // Recompile bytecode so the new PHP is used on the next request.
+                if (function_exists('opcache_reset')) {
+                    @opcache_reset();
+                }
             }
 
             // Run migrations against the freshly-updated code. A migration
@@ -265,6 +265,8 @@ final class GitUpdater
             // code: a partially-applied migration leaves the DB in an unknown
             // state, so reverting code could deepen the mismatch rather than fix
             // it. The operator restores a DB backup or fixes forward, then retries.
+            // Code may already be current after an interrupted schema update.
+            // Always run this callback; Migrator applies only pending checkpoints.
             if ($migrate !== null) {
                 try {
                     $res['migrations'] = ['ok' => true, 'result' => $migrate()];
@@ -281,13 +283,16 @@ final class GitUpdater
             }
 
             $res['ok']      = true;
-            $res['state']   = 'updated';
-            $res['message'] = __('admin.updates.git_msg_updated', ['version' => (string) $res['to_version']]);
+            $res['state']   = $alreadyCurrent ? 'up_to_date' : 'updated';
+            $res['message'] = $alreadyCurrent
+                ? __('admin.updates.git_msg_already_current')
+                : __('admin.updates.git_msg_updated', ['version' => (string) $res['to_version']]);
             return $res;
         } finally {
             flock($lock, LOCK_UN);
             fclose($lock);
-            @unlink($this->lockFile);
+            // Keep one stable inode: an already-open waiter must not compete
+            // with a new updater locking a replacement file after unlink.
         }
     }
 

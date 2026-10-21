@@ -47,9 +47,9 @@ final class DataExporter
             throw new \RuntimeException("Customer {$customerId} has been anonymized — no PII to export");
         }
 
-        $bookings = self::loadBookings($customerId);
+        $bookings = self::loadBookings($customerId, $customer['tenant_id']);
         $consentRecords = self::extractConsentRecords($bookings);
-        $emailLog = self::loadEmailLog($customerId);
+        $emailLog = self::loadEmailLog($customerId, $customer['tenant_id']);
 
         return [
             'export_version' => '1.0',
@@ -96,25 +96,25 @@ final class DataExporter
     /**
      * @return array<int, array<string, mixed>>
      */
-    private static function loadBookings(string $customerId): array
+    private static function loadBookings(string $customerId, string $tenantId): array
     {
         return Database::query(
-            'SELECT * FROM `bookings` WHERE `customer_id` = ? ORDER BY `start_datetime` DESC',
-            [$customerId]
+            'SELECT * FROM `bookings` WHERE `customer_id` = ? AND `tenant_id` = ? ORDER BY `start_datetime` DESC',
+            [$customerId, $tenantId]
         );
     }
 
     /**
      * @return array<int, array<string, mixed>>
      */
-    private static function loadEmailLog(string $customerId): array
+    private static function loadEmailLog(string $customerId, string $tenantId): array
     {
         return Database::query(
             'SELECT el.* FROM `email_log` el
-             INNER JOIN `bookings` b ON el.`booking_id` = b.`id`
-             WHERE b.`customer_id` = ?
+             INNER JOIN `bookings` b ON el.`booking_id` = b.`id` AND el.`tenant_id` = b.`tenant_id`
+             WHERE b.`customer_id` = ? AND b.`tenant_id` = ?
              ORDER BY el.`sent_at` DESC',
-            [$customerId]
+            [$customerId, $tenantId]
         );
     }
 
@@ -142,6 +142,7 @@ final class DataExporter
     {
         return array_map(fn(array $b) => [
             'booking_pattern'    => $b['booking_pattern'],
+            'contact' => ['name' => $b['customer_name_snapshot'] ?? null, 'email' => $b['customer_email_snapshot'] ?? null, 'phone' => $b['customer_phone_snapshot'] ?? null],
             'start_datetime'     => $b['start_datetime'],
             'end_datetime'       => $b['end_datetime'],
             'party_size'         => $b['party_size'],

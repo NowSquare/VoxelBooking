@@ -132,9 +132,12 @@ final class AuditLog
                 ]
             );
         } catch (\Throwable $e) {
-            // Audit log failures must not break the application.
-            // Fall back to file logger so evidence is not silently lost.
-            Logger::warning('Audit log write failed: ' . $e->getMessage(), [
+            // Domain mutations and their evidence commit together in every transport.
+            // Authentication and other non-transactional logging retain the safe fallback.
+            if (Database::pdo()->inTransaction()) {
+                throw new \App\Agent\OperationException('audit_unavailable',503,nextAction:'retry_later',retryable:true);
+            }
+            Logger::warning('Audit log write failed', [
                 'action'      => $action,
                 'entity_type' => $entityType,
                 'entity_id'   => $entityId,

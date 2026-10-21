@@ -34,6 +34,8 @@ final class TimeSlotCalculator
         ?string $serviceId = null,
         ?string $staffId = null,
         ?string $excludeBookingId = null,
+        ?int $durationOverride = null,
+        bool $ignoreAdvanceWindow = false,
     ): array {
         $tenantId = $tenant['id'];
         $timezone = $tenant['timezone'] ?? 'UTC';
@@ -41,15 +43,20 @@ final class TimeSlotCalculator
 
         // Resolve service duration
         $serviceDuration = (int) ($tenant['slot_duration_minutes'] ?? 30);
+        $requiresStaff = false;
         if ($serviceId) {
             $service = Database::query(
-                'SELECT `duration_minutes` FROM `services` WHERE `id` = ? AND `tenant_id` = ? AND `is_active` = 1 LIMIT 1',
+                'SELECT `duration_minutes`, `requires_staff` FROM `services` WHERE `id` = ? AND `tenant_id` = ? AND `is_active` = 1 LIMIT 1',
                 [$serviceId, $tenantId]
             );
             if (!empty($service)) {
                 $serviceDuration = (int) $service[0]['duration_minutes'];
+                $requiresStaff = (bool) $service[0]['requires_staff'];
+            } else {
+                return ['slots' => [], 'date' => $date, 'timezone' => $timezone];
             }
         }
+        if ($durationOverride !== null) $serviceDuration = max(1, $durationOverride);
 
         // Check if date is blocked (tenant-level)
         $blockedTenant = Database::query(
@@ -69,7 +76,7 @@ final class TimeSlotCalculator
         $earliestBookable = $now->modify("+{$minAdvance} hours");
         $latestBookable = $now->modify("+{$maxAdvanceDays} days")->setTime(23, 59, 59);
 
-        if ($requestedDate->format('Y-m-d') > $latestBookable->format('Y-m-d')) {
+        if (!$ignoreAdvanceWindow && $requestedDate->format('Y-m-d') > $latestBookable->format('Y-m-d')) {
             return ['slots' => [], 'date' => $date, 'timezone' => $timezone];
         }
 
@@ -80,6 +87,7 @@ final class TimeSlotCalculator
         $eligibleStaff = self::resolveEligibleStaff($tenantId, $serviceId, $staffId);
 
         if (empty($eligibleStaff)) {
+            if ($staffId !== null || $requiresStaff) return ['slots' => [], 'date' => $date, 'timezone' => $timezone];
             // No staff: use tenant-level availability
             $eligibleStaff = [null]; // null = no staff filter
         }
@@ -120,12 +128,10 @@ final class TimeSlotCalculator
                         continue;
                     }
 
-                    // Check min_advance: if today, skip past times
-                    if ($requestedDate->format('Y-m-d') === $now->format('Y-m-d')) {
-                        $slotDateTime = $requestedDate->setTime((int) floor($startMin / 60), $startMin % 60);
-                        if ($slotDateTime < $earliestBookable) {
-                            continue;
-                        }
+                    // Advance limits can span more than one day.
+                    $slotDateTime = $requestedDate->setTime((int) floor($startMin / 60), $startMin % 60);
+                    if (!$ignoreAdvanceWindow && $slotDateTime < $earliestBookable) {
+                        continue;
                     }
 
                     // Check against existing bookings (with buffer)
@@ -138,7 +144,7 @@ final class TimeSlotCalculator
                         $bookingEndWithBuffer = $bookingEnd + $bufferMinutes;
 
                         // Overlap check: slot overlaps if it starts before booking ends (+ buffer) AND ends after booking starts
-                        if ($startMin < $bookingEndWithBuffer && $endMin > $bookingStart) {
+                        if ($startMin < $bookingEndWithBuffer && $endMin + $bufferMinutes > $bookingStart) {
                             $conflicts = true;
                             break;
                         }
@@ -185,13 +191,14 @@ final class TimeSlotCalculator
         ?string $serviceId = null,
         ?string $staffId = null,
         ?string $excludeBookingId = null,
+        ?int $durationOverride = null,
     ): array {
         $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
         $availableDates = [];
 
         for ($day = 1; $day <= $daysInMonth; $day++) {
             $date = sprintf('%04d-%02d-%02d', $year, $month, $day);
-            $result = self::getAvailableSlots($tenant, $date, $serviceId, $staffId, $excludeBookingId);
+            $result = self::getAvailableSlots($tenant, $date, $serviceId, $staffId, $excludeBookingId, $durationOverride);
             if (!empty($result['slots'])) {
                 $availableDates[] = $date;
             }
@@ -241,6 +248,7 @@ final class TimeSlotCalculator
             if (!empty($staffRows)) {
                 return array_column($staffRows, 'id');
             }
+            return [];
         }
 
         // Fallback: all active staff for tenant
@@ -267,7 +275,7 @@ final class TimeSlotCalculator
                 [$tenantId, $staffId, $dayOfWeek]
             );
 
-            if (!empty($windows)) {
+            if (!empty($windows) || Database::query('SELECT 1 FROM availability WHERE tenant_id = ? AND staff_id = ? LIMIT 1', [$tenantId, $staffId])) {
                 return $windows;
             }
         }

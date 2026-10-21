@@ -41,18 +41,18 @@ final class Booking
     {
         $rows = Database::query(
             "SELECT b.*, t.`name` AS `tenant_name`, t.`slug` AS `tenant_slug`,
-                    c.`name` AS `customer_name`, c.`email` AS `customer_email`,
+                    COALESCE(b.`customer_name_snapshot`,c.`name`) AS `customer_name`, COALESCE(b.`customer_email_snapshot`,c.`email`) AS `customer_email`,
                     s.`name` AS `service_name`,
                     st.`name` AS `staff_name`,
                     r.`name` AS `resource_name`,
                     ev.`name` AS `event_name`
              FROM `bookings` b
              LEFT JOIN `tenants` t ON t.`id` = b.`tenant_id`
-             LEFT JOIN `customers` c ON c.`id` = b.`customer_id`
-             LEFT JOIN `services` s ON s.`id` = b.`service_id`
-             LEFT JOIN `staff` st ON st.`id` = b.`staff_id`
-             LEFT JOIN `resources` r ON r.`id` = b.`resource_id`
-             LEFT JOIN `events` ev ON ev.`id` = b.`event_id`
+             LEFT JOIN `customers` c ON c.`id` = b.`customer_id` AND c.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `services` s ON s.`id` = b.`service_id` AND s.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `staff` st ON st.`id` = b.`staff_id` AND st.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `resources` r ON r.`id` = b.`resource_id` AND r.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `events` ev ON ev.`id` = b.`event_id` AND ev.`tenant_id` = b.`tenant_id`
              WHERE b.`id` = ?
              LIMIT 1",
             [$id]
@@ -83,16 +83,16 @@ final class Booking
 
         return Database::query(
             "SELECT b.*, t.`name` AS `tenant_name`, t.`slug` AS `tenant_slug`,
-                    c.`name` AS `customer_name`, c.`email` AS `customer_email`,
+                    COALESCE(b.`customer_name_snapshot`,c.`name`) AS `customer_name`, COALESCE(b.`customer_email_snapshot`,c.`email`) AS `customer_email`,
                     s.`name` AS `service_name`,
                     r.`name` AS `resource_name`,
                     ev.`name` AS `event_name`
              FROM `bookings` b
              LEFT JOIN `tenants` t ON t.`id` = b.`tenant_id`
-             LEFT JOIN `customers` c ON c.`id` = b.`customer_id`
-             LEFT JOIN `services` s ON s.`id` = b.`service_id`
-             LEFT JOIN `resources` r ON r.`id` = b.`resource_id`
-             LEFT JOIN `events` ev ON ev.`id` = b.`event_id`
+             LEFT JOIN `customers` c ON c.`id` = b.`customer_id` AND c.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `services` s ON s.`id` = b.`service_id` AND s.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `resources` r ON r.`id` = b.`resource_id` AND r.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `events` ev ON ev.`id` = b.`event_id` AND ev.`tenant_id` = b.`tenant_id`
              {$whereClause}
              ORDER BY {$orderCol} {$orderDir}
              LIMIT ? OFFSET ?",
@@ -123,16 +123,16 @@ final class Booking
 
         return Database::query(
             "SELECT b.*, t.`name` AS `tenant_name`, t.`slug` AS `tenant_slug`,
-                    c.`name` AS `customer_name`, c.`email` AS `customer_email`,
+                    COALESCE(b.`customer_name_snapshot`,c.`name`) AS `customer_name`, COALESCE(b.`customer_email_snapshot`,c.`email`) AS `customer_email`,
                     s.`name` AS `service_name`,
                     r.`name` AS `resource_name`,
                     ev.`name` AS `event_name`
              FROM `bookings` b
              LEFT JOIN `tenants` t ON t.`id` = b.`tenant_id`
-             LEFT JOIN `customers` c ON c.`id` = b.`customer_id`
-             LEFT JOIN `services` s ON s.`id` = b.`service_id`
-             LEFT JOIN `resources` r ON r.`id` = b.`resource_id`
-             LEFT JOIN `events` ev ON ev.`id` = b.`event_id`
+             LEFT JOIN `customers` c ON c.`id` = b.`customer_id` AND c.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `services` s ON s.`id` = b.`service_id` AND s.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `resources` r ON r.`id` = b.`resource_id` AND r.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `events` ev ON ev.`id` = b.`event_id` AND ev.`tenant_id` = b.`tenant_id`
              {$whereClause}
              ORDER BY {$orderCol} {$orderDir}
              LIMIT 10000",
@@ -162,16 +162,16 @@ final class Booking
 
         return Database::query(
             "SELECT b.*, t.`name` AS `tenant_name`, t.`slug` AS `tenant_slug`,
-                    c.`name` AS `customer_name`, c.`email` AS `customer_email`,
+                    COALESCE(b.`customer_name_snapshot`,c.`name`) AS `customer_name`, COALESCE(b.`customer_email_snapshot`,c.`email`) AS `customer_email`,
                     s.`name` AS `service_name`,
                     r.`name` AS `resource_name`,
                     ev.`name` AS `event_name`
              FROM `bookings` b
              LEFT JOIN `tenants` t ON t.`id` = b.`tenant_id`
-             LEFT JOIN `customers` c ON c.`id` = b.`customer_id`
-             LEFT JOIN `services` s ON s.`id` = b.`service_id`
-             LEFT JOIN `resources` r ON r.`id` = b.`resource_id`
-             LEFT JOIN `events` ev ON ev.`id` = b.`event_id`
+             LEFT JOIN `customers` c ON c.`id` = b.`customer_id` AND c.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `services` s ON s.`id` = b.`service_id` AND s.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `resources` r ON r.`id` = b.`resource_id` AND r.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `events` ev ON ev.`id` = b.`event_id` AND ev.`tenant_id` = b.`tenant_id`
              {$whereClause}
              ORDER BY {$orderCol} {$orderDir}
              LIMIT 10000",
@@ -224,16 +224,16 @@ final class Booking
 
         return Database::query(
             "SELECT b.*, t.`name` AS `tenant_name`, t.`slug` AS `tenant_slug`,
-                    c.`name` AS `customer_name`, c.`email` AS `customer_email`,
+                    COALESCE(b.`customer_name_snapshot`,c.`name`) AS `customer_name`, COALESCE(b.`customer_email_snapshot`,c.`email`) AS `customer_email`,
                     s.`name` AS `service_name`,
                     r.`name` AS `resource_name`,
                     ev.`name` AS `event_name`
              FROM `bookings` b
              LEFT JOIN `tenants` t ON t.`id` = b.`tenant_id`
-             LEFT JOIN `customers` c ON c.`id` = b.`customer_id`
-             LEFT JOIN `services` s ON s.`id` = b.`service_id`
-             LEFT JOIN `resources` r ON r.`id` = b.`resource_id`
-             LEFT JOIN `events` ev ON ev.`id` = b.`event_id`
+             LEFT JOIN `customers` c ON c.`id` = b.`customer_id` AND c.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `services` s ON s.`id` = b.`service_id` AND s.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `resources` r ON r.`id` = b.`resource_id` AND r.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `events` ev ON ev.`id` = b.`event_id` AND ev.`tenant_id` = b.`tenant_id`
              {$whereClause}
              ORDER BY {$orderCol} {$orderDir}
              LIMIT ? OFFSET ?",
@@ -253,16 +253,16 @@ final class Booking
     ): array {
         return Database::query(
             "SELECT b.*, t.`name` AS `tenant_name`, t.`slug` AS `tenant_slug`,
-                    c.`name` AS `customer_name`, c.`email` AS `customer_email`,
+                    COALESCE(b.`customer_name_snapshot`,c.`name`) AS `customer_name`, COALESCE(b.`customer_email_snapshot`,c.`email`) AS `customer_email`,
                     s.`name` AS `service_name`,
                     r.`name` AS `resource_name`,
                     ev.`name` AS `event_name`
              FROM `bookings` b
              LEFT JOIN `tenants` t ON t.`id` = b.`tenant_id`
-             LEFT JOIN `customers` c ON c.`id` = b.`customer_id`
-             LEFT JOIN `services` s ON s.`id` = b.`service_id`
-             LEFT JOIN `resources` r ON r.`id` = b.`resource_id`
-             LEFT JOIN `events` ev ON ev.`id` = b.`event_id`
+             LEFT JOIN `customers` c ON c.`id` = b.`customer_id` AND c.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `services` s ON s.`id` = b.`service_id` AND s.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `resources` r ON r.`id` = b.`resource_id` AND r.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `events` ev ON ev.`id` = b.`event_id` AND ev.`tenant_id` = b.`tenant_id`
              WHERE b.`tenant_id` = ? AND b.`status` = 'confirmed'
                    AND b.`start_datetime` >= ?
              ORDER BY b.`start_datetime` ASC
@@ -289,16 +289,16 @@ final class Booking
             $rows = Database::query(
                 "SELECT b.*, t.`name` AS `tenant_name`, t.`slug` AS `tenant_slug`,
                     t.`timezone` AS `tenant_timezone`,
-                    c.`name` AS `customer_name`, c.`email` AS `customer_email`,
+                    COALESCE(b.`customer_name_snapshot`,c.`name`) AS `customer_name`, COALESCE(b.`customer_email_snapshot`,c.`email`) AS `customer_email`,
                     s.`name` AS `service_name`,
                     r.`name` AS `resource_name`,
                     ev.`name` AS `event_name`
              FROM `bookings` b
              LEFT JOIN `tenants` t ON t.`id` = b.`tenant_id`
-             LEFT JOIN `customers` c ON c.`id` = b.`customer_id`
-             LEFT JOIN `services` s ON s.`id` = b.`service_id`
-             LEFT JOIN `resources` r ON r.`id` = b.`resource_id`
-             LEFT JOIN `events` ev ON ev.`id` = b.`event_id`
+             LEFT JOIN `customers` c ON c.`id` = b.`customer_id` AND c.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `services` s ON s.`id` = b.`service_id` AND s.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `resources` r ON r.`id` = b.`resource_id` AND r.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `events` ev ON ev.`id` = b.`event_id` AND ev.`tenant_id` = b.`tenant_id`
              WHERE b.`status` = 'confirmed'
                    AND COALESCE(NULLIF(t.`timezone`, ''), 'UTC') = ?
                    AND b.`start_datetime` >= ?
@@ -486,17 +486,17 @@ final class Booking
         return Database::query(
             "SELECT b.`id`, b.`customer_id`, b.`start_datetime`, b.`end_datetime`, b.`status`,
                     b.`booking_pattern`, b.`staff_id`,
-                    c.`name` AS `customer_name`, c.`email` AS `customer_email`,
+                    COALESCE(b.`customer_name_snapshot`,c.`name`) AS `customer_name`, COALESCE(b.`customer_email_snapshot`,c.`email`) AS `customer_email`,
                     s.`name` AS `service_name`, s.`color` AS `service_color`,
                     st.`name` AS `staff_name`,
                     r.`name` AS `resource_name`,
                     ev.`name` AS `event_name`
              FROM `bookings` b
-             LEFT JOIN `customers` c ON c.`id` = b.`customer_id`
-             LEFT JOIN `services` s ON s.`id` = b.`service_id`
-             LEFT JOIN `staff` st ON st.`id` = b.`staff_id`
-             LEFT JOIN `resources` r ON r.`id` = b.`resource_id`
-             LEFT JOIN `events` ev ON ev.`id` = b.`event_id`
+             LEFT JOIN `customers` c ON c.`id` = b.`customer_id` AND c.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `services` s ON s.`id` = b.`service_id` AND s.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `staff` st ON st.`id` = b.`staff_id` AND st.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `resources` r ON r.`id` = b.`resource_id` AND r.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `events` ev ON ev.`id` = b.`event_id` AND ev.`tenant_id` = b.`tenant_id`
              WHERE b.`tenant_id` = ?
                AND DATE(b.`start_datetime`) = ?
                AND b.`status` NOT IN ('cancelled', 'rescheduled')
@@ -518,17 +518,17 @@ final class Booking
         return Database::query(
             "SELECT b.`id`, b.`customer_id`, b.`start_datetime`, b.`end_datetime`, b.`status`,
                     b.`booking_pattern`, b.`staff_id`,
-                    c.`name` AS `customer_name`, c.`email` AS `customer_email`,
+                    COALESCE(b.`customer_name_snapshot`,c.`name`) AS `customer_name`, COALESCE(b.`customer_email_snapshot`,c.`email`) AS `customer_email`,
                     s.`name` AS `service_name`, s.`color` AS `service_color`,
                     st.`name` AS `staff_name`,
                     r.`name` AS `resource_name`,
                     ev.`name` AS `event_name`
              FROM `bookings` b
-             LEFT JOIN `customers` c ON c.`id` = b.`customer_id`
-             LEFT JOIN `services` s ON s.`id` = b.`service_id`
-             LEFT JOIN `staff` st ON st.`id` = b.`staff_id`
-             LEFT JOIN `resources` r ON r.`id` = b.`resource_id`
-             LEFT JOIN `events` ev ON ev.`id` = b.`event_id`
+             LEFT JOIN `customers` c ON c.`id` = b.`customer_id` AND c.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `services` s ON s.`id` = b.`service_id` AND s.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `staff` st ON st.`id` = b.`staff_id` AND st.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `resources` r ON r.`id` = b.`resource_id` AND r.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `events` ev ON ev.`id` = b.`event_id` AND ev.`tenant_id` = b.`tenant_id`
              WHERE b.`tenant_id` = ?
                AND DATE(b.`start_datetime`) >= ?
                AND DATE(b.`start_datetime`) <= ?

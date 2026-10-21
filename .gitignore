@@ -45,6 +45,8 @@ docs/superpowers/
 .phpunit.cache/
 coverage/
 storage/sessions/
+storage/keys/
+storage/media-journal/
 
 # ── Demo mode ──
 .demo

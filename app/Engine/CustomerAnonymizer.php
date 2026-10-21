@@ -42,86 +42,55 @@ final class CustomerAnonymizer
      *
      * @throws \RuntimeException if the customer doesn't exist or is already anonymized
      */
-    public static function anonymize(string $customerId, string $reason = 'manual'): array
+    public static function anonymize(string $customerId, string $reason = 'manual', ?\App\Agent\ActorContext $actor = null, ?int $retentionMonths = null): array
     {
-        // Load customer
-        $customer = self::loadCustomer($customerId);
-
-        if ($customer === null) {
-            throw new \RuntimeException("Customer {$customerId} not found");
-        }
-
-        if ((int) ($customer['is_anonymized'] ?? 0) === 1) {
-            throw new \RuntimeException("Customer {$customerId} is already anonymized");
-        }
-
-        $emailHash = hash('sha256', strtolower(trim($customer['email'])));
-
-        // Run all anonymization in a transaction
-        Database::execute('START TRANSACTION');
-
-        try {
-            // 1. Anonymize customer record
-            Database::execute(
-                'UPDATE `customers` SET
-                    `name` = ?,
-                    `email` = ?,
-                    `phone` = NULL,
-                    `notes` = NULL,
-                    `is_anonymized` = 1,
-                    `anonymized_at` = NOW(),
-                    `updated_at` = NOW()
-                WHERE `id` = ?',
-                ['Deleted', $emailHash, $customerId]
-            );
-
-            // 2. Anonymize booking PII (preserve consent + internal notes + structure)
-            $bookingsAffected = Database::execute(
-                'UPDATE `bookings` SET
-                    `notes` = NULL,
-                    `custom_field_data` = NULL,
-                    `updated_at` = NOW()
-                WHERE `customer_id` = ?',
-                [$customerId]
-            );
-
-            // 3. Anonymize email log (hash the to_email)
-            $emailsAffected = Database::execute(
-                'UPDATE `email_log` SET
-                    `to_email` = ?
-                WHERE `booking_id` IN (
-                    SELECT `id` FROM `bookings` WHERE `customer_id` = ?
-                )',
-                [$emailHash, $customerId]
-            );
-
-            Database::execute('COMMIT');
-        } catch (\Throwable $e) {
-            Database::execute('ROLLBACK');
-            throw new \RuntimeException('Anonymization failed: ' . $e->getMessage(), 0, $e);
-        }
-
-        $result = [
-            'customer_id'       => $customerId,
-            'bookings_affected' => $bookingsAffected,
-            'emails_affected'   => $emailsAffected,
-        ];
-
-        // Audit log the anonymization
-        AuditLog::log(
-            'customer.anonymized',
-            'customer',
-            $customerId,
-            [
-                'reason'            => $reason,
-                'tenant_id'         => $customer['tenant_id'],
-                'bookings_affected' => $bookingsAffected,
-                'emails_affected'   => $emailsAffected,
-            ],
-            $customer['tenant_id'],
-        );
-
-        return $result;
+        $initial = self::loadCustomer($customerId);
+        if ($initial === null) throw new \RuntimeException('Customer not found');
+        return \App\Application\Shared\Access::transaction(static function () use ($customerId, $initial, $reason, $actor, $retentionMonths): array {
+            $tenant = Database::query('SELECT * FROM tenants WHERE id = ? FOR UPDATE', [$initial['tenant_id']])[0] ?? null;
+            $customer = Database::query('SELECT * FROM customers WHERE id = ? AND tenant_id = ? FOR UPDATE', [$customerId, $initial['tenant_id']])[0] ?? null;
+            if ($tenant === null || $customer === null) throw new \RuntimeException('Customer not found');
+            if ((bool)$customer['is_anonymized']) throw new \RuntimeException('Customer is already anonymized');
+            if ($reason === 'retention_cron') {
+                $months = $retentionMonths ?? (int)$tenant['data_retention_months'];
+                $eligible = $months > 0 && Database::query("SELECT id FROM customers WHERE id = ? AND last_booking_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL ? MONTH) AND NOT EXISTS (SELECT 1 FROM bookings WHERE customer_id = ? AND status NOT IN ('completed','cancelled','no_show'))", [$customerId, $months, $customerId]);
+                if (!$eligible) throw new \RuntimeException('Customer no longer eligible for retention');
+            }
+            $emailHash = hash('sha256', mb_strtolower(trim($customer['email'])));
+            Database::execute("UPDATE customers SET name = 'Deleted', email = ?, phone = NULL, notes = NULL, is_anonymized = 1, anonymized_at = UTC_TIMESTAMP(), updated_at = UTC_TIMESTAMP() WHERE id = ? AND tenant_id = ?", [$emailHash, $customerId, $tenant['id']]);
+            $bookings = Database::execute('UPDATE bookings SET notes = NULL, custom_field_data = NULL, customer_name_snapshot = NULL, customer_email_snapshot = NULL, customer_phone_snapshot = NULL, updated_at = UTC_TIMESTAMP() WHERE customer_id = ? AND tenant_id = ?', [$customerId,$tenant['id']]);
+            $emails = Database::execute("UPDATE email_log SET to_email = ?, subject = 'Anonymized communication', error = NULL WHERE tenant_id = ? AND (to_email = ? OR booking_id IN (SELECT id FROM bookings WHERE customer_id = ? AND tenant_id = ?))", [$emailHash,$tenant['id'],$customer['email'],$customerId,$tenant['id']]);
+            $capabilities = Database::execute('UPDATE customer_capabilities SET revoked_at = UTC_TIMESTAMP() WHERE customer_id = ? AND tenant_id = ? AND revoked_at IS NULL', [$customerId,$tenant['id']]);
+            $connections = Database::execute("UPDATE agent_connections SET revoked_at = UTC_TIMESTAMP() WHERE principal_type = 'customer' AND principal_id = ? AND revoked_at IS NULL", [$customerId]);
+            foreach (['agent_credentials','oauth_auth_codes','oauth_access_tokens','oauth_refresh_tokens'] as $table) {
+                Database::execute("UPDATE $table SET revoked_at = UTC_TIMESTAMP() WHERE connection_id IN (SELECT id FROM agent_connections WHERE principal_type = 'customer' AND principal_id = ?) AND revoked_at IS NULL", [$customerId]);
+            }
+            // Payloads may contain this customer's contact data even under staff credentials.
+            // Preserve only the current consumed confirmation's selectors for exact retry.
+            // The original review contains personal data and is always erased.
+            $retainedConfirmations = [];
+            if ($actor !== null && Outbox::currentReceiptId() !== null) {
+                $cipher = new \App\Agent\PayloadCipher();
+                $candidates = Database::query("SELECT id,principal_type,principal_id,connection_id,payload_cipher FROM agent_previews WHERE tenant_id=? AND operation_id='deletion_confirm' AND consumed_at IS NOT NULL", [$tenant['id']]);
+                foreach ($candidates as $preview) {
+                    if ($preview['principal_type'] !== $actor->principalType || $preview['principal_id'] !== $actor->principalId || $preview['connection_id'] !== $actor->connectionId) continue;
+                    $arguments = $cipher->decrypt($preview['payload_cipher']);
+                    if (($arguments['customer_id'] ?? null) !== $customerId || ($arguments['business_id'] ?? null) !== $tenant['id']
+                        || array_diff(array_keys($arguments), ['business_id','customer_id']) !== []) continue;
+                    Database::execute('UPDATE agent_previews SET review_cipher=? WHERE id=?', [$cipher->encrypt([]), $preview['id']]);
+                    $retainedConfirmations[] = $preview['id'];
+                }
+            }
+            $previews = Database::execute('DELETE FROM agent_previews WHERE tenant_id = ?'
+                . ($retainedConfirmations ? ' AND id NOT IN ('.implode(',', array_fill(0,count($retainedConfirmations),'?')).')' : ''),
+                [$tenant['id'], ...$retainedConfirmations]);
+            $receipts = Database::execute('UPDATE agent_operation_receipts SET result_cipher = NULL WHERE tenant_id = ? AND result_cipher IS NOT NULL', [$tenant['id']]);
+            $webhooks = Database::execute('UPDATE webhook_deliveries SET payload_cipher=NULL WHERE tenant_id=? AND payload_cipher IS NOT NULL',[$tenant['id']]);
+            $webhookIntents = Database::execute("UPDATE delivery_outbox o JOIN webhook_deliveries d ON d.outbox_id=o.id SET o.status='delivered',o.delivered_at=UTC_TIMESTAMP(),o.last_error_code='privacy_erasure' WHERE d.tenant_id=? AND o.status IN ('pending','failed')",[$tenant['id']]);
+            $result = ['customer_id'=>$customerId,'anonymized'=>true,'bookings_affected'=>$bookings,'emails_affected'=>$emails,'capabilities_revoked'=>$capabilities,'connections_revoked'=>$connections,'previews_removed'=>$previews,'receipt_payloads_removed'=>$receipts,'webhook_payloads_removed'=>$webhooks,'webhook_intents_suppressed'=>$webhookIntents];
+            Database::execute('INSERT INTO audit_log (id,tenant_id,actor_type,actor_id,action,entity_type,entity_id,details,request_id,created_at) VALUES (?,?,?,?,?,?,?,?,?,UTC_TIMESTAMP())', [Ulid::generate(),$tenant['id'],$actor?->auditType() ?? 'system',$actor?->principalId,'customer.anonymized','customer',$customerId,json_encode(['reason'=>in_array($reason,['manual','retention_cron','operator_review'],true)?$reason:'manual','effects'=>$result],JSON_THROW_ON_ERROR),AuditLog::getRequestId() ?: Ulid::generate()]);
+            return $result;
+        });
     }
 
     /**
@@ -172,7 +141,7 @@ final class CustomerAnonymizer
 
         foreach ($candidates as $candidate) {
             try {
-                self::anonymize($candidate['id'], 'retention_cron');
+                self::anonymize($candidate['id'], 'retention_cron', retentionMonths: $retentionMonths);
                 $processed++;
             } catch (\RuntimeException $e) {
                 if (str_contains($e->getMessage(), 'already anonymized')) {

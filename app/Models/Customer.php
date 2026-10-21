@@ -55,7 +55,7 @@ final class Customer
                     `last_booking_at`, `is_anonymized`, `created_at`
              FROM `customers`
              {$whereClause}
-             ORDER BY `last_booking_at` DESC, `created_at` DESC
+             ORDER BY `last_booking_at` DESC, `created_at` DESC, `id` DESC
              LIMIT ? OFFSET ?",
             array_merge($bindings, [$limit, $offset])
         );

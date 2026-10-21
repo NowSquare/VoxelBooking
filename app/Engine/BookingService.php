@@ -38,7 +38,7 @@ final class BookingService
      * @throws \InvalidArgumentException If required fields are missing
      * @throws \RuntimeException If tenant requires consent but it was not given
      */
-    public static function createBooking(array $bookingData, array $tenant, bool $consentGiven): array
+    public static function createBooking(array $bookingData, array $tenant, bool $consentGiven, ?\App\Agent\ActorContext $actor = null): array
     {
         // Validate required fields
         $required = ['tenant_id', 'customer_id', 'booking_pattern', 'start_datetime', 'end_datetime'];
@@ -92,6 +92,7 @@ final class BookingService
         $optionalFields = [
             'service_id', 'staff_id', 'resource_id', 'event_id',
             'party_size', 'notes', 'internal_notes', 'customer_timezone', 'source', 'status',
+            'customer_name_snapshot', 'customer_email_snapshot', 'customer_phone_snapshot', 'capacity_slot_id', 'price_total', 'price_currency',
         ];
 
         foreach ($optionalFields as $field) {
@@ -135,6 +136,8 @@ final class BookingService
                 'consent_recorded' => $consentGivenAt !== null,
             ],
             $bookingData['tenant_id'],
+            actorType: $actor?->auditType(),
+            actorId: $actor?->principalId ?: null,
         );
 
         return [
@@ -252,14 +255,14 @@ final class BookingService
                     r.`name` AS `resource_name`,
                     e.`name` AS `event_name`,
                     e.`location` AS `event_location`,
-                    c.`name` AS `customer_name`,
-                    c.`email` AS `customer_email`
+                    COALESCE(b.`customer_name_snapshot`, c.`name`) AS `customer_name`,
+                    COALESCE(b.`customer_email_snapshot`, c.`email`) AS `customer_email`
              FROM `bookings` b
-             LEFT JOIN `services` s ON s.`id` = b.`service_id`
-             LEFT JOIN `staff` st ON st.`id` = b.`staff_id`
-             LEFT JOIN `resources` r ON r.`id` = b.`resource_id`
-             LEFT JOIN `events` e ON e.`id` = b.`event_id`
-             LEFT JOIN `customers` c ON c.`id` = b.`customer_id`
+             LEFT JOIN `services` s ON s.`id` = b.`service_id` AND s.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `staff` st ON st.`id` = b.`staff_id` AND st.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `resources` r ON r.`id` = b.`resource_id` AND r.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `events` e ON e.`id` = b.`event_id` AND e.`tenant_id` = b.`tenant_id`
+             LEFT JOIN `customers` c ON c.`id` = b.`customer_id` AND c.`tenant_id` = b.`tenant_id`
              WHERE b.`id` = ? AND b.`tenant_id` = ?
              LIMIT 1',
             [$bookingId, $tenantId]
@@ -427,14 +430,17 @@ final class BookingService
         array $target,
         string $actorType = 'customer',
         string $source = 'web',
+        ?\App\Agent\ActorContext $actor = null,
     ): array {
-        $booking = self::findById($bookingId);
+        return \App\Application\Bookings\BookingTransaction::run($tenant['id'], static function (array $tenant) use ($bookingId, $target, $actorType, $source, $actor): array {
+        $booking = Database::query('SELECT * FROM bookings WHERE id = ? AND tenant_id = ? FOR UPDATE', [$bookingId, $tenant['id']])[0] ?? null;
         if (!$booking || $booking['tenant_id'] !== $tenant['id']) {
             throw new \RuntimeException('not_found');
         }
 
         // Only confirmed bookings can be rescheduled
         $check = self::canReschedule($booking, $tenant);
+        if ($actor?->isStaff()) $check = ['allowed' => $booking['status'] === 'confirmed', 'reason' => 'not_confirmed'];
         if (!$check['allowed']) {
             throw new \RuntimeException($check['reason']);
         }
@@ -461,7 +467,6 @@ final class BookingService
 
         // Transaction: lock + recheck availability + create replacement
         $pdo = Database::connect();
-        $pdo->beginTransaction();
 
         try {
             // Pattern-specific locking
@@ -493,15 +498,26 @@ final class BookingService
             ];
 
             // Carry forward optional fields from the original booking
-            foreach (['service_id', 'staff_id', 'resource_id', 'event_id', 'party_size', 'notes', 'internal_notes', 'customer_timezone'] as $field) {
+            foreach (['service_id', 'staff_id', 'resource_id', 'event_id', 'party_size', 'notes', 'internal_notes', 'customer_timezone', 'customer_name_snapshot', 'customer_email_snapshot', 'customer_phone_snapshot', 'capacity_slot_id', 'price_total', 'price_currency'] as $field) {
                 if (!empty($booking[$field])) {
                     $newBookingData[$field] = $booking[$field];
                 }
             }
 
             // Pattern-specific overrides for the new booking
+            if ($pattern === 'capacity') $newBookingData['capacity_slot_id'] = $resolved['slot_id'];
             if ($pattern === 'event' && !empty($resolved['event_id'])) {
                 $newBookingData['event_id'] = $resolved['event_id'];
+            }
+
+            if ($pattern === 'resource') {
+                $quote=ResourceCalculator::checkAvailability($tenant,$booking['resource_id'],$resolved['check_in'],$resolved['check_out'],$resolved['guest_count'],$bookingId);
+                $newBookingData['price_total']=isset($quote['total'])?sprintf('%.2f',$quote['total']):null;
+                $newBookingData['price_currency']=$tenant['currency'];
+            } elseif($pattern==='event' && $newBookingData['event_id']!==$booking['event_id']) {
+                $event=Database::query('SELECT price FROM events WHERE id=? AND tenant_id=?',[$newBookingData['event_id'],$tenantId])[0];
+                $newBookingData['price_total']=$event['price']===null?null:\App\Application\Bookings\BookingDraft::multiplyMoney((string)$event['price'],(int)$booking['party_size']);
+                $newBookingData['price_currency']=$tenant['currency'];
             }
 
             // Preserve custom field data (customer answers)
@@ -521,7 +537,8 @@ final class BookingService
                 $newBookingData['_skip_consent_enforcement'] = true;
             }
 
-            $result = self::createBooking($newBookingData, $tenant, $originalHadConsent);
+            \App\Application\Bookings\BookingInventory::assertAvailable($tenant, $newBookingData + ['id' => $bookingId, 'staff_id' => null]);
+            $result = self::createBooking($newBookingData, $tenant, $originalHadConsent, $actor);
 
             // Overwrite with original consent evidence (preserves exact timestamp
             // and text from the initial booking, not a freshly generated one)
@@ -546,7 +563,7 @@ final class BookingService
                 'new_end'        => $newEndDt->format('Y-m-d H:i:s'),
                 'actor_type'     => $actorType,
                 'pattern'        => $pattern,
-            ], $tenantId);
+            ], $tenantId, actorType: $actor?->auditType() ?? $actorType, actorId: $actor?->principalId ?: null);
 
             // Cancel unsent reminders for the original booking (belt-and-suspenders
             // with ReminderJob's own status check — ensures no stale reminder fires
@@ -556,13 +573,14 @@ final class BookingService
                 [$bookingId]
             );
 
-            $pdo->commit();
 
-            // Post-commit: schedule reminder for the new booking (dedupe-safe)
-            self::scheduleReminderIfNeeded($tenant, $result['id'], $newStartDt);
+            // Reminder and management grant commit with the replacement.
+            \App\Application\Bookings\BookingCommands::scheduleReminder($tenant, $result['id'], $newStartDt->format('Y-m-d H:i:s'), 'confirmed');
+            $manageUrl = $source === 'web' ? CustomerCapability::manageLink($tenant, $result['id']) : null;
 
             return [
                 'new_booking_id' => $result['id'],
+                'manage_url' => $manageUrl,
                 'old_booking'    => $booking,
                 'new_start'      => $newStartDt->format('Y-m-d H:i:s'),
                 'new_end'        => $newEndDt->format('Y-m-d H:i:s'),
@@ -571,23 +589,66 @@ final class BookingService
                 'pattern'        => $pattern,
             ];
 
+        } catch (\PDOException $e) {
+            Logger::error('Booking reschedule failed', ['booking'=>$bookingId,'pattern'=>$pattern,'exception'=>get_class($e)]);
+            throw new \RuntimeException('reschedule_failed');
         } catch (\RuntimeException $e) {
-            // Re-throw RuntimeException as-is (these are our coded errors)
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
             throw $e;
         } catch (\Throwable $e) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
             Logger::error('Booking reschedule failed', [
                 'booking' => $bookingId,
                 'pattern' => $pattern,
-                'error'   => $e->getMessage(),
+                'exception' => get_class($e),
             ]);
             throw new \RuntimeException('reschedule_failed');
         }
+        });
+    }
+
+    /** Pure review calculation; excludes only the previously authorized original. */
+    public static function previewReschedule(array $booking, array $tenant, array $target, bool $staff = false): array
+    {
+        $permission = $staff ? ['allowed' => $booking['status'] === 'confirmed', 'reason' => 'not_confirmed'] : self::canReschedule($booking, $tenant);
+        if (!$permission['allowed']) throw self::rescheduleError(new \RuntimeException($permission['reason']));
+        $tz = new \DateTimeZone($tenant['timezone']);
+        $start = new \DateTimeImmutable($booking['start_datetime'], $tz);
+        $end = new \DateTimeImmutable($booking['end_datetime'], $tz);
+        if (!$staff && isset($target['event_id']) && $target['event_id'] !== $booking['event_id']) throw new \App\Agent\OperationException('forbidden', 403);
+        try {
+            $resolved = match ($booking['booking_pattern']) {
+                'timeslot' => self::resolveTimeslotTarget($target, $start, $end, $tz),
+                'resource' => self::resolveResourceTarget($target, $booking, $tenant, $tz),
+                'capacity' => self::resolveCapacityTarget($target, $booking, $tenant, $tz),
+                'event' => self::resolveEventTarget($target, $booking, $tenant, $tz),
+            };
+            if ($resolved['new_start_dt'] <= new \DateTimeImmutable('now', $tz)) throw new \RuntimeException('too_soon');
+            self::recheckAvailability($booking['booking_pattern'], $booking, $tenant, $resolved, $booking['id']);
+        } catch (\PDOException) { throw new \App\Agent\OperationException('temporarily_unavailable', 503); } catch (\RuntimeException $error) { throw self::rescheduleError($error); }
+        $result = ['booking_id' => $booking['id'], 'status' => $booking['status'], 'original_start' => $booking['start_datetime'], 'original_end' => $booking['end_datetime'], 'new_start' => $resolved['new_start_dt']->format('Y-m-d H:i:s'), 'new_end' => $resolved['new_end_dt']->format('Y-m-d H:i:s'), 'timezone' => $tenant['timezone'], 'currency' => $tenant['currency'], 'cancellation_policy' => $tenant['cancellation_policy'], 'updated_at' => $booking['updated_at']];
+        if ($booking['booking_pattern'] === 'resource') $result['total'] = sprintf('%.2f', ResourceCalculator::checkAvailability($tenant, $booking['resource_id'], $resolved['check_in'], $resolved['check_out'], $resolved['guest_count'], $booking['id'])['total']);
+        if($booking['booking_pattern']==='event' && ($resolved['event_id']??$booking['event_id'])!==$booking['event_id']) {
+            $targetEvent=Database::query('SELECT price FROM events WHERE id=? AND tenant_id=?',[$resolved['event_id'],$tenant['id']])[0];
+            $result['total']=$targetEvent['price']===null?null:\App\Application\Bookings\BookingDraft::multiplyMoney((string)$targetEvent['price'],(int)$booking['party_size']);
+        }
+        $newPrice=array_key_exists('total',$result);
+        $result['price_currency']=$newPrice?$tenant['currency']:($booking['price_currency']??null);
+        if(!$newPrice)$result['total']=$booking['price_total']??null;
+        if($result['price_currency']!==null)$result['currency']=$result['price_currency'];
+        return $result;
+    }
+
+    public static function rescheduleError(\RuntimeException $error): \App\Agent\OperationException
+    {
+        if ($error instanceof \App\Agent\OperationException) return $error;
+        $code=$error->getMessage();
+        $status=match($code){
+            'invalid_date','invalid_time','invalid_slot','invalid_event','same_slot','pattern_not_supported','too_soon','party_too_small','party_too_large','min_stay','max_stay','invalid_check_in_day','invalid_check_out_day'=>422,
+            'rescheduling_disabled'=>403,
+            'not_found'=>404,
+            'too_late','not_confirmed','slot_unavailable','capacity_exceeded','event_full','already_booked','date_blocked','outside_booking_window','too_many_guests','resource_unavailable'=>409,
+            default=>503,
+        };
+        return new \App\Agent\OperationException($status===503?'reschedule_failed':$code,$status);
     }
 
     // ── Reschedule target resolvers (per pattern) ──
@@ -613,6 +674,8 @@ final class BookingService
             throw new \RuntimeException('invalid_time');
         }
 
+        \App\Application\Bookings\BookingDraft::date($newDate);
+        if (!preg_match('/^([01]\d|2[0-3]):[0-5]\d$/D', $newTime) || !VenueDateTime::wallTimeExists($newDate, $newTime, $tz)) throw new \RuntimeException('invalid_time');
         $newStartDt = new \DateTimeImmutable("{$newDate} {$newTime}", $tz);
         $durationMinutes = (int) (($origEnd->getTimestamp() - $origStart->getTimestamp()) / 60);
         $newEndDt = $newStartDt->modify("+{$durationMinutes} minutes");
@@ -651,6 +714,8 @@ final class BookingService
             throw new \RuntimeException('invalid_date');
         }
 
+        \App\Application\Bookings\BookingDraft::date($checkIn);
+        \App\Application\Bookings\BookingDraft::date($checkOut);
         $newStartDt = new \DateTimeImmutable("{$checkIn} 00:00:00", $tz);
         $newEndDt = new \DateTimeImmutable("{$checkOut} 00:00:00", $tz);
 
@@ -698,6 +763,7 @@ final class BookingService
             throw new \RuntimeException('invalid_slot');
         }
 
+        \App\Application\Bookings\BookingDraft::date($date);
         // Load the capacity slot to get start/end times
         $slots = Database::query(
             'SELECT `start_time`, `end_time` FROM `capacity_slots` WHERE `id` = ? AND `tenant_id` = ? AND `is_active` = 1',
@@ -751,6 +817,7 @@ final class BookingService
             throw new \RuntimeException('invalid_event');
         }
 
+        \App\Application\Bookings\BookingDraft::date($date);
         // Load the event to get start/end times
         $events = Database::query(
             'SELECT `start_datetime`, `end_datetime` FROM `events` WHERE `id` = ? AND `tenant_id` = ? AND `is_active` = 1',
@@ -854,11 +921,13 @@ final class BookingService
         array $booking,
         array $tenant,
         array $resolved,
+        ?string $excludeBookingId = null,
     ): void {
         switch ($pattern) {
             case 'timeslot':
                 $availResult = TimeSlotCalculator::getAvailableSlots(
-                    $tenant, $resolved['new_date'], $booking['service_id'], $booking['staff_id']
+                    $tenant, $resolved['new_date'], $booking['service_id'], $booking['staff_id'], $excludeBookingId,
+                    (int)(($resolved['new_end_dt']->getTimestamp() - $resolved['new_start_dt']->getTimestamp()) / 60)
                 );
                 $stillAvailable = false;
                 foreach ($availResult['slots'] as $slot) {
@@ -878,7 +947,7 @@ final class BookingService
                     $resolved['resource_id'],
                     $resolved['check_in'],
                     $resolved['check_out'],
-                    $resolved['guest_count'],
+                    $resolved['guest_count'], $excludeBookingId,
                 );
                 if (!$avail['available']) {
                     throw new \RuntimeException($avail['error'] ?? 'slot_unavailable');
@@ -890,7 +959,7 @@ final class BookingService
                     $tenant,
                     $resolved['slot_id'],
                     $resolved['new_date'],
-                    $resolved['party_size'],
+                    $resolved['party_size'], $excludeBookingId,
                 );
                 if (!$avail['available']) {
                     throw new \RuntimeException($avail['error'] ?? 'capacity_exceeded');
@@ -902,7 +971,7 @@ final class BookingService
                     $tenant,
                     $resolved['event_id'],
                     $resolved['new_date'],
-                    $resolved['spot_count'],
+                    $resolved['spot_count'], $excludeBookingId,
                 );
                 if (!$avail['available']) {
                     throw new \RuntimeException($avail['error'] ?? 'event_full');
@@ -945,7 +1014,7 @@ final class BookingService
         } catch (\Throwable $e) {
             Logger::error('Failed to schedule reschedule reminder', [
                 'booking' => $bookingId,
-                'error'   => $e->getMessage(),
+                'exception' => get_class($e),
             ]);
         }
     }

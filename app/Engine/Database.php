@@ -26,6 +26,10 @@ final class Database
             return self::$pdo;
         }
 
+        if (defined('VOXELBOOKING_TEST_PROCESS')) {
+            \Tests\Support\TestEnvironment::assertDatabase();
+        }
+
         $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
         $port = $_ENV['DB_PORT'] ?? '3306';
         $name = $_ENV['DB_DATABASE'] ?? 'voxelbooking';
@@ -83,6 +87,12 @@ final class Database
     public static function transaction(callable $callback): mixed
     {
         $pdo = self::connect();
+        if ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+            // Domain locks serialize writes. Later reads must see the state
+            // committed by the previous lock holder, even if authorization or
+            // receipt reads happened before this transaction acquired its lock.
+            $pdo->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+        }
         $pdo->beginTransaction();
 
         try {

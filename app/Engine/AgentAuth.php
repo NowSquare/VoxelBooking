@@ -101,7 +101,11 @@ final class AgentAuth
             }
 
             // Parse scopes from JSON
-            $key['scopes_array'] = json_decode($key['scopes'] ?? '[]', true) ?: [];
+            $storedScopes = json_decode($key['scopes'] ?? '[]', true);
+            $key['scopes_array'] = array_values(array_intersect(
+                is_array($storedScopes) ? $storedScopes : [],
+                self::ROLE_DEFAULTS['viewer'],
+            ));
 
             return $key;
         } catch (\Throwable) {
@@ -117,7 +121,9 @@ final class AgentAuth
      */
     public static function hasScope(array $key, string $scope): bool
     {
-        return in_array($scope, $key['scopes_array'] ?? [], true);
+        // v1 write names were inert at issue time. An upgrade cannot grant new authority.
+        return in_array($scope, self::ROLE_DEFAULTS['viewer'], true)
+            && in_array($scope, $key['scopes_array'] ?? [], true);
     }
 
     /**
@@ -133,7 +139,7 @@ final class AgentAuth
         $hash = hash('sha256', $rawKey);
         $prefix = substr($rawKey, 0, 8);
         $id = Ulid::generate();
-        $scopes = self::ROLE_DEFAULTS[$role] ?? self::ROLE_DEFAULTS['viewer'];
+        $scopes = self::ROLE_DEFAULTS['viewer'];
 
         Database::execute(
             'INSERT INTO `api_keys`
@@ -193,8 +199,8 @@ final class AgentAuth
      */
     public static function extractBearerToken(string $authHeader): string
     {
-        if (str_starts_with($authHeader, 'Bearer ')) {
-            return substr($authHeader, 7);
+        if (preg_match('/\ABearer +([A-Za-z0-9._~+\/=-]+)\z/iD', $authHeader, $matches) === 1) {
+            return $matches[1];
         }
 
         return '';
