@@ -136,7 +136,7 @@ return [
         'upload_grant_invalid'=>'This upload grant does not match the image or business.','upload_expired'=>'The upload grant expired. Prepare a new upload.',
         'image_processing_unavailable'=>'Image processing is not available on this host.',
         'endpoint_configuration_invalid'=>'The installation’s agent address needs to be configured.',
-        'https_required'=>'Agent connections require HTTPS.','invalid_json'=>'Send a bounded JSON object with the application/json content type.',
+        'https_required'=>'Agent connections require HTTPS. Serve APP_URL over https, or use a .test or .localhost host for local development.','invalid_json'=>'Send a bounded JSON object with the application/json content type.',
         'origin_configuration_invalid'=>'A browser origin is configured incorrectly. Ask the operator to review AGENT_ALLOWED_ORIGINS.',
         'origin_not_allowed'=>'This browser origin is not allowed to access the Agent API.',
         'cors_preflight_denied'=>'This browser request uses an unsupported method or header.',

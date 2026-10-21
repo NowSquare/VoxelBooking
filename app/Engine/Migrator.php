@@ -50,6 +50,9 @@ final class Migrator
             Logger::info("Migration {$file} executed (version {$sequence})");
         }
 
+        // Every install and upgrade passes through here, so the payload key appears with the schema.
+        \App\Agent\PayloadCipher::provisionForInstallation();
+
         return $count;
     }
 

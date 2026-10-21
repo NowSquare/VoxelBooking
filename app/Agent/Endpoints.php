@@ -25,10 +25,31 @@ final class Endpoints
             || !in_array($parts['scheme'], ['https', 'http'], true)) {
             throw new OperationException('endpoint_configuration_invalid', 503);
         }
-        if ($parts['scheme'] !== 'https' && !in_array($parts['host'], ['localhost', '127.0.0.1', '[::1]'], true)) {
-            throw new OperationException('https_required', 503);
+        if ($parts['scheme'] !== 'https' && !self::allowsPlainHttp($parts['host'])) {
+            throw new OperationException('https_required', 503, nextAction: 'configure_https');
         }
         return $base;
+    }
+
+    /**
+     * Whether a host may serve agent traffic over plain http.
+     *
+     * Bearer tokens and OAuth codes cross these endpoints, so plain http is only
+     * acceptable where no network sits between client and server: loopback, and
+     * the `.test` and `.localhost` names RFC 2606 and RFC 6761 reserve for local
+     * use (Laravel Herd, Valet, DDEV). Those names never resolve on the public
+     * internet, so allowing them cannot weaken a production deployment.
+     */
+    public static function allowsPlainHttp(string $host): bool
+    {
+        $host = strtolower($host);
+        if (in_array($host, ['localhost', '127.0.0.1', '[::1]'], true)) {
+            return true;
+        }
+        if (!filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
+            return false;
+        }
+        return str_ends_with($host, '.test') || str_ends_with($host, '.localhost');
     }
 
     public static function resource(string $transport = 'http'): string

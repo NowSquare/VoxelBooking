@@ -95,16 +95,21 @@ final class WebhookService
             self::preview($actor, $input);
             $before = self::owned($actor, $input['business_id'], $input['subscription_id']);
             // Changing a destination must not send previously queued events to a new recipient.
+            // A row still 'sending' after its lease ran out belongs to a worker that died, and
+            // the outbox would claim it again, so it is retired with the waiting rows. Clearing
+            // the lease token stops that dead worker, should it wake, from re-queueing the row.
+            // A row under a live lease is left to its worker: deliver() drops it, because its
+            // payload names the destination it was published for.
             if (isset($input['endpoint']) && $input['endpoint'] !== $before['endpoint']) {
                 Database::execute(
-                    "UPDATE delivery_outbox o JOIN webhook_deliveries d ON d.outbox_id=o.id SET o.status='delivered',o.delivered_at=UTC_TIMESTAMP(),o.last_error_code='destination_changed' WHERE d.subscription_id=? AND o.status IN ('pending','failed')",
-                    [$before['id']]
+                    "UPDATE delivery_outbox o JOIN webhook_deliveries d ON d.outbox_id=o.id SET o.status='delivered',o.delivered_at=UTC_TIMESTAMP(),o.last_error_code='destination_changed',o.lease_token=NULL,o.lease_until=NULL WHERE d.subscription_id=? AND d.tenant_id=? AND (o.status IN ('pending','failed') OR (o.status='sending' AND o.lease_until < UTC_TIMESTAMP()))",
+                    [$before['id'], $before['tenant_id']]
                 );
             }
 
             $values = array_replace($before, $input);
             Database::execute(
-                'UPDATE webhook_subscriptions SET name=?,endpoint=?,event_types=?,is_active=?,generation=generation+1,updated_at=? WHERE id=?',
+                'UPDATE webhook_subscriptions SET name=?,endpoint=?,event_types=?,is_active=?,generation=generation+1,updated_at=? WHERE id=? AND tenant_id=?',
                 [
                     $values['name'],
                     $values['endpoint'],
@@ -113,7 +118,8 @@ final class WebhookService
                         : $values['event_types'],
                     (int) $values['is_active'],
                     gmdate('Y-m-d H:i:s'),
-                    $before['id']
+                    $before['id'],
+                    $before['tenant_id']
                 ]
             );
             self::audit($actor, 'webhook.updated', $before['id'], $input['business_id']);
@@ -127,12 +133,13 @@ final class WebhookService
             self::mutable($actor, $input['business_id']);
             self::preview($actor, $input);
             Database::execute(
-                'UPDATE webhook_subscriptions SET previous_secret_cipher=secret_cipher,previous_secret_until=?,secret_cipher=?,secret_revealed_at=NULL,generation=generation+1,updated_at=? WHERE id=?',
+                'UPDATE webhook_subscriptions SET previous_secret_cipher=secret_cipher,previous_secret_until=?,secret_cipher=?,secret_revealed_at=NULL,generation=generation+1,updated_at=? WHERE id=? AND tenant_id=?',
                 [
                     gmdate('Y-m-d H:i:s', time() + 86400),
                     (new PayloadCipher())->encrypt(['secret' => bin2hex(random_bytes(32))]),
                     gmdate('Y-m-d H:i:s'),
-                    $input['subscription_id']
+                    $input['subscription_id'],
+                    $input['business_id']
                 ]
             );
             self::audit($actor, 'webhook.secret_rotated', $input['subscription_id'], $input['business_id']);
@@ -155,8 +162,8 @@ final class WebhookService
             }
 
             Database::execute(
-                'UPDATE webhook_subscriptions SET secret_revealed_at=? WHERE id=?',
-                [gmdate('Y-m-d H:i:s'), $id]
+                'UPDATE webhook_subscriptions SET secret_revealed_at=? WHERE id=? AND tenant_id=?',
+                [gmdate('Y-m-d H:i:s'), $id, $businessId]
             );
             self::audit($actor, 'webhook.secret_revealed', $id, $businessId);
             return (new PayloadCipher())->decrypt($row['secret_cipher'])['secret'];
@@ -183,7 +190,7 @@ final class WebhookService
         }
 
         $subscriptions = Database::query(
-            'SELECT id,event_types FROM webhook_subscriptions WHERE tenant_id=? AND is_active=1',
+            'SELECT id,endpoint,event_types FROM webhook_subscriptions WHERE tenant_id=? AND is_active=1',
             [$businessId]
         );
         $eventId = Ulid::generate();
@@ -223,8 +230,16 @@ final class WebhookService
                     gmdate('Y-m-d H:i:s')
                 ]
             );
-            $outboxId = Outbox::enqueue('webhook.deliver', ['delivery_id' => $id], $businessId, $id);
-            Database::execute('UPDATE webhook_deliveries SET outbox_id=? WHERE id=?', [$outboxId, $id]);
+            $outboxId = Outbox::enqueue(
+                'webhook.deliver',
+                ['delivery_id' => $id, 'destination' => self::destinationFingerprint($subscription['endpoint'])],
+                $businessId,
+                $id
+            );
+            Database::execute(
+                'UPDATE webhook_deliveries SET outbox_id=? WHERE id=? AND tenant_id=?',
+                [$outboxId, $id, $businessId]
+            );
         }
     }
 
@@ -235,6 +250,20 @@ final class WebhookService
             [$payload['delivery_id'], 'archived']
         )[0] ?? null;
         if (!$row || !$row['is_active'] || $row['payload_cipher'] === null) {
+            return ['skipped' => true];
+        }
+
+        // The endpoint is read live, so an event queued for an earlier destination would
+        // otherwise go to whoever the owner points the subscription at next. Rows queued
+        // before payloads carried a fingerprint have none and keep the earlier behaviour.
+        if (
+            isset($payload['destination'])
+            && !hash_equals($payload['destination'], self::destinationFingerprint($row['endpoint']))
+        ) {
+            Database::execute(
+                'UPDATE webhook_deliveries SET last_attempt_at=?,last_error_code=? WHERE id=? AND tenant_id=?',
+                [gmdate('Y-m-d H:i:s'), 'destination_changed', $row['id'], $row['tenant_id']]
+            );
             return ['skipped' => true];
         }
 
@@ -256,8 +285,8 @@ final class WebhookService
             }
 
             Database::execute(
-                'UPDATE webhook_deliveries SET last_http_status=?,last_attempt_at=?,last_error_code=NULL WHERE id=?',
-                [$status, gmdate('Y-m-d H:i:s'), $row['id']]
+                'UPDATE webhook_deliveries SET last_http_status=?,last_attempt_at=?,last_error_code=NULL WHERE id=? AND tenant_id=?',
+                [$status, gmdate('Y-m-d H:i:s'), $row['id'], $row['tenant_id']]
             );
             return ['sent' => true];
         } catch (\Throwable $error) {
@@ -265,8 +294,8 @@ final class WebhookService
                 ? 'unsafe_or_unavailable_destination'
                 : ($status === null ? 'transport_failed' : 'receiver_rejected');
             Database::execute(
-                'UPDATE webhook_deliveries SET last_http_status=?,last_attempt_at=?,last_error_code=? WHERE id=?',
-                [$status, gmdate('Y-m-d H:i:s'), $code, $row['id']]
+                'UPDATE webhook_deliveries SET last_http_status=?,last_attempt_at=?,last_error_code=? WHERE id=? AND tenant_id=?',
+                [$status, gmdate('Y-m-d H:i:s'), $code, $row['id'], $row['tenant_id']]
             );
             throw new \RuntimeException('webhook_delivery_failed');
         }
@@ -309,10 +338,13 @@ final class WebhookService
                 throw new OperationException('delivery_not_retryable', 409);
             }
 
-            Database::execute('UPDATE webhook_deliveries SET manual_retries=manual_retries+1 WHERE id=?', [$row['id']]);
             Database::execute(
-                "UPDATE delivery_outbox SET status='pending',attempts=0,available_at=?,last_error_code=NULL WHERE id=?",
-                [gmdate('Y-m-d H:i:s'), $row['outbox_id']]
+                'UPDATE webhook_deliveries SET manual_retries=manual_retries+1 WHERE id=? AND tenant_id=?',
+                [$row['id'], $input['business_id']]
+            );
+            Database::execute(
+                "UPDATE delivery_outbox SET status='pending',attempts=0,available_at=?,last_error_code=NULL WHERE id=? AND tenant_id=?",
+                [gmdate('Y-m-d H:i:s'), $row['outbox_id'], $input['business_id']]
             );
             self::audit($actor, 'webhook.delivery_retried', $row['id'], $input['business_id']);
             return ['delivery_id' => $row['id'], 'status' => 'queued'];
@@ -393,6 +425,15 @@ final class WebhookService
             'created_at' => $row['created_at'],
             'updated_at' => $row['updated_at']
         ];
+    }
+
+    /**
+     * Names the destination an event was queued for without copying the URL into the outbox.
+     * The outbox payload is encrypted already; a digest is enough to tell destinations apart.
+     */
+    private static function destinationFingerprint(string $endpoint): string
+    {
+        return hash('sha256', $endpoint);
     }
 
     private static function version(array $row): string

@@ -35,6 +35,34 @@ final class RateBudgetTest extends TestCase
         self::assertFalse($limiter->consume(['credential:b' => 60, 'principal:u' => 1], 100)['allowed']);
     }
 
+    public function testDeniedAttemptsDoNotSpendTheSharedCeiling(): void
+    {
+        // A blocked actor that keeps knocking must not drain the budget it shares with everyone else.
+        $limiter = new RateBudget($this->db);
+        self::assertTrue($limiter->consume(['address:a' => 1, 'ceiling' => 3], 100)['allowed']);
+        for ($knock = 0; $knock < 10; $knock++) {
+            self::assertFalse($limiter->consume(['address:a' => 1, 'ceiling' => 3], 100)['allowed']);
+        }
+        self::assertTrue($limiter->consume(['address:b' => 1, 'ceiling' => 3], 100)['allowed']);
+        $last = $limiter->consume(['address:c' => 1, 'ceiling' => 3], 100);
+        self::assertTrue($last['allowed']);
+        self::assertSame(0, $last['remaining']);
+    }
+
+    public function testReportedLimitIsTheBudgetThatBinds(): void
+    {
+        $limiter = new RateBudget($this->db);
+        $limiter->consume(['address:a' => 5, 'session:s' => 2], 100);
+        $limiter->consume(['address:a' => 5, 'session:t' => 2], 100);
+        $limiter->consume(['address:a' => 5, 'session:u' => 2], 100);
+        $limiter->consume(['address:a' => 5, 'session:v' => 2], 100);
+        $limiter->consume(['address:a' => 5, 'session:x' => 2], 100);
+        $denied = $limiter->consume(['address:a' => 5, 'session:w' => 2, 'ceiling' => 1000], 100);
+        self::assertFalse($denied['allowed']);
+        self::assertSame(5, $denied['limit']);
+        self::assertSame(0, $denied['remaining']);
+    }
+
     public function testStorageFailureNeverReportsEnforcementSucceeded(): void
     {
         $this->db->exec('DROP TABLE agent_rate_budgets');

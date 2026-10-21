@@ -26,6 +26,10 @@ final class CorsPolicy
         if (!is_array($base) || !isset($base['scheme'], $base['host']) || isset($base['user']) || isset($base['pass'])) {
             throw new OperationException('origin_configuration_invalid', 503);
         }
+        // Name the real problem: an http APP_URL on a public host is a deployment fix, not a bad origin list.
+        if ($base['scheme'] === 'http' && !Endpoints::allowsPlainHttp($base['host'])) {
+            throw new OperationException('https_required', 503, nextAction: 'configure_https');
+        }
         $origin = $base['scheme'] . '://' . $base['host'] . (isset($base['port']) ? ':' . $base['port'] : '');
         $configured = $additionalOrigins === '' ? [] : explode(',', $additionalOrigins);
         if (count($configured) > 20 || strlen($additionalOrigins) > 4096) {
@@ -111,10 +115,11 @@ final class CorsPolicy
             return false;
         }
         $host = $parts['host'];
-        $loopback = in_array($host, ['localhost', '127.0.0.1', '[::1]'], true);
-        if ($parts['scheme'] !== 'https' && !($parts['scheme'] === 'http' && $loopback)) {
+        $plainHttpAllowed = Endpoints::allowsPlainHttp($host);
+        if ($parts['scheme'] !== 'https' && !($parts['scheme'] === 'http' && $plainHttpAllowed)) {
             return false;
         }
+        $loopback = in_array($host, ['localhost', '127.0.0.1', '[::1]'], true);
         if (!$loopback && !filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
             return false;
         }
