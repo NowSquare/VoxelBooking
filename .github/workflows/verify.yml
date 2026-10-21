@@ -62,3 +62,10 @@ jobs:
         run: php scripts/test-isolated.php --mysql-image=mysql:${{ matrix.mysql }} --log-junit "$RUNNER_TEMP/junit.xml"
       - name: Require every referenced parity test to have run and passed
         run: php scripts/check-agent-parity.php --junit="$RUNNER_TEMP/junit.xml"
+      - name: Keep the complete JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-php${{ matrix.php }}-mysql${{ matrix.mysql }}
+          path: ${{ runner.temp }}/junit.xml
+          if-no-files-found: ignore

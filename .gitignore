@@ -56,3 +56,6 @@ getMessage
 
 # Python bytecode (scripts/ and tests/scripts/)
 __pycache__/
+
+# Full JUnit reports are summarised in results.json; CI keeps the complete XML.
+docs/agent-api/evidence/matrix/*.xml

@@ -117,7 +117,7 @@ final class CalendarLinks
             $stay ? 'DTEND;VALUE=DATE:' . $end : 'DTEND:' . $end,
             'SUMMARY:' . self::escape($title),
             $description !== '' ? 'DESCRIPTION:' . self::escape($description) : '',
-            'DTSTAMP:' . ($now ?? new \DateTimeImmutable('now', new \DateTimeZone('UTC')))
+            'DTSTAMP:' . ($now ?? self::createdAt((string) $event['id']) ?? new \DateTimeImmutable('now', new \DateTimeZone('UTC')))
                 ->setTimezone(new \DateTimeZone('UTC'))
                 ->format('Ymd\THis\Z'),
             'END:VEVENT',
@@ -134,6 +134,26 @@ final class CalendarLinks
     }
 
     /** JavaScript's `a || b || c`: the first value that is not empty. */
+    /**
+     * The creation instant a ULID carries in its first ten characters.
+     *
+     * Stamping the calendar entry with the booking's own creation time keeps
+     * every read of the same booking byte-identical, across retries and
+     * transports, instead of changing with the clock.
+     */
+    private static function createdAt(string $id): ?\DateTimeImmutable
+    {
+        if (preg_match('/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i', $id) !== 1) {
+            return null;
+        }
+        $milliseconds = 0;
+        foreach (str_split(strtoupper(substr($id, 0, 10))) as $character) {
+            $milliseconds = $milliseconds * 32 + strpos('0123456789ABCDEFGHJKMNPQRSTVWXYZ', $character);
+        }
+
+        return (new \DateTimeImmutable('@' . intdiv($milliseconds, 1000)))->setTimezone(new \DateTimeZone('UTC'));
+    }
+
     private static function first(mixed ...$values): string
     {
         foreach ($values as $value) {
