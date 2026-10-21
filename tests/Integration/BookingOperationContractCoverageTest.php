@@ -234,11 +234,11 @@ final class BookingOperationContractCoverageTest extends TestCase
 
     public static function daylightSavingStays():array
     {
-        return ['spring forward'=>['March',71,'23:00:00','22:00:00'],'autumn back'=>['October',73,'22:00:00','23:00:00']];
+        return ['spring forward'=>['March'],'autumn back'=>['October']];
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('daylightSavingStays')]
-    public function testResourceStayCrossesDaylightSavingAndSeasonalPriceBoundary(string $month,int $elapsedHours,string $startUtcClock,string $endUtcClock):void
+    public function testResourceStayCrossesDaylightSavingAndSeasonalPriceBoundary(string $month):void
     {
         $f=$this->fixtures('resource');$business=$f['id'];$base=['business_id'=>$business];
         // Use next year's known Amsterdam transition to keep this case future-bookable
@@ -267,15 +267,15 @@ final class BookingOperationContractCoverageTest extends TestCase
         self::assertSame(2,$created['data']['guest_count']);self::assertSame(4,$quote['resource']['capacity']);
         self::assertSame($checkIn,$created['data']['check_in']);self::assertSame($checkOut,$created['data']['check_out']);
         self::assertSame('Europe/Amsterdam',$created['data']['timezone']);
-        $utcStart=(new \DateTimeImmutable($checkIn))->modify('-1 day')->format('Y-m-d').'T'.$startUtcClock.'Z';
-        $utcEnd=(new \DateTimeImmutable($checkOut))->modify('-1 day')->format('Y-m-d').'T'.$endUtcClock.'Z';
-        self::assertSame($utcStart,$created['data']['start_utc']);self::assertSame($utcEnd,$created['data']['end_utc']);
-        self::assertSame($elapsedHours,(int)((strtotime($utcEnd)-strtotime($utcStart))/3600));
+        // A stay is three local nights whatever the clocks do; a UTC midnight would name the previous day.
+        self::assertArrayNotHasKey('start_utc',$created['data']);self::assertArrayNotHasKey('end_utc',$created['data']);
         $stored=Database::query('SELECT start_datetime,end_datetime,price_total,price_currency FROM bookings WHERE id=?',[$created['data']['id']])[0];
         self::assertSame(['start_datetime'=>$checkIn.' 00:00:00','end_datetime'=>$checkOut.' 00:00:00','price_total'=>'190.95','price_currency'=>'EUR'],$stored);
         $read=$this->invoke($this->clients['staff'],'booking_get',$base+['booking_id'=>$created['data']['id']])['data'];
         self::assertSame($stored['start_datetime'],$read['start_datetime']);self::assertSame($stored['end_datetime'],$read['end_datetime']);
-        self::assertSame('190.95',$read['price_total']);self::assertSame($utcStart,$read['start_utc']);self::assertSame($utcEnd,$read['end_utc']);
+        self::assertSame('190.95',$read['price_total']);
+        self::assertSame([$checkIn,$checkOut,3],[$read['check_in'],$read['check_out'],$read['nights']]);
+        self::assertArrayNotHasKey('start_utc',$read);self::assertArrayNotHasKey('end_utc',$read);
     }
 
     public static function changedBookingReviews():array

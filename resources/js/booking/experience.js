@@ -149,7 +149,10 @@ export function createBookingExperience({ config, fmt, t, refreshIcons }) {
         },
         get rescheduleStayTotal() {
             const stay = this.rescheduleResourceAvailability;
-            return stay ? t('resource.stay_total', { nights: stay.nights, total: this.formatPrice(stay.total) }) : '';
+            if (!stay) return '';
+            return stay.total == null
+                ? t('resource.stay_nights', { nights: stay.nights })
+                : t('resource.stay_total', { nights: stay.nights, total: this.formatPrice(stay.total) });
         },
         get phaseSteps() {
             const choice = config.booking_pattern === 'timeslot'

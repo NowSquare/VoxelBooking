@@ -68,7 +68,7 @@ final class BookingQueries
             'cancellation' => BookingService::canCancel($row, $tenant),
             'rescheduling' => BookingService::canReschedule($row, $tenant),
             'allowed_statuses' => $actor->isStaff() ? BookingCommands::transitions($row['status']) : [],
-            ...VenueDateTime::utcRange($row['start_datetime'], $row['end_datetime'], $tenant['timezone'])
+            ...VenueDateTime::presentRange($row['booking_pattern'], $row['start_datetime'], $row['end_datetime'], $tenant['timezone'])
         ];
         // Internal fields are staff-only; customers and public agents never see them.
         if ($actor->isStaff()) $result += [

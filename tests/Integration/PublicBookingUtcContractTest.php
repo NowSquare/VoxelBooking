@@ -87,6 +87,18 @@ final class PublicBookingUtcContractTest extends TestCase
         $row = Database::query('SELECT * FROM bookings WHERE id = ? AND tenant_id = ?', [$created['id'], $this->tenantId])[0];
         $this->assertSame($start, $row['start_datetime']);
         $this->assertSame($end, $row['end_datetime']);
+        if ($pattern === 'resource') {
+            // A stay is local dates, never a UTC midnight that east of UTC names the previous day.
+            $this->assertSame($date, $created['check_in']);
+            $this->assertSame($endDate, $created['check_out']);
+            $this->assertArrayNotHasKey('start_utc', $created);
+            $this->assertArrayNotHasKey('end_utc', $created);
+            $managed = $this->request('GET', '/api/' . $this->slug . '/bookings/' . $created['id'])['booking'];
+            $this->assertStayDates($managed, $date, $endDate);
+            $rescheduled = $this->request('POST', '/api/' . $this->slug . '/bookings/' . $created['id'] . '/reschedule', $target)['new_booking'];
+            $this->assertStayDates($rescheduled, $nextDate, $nextEndDate);
+            return;
+        }
         $this->assertCanonicalRange($created, $row, $timezone);
         $managed = $this->request('GET', '/api/' . $this->slug . '/bookings/' . $created['id'])['booking'];
         $this->assertCanonicalRange($managed, $row, $timezone);
@@ -144,6 +156,15 @@ final class PublicBookingUtcContractTest extends TestCase
             $this->assertSame($alternative[$field], $recovered[$field]);
             $this->assertSame($alternative[$field], $managed[$field]);
         }
+    }
+
+    private function assertStayDates(array $response, string $checkIn, string $checkOut): void
+    {
+        $this->assertSame($checkIn, $response['check_in']);
+        $this->assertSame($checkOut, $response['check_out']);
+        $this->assertSame((int) (new \DateTimeImmutable($checkIn))->diff(new \DateTimeImmutable($checkOut))->days, $response['nights']);
+        $this->assertArrayNotHasKey('start_utc', $response);
+        $this->assertArrayNotHasKey('end_utc', $response);
     }
 
     private function assertCanonicalRange(array $response, array $row, string $timezone): void

@@ -2560,7 +2560,7 @@
     },
     "GET /api/{slug}/bookings/{id}": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::bookingDetail",
-      "source_hash": "278701f4006483fa42b2d7e815660600e15e100540532e83f291511401218db2",
+      "source_hash": "bf8ebc4f116b4dab1f4ce13e33d3b02db6daf199ebfaef20c0414c1bcea4acc8",
       "disposition": "operation",
       "operations": [
         "customer_booking_get"
@@ -2590,7 +2590,7 @@
     },
     "POST /api/{slug}/bookings/{id}/reschedule": {
       "handler": "App\\Controllers\\Booking\\BookingApiController::rescheduleBookingAction",
-      "source_hash": "2988cdf439f424839b3e88e2a90803bfe91f160bad40cf960f1cfd246af9584d",
+      "source_hash": "9150a4a35846ba7d8e37ee7a1ff3b6d9845b026ecbde2b4701af16a5faa77dbe",
       "disposition": "operation",
       "operations": [
         "customer_booking_reschedule"
@@ -2774,7 +2774,7 @@
       ]
     },
     "availability_search": {
-      "contract_hash": "5ca82176b0f0daa0d76b6e8eef88111d6b94a3f0a762fe130dc1c66914abd4f2",
+      "contract_hash": "181dc11b61f7db7c7c9c5b830f5deb975e807a28c6bfcf0ecc8b1aa06ce63246",
       "tests": [
         "tests/Integration/AvailabilityAcceptanceTest.php",
         "tests/Integration/BookingConcurrencyTest.php",
@@ -2819,7 +2819,7 @@
       ]
     },
     "booking_create": {
-      "contract_hash": "bb9ea187204f9086970034f19159740fbf59e40e3ed6a851376ee838022b1d3f",
+      "contract_hash": "43780c9ecce36995b89372f636a043ed0d87bc79eea3b03c91ebbc6bbea230c2",
       "tests": [
         "tests/Integration/AvailabilityAcceptanceTest.php",
         "tests/Integration/BookingConcurrencyTest.php",
@@ -2832,7 +2832,7 @@
       ]
     },
     "booking_get": {
-      "contract_hash": "260ee1d2680903af501627ae72f1f4ff541a932cf63e7cb9ac3859a58ba43393",
+      "contract_hash": "154e530f3dcc84244391b62fe4ad1dcce1e2613db782d1901eea6b2fc1e09b14",
       "tests": [
         "tests/Integration/BookingDirectAuthorizationTest.php",
         "tests/Integration/BookingOperationContractCoverageTest.php",
@@ -2842,7 +2842,7 @@
       ]
     },
     "booking_reschedule": {
-      "contract_hash": "8980b6eecf0321d6931a393d7a6c8b04a62c013ce2500a31fcfa041a5014db86",
+      "contract_hash": "656e9f726b777bfae0b851bbaf61a7e13c9a80a4d51dc00376ebac3c283829ce",
       "tests": [
         "tests/Integration/BookingConcurrencyTest.php",
         "tests/Integration/BookingDirectAuthorizationTest.php",
@@ -2852,7 +2852,7 @@
       ]
     },
     "booking_status_set": {
-      "contract_hash": "1cf0481870dde3274aff44bd056cebf95b8505e96238f2c6bd223df1103eda3f",
+      "contract_hash": "91a7f0d43e4eb29ba82ecc8ca566e268a1955e109262e91a86e455b31b0dfdfe",
       "tests": [
         "tests/Integration/BookingConcurrencyTest.php",
         "tests/Integration/BookingDirectAuthorizationTest.php",
@@ -2871,7 +2871,7 @@
       ]
     },
     "bookings_list": {
-      "contract_hash": "e75e63ccd78125a138416b1cc978888093d53e1bd07f664b5e322004562b3f98",
+      "contract_hash": "f899865eca32f062354ee3f30a131054980239805e57e5f43f2d1e13dee2d3e8",
       "tests": [
         "tests/Integration/BookingDirectAuthorizationTest.php",
         "tests/Integration/BookingOperationContractCoverageTest.php",
@@ -3044,7 +3044,7 @@
       ]
     },
     "calendar_get": {
-      "contract_hash": "0b419ed6030576799f75d6ffa2eff456ac11479d2898995b10dc35274b3abad5",
+      "contract_hash": "f8532d41dbc63f4602d58bc0b379c873d85106e84f41bbdedfd9779e1354a343",
       "tests": [
         "tests/Integration/BookingOperationContractCoverageTest.php",
         "tests/Integration/SharedBookingOperationsTest.php"
@@ -3138,7 +3138,7 @@
       ]
     },
     "customer_availability_search": {
-      "contract_hash": "94aa52a56b789fcd5acf91bb4749ba9d2e6f01538810bc23e16224d7fd10195e",
+      "contract_hash": "7f81455b98d26826cf603cb5967efb167fef4febb02526707a2bb12d6dac8a8a",
       "tests": [
         "tests/Integration/AvailabilityAcceptanceTest.php",
         "tests/Integration/BookingConcurrencyTest.php",
@@ -3150,7 +3150,7 @@
       ]
     },
     "customer_booking_cancel": {
-      "contract_hash": "f3cb1046a82c752098cba194d017bc6637c65a0c6381e2243f6725e4d9582c51",
+      "contract_hash": "e921dcc7afe1e730fb0bd51e09154f3c953cb689ca6e66080757dd16680974c0",
       "tests": [
         "tests/Integration/BookingDirectAuthorizationTest.php",
         "tests/Integration/BookingOperationContractCoverageTest.php",
@@ -3159,7 +3159,7 @@
       ]
     },
     "customer_booking_get": {
-      "contract_hash": "e83bba06057e727d5fd9a4ad57bbca7e5916ad2fdc06f329ecc3a6938875a671",
+      "contract_hash": "a5bffa2255a69f1d3e8f5afb238c5572700e39774ccd80cae4bbcb4357d16696",
       "tests": [
         "tests/Integration/BookingDirectAuthorizationTest.php",
         "tests/Integration/BookingOperationContractCoverageTest.php",
@@ -3168,7 +3168,7 @@
       ]
     },
     "customer_booking_reschedule": {
-      "contract_hash": "de0468fca908df15a0f1620a62e22b3b8253900bc1572675885362d37b99c753",
+      "contract_hash": "fca232bc8eb28b742901fc5491118149a022800cf8ee999dee0897e25b4f0017",
       "tests": [
         "tests/Integration/BookingConcurrencyTest.php",
         "tests/Integration/BookingDirectAuthorizationTest.php",
@@ -3428,7 +3428,7 @@
       ]
     },
     "operator_bookings_list": {
-      "contract_hash": "535944e18ee2ddced170744d93d626d3e635e4f045c1d5e8be92d5c2e97164cd",
+      "contract_hash": "2d6a512876a56539f1758ea1eadc345a4cf341e55c305e9bf302b2e0d533d2de",
       "tests": [
         "tests/Integration/BookingDirectAuthorizationTest.php",
         "tests/Integration/BookingOperationContractCoverageTest.php",
@@ -3453,7 +3453,7 @@
       ]
     },
     "public_booking_create": {
-      "contract_hash": "650c5c247a82354c4ca3dbaa491c6353dc5742dbd74153dc8ad58cfd512bfc83",
+      "contract_hash": "bc50c5d8274743626d3fcc4e872f88a1f46f431588e235d86d5903d86d12909f",
       "tests": [
         "tests/Integration/BookingConcurrencyTest.php",
         "tests/Integration/BookingOperationContractCoverageTest.php",
@@ -3621,7 +3621,7 @@
       ]
     },
     "staff_availability_search": {
-      "contract_hash": "147a523d35af83a896eaa77581d6b698ebba04e0ff6c14a04d838ba3a7fb3d55",
+      "contract_hash": "c3af7f20207031fe898befa07ee035ce1f579e0e01bdfaa83ab1b6b1f969ce8d",
       "tests": [
         "tests/Integration/AvailabilityAcceptanceTest.php",
         "tests/Integration/BookingConcurrencyTest.php",

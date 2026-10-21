@@ -60,11 +60,6 @@ final class BookingApiController
         Locale::resolveForBooking($tenant, $acceptLang);
     }
 
-    /**
-     * Only a verified grant for a permitted reschedule may exclude occupancy.
-     */
-
-
     /** Adapt the existing browser response shape around the shared application reads. */
     private function read(Request $request,callable $handler,?string $pattern=null):Response
     {
@@ -137,17 +132,6 @@ final class BookingApiController
         },'timeslot');
     }
 
-    /**
-     * POST /api/{slug}/bookings — create a booking.
-     *
-     * Implements double-booking prevention per PRD §III:
-     * 1. Begin transaction
-     * 2. SELECT ... FOR UPDATE on time window
-     * 3. Re-check availability
-     * 4. Insert booking + customer
-     * 5. Commit
-     * 6. After commit: dispatch emails
-     */
     // ── Resource-pattern endpoints ──
 
     /**
@@ -272,16 +256,6 @@ final class BookingApiController
         }
     }
 
-    // ── Resource-pattern booking creation ──
-
-    /**
-     * Create a resource-pattern booking (hotel room, meeting room, etc.).
-     *
-     * Validates resource availability for the requested date range,
-     * checks guest capacity, and creates the booking with date-based datetimes.
-     */
-
-
     // ── Capacity-pattern read endpoints ──
 
     /**
@@ -307,16 +281,6 @@ final class BookingApiController
             return ['slots'=>$result['choices'],'date'=>$input['date']??null,'timezone'=>$result['timezone']];
         },'capacity');
     }
-
-    // ── Capacity-pattern booking creation ──
-
-    /**
-     * Create a capacity-pattern booking (restaurant, escape room, group class).
-     *
-     * Validates slot availability for the requested party size,
-     * checks capacity limits, and creates the booking.
-     */
-
 
     // ── Event-pattern read endpoints ──
 
@@ -345,16 +309,6 @@ final class BookingApiController
     {
         return $this->read($request,static fn($actor,$input)=>AvailabilityService::eventDetail($actor,array_replace($input,['event_id'=>$request->getAttribute('id')])),'event');
     }
-
-    // ── Event-pattern booking creation ──
-
-    /**
-     * Create an event-pattern booking.
-     *
-     * Validates event availability and spot count, handles waitlist behavior.
-     * If event is full and allows waitlist, creates booking with status 'waitlisted'.
-     */
-
 
     // ── Self-service booking management ──
 
@@ -433,7 +387,8 @@ final class BookingApiController
                 'end_time'        => $endDt->format('H:i'),
                 'start_datetime'  => $booking['start_datetime'],
                 'end_datetime'    => $booking['end_datetime'],
-                ...VenueDateTime::utcRange($booking['start_datetime'], $booking['end_datetime'], $tenant['timezone'] ?? 'UTC'),
+                // A stay publishes local dates (check-in, check-out, nights); timed bookings publish UTC instants.
+                ...VenueDateTime::presentRange($pattern, $booking['start_datetime'], $booking['end_datetime'], $tenant['timezone'] ?? 'UTC'),
                 'party_size'      => (int) $booking['party_size'],
                 'service_id'      => $booking['service_id'] ?? null,
                 'is_virtual'      => $isVirtual,
@@ -529,8 +484,15 @@ final class BookingApiController
         if ($actor === null) return CustomerCapability::protect(Response::json(['error' => 'verification_required', 'message' => __('booking.access.expired')], 403));
         try {
             $result = BookingCommands::reschedule($actor, array_replace($request->json(), ['business_id' => $tenant['id'], 'booking_id' => $bookingId]));
-            $replacement = ['id' => $result['new_booking_id'], 'manage_url' => $result['manage_url'], 'date' => $result['new_date'], 'time' => $result['new_time'], 'end_time' => substr($result['new_end'], 11, 5), ...VenueDateTime::utcRange($result['new_start'], $result['new_end'], $tenant['timezone'])];
-            if ($result['pattern'] === 'resource') $replacement += ['check_in' => substr($result['new_start'], 0, 10), 'check_out' => substr($result['new_end'], 0, 10)];
+            $replacement = [
+                'id' => $result['new_booking_id'],
+                'manage_url' => $result['manage_url'],
+                'date' => $result['new_date'],
+                'time' => $result['new_time'],
+                'end_time' => substr($result['new_end'], 11, 5),
+                // A moved stay is new local dates; a moved timed booking is new UTC instants.
+                ...VenueDateTime::presentRange($result['pattern'], $result['new_start'], $result['new_end'], $tenant['timezone'])
+            ];
             if ($result['pattern'] === 'event') $replacement['event_name'] = BookingService::findByIdWithDetails($result['new_booking_id'], $tenant['id'])['event_name'];
             return CustomerCapability::protect(Response::json(
                 ['rescheduled' => true, 'new_booking_id' => $result['new_booking_id'], 'new_booking' => $replacement]

@@ -99,7 +99,8 @@ final class AvailabilityOperations
                     'properties' => ['id' => $string, 'name' => $string, 'capacity' => ['type' => 'integer']],
                     'required' => ['id', 'name', 'capacity']
                 ],
-                'pricing' => ['type' => 'array', 'items' => $o(['date' => $string, 'price' => $string, 'label' => $nullable], ['date', 'price', 'label'])]
+                // A night without a base rate or season has no price; it is null, never "0.00".
+                'pricing' => ['type' => 'array', 'items' => $o(['date' => $string, 'price' => $nullable, 'label' => $nullable], ['date', 'price', 'label'])]
             ],
             'required' => ['available', 'error', 'nights', 'total', 'check_in', 'check_out']
         ];

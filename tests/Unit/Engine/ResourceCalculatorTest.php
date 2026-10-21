@@ -351,12 +351,12 @@ class ResourceCalculatorTest extends TestCase
             $this->assertArrayHasKey('date', $entry);
             $this->assertArrayHasKey('price', $entry);
             $this->assertArrayHasKey('label', $entry);
-            $this->assertGreaterThan(0, $entry['price']);
+            $this->assertMatchesRegularExpression('/^\d+\.\d{2}$/D', $entry['price']);
         }
 
-        // Total should equal sum of per-night prices
-        $expectedTotal = array_sum(array_column($result['pricing'], 'price'));
-        $this->assertSame($expectedTotal, $result['total']);
+        // The total is the exact cent sum of the per-night prices, as a decimal string.
+        $expectedCents = array_sum(array_map(\App\Engine\Money::toCents(...), array_column($result['pricing'], 'price')));
+        $this->assertSame(\App\Engine\Money::fromCents($expectedCents), $result['total']);
     }
 
     #[Test]

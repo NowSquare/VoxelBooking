@@ -1175,7 +1175,6 @@ return [
 
         // Messages
         'saved'                     => 'Settings saved.',
-        'no_changes'                => 'No changes detected.',
         'error_name_required'       => 'Business name is required.',
         'error_email_invalid'       => 'Please enter a valid email address.',
         'error_slug_invalid'        => 'URL slug may only contain lowercase letters, numbers, and hyphens.',

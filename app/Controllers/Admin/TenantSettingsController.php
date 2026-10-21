@@ -6,7 +6,6 @@ namespace App\Controllers\Admin;
 
 use App\Engine\Auth;
 use App\Engine\FormState;
-use App\Engine\AuditLog;
 use App\Engine\BrandColorHelper;
 use App\Engine\Database;
 use App\Engine\Request;
@@ -180,50 +179,6 @@ final class TenantSettingsController
     {
         $rows = Database::query('SELECT * FROM `tenants` WHERE `id` = ? LIMIT 1', [$tenantId]);
         return $rows[0] ?? null;
-    }
-
-    /**
-     * Update tenant fields, compute diff, log audit, flash success.
-     */
-    private function saveTenant(string $tenantId, array $data, array $tenant, string $tab): void
-    {
-        $changes = [];
-        foreach ($data as $k => $v) {
-            $old = $tenant[$k] ?? null;
-            if (is_int($v)) {
-                $old = (int) $old;
-            }
-            if ($old !== $v) {
-                $changes[$k] = ['old' => $tenant[$k] ?? null, 'new' => $v];
-            }
-        }
-
-        if (empty($changes)) {
-            FormState::toast('info', __('admin.tenant_settings.no_changes'));
-            return;
-        }
-
-        $sets = [];
-        $params = [];
-        foreach ($data as $k => $v) {
-            if (array_key_exists($k, $changes)) {
-                $sets[] = "`{$k}` = ?";
-                $params[] = $v;
-            }
-        }
-        $params[] = $tenantId;
-
-        Database::execute(
-            'UPDATE `tenants` SET ' . implode(', ', $sets) . ' WHERE `id` = ?',
-            $params
-        );
-
-        AuditLog::log('tenant.settings_updated', 'tenant', $tenantId, [
-            'tab'     => $tab,
-            'changes' => $changes,
-        ]);
-
-        FormState::toast('success', __('admin.tenant_settings.saved'));
     }
 
     private function render(string $template, string $tenantId, array $tenant, string $activeTab, array $extraData = []): Response

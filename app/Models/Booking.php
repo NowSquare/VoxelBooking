@@ -375,25 +375,6 @@ final class Booking
     }
 
     /**
-     * Update a booking's status.
-     *
-     * @return bool True if a row was updated.
-     */
-    public static function updateStatus(string $id, string $status): bool
-    {
-        if (!in_array($status, self::VALID_STATUSES, true)) {
-            return false;
-        }
-
-        $affected = Database::execute(
-            "UPDATE `bookings` SET `status` = ?, `updated_at` = NOW() WHERE `id` = ?",
-            [$status, $id]
-        );
-
-        return $affected > 0;
-    }
-
-    /**
      * Get booking counts by status for a specific tenant.
      *
      * @return array<string, int>

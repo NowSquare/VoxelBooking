@@ -102,15 +102,12 @@ final class BookingDetailResponseTest extends TestCase
         $methodBody = $m[0] ?? '';
         $this->assertNotEmpty($methodBody, 'rescheduleBookingAction method should exist');
 
+        // presentRange() publishes check_in, check_out and nights for a stay
+        // (PublicBookingUtcContractTest asserts the actual response).
         $this->assertStringContainsString(
-            "'check_in'",
+            "VenueDateTime::presentRange(\$result['pattern']",
             $methodBody,
-            'Reschedule response should include check_in for resource pattern'
-        );
-        $this->assertStringContainsString(
-            "'check_out'",
-            $methodBody,
-            'Reschedule response should include check_out for resource pattern'
+            'Reschedule response should publish a resource stay as check-in/check-out dates'
         );
     }
 

@@ -43,7 +43,7 @@ export function bookingPresentation({ config, t }) {
                 else if (this.staff.length > 1) bits.push(t('staff.any_available'));
             } else if (this.selectedResource) {
                 bits.push(t('resource.capacity_label', { count: this.selectedResource.capacity }));
-                if (this.resourceAvailability) bits.push(this.formatPrice(this.resourceAvailability.total));
+                if (this.resourceAvailability?.total != null) bits.push(this.formatPrice(this.resourceAvailability.total));
                 else if (this.selectedResource.price_per_night != null) bits.push(this.selectedResource.price_label || this.formatPrice(this.selectedResource.price_per_night) + t('resource.per_night'));
             } else if (this.selectedEvent) {
                 bits.push(this.formatEventPrice(this.selectedEvent.price));

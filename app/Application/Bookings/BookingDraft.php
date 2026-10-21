@@ -8,6 +8,7 @@ use App\Agent\OperationException;
 use App\Engine\CapacityCalculator;
 use App\Engine\Database;
 use App\Engine\EventCalculator;
+use App\Engine\Money;
 use App\Engine\ResourceCalculator;
 use App\Engine\TimeSlotCalculator;
 use App\Engine\VenueDateTime;
@@ -101,7 +102,8 @@ final class BookingDraft
                     'check_out' => $checkOut,
                     'nights' => $availability['nights'],
                     'guest_count' => $size,
-                    'total' => sprintf('%.2f', $availability['total'])
+                    // Already exact cents as a decimal string, or null when a night has no price.
+                    'total' => $availability['total']
                 ];
                 break;
 
@@ -151,9 +153,15 @@ final class BookingDraft
         $data['price_currency'] = $tenant['currency'];
         $data += ['start_datetime' => $start->format('Y-m-d H:i:s'), 'end_datetime' => $end->format('Y-m-d H:i:s')];
 
+        // A stay is a pair of local dates; a clock time would only be its storage midnight.
+        $display['date'] = $start->format('Y-m-d');
+        if ($pattern !== 'resource') {
+            $display += ['time' => $start->format('H:i'), 'end_time' => $end->format('H:i')];
+        }
+
         return [
             'data' => $data,
-            'display' => $display + ['date' => $start->format('Y-m-d'), 'time' => $start->format('H:i'), 'end_time' => $end->format('H:i')]
+            'display' => $display
         ];
     }
 
@@ -181,10 +189,7 @@ final class BookingDraft
     public static function multiplyMoney(string $amount, int $quantity): string
     {
         // Integer cents avoid float rounding on money.
-        [$whole, $fraction] = array_pad(explode('.', $amount, 2), 2, '00');
-        $cents = ((int) $whole * 100 + (int) str_pad(substr($fraction, 0, 2), 2, '0')) * $quantity;
-
-        return intdiv($cents, 100) . '.' . str_pad((string) ($cents % 100), 2, '0', STR_PAD_LEFT);
+        return Money::fromCents(Money::toCents($amount) * $quantity);
     }
 
     public static function date(mixed $value): string

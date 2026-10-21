@@ -144,3 +144,23 @@ describe('confirmation email line', () => {
         }
     });
 });
+
+describe('unpriced stays', () => {
+    beforeEach(() => {
+        window.__VB_I18N__['resource.total_label'] = 'Total';
+        window.__VB_I18N__['resource.stay_total'] = ':nights night(s) · :total';
+        window.__VB_I18N__['resource.stay_nights'] = ':nights night(s)';
+    });
+
+    it('lists no total for a stay without a price', () => {
+        wizard.resourceAvailability = { nights: 2, total: null };
+        expect(wizard.resourceSummaryRows.map(row => row.label)).not.toContain('Total');
+        wizard.resourceAvailability = { nights: 2, total: '305.00' };
+        expect(wizard.resourceSummaryRows.map(row => row.label)).toContain('Total');
+    });
+
+    it('describes a rescheduled unpriced stay by its nights alone', () => {
+        wizard.rescheduleResourceAvailability = { nights: 3, total: null };
+        expect(wizard.rescheduleStayTotal).toBe('3 night(s)');
+    });
+});

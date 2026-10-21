@@ -528,11 +528,6 @@ final class BookingsController
         return (new Response())->header('Content-Type','text/csv; charset=UTF-8')->header('Content-Disposition','attachment; filename="'.$data['filename'].'"')->header('Cache-Control','no-store')->body($data['content']);
     }
 
-    /**
-     * Build a CSV response from booking rows.
-     *
-     * @param list<array<string, mixed>> $bookings
-     */
     private function bookingDetail(string $id,?string $businessId):?array
     {
         $actor=SessionActor::resolve(Operations::registry());

@@ -177,28 +177,6 @@ final class BookingTest extends TestCase
     }
 
     // ════════════════════════════════════════════════════════════════
-    // Booking::updateStatus()
-    // ════════════════════════════════════════════════════════════════
-
-    public function test_update_status_changes_booking(): void
-    {
-        $id = self::$bookingIds[0];
-        $result = Booking::updateStatus($id, 'no_show');
-        $this->assertTrue($result);
-
-        $booking = Booking::find($id);
-        $this->assertSame('no_show', $booking['status']);
-
-        // Restore
-        Booking::updateStatus($id, 'confirmed');
-    }
-
-    public function test_update_status_returns_false_for_missing(): void
-    {
-        $this->assertFalse(Booking::updateStatus('01NONEXISTENT00000000000', 'cancelled'));
-    }
-
-    // ════════════════════════════════════════════════════════════════
     // Booking::forTenantDate() — dashboard schedule strip
     // ════════════════════════════════════════════════════════════════
 

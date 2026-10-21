@@ -37,7 +37,16 @@ final class Executor
             if ($arguments !== []) {
                 throw new OperationException('reviewed_payload_only', 422);
             }
-            $arguments = (new PreviewStore())->resolve($actor, $operationId, $previewHandle)['arguments'];
+            try {
+                $arguments = (new PreviewStore())->resolve($actor, $operationId, $previewHandle)['arguments'];
+            } catch (OperationException $missingPreview) {
+                // Previews are cleaned up long before the 24-hour receipt window ends. A retry of a
+                // committed command must still get its receipt, so consult the receipt before giving up.
+                if ($missingPreview->status !== 404 || $idempotencyKey === null) {
+                    throw $missingPreview;
+                }
+                return $this->storedReplay($actor, $definition, $idempotencyKey) ?? throw $missingPreview;
+            }
         }
         // Fields a person adds on the review page are not part of the caller's
         // contract, so they skip input validation and only ever come from a review.
@@ -127,6 +136,48 @@ final class Executor
             ($definition->previewHandler)($actor, $arguments),
             $businessId
         );
+    }
+
+    /**
+     * The stored result for this caller's key, when its reviewed preview no longer exists.
+     *
+     * The business is unknown without the preview, so each business this caller has a
+     * live receipt for is tried with the same dedupe identity OperationReceiptStore
+     * writes (principal, connection, credential, business, operation, key). A mismatch
+     * finds nothing and the caller keeps the original not-found answer.
+     */
+    private function storedReplay(ActorContext $actor, OperationDefinition $definition, string $key): ?array
+    {
+        $customerCredential = $actor->authMode === 'customer' ? $actor->credentialId : null;
+        $candidates = Database::query(
+            'SELECT id, dedupe_hash, tenant_id, result_cipher FROM agent_operation_receipts
+             WHERE principal_type = ? AND principal_id = ? AND operation_id = ?
+             AND result_cipher IS NOT NULL AND replay_until > UTC_TIMESTAMP()',
+            [$actor->principalType, $actor->principalId, $definition->operationId]
+        );
+        foreach ($candidates as $receipt) {
+            $identity = CanonicalJson::hash([
+                $actor->principalType,
+                $actor->principalId,
+                $actor->connectionId,
+                $customerCredential,
+                $receipt['tenant_id'],
+                $definition->operationId,
+                $key
+            ]);
+            if (!hash_equals($receipt['dedupe_hash'], $identity)) {
+                continue;
+            }
+            // The caller must still be allowed to act for this business today.
+            if ($receipt['tenant_id'] !== null) {
+                $actor->business($receipt['tenant_id']);
+            }
+            (new AuthorizationPolicy())->authorize($actor, $definition, $receipt['tenant_id']);
+
+            return (new PayloadCipher())->decrypt($receipt['result_cipher']);
+        }
+
+        return null;
     }
 
     private function authorizeInput(ActorContext $actor, OperationDefinition $definition, array $arguments): array

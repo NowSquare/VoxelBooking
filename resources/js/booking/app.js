@@ -812,7 +812,10 @@ Alpine.data('bookingWizard', () => enhanceBookingWizard({
         }
         if (this.resourceAvailability) {
             rows.push({ label: t('resource.nights_label'), value: String(this.resourceAvailability.nights) });
-            rows.push({ label: t('resource.total_label'), value: this.formatPrice(this.resourceAvailability.total) });
+            // An unpriced stay has no total, not a total of zero.
+            if (this.resourceAvailability.total != null) {
+                rows.push({ label: t('resource.total_label'), value: this.formatPrice(this.resourceAvailability.total) });
+            }
         }
         if (this.guestCount >= 1) {
             rows.push({ label: t('resource.guests_label'), value: String(this.guestCount) });

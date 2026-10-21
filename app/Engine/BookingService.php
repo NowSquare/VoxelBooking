@@ -304,65 +304,6 @@ final class BookingService
     }
 
     /**
-     * Cancel a booking.
-     *
-     * Sets status to 'cancelled', records the timestamp and optional reason,
-     * decrements the customer's booking count, and logs an audit event.
-     *
-     * @throws \RuntimeException If cancellation is not allowed
-     */
-    public static function cancelBooking(string $bookingId, array $tenant, string $reason = ''): array
-    {
-        $booking = self::findById($bookingId);
-        if (!$booking || $booking['tenant_id'] !== $tenant['id']) {
-            throw new \RuntimeException('Booking not found');
-        }
-
-        $check = self::canCancel($booking, $tenant);
-        if (!$check['allowed']) {
-            throw new \RuntimeException('Cannot cancel: ' . $check['reason']);
-        }
-
-        // Update booking status
-        Database::execute(
-            'UPDATE `bookings` SET
-                `status` = ?,
-                `cancelled_at` = NOW(),
-                `cancellation_reason` = ?,
-                `updated_at` = NOW()
-             WHERE `id` = ?',
-            ['cancelled', $reason ?: null, $bookingId]
-        );
-
-        // Decrement customer booking count
-        Database::execute(
-            'UPDATE `customers` SET
-                `booking_count` = GREATEST(0, `booking_count` - 1)
-             WHERE `id` = ?',
-            [$booking['customer_id']]
-        );
-
-        // Audit log
-        AuditLog::log(
-            'booking.cancelled',
-            'booking',
-            $bookingId,
-            [
-                'cancelled_by'  => 'customer',
-                'reason'        => $reason ?: null,
-            ],
-            $tenant['id'],
-        );
-
-        // Return the updated booking
-        $booking['status'] = 'cancelled';
-        $booking['cancelled_at'] = date('Y-m-d H:i:s');
-        $booking['cancellation_reason'] = $reason ?: null;
-
-        return $booking;
-    }
-
-    /**
      * Check whether a booking can be rescheduled (time-gate check).
      *
      * @return array{allowed: bool, reason: string|null}
@@ -513,7 +454,8 @@ final class BookingService
 
             if ($pattern === 'resource') {
                 $quote=ResourceCalculator::checkAvailability($tenant,$booking['resource_id'],$resolved['check_in'],$resolved['check_out'],$resolved['guest_count'],$bookingId);
-                $newBookingData['price_total']=isset($quote['total'])?sprintf('%.2f',$quote['total']):null;
+                // Exact cents as a decimal string, or null for a stay with an unpriced night.
+                $newBookingData['price_total']=$quote['total'];
                 $newBookingData['price_currency']=$tenant['currency'];
             } elseif($pattern==='event' && $newBookingData['event_id']!==$booking['event_id']) {
                 $event=Database::query('SELECT price FROM events WHERE id=? AND tenant_id=?',[$newBookingData['event_id'],$tenantId])[0];
@@ -626,7 +568,17 @@ final class BookingService
             self::recheckAvailability($booking['booking_pattern'], $booking, $tenant, $resolved, $booking['id']);
         } catch (\PDOException) { throw new \App\Agent\OperationException('temporarily_unavailable', 503); } catch (\RuntimeException $error) { throw self::rescheduleError($error); }
         $result = ['booking_id' => $booking['id'], 'status' => $booking['status'], 'original_start' => $booking['start_datetime'], 'original_end' => $booking['end_datetime'], 'new_start' => $resolved['new_start_dt']->format('Y-m-d H:i:s'), 'new_end' => $resolved['new_end_dt']->format('Y-m-d H:i:s'), 'timezone' => $tenant['timezone'], 'currency' => $tenant['currency'], 'cancellation_policy' => $tenant['cancellation_policy'], 'updated_at' => $booking['updated_at']];
-        if ($booking['booking_pattern'] === 'resource') $result['total'] = sprintf('%.2f', ResourceCalculator::checkAvailability($tenant, $booking['resource_id'], $resolved['check_in'], $resolved['check_out'], $resolved['guest_count'], $booking['id'])['total']);
+        if ($booking['booking_pattern'] === 'resource') {
+            // The calculator already returns exact cents as a decimal string, or null for an unpriced stay.
+            $result['total'] = ResourceCalculator::checkAvailability(
+                $tenant,
+                $booking['resource_id'],
+                $resolved['check_in'],
+                $resolved['check_out'],
+                $resolved['guest_count'],
+                $booking['id']
+            )['total'];
+        }
         if($booking['booking_pattern']==='event' && ($resolved['event_id']??$booking['event_id'])!==$booking['event_id']) {
             $targetEvent=Database::query('SELECT price FROM events WHERE id=? AND tenant_id=?',[$resolved['event_id'],$tenant['id']])[0];
             $result['total']=$targetEvent['price']===null?null:\App\Application\Bookings\BookingDraft::multiplyMoney((string)$targetEvent['price'],(int)$booking['party_size']);

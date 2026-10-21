@@ -261,17 +261,17 @@ final class AvailabilityService
                         self::size($input['guest_count'] ?? $input['party_size'] ?? 1),
                         $exclude
                     );
-                    // Money leaves as fixed two-decimal strings so agents never see float artefacts.
+                    // The calculator already prices in exact cents: two-decimal strings, null where no price exists.
                     $result['quote'] = [
                         'available' => $quote['available'],
                         'error' => $quote['error'] ?? null,
                         'nights' => $quote['nights'] ?? null,
-                        'total' => isset($quote['total']) ? sprintf('%.2f', $quote['total']) : null,
+                        'total' => $quote['total'],
                         'check_in' => $in,
                         'check_out' => $out,
                         'resource' => $quote['resource'],
                         'pricing' => array_map(
-                            static fn ($night) => ['date' => $night['date'], 'price' => sprintf('%.2f', $night['price']), 'label' => $night['label']],
+                            static fn ($night) => ['date' => $night['date'], 'price' => $night['price'], 'label' => $night['label']],
                             $quote['pricing']
                         )
                     ];

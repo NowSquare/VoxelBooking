@@ -122,6 +122,9 @@ final class ResourceCalculator
      * Check availability for a specific date range on a resource.
      *
      * Returns availability status, pricing breakdown, and total price.
+     * Prices are exact two-decimal strings. A night without any price (no
+     * base rate and no season) is null, and so is the total of a stay that
+     * contains one: an unpriced stay is not a free one.
      *
      * @param array  $tenant     Tenant record
      * @param string $resourceId Resource ID
@@ -129,7 +132,7 @@ final class ResourceCalculator
      * @param string $checkOut   Check-out date (YYYY-MM-DD)
      * @param int    $guestCount Number of guests
      *
-     * @return array{available: bool, resource: array|null, nights: int, pricing: list<array>, total: float, error: string|null}
+     * @return array{available: bool, resource: array|null, nights: int, pricing: list<array{date: string, price: string|null, label: string|null}>, total: string|null, error: string|null}
      */
     public static function checkAvailability(
         array $tenant,
@@ -240,7 +243,8 @@ final class ResourceCalculator
         }
 
         // Calculate pricing
-        $pricing = self::calculatePricing($resourceId, $tenantId, $checkInDate, $checkOutDate, (float) ($resource['price_per_night'] ?? 0));
+        $basePrice = $resource['price_per_night'] ?? null;
+        $pricing = self::calculatePricing($resourceId, $tenantId, $checkInDate, $checkOutDate, $basePrice === null ? null : (string) $basePrice);
 
         return [
             'available' => true,
@@ -342,14 +346,17 @@ final class ResourceCalculator
     /**
      * Calculate per-night pricing with seasonal overrides.
      *
-     * @return array{breakdown: list<array{date: string, price: float, label: string|null}>, total: float}
+     * Nights are summed in integer cents, never floats, so a long stay totals
+     * to the exact cent. The total is null as soon as one night has no price.
+     *
+     * @return array{breakdown: list<array{date: string, price: string|null, label: string|null}>, total: string|null}
      */
     private static function calculatePricing(
         string $resourceId,
         string $tenantId,
         \DateTimeImmutable $checkIn,
         \DateTimeImmutable $checkOut,
-        float $basePrice,
+        ?string $basePrice,
     ): array {
         // Load seasonal pricing entries that overlap the stay
         $seasonalRows = Database::query(
@@ -362,7 +369,8 @@ final class ResourceCalculator
         );
 
         $breakdown = [];
-        $total = 0.0;
+        $totalCents = 0;
+        $everyNightPriced = true;
         $current = $checkIn;
 
         while ($current < $checkOut) {
@@ -373,23 +381,28 @@ final class ResourceCalculator
             // Check if this night falls in a seasonal range
             foreach ($seasonalRows as $season) {
                 if ($dateStr >= $season['start_date'] && $dateStr <= $season['end_date']) {
-                    $nightPrice = (float) $season['price_per_night'];
+                    $nightPrice = (string) $season['price_per_night'];
                     $label = $season['label'];
                     break; // First matching season wins
                 }
             }
 
+            $nightCents = $nightPrice === null ? null : Money::toCents($nightPrice);
             $breakdown[] = [
                 'date'  => $dateStr,
-                'price' => $nightPrice,
+                'price' => $nightCents === null ? null : Money::fromCents($nightCents),
                 'label' => $label,
             ];
 
-            $total += $nightPrice;
+            if ($nightCents === null) {
+                $everyNightPriced = false;
+            } else {
+                $totalCents += $nightCents;
+            }
             $current = $current->modify('+1 day');
         }
 
-        return ['breakdown' => $breakdown, 'total' => $total];
+        return ['breakdown' => $breakdown, 'total' => $everyNightPriced ? Money::fromCents($totalCents) : null];
     }
 
     /**
@@ -402,7 +415,7 @@ final class ResourceCalculator
             'resource'  => null,
             'nights'    => 0,
             'pricing'   => [],
-            'total'     => 0.0,
+            'total'     => null,
             'error'     => $reason,
         ];
     }

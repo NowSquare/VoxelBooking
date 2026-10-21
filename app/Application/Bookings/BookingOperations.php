@@ -425,7 +425,12 @@ final class BookingOperations
             'cancellation_policy' => $tenant['cancellation_policy'],
             'requires_approval' => (bool) $tenant['booking_requires_approval'],
             ...self::selfServiceReview($tenant, array_replace($draft['data'], ['status' => $status])),
-            ...VenueDateTime::utcRange($draft['data']['start_datetime'], $draft['data']['end_datetime'], $tenant['timezone'])
+            ...VenueDateTime::presentRange(
+                $tenant['booking_pattern'],
+                $draft['data']['start_datetime'],
+                $draft['data']['end_datetime'],
+                $tenant['timezone']
+            )
         ];
     }
 
@@ -551,13 +556,27 @@ final class BookingOperations
         foreach (['duration', 'nights', 'guest_count', 'party_size', 'spot_count'] as $field) $properties[$field] = ['type' => 'integer'];
         foreach (['consent_recorded', 'email_sent', 'waitlisted'] as $field) $properties[$field] = ['type' => 'boolean'];
 
-        return self::object(
-            $properties,
-            [
-                'id', 'business_id', 'booking_pattern', 'status', 'timezone', 'notification_state', 'date', 'time', 'end_time',
-                'start_utc', 'end_utc', 'consent_recorded', 'email_sent'
-            ]
+        return self::periodRequired(
+            self::object(
+                $properties,
+                ['id', 'business_id', 'booking_pattern', 'status', 'timezone', 'notification_state', 'date', 'consent_recorded', 'email_sent']
+            ),
+            ['check_in', 'check_out', 'nights'],
+            ['time', 'end_time', 'start_utc', 'end_utc']
         );
+    }
+
+    /**
+     * A stay is published as local dates and a timed booking as UTC instants (see VenueDateTime).
+     * The contract requires whichever pair the booking's pattern publishes.
+     */
+    private static function periodRequired(array $schema, array $stayFields, array $timedFields): array
+    {
+        $schema['if'] = ['properties' => ['booking_pattern' => ['const' => 'resource']], 'required' => ['booking_pattern']];
+        $schema['then'] = ['required' => $stayFields];
+        $schema['else'] = ['required' => $timedFields];
+
+        return $schema;
     }
 
     public static function bookingSchema(): array
@@ -567,6 +586,9 @@ final class BookingOperations
             'id', 'business_id', 'business_name', 'business_slug', 'created_at', 'updated_at', 'booking_pattern', 'status',
             'start_datetime', 'end_datetime', 'timezone', 'start_utc', 'end_utc'
         ] as $field) $properties[$field] = ['type' => 'string'];
+        $properties['check_in'] = ['type' => 'string', 'format' => 'date'];
+        $properties['check_out'] = ['type' => 'string', 'format' => 'date'];
+        $properties['nights'] = ['type' => 'integer'];
         foreach ([
             'service_name', 'service_color', 'staff_name', 'resource_name', 'event_name', 'price_total', 'price_currency',
             'service_id', 'staff_id', 'resource_id', 'event_id', 'notes', 'customer_timezone', 'rescheduled_to_id',
@@ -581,12 +603,16 @@ final class BookingOperations
         );
         $properties['allowed_statuses'] = ['type' => 'array', 'items' => ['type' => 'string']];
 
-        return self::object(
-            $properties,
-            [
-                'id', 'business_id', 'booking_pattern', 'status', 'start_datetime', 'end_datetime', 'timezone', 'start_utc',
-                'end_utc', 'party_size', 'customer', 'cancellation', 'rescheduling', 'allowed_statuses'
-            ]
+        return self::periodRequired(
+            self::object(
+                $properties,
+                [
+                    'id', 'business_id', 'booking_pattern', 'status', 'start_datetime', 'end_datetime', 'timezone', 'party_size',
+                    'customer', 'cancellation', 'rescheduling', 'allowed_statuses'
+                ]
+            ),
+            ['check_in', 'check_out', 'nights'],
+            ['start_utc', 'end_utc']
         );
     }
 }

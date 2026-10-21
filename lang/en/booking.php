@@ -173,6 +173,7 @@ return [
         'stay_hint_range'             => 'Stay :min–:max nights. Choose check-in first, then check-out.',
         'stay_hint_min'               => 'Stay at least :min night(s). Choose check-in first, then check-out.',
         'stay_total'                  => ':nights night(s) · :total',
+        'stay_nights'                 => ':nights night(s)',
     ],
 
     // ── Empty States ──

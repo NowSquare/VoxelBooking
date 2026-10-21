@@ -108,7 +108,7 @@ final class BookingCommands
                 // Nothing has left at commit time. Adapters that deliver at once report the outcome.
                 'email_sent' => false,
                 'notification_state' => $customerNotified ? 'queued' : 'none',
-                ...VenueDateTime::utcRange($data['start_datetime'], $data['end_datetime'], $tenant['timezone'])
+                ...VenueDateTime::presentRange($tenant['booking_pattern'], $data['start_datetime'], $data['end_datetime'], $tenant['timezone'])
             ];
             if (!$actor->isStaff()) $receipt['manage_url'] = CustomerCapability::manageLink($tenant, $result['id']);
 
