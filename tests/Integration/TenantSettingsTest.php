@@ -470,6 +470,8 @@ final class TenantSettingsTest extends TestCase
 
     public function testSaveNotificationsRejectsInvalidEmail(): void
     {
+        // Start from a known saved address rather than whatever an earlier test left.
+        Database::execute('UPDATE `tenants` SET `notification_email` = ? WHERE `id` = ?', ['alerts@test.test', self::$tenantId]);
         $page = self::httpGet("/admin/tenants/" . self::$tenantId . "/settings/notifications", 'operator');
         self::extractCsrf($page['body'], 'operator');
 

@@ -548,9 +548,14 @@ php scripts/test-isolated.php --filter CapacityBookingFlowTest
 php scripts/test-isolated.php --mysql-image=mysql:8.0
 php scripts/test-isolated.php --upgrade-check --mysql-image=mysql:8.0
 
+# Shuffle classes and methods to catch tests that depend on each other
+php scripts/test-isolated.php --order-by=random --random-order-seed=202
+
 # Keep a private environment running for browser/API checks
 php scripts/test-isolated.php --keep --serve
 ```
+
+Tests do not depend on each other's order. Every `TestFixtures::provision()` call restores the shared accounts and the fixture business's settings, a PHPUnit extension (`Tests\Support\FreshRequestBudgets`) gives each test fresh request budgets, and a test that needs another test's result declares it with `#[Depends]`. Close any database connection before forking a child process: a child that exits closes the socket it inherited.
 
 Both suites include database-backed checks. Integration coverage exercises actual HTTP/MCP flows, authorization, retries and competing writers. The upgrade rehearsal creates a fictional version 28 installation, verifies migration and interrupted-DDL recovery, restores its backup and upgrades again. The default database image is MySQL 8.4; CI runs PHP 8.3/MySQL 8.0 and PHP 8.5/MySQL 8.4.
 

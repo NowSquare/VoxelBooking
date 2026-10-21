@@ -58,6 +58,9 @@ final class AdminRoutesTest extends TestCase
         } catch (\Throwable) {
             // Table may not exist; not critical
         }
+        // Detail and list pages need the fixture booking, which other classes may have cleared.
+        TestFixtures::provision();
+        TestFixtures::ensureBooking();
     }
 
     protected function tearDown(): void

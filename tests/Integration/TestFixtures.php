@@ -125,10 +125,11 @@ final class TestFixtures
         } catch (\Throwable) {}
 
         if (self::$provisioned) {
+            self::restoreAccounts();
             return;
         }
 
-        $hash = password_hash(self::OPERATOR_PASSWORD, PASSWORD_BCRYPT, ['cost' => 12]);
+        $hash = self::passwordHash();
 
         // ── Operator: delete by ID and email, then insert fresh ──
         Database::execute(
@@ -206,6 +207,95 @@ final class TestFixtures
         );
 
         self::$provisioned = true;
+    }
+
+    /**
+     * Put the shared accounts back the way provision() created them.
+     *
+     * The full reset runs once per process, so a class that demotes,
+     * deactivates or renames the fixture member would otherwise leave every
+     * later class acting as someone else. Cheap enough to run on every call.
+     */
+    private static function restoreAccounts(): void
+    {
+        $hash = self::passwordHash();
+        Database::execute(
+            "UPDATE `operators` SET `name` = 'Test Operator', `email` = ?, `password_hash` = ? WHERE `id` = ?",
+            [self::OPERATOR_EMAIL, $hash, self::OPERATOR_ID]
+        );
+        Database::execute(
+            "UPDATE `business_users`
+             SET `tenant_id` = ?, `name` = 'Test Business User', `email` = ?, `password_hash` = ?,
+                 `role` = 'owner', `is_active` = 1, `force_password_change` = 0
+             WHERE `id` = ?",
+            [self::BUSINESS_TENANT_ID, self::BUSINESS_EMAIL, $hash, self::BUSINESS_USER_ID]
+        );
+        self::restoreBusinessSettings();
+        Database::execute(
+            "DELETE FROM `auth_emails` WHERE `email` IN (?, ?) OR (`user_type` = 'operator' AND `user_id` = ?)
+                OR (`user_type` = 'business_user' AND `user_id` = ?)",
+            [self::OPERATOR_EMAIL, self::BUSINESS_EMAIL, self::OPERATOR_ID, self::BUSINESS_USER_ID]
+        );
+        Database::execute(
+            "INSERT INTO `auth_emails` (`email`, `user_type`, `user_id`) VALUES (?, 'operator', ?), (?, 'business_user', ?)",
+            [self::OPERATOR_EMAIL, self::OPERATOR_ID, self::BUSINESS_EMAIL, self::BUSINESS_USER_ID]
+        );
+    }
+
+    /**
+     * Return every setting of the shared business to its schema default.
+     *
+     * Classes switch its booking pattern, time zone, notice rules and more;
+     * reading the columns from the schema keeps this complete as settings grow.
+     */
+    private static function restoreBusinessSettings(): void
+    {
+        $fixed = ['id', 'name', 'slug', 'email', 'booking_pattern', 'timezone', 'currency', 'brand_color', 'status', 'created_at', 'updated_at'];
+        $columns = array_column(Database::query('SHOW COLUMNS FROM `tenants`'), 'Field');
+        $defaults = array_map(
+            static fn (string $column): string => "`{$column}` = DEFAULT(`{$column}`)",
+            array_values(array_diff($columns, $fixed))
+        );
+        Database::execute(
+            "UPDATE `tenants` SET " . implode(', ', $defaults) . ",
+                `name` = 'Test Tenant', `slug` = 'test-fixture', `email` = ?, `booking_pattern` = 'timeslot',
+                `timezone` = 'UTC', `currency` = 'EUR', `brand_color` = '#2563EB', `status` = 'active'
+             WHERE `id` = ?",
+            [self::BUSINESS_EMAIL, self::BUSINESS_TENANT_ID]
+        );
+    }
+
+    /**
+     * Recreate the fixture customer and booking if an earlier class deleted them.
+     *
+     * Some classes clear every booking of the shared business to control
+     * their own slots; classes that open the fixture booking call this first.
+     */
+    public static function ensureBooking(): void
+    {
+        Database::execute(
+            "INSERT IGNORE INTO `customers` (`id`, `tenant_id`, `name`, `email`)
+             VALUES (?, ?, 'Test Customer', 'customer@example.com')",
+            [self::CUSTOMER_ID, self::BUSINESS_TENANT_ID]
+        );
+        Database::execute(
+            "INSERT IGNORE INTO `bookings`
+             (`id`, `tenant_id`, `booking_pattern`, `customer_id`,
+              `start_datetime`, `end_datetime`, `status`, `source`)
+             VALUES (?, ?, 'timeslot', ?,
+              DATE_ADD(CURDATE(), INTERVAL 1 DAY),
+              DATE_ADD(DATE_ADD(CURDATE(), INTERVAL 1 DAY), INTERVAL 30 MINUTE),
+              'confirmed', 'web')",
+            [self::BOOKING_ID, self::BUSINESS_TENANT_ID, self::CUSTOMER_ID]
+        );
+    }
+
+    /** One bcrypt per process: hashing at cost 12 on every call would slow the suite. */
+    private static function passwordHash(): string
+    {
+        static $hash = null;
+
+        return $hash ??= password_hash(self::OPERATOR_PASSWORD, PASSWORD_BCRYPT, ['cost' => 12]);
     }
 
     /**

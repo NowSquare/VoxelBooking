@@ -174,8 +174,10 @@ final class SystemOperationsTest extends TestCase
     {
         $mailPath=dirname(getenv('VOXELBOOKING_TEST_MANIFEST')).'/mail.jsonl';
         $mailOffset=is_file($mailPath)?count(file($mailPath,FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES)):0;
-        Database::execute("DELETE FROM delivery_outbox WHERE topic='booking.reminder'");
+        // Each dispatch takes a bounded batch; pending rows left by other classes must not crowd out this reminder.
+        Database::execute("DELETE FROM delivery_outbox WHERE status<>'delivered' OR topic='booking.reminder'");
         Database::execute('DELETE FROM reminders WHERE booking_id=?',[TestFixtures::BOOKING_ID]);
+        TestFixtures::ensureBooking();
         Database::execute("UPDATE bookings SET status='confirmed',start_datetime=?,end_datetime=? WHERE id=?",[gmdate('Y-m-d H:i:s',time()+86400),gmdate('Y-m-d H:i:s',time()+90000),TestFixtures::BOOKING_ID]);
         Database::execute('UPDATE tenants SET send_reminders=1 WHERE id=?',[TestFixtures::BUSINESS_TENANT_ID]);
         $id=Ulid::generate();

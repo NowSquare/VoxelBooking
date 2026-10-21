@@ -105,6 +105,8 @@ final class BusinessUserCrudTest extends TestCase
         if (!self::$dbReady || self::$tenantId === '') {
             $this->markTestSkipped('Database or test tenant not available');
         }
+        // Earlier classes share this address's request budget; start each test with a fresh one.
+        Database::execute('DELETE FROM `rate_limits`');
     }
 
     // ════════════════════════════════════════════════════════════════

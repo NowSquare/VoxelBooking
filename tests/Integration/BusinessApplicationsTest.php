@@ -7,6 +7,7 @@ namespace Tests\Integration;
 use App\Engine\Database;
 use App\Engine\EnvLoader;
 use App\Engine\Ulid;
+use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -418,8 +419,13 @@ final class BusinessApplicationsTest extends TestCase
 
     public function testDuplicatePendingEmailRejected(): void
     {
-        if (self::$applicationId === '') $this->markTestSkipped('No application created');
-
+        // Seed its own pending application: whatever order tests run in, this one stays pending.
+        Database::execute("DELETE FROM `business_applications` WHERE `email` = 'dup@batest.test'");
+        Database::execute(
+            "INSERT INTO `business_applications` (`id`, `business_name`, `contact_name`, `email`, `status`, `created_at`)
+             VALUES (?, 'Dup Salon', 'Dee Dup', 'dup@batest.test', 'pending', NOW())",
+            [Ulid::generate()]
+        );
         Database::upsertSetting('enable_applications', '1');
 
         $home = self::httpPublic('GET', '/');
@@ -429,18 +435,19 @@ final class BusinessApplicationsTest extends TestCase
             '_csrf_token'   => $csrf,
             '__ts'          => (string) ((time() - 10) * 1000),
             '__hp'          => '',
-            'business_name' => 'Acme Salon 2',
-            'contact_name'  => 'Jane Doe 2',
-            'email'         => 'jane@batest.test',
+            'business_name' => 'Dup Salon 2',
+            'contact_name'  => 'Dee Dup 2',
+            'email'         => 'dup@batest.test',
         ]);
 
         $this->assertContains($res['code'], [302, 403]);
 
         $rows = Database::query(
-            "SELECT COUNT(*) AS cnt FROM `business_applications` WHERE `email` = 'jane@batest.test'"
+            "SELECT COUNT(*) AS cnt FROM `business_applications` WHERE `email` = 'dup@batest.test'"
         );
         $this->assertSame(1, (int) $rows[0]['cnt'],
             'Duplicate pending application must be rejected — only one row expected');
+        Database::execute("DELETE FROM `business_applications` WHERE `email` = 'dup@batest.test'");
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -464,23 +471,33 @@ final class BusinessApplicationsTest extends TestCase
 
     public function testApplicationsPageShowsTestApplication(): void
     {
-        if (self::$applicationId === '') $this->markTestSkipped('No application created');
+        // Its own pending application, so approval elsewhere in the class cannot hide it.
+        Database::execute("DELETE FROM `business_applications` WHERE `email` = 'show@batest.test'");
+        Database::execute(
+            "INSERT INTO `business_applications` (`id`, `business_name`, `contact_name`, `email`, `website`, `status`, `created_at`)
+             VALUES (?, 'Show Salon', 'Sam Show', 'show@batest.test', 'https://show-salon.example.com', 'pending', NOW())",
+            [Ulid::generate()]
+        );
 
-        $res = self::httpGet('/admin/applications?status=pending');
-        $this->assertSame(200, $res['code']);
-        $this->assertStringContainsString('Acme Salon', $res['body']);
-        $this->assertStringContainsString('jane@batest.test', $res['body']);
-        $this->assertStringContainsString('acme-salon.example.com', $res['body'],
-            'Website must be visible in the admin review table');
+        try {
+            $res = self::httpGet('/admin/applications?status=pending');
+            $this->assertSame(200, $res['code']);
+            $this->assertStringContainsString('Show Salon', $res['body']);
+            $this->assertStringContainsString('show@batest.test', $res['body']);
+            $this->assertStringContainsString('show-salon.example.com', $res['body'],
+                'Website must be visible in the admin review table');
+        } finally {
+            Database::execute("DELETE FROM `business_applications` WHERE `email` = 'show@batest.test'");
+        }
     }
 
     // ════════════════════════════════════════════════════════════════
     // Approve/Reject actions
     // ════════════════════════════════════════════════════════════════
 
+    #[Depends('testSuccessfulSubmissionWithWebsite')]
     public function testApproveApplication(): void
     {
-        if (self::$applicationId === '') $this->markTestSkipped('No application created');
 
         // Get fresh CSRF
         $page = self::httpGet('/admin/applications');
@@ -503,9 +520,9 @@ final class BusinessApplicationsTest extends TestCase
             'reviewed_by must reference the operator');
     }
 
+    #[Depends('testApproveApplication')]
     public function testApproveCreatesAuditEntry(): void
     {
-        if (self::$applicationId === '') $this->markTestSkipped('No application created');
 
         $rows = Database::query(
             "SELECT * FROM `audit_log` WHERE `entity_type` = 'business_application' AND `entity_id` = ? AND `action` LIKE '%approve%' ORDER BY `created_at` DESC LIMIT 1",

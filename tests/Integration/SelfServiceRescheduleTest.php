@@ -78,6 +78,10 @@ final class SelfServiceRescheduleTest extends TestCase
         } catch (\Throwable) {
             // best-effort
         }
+
+        // Several tests move or cancel the fixture booking; each starts from the seeded state.
+        TestFixtures::provision();
+        self::seedFixtures();
     }
 
     protected function tearDown(): void

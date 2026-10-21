@@ -13,6 +13,9 @@
             <directory>tests/Integration</directory>
         </testsuite>
     </testsuites>
+    <extensions>
+        <bootstrap class="Tests\Support\FreshRequestBudgets"/>
+    </extensions>
     <php>
         <env name="APP_ENV" value="test"/>
     </php>

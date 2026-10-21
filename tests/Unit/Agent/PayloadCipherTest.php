@@ -31,6 +31,9 @@ final class PayloadCipherTest extends TestCase
             self::markTestSkipped('pcntl is required for the key creation race.');
         }
         $path = $this->directory . '/keys/payload.key';
+        // A child that exits closes any MySQL socket it inherited, which would
+        // leave this process and every later test with a dead connection.
+        \App\Engine\Database::reset();
         $children = [];
         for ($i = 0; $i < 8; $i++) {
             $pid = pcntl_fork();

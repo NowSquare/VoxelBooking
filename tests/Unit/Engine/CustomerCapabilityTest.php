@@ -27,9 +27,14 @@ final class CustomerCapabilityTest extends TestCase
         $this->db->exec("INSERT INTO tenants VALUES ('tenant-a','a','active'),('tenant-b','b','active')");
         $this->db->exec("INSERT INTO customers VALUES ('customer-a','tenant-a',0,'a@example.com'),('customer-b','tenant-b',0,'b@example.com')");
         $this->db->exec("INSERT INTO bookings VALUES ('booking-a','tenant-a','customer-a'),('booking-b','tenant-b','customer-b'),('booking-other','tenant-a','customer-a')");
-        $_SESSION = [];
         $_SERVER = [];
         $_GET = $_POST = $_FILES = [];
+        // Capability checks start a session when none is active, and starting one
+        // replaces $_SESSION; open it first so each test's session data survives.
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            \App\Engine\Auth::startSession();
+        }
+        $_SESSION = [];
     }
 
     protected function tearDown(): void

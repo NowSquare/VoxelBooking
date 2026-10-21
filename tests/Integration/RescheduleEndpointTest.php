@@ -87,10 +87,15 @@ final class RescheduleEndpointTest extends TestCase
                 $this->markTestSkipped('Fixtures could not be recovered: ' . $e->getMessage());
             }
         } else {
-            $tenantId = TestFixtures::BUSINESS_TENANT_ID;
-            self::ensureCustomerExists($tenantId);
-            self::ensureServiceExists($tenantId);
-            self::ensureAvailabilityExists($tenantId);
+            // Each test starts from the seeded slots: earlier tests leave the
+            // bookings their reschedules created, under generated IDs, on the
+            // shared business, and one of those can hold a later test's target.
+            TestFixtures::provision();
+            Database::execute(
+                "DELETE FROM `bookings` WHERE `tenant_id` = ? AND `id` NOT LIKE '01TEST%'",
+                [TestFixtures::BUSINESS_TENANT_ID]
+            );
+            self::seedRescheduleFixtures();
         }
     }
 
