@@ -59,13 +59,13 @@ final class SettingsIdentityOperationsTest extends TestCase
     }
     private function request(string $path,string $method='GET',array $payload=[],?string $token=null,?string $key=null): array
     {
-        $headers=['Accept: application/json','Content-Type: application/json'];
+        // One Accept header only: servers disagree on which duplicate wins, and
+        // PHP 8.3's built-in server keeps the first, which MCP rejects with 406.
+        $accept=$path==='/mcp'?'application/json, text/event-stream':'application/json';
+        $headers=['Accept: '.$accept,'Content-Type: application/json'];
         if($token!==null) { $headers[]='Authorization: Bearer '.$token; }
         if($key!==null) { $headers[]='Idempotency-Key: '.$key; }
-        if($path==='/mcp') {
-            $headers[]='MCP-Protocol-Version: 2025-11-25';
-            $headers[]='Accept: application/json, text/event-stream';
-        }
+        if($path==='/mcp') { $headers[]='MCP-Protocol-Version: 2025-11-25'; }
         $responseHeaders=[];
         $curl=curl_init($this->base.$path);
         curl_setopt_array($curl,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_TIMEOUT=>10,CURLOPT_CUSTOMREQUEST=>$method,
