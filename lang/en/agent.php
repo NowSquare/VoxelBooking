@@ -143,4 +143,30 @@ return [
         'path_body_mismatch'=>'The request path and reviewed record do not match.',
         'internal_error'=>'The action could not be completed. Recover its receipt before retrying a write.',
     ],
+
+    // Image upload operation.
+    'media' => [
+        'title' => 'Prepare an image upload',
+        'description' => 'Get a short-lived, single-use address for uploading one image to a business, for a logo, service, staff member, resource or event.',
+    ],
+
+    // Descriptions in the generated OpenAPI document and MCP tool list.
+    'contract' => [
+        'preview_title' => 'Preview: :title',
+        'preview_description' => 'Review this proposed action before committing it. :description',
+        'operation_result' => 'Operation result',
+        'operation_problem' => 'Operation problem',
+        'continuation' => 'Get a continuation from POST :path and reuse it for this task. It does not authorize access to existing customer records.',
+        'idempotency_key' => 'Reuse this key for retries of the same reviewed operation.',
+        'session_booking_summary' => 'Start a public booking task',
+        'session_application_summary' => 'Start a public application task',
+        'session_description' => 'Create a temporary continuation for public booking previews, browser review and retries. It grants no access to existing bookings or customer data.',
+        'session_result' => 'Temporary booking continuation',
+        'business_unavailable' => 'Business unavailable',
+        'rate_limited' => 'Rate limit reached',
+        'money' => 'Decimal amount in the business currency. Null means no listed price.',
+        'weekday_sunday_first' => '0 is Sunday; null allows every day.',
+        'weekday_monday_first' => '0 is Monday; 6 is Sunday.',
+        'business_id' => 'Omit when the connection grants one business.',
+    ],
 ];

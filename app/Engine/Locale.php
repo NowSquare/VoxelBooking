@@ -76,6 +76,9 @@ final class Locale
     public static function init(string $basePath): void
     {
         self::$basePath = rtrim($basePath, '/');
+        // Translations cached before this point came from another location, or
+        // were cached as missing because no location was set yet.
+        self::$translations = [];
 
         $registryPath = self::$basePath . '/config/locales.php';
         if (is_file($registryPath)) {

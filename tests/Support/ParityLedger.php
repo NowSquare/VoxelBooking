@@ -29,10 +29,25 @@ final class ParityLedger
         $lines=file($method->getFileName());
         return hash('sha256',implode('',array_slice($lines,$method->getStartLine()-1,$method->getEndLine()-$method->getStartLine()+1)));
     }
+    /**
+     * A contract is its structure and policy. Schema descriptions and titles are
+     * documentation: rewording or translating them must not demand a parity
+     * review, and the hash must not depend on whether translations are loaded.
+     * Only string annotations are dropped, so a property named "title" stays.
+     */
     public static function contractHash(\App\Agent\OperationDefinition $operation): string
     {
-        return CanonicalJson::hash([$operation->inputSchema,$operation->resultSchema(),$operation->requiredScopes,$operation->actorPolicy,
+        return CanonicalJson::hash([self::structure($operation->inputSchema),self::structure($operation->resultSchema()),$operation->requiredScopes,$operation->actorPolicy,
             $operation->confirmationPolicy,$operation->patterns,$operation->httpMethod,$operation->httpPath]);
+    }
+    private static function structure(array $schema): array
+    {
+        $structure=[];
+        foreach($schema as $key=>$value) {
+            if(in_array($key,['description','title'],true)&&is_string($value)) { continue; }
+            $structure[$key]=is_array($value)?self::structure($value):$value;
+        }
+        return $structure;
     }
     public static function verify(array $ledger,?array $routes=null): array
     {

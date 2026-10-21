@@ -31,8 +31,8 @@ final class ContractGenerator
             if ($this->reviewed($definition)) {
                 $tools[] = [
                     'name' => $definition->operationId . '_preview',
-                    'title' => 'Preview: ' . $definition->title,
-                    'description' => 'Review this proposed action before committing it. ' . $definition->description,
+                    'title' => __('agent.contract.preview_title', ['title' => $definition->title]),
+                    'description' => __('agent.contract.preview_description', ['description' => $definition->description]),
                     'inputSchema' => $this->schema($definition->inputSchema),
                     'outputSchema' => $this->schema($this->previewSchema()),
                     'annotations' => [
@@ -139,7 +139,7 @@ final class ContractGenerator
             'parameters' => [],
             'responses' => [
                 '200' => [
-                    'description' => 'Operation result',
+                    'description' => __('agent.contract.operation_result'),
                     'content' => [
                         'application/json' => [
                             'schema' => $this->schema($preview ? $this->previewSchema() : $definition->resultSchema())
@@ -184,9 +184,9 @@ final class ContractGenerator
                 'in' => 'header',
                 'required' => true,
                 'schema' => ['type' => 'string', 'minLength' => 1],
-                'description' => 'Obtain a continuation from POST /public/'
-                    . (str_contains($definition->httpPath, '/{slug}/') ? '{slug}/' : '')
-                    . 'session and reuse it for this task. It does not authorize access to existing customer records.',
+                'description' => __('agent.contract.continuation', [
+                    'path' => '/public/' . (str_contains($definition->httpPath, '/{slug}/') ? '{slug}/' : '') . 'session',
+                ]),
             ];
         }
         if (!$definition->readOnly && !$preview) {
@@ -195,7 +195,7 @@ final class ContractGenerator
                 'in' => 'header',
                 'required' => true,
                 'schema' => $this->idempotencySchema(),
-                'description' => 'Reuse this key for retries of the same reviewed operation.',
+                'description' => __('agent.contract.idempotency_key'),
             ];
         }
         if (!$preview && strtoupper($definition->httpMethod) === 'GET') {
@@ -219,7 +219,7 @@ final class ContractGenerator
         }
         foreach ([400, 401, 403, 404, 409, 422, 429, 503] as $status) {
             $operation['responses'][(string) $status] = [
-                'description' => 'Operation problem',
+                'description' => __('agent.contract.operation_problem'),
                 'content' => ['application/problem+json' => ['schema' => ['$ref' => '#/components/schemas/Problem']]],
             ];
         }
@@ -240,14 +240,14 @@ final class ContractGenerator
     {
         return [
             'operationId' => $business ? 'public_booking_session_start' : 'public_application_session_start',
-            'summary' => $business ? 'Start a public booking task' : 'Start a public application task',
-            'description' => 'Create a temporary continuation for public booking previews, browser review and retries. This grants no access to existing bookings or customer data.',
+            'summary' => __($business ? 'agent.contract.session_booking_summary' : 'agent.contract.session_application_summary'),
+            'description' => __('agent.contract.session_description'),
             'security' => [],
             'parameters' => $business
                 ? [['name' => 'slug', 'in' => 'path', 'required' => true, 'schema' => $this->slugSchema()]]
                 : [],
             'responses' => [
-                '200' => ['description' => 'Temporary booking continuation', 'content' => ['application/json' => ['schema' => [
+                '200' => ['description' => __('agent.contract.session_result'), 'content' => ['application/json' => ['schema' => [
                     'type' => 'object',
                     'properties' => [
                         'continuation' => ['type' => 'string'],
@@ -261,8 +261,8 @@ final class ContractGenerator
                     'required' => ['continuation', 'expires_at', 'business_id', 'permissions'],
                     'additionalProperties' => false,
                 ]]]],
-                '404' => ['description' => 'Business unavailable'],
-                '429' => ['description' => 'Rate limit reached'],
+                '404' => ['description' => __('agent.contract.business_unavailable')],
+                '429' => ['description' => __('agent.contract.rate_limited')],
             ],
             'externalDocs' => ['url' => 'https://voxelbooking.com/docs/agent-api/book-an-appointment'],
         ];

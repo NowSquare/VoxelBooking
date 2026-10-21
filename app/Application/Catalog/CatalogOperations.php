@@ -15,7 +15,7 @@ final class CatalogOperations
         $business = ['business_id' => [
             'type' => 'string',
             'maxLength' => 26,
-            'description' => 'Omit when the connection grants one business.'
+            'description' => __('agent.contract.business_id')
         ]];
         $identity = ['id' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 26]];
         $version = ['expected_version' => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$']];

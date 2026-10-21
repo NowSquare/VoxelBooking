@@ -135,11 +135,16 @@ final class OperationContractCoverageTest extends TestCase
         foreach ([$response, $mcp] as $result) {
             (new SchemaValidator())->validate($definition->resultSchema(), $result, true);
             self::assertSame($name, $result['operation']);
-            // These endpoints intentionally include their own observation timestamp.
+            // These endpoints include their own observation timestamp, and a cursor is
+            // sealed with a fresh nonce on every request: compare its presence, not its bytes.
             $data = $result['data'];
-            unset($data['generated_at']);
             $comparable = $expected;
-            unset($comparable['generated_at']);
+            foreach (['generated_at', 'next_cursor'] as $volatile) {
+                if (array_key_exists($volatile, $comparable)) {
+                    self::assertSame($comparable[$volatile] === null, ($data[$volatile] ?? null) === null, $name . ' ' . $volatile);
+                }
+                unset($data[$volatile], $comparable[$volatile]);
+            }
             self::assertSame($comparable, $data, $name);
         }
     }

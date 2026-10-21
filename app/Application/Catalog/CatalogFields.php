@@ -48,7 +48,7 @@ final class CatalogFields
         $money = [
             'type' => ['string', 'null'],
             'pattern' => '^[0-9]{1,8}(\\.[0-9]{1,2})?$',
-            'description' => 'Decimal amount in the business currency. Null means no listed price.'
+            'description' => __('agent.contract.money')
         ];
         $ids = [
             'type' => 'array',
@@ -91,14 +91,14 @@ final class CatalogFields
                     'uniqueItems' => true,
                     'maxItems' => 7,
                     'items' => $integer(0, 6),
-                    'description' => '0 is Sunday; null allows every day.'
+                    'description' => __('agent.contract.weekday_sunday_first')
                 ],
                 'check_out_days' => [
                     'type' => ['array', 'null'],
                     'uniqueItems' => true,
                     'maxItems' => 7,
                     'items' => $integer(0, 6),
-                    'description' => '0 is Sunday; null allows every day.'
+                    'description' => __('agent.contract.weekday_sunday_first')
                 ],
                 'seasonal_pricing' => [
                     'type' => 'array',
@@ -117,7 +117,7 @@ final class CatalogFields
                 ],
             ],
             'capacity_slots' => [
-                'day_of_week' => [...$integer(0, 6), 'description' => '0 is Monday; 6 is Sunday.'],
+                'day_of_week' => [...$integer(0, 6), 'description' => __('agent.contract.weekday_monday_first')],
                 'start_time' => $time,
                 'end_time' => $time,
                 'max_capacity' => $integer(1, 10000),

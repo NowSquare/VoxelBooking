@@ -2787,7 +2787,7 @@
       ]
     },
     "blocked_date_create": {
-      "contract_hash": "6bc60afb2937c32ac8d718e882634756637a56186c067f16c20ebf92032ffd0b",
+      "contract_hash": "cd35c0db109c497001b4d7adf3ac6f72be353e5d91fbc8a8cd36b30c2b5afcee",
       "tests": [
         "tests/Integration/BlockedDatesManagementTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -2795,7 +2795,7 @@
       ]
     },
     "blocked_date_delete": {
-      "contract_hash": "041ebba3960dbe67432e87935f979193cbd6f40300f08ae5c5a211ea4f0c83b5",
+      "contract_hash": "11eb59e6c403f48e7cc72f6ce2143a69edacb30221eeca30b65954441a883f45",
       "tests": [
         "tests/Integration/BlockedDatesManagementTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -2803,7 +2803,7 @@
       ]
     },
     "blocked_date_get": {
-      "contract_hash": "55ad7b9df1ca4d034fd94fd9de93c136537e0eab39fc667eb9de67cef99928d5",
+      "contract_hash": "92ab1d0a66cc030f72fa267cf6fbbf7f89e40c5c31ab5860139bc64837139bbb",
       "tests": [
         "tests/Integration/BlockedDatesManagementTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -2811,7 +2811,7 @@
       ]
     },
     "blocked_dates_list": {
-      "contract_hash": "2c8aa355848ed141a83db4a96be95b8ec1f63119fb1a856c654cb4eea17a1c7f",
+      "contract_hash": "73628f198dda37d74e6dbb9e233b4a7e54fca7ce767e921fff49a422c817dcfd",
       "tests": [
         "tests/Integration/BlockedDatesManagementTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -3058,7 +3058,7 @@
       ]
     },
     "capacity_slot_create": {
-      "contract_hash": "835f2572739e0c72c933107924c5c6625b6e3f83e03714bf70be4d80ee412f27",
+      "contract_hash": "9f0436a5a828c874f51df90eee9df73c21e2cb8fb0bd0d08e334d097361e3ba8",
       "tests": [
         "tests/Integration/CapacityBookingFlowTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -3066,7 +3066,7 @@
       ]
     },
     "capacity_slot_delete": {
-      "contract_hash": "b43e97ef9f0cbdf73a496b11c3c90c51ea49baa89fbecaf358c39e1e5c43944b",
+      "contract_hash": "d54a80ff687f3bd82cb348ab68f8c25a8389ab38d52ab60b4b3a49945fe3d89e",
       "tests": [
         "tests/Integration/CapacityBookingFlowTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -3074,7 +3074,7 @@
       ]
     },
     "capacity_slot_get": {
-      "contract_hash": "a34ff2ecfdd0bcaab5bf7f0ae4ecb0185406c358d16b50d9d3ec23a6a80d0724",
+      "contract_hash": "6a69d4574ab1b40dc5241b6d8214aefb65f2681b3e17d8859976d0dedc22c903",
       "tests": [
         "tests/Integration/CapacityBookingFlowTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -3082,7 +3082,7 @@
       ]
     },
     "capacity_slot_set_active": {
-      "contract_hash": "91372ce26bf7f78b3b96ea8cb642cfd298274fbe449cbfbf316e943da857de51",
+      "contract_hash": "72f6eb3abfe9a4fed63b3033344234b0fe17c4b7e8ec32ba58533aa9db754ea5",
       "tests": [
         "tests/Integration/CapacityBookingFlowTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -3090,7 +3090,7 @@
       ]
     },
     "capacity_slots_list": {
-      "contract_hash": "ae20c0b3db1abd2ad07c64c20ae51776e20c46704ff4205d6d3b3ddc43d294a8",
+      "contract_hash": "196068c904c1fb2bdea860be2e35b485d8468d732a2d2d5e7a46b5a7c8e6f272",
       "tests": [
         "tests/Integration/CapacityBookingFlowTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -3295,7 +3295,7 @@
       ]
     },
     "event_create": {
-      "contract_hash": "5ebb27d9c0fd20877c85b78970eb63e364d85dd1d264a287b8cb0b28ac70b3d8",
+      "contract_hash": "226e0597f37e8cde73d4c55f0b079df41a8e4512f08c0c1d60883c8d6071f7c2",
       "tests": [
         "tests/Integration/AvailabilityAcceptanceTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -3304,7 +3304,7 @@
       ]
     },
     "event_delete": {
-      "contract_hash": "13ddf2b8efe9afd755c253ef6386e10b8f3d3e9ee7f77d2bc54cd20d8090a1ed",
+      "contract_hash": "ff27c650b02f34bb12cbfb3e00dca3a763f846f3f2579269662296a897eaf7ca",
       "tests": [
         "tests/Integration/AvailabilityAcceptanceTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -3313,7 +3313,7 @@
       ]
     },
     "event_get": {
-      "contract_hash": "81612078fc3bf17b5a2e820055282dcf4fa20d1a6670b3b67d4685431a736f69",
+      "contract_hash": "af8d85f34c06482ff9117e9c5213527a73c057230b9766077fc2d731b893f0a8",
       "tests": [
         "tests/Integration/AvailabilityAcceptanceTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -3322,7 +3322,7 @@
       ]
     },
     "event_set_active": {
-      "contract_hash": "70a2e7cc54671827383f96c5ba37becba39c7a61d12926946bc775f4ad790650",
+      "contract_hash": "602bfe9b0d45f6e496402ba665e476072f81e2993c81c0c257aa941699a190cd",
       "tests": [
         "tests/Integration/AvailabilityAcceptanceTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -3331,7 +3331,7 @@
       ]
     },
     "event_update": {
-      "contract_hash": "64c864a81fa964736e9c6fb3ea8ca8cce8126fbee348e2bf86ac5bf7a984b27d",
+      "contract_hash": "baa2ac2d9354a6d35408809bc02fae83b8fc4aa02155e3bf957db2e481ab8008",
       "tests": [
         "tests/Integration/AvailabilityAcceptanceTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -3340,7 +3340,7 @@
       ]
     },
     "events_list": {
-      "contract_hash": "1ef8e38bb63310ecb173d723ddfe4e60b09c49fc2fa1b46625e23478080370f8",
+      "contract_hash": "bb024ae26e37310329ace964eca5ea0d1e2090ec8aff7326cc317a459169cc31",
       "tests": [
         "tests/Integration/AvailabilityAcceptanceTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -3501,7 +3501,7 @@
       ]
     },
     "resource_create": {
-      "contract_hash": "6f0443ba95ad9c64926eb4cc3fc4227d78b1f47cad6630870653f9db08c324a0",
+      "contract_hash": "05c36a4b0c3737be0a411984c256655cc4e9a90ef46925c79bc3b6e1fdedc0ad",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3509,7 +3509,7 @@
       ]
     },
     "resource_get": {
-      "contract_hash": "94270124d16baa59dc6a8a43458a4cf1d3d8aa01ac4fcc3aa040ee611b0973d8",
+      "contract_hash": "5c1902fcd956ef039053552ca21b4d0124a748329f19cdad550cb68fffd3070d",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3517,7 +3517,7 @@
       ]
     },
     "resource_reorder": {
-      "contract_hash": "ab9747af4effd5517debb079c9a30ce55f7961a00894c82c9ccfc022eee8999f",
+      "contract_hash": "8e12839feb35cc07733a4e54088253c4ee5ee7457a892a7f22446a92637a583b",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3525,7 +3525,7 @@
       ]
     },
     "resource_set_active": {
-      "contract_hash": "a4c354ed3192bd612c32c53fbe16f23c8357bf4229d11b5cdb5c691e45f0ce30",
+      "contract_hash": "af75e782546f13a7441d4584addb5aa83a455ec9ceb09e4c64dd656fbe1915d3",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3533,7 +3533,7 @@
       ]
     },
     "resource_update": {
-      "contract_hash": "35358ea998e71dcef75bb9a461d50856e9b2ad00633ea2ae96ad76054ea9ca1e",
+      "contract_hash": "d90e6931512d0c0b253fd9c0ada98e5b00f6efadfa67b7e7e93a1e6848e87953",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3541,7 +3541,7 @@
       ]
     },
     "resources_list": {
-      "contract_hash": "377e64d059291039866ba8659e8bca2411e88ab3410e6e25a705529620e47557",
+      "contract_hash": "97dbc7773ec9ea94fd41fa4585975a3b3ec722f10f0f554cf711bd9f2dc02c9e",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3549,7 +3549,7 @@
       ]
     },
     "schedule_get": {
-      "contract_hash": "bdef0599eff07ae9bb7014290ecb514c456bf97a272e45716963345b2925b605",
+      "contract_hash": "654381de4117ecfa5fb40d390e60bf273ba1875896f6a3e2183566fe3e7e390e",
       "tests": [
         "tests/Integration/AvailabilityManagementTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -3557,7 +3557,7 @@
       ]
     },
     "schedule_replace": {
-      "contract_hash": "62b25cc026652a31b438b633ec0dbe8bbfe775309e775cf532715e52a4500c8e",
+      "contract_hash": "b34bd331d69a93a750edd8598a4d0388756874118e31a9f3eae432262af7ab72",
       "tests": [
         "tests/Integration/AvailabilityManagementTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -3565,7 +3565,7 @@
       ]
     },
     "schedule_reset_staff": {
-      "contract_hash": "ae9c7b64ffdc56700408569cb3ff8c07aefbc0d0e996b1664f75136378d85381",
+      "contract_hash": "151efbd08538f302f601931e0b72df5133568979c6d75848d334a3fdaa79709e",
       "tests": [
         "tests/Integration/AvailabilityManagementTest.php",
         "tests/Integration/CatalogOperationsTest.php",
@@ -3573,7 +3573,7 @@
       ]
     },
     "service_create": {
-      "contract_hash": "7f7671399a4eeb6e1d62ee855b9df5ec021d036a664fb256a318fe02213cca24",
+      "contract_hash": "ede3344f90475edc8d57fdca357afa09fa7493c6424299e27dbdb8244cbdf548",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3581,7 +3581,7 @@
       ]
     },
     "service_get": {
-      "contract_hash": "f16b3b880b36f8eb36c5db6edc4370c00bf9ee0335c491c3905e544d059f2ca9",
+      "contract_hash": "d29bf4a2e43a2fe5021ab1485770fb301bf5046545267a2d1abfcbec6e2e3454",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3589,7 +3589,7 @@
       ]
     },
     "service_reorder": {
-      "contract_hash": "01e82c0caa2d334ff8089534fbd2d95a1f376a502d64085c5cb3e4bdab04fc80",
+      "contract_hash": "44430512405eec0e2a9607d73b5e840d2e6838686e5a267ec3518fbb7c3a2aec",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3597,7 +3597,7 @@
       ]
     },
     "service_set_active": {
-      "contract_hash": "f05d132a908d9edcb3c850bed335560a88a1debf751549e18f80c713e3cb7a3d",
+      "contract_hash": "c4d0f5cbb8f9b495d1e20bbbfa864f6cff308aae3e66581d375482121ec04c99",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3605,7 +3605,7 @@
       ]
     },
     "service_update": {
-      "contract_hash": "c428d254d62ab1046aebeaceb8773c766ad9f8fc0f0b4202a87e12369aa98a91",
+      "contract_hash": "34879340250fd627bafce17ed98b7574639e21d5c032d5442d33170c352820e2",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3613,7 +3613,7 @@
       ]
     },
     "services_list": {
-      "contract_hash": "0fbdee12bbad5bcd64befc3c165d9bb3b708ec62bb1b62b8ecbfd38a5ca97a1b",
+      "contract_hash": "71dc5c266ffbdf3bacced6dad9979f161e3f5118efd00716c0d6e0cc02cb2eb5",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3634,7 +3634,7 @@
       ]
     },
     "staff_create": {
-      "contract_hash": "e85bfce5411d0e8ede13c5bfa9554750df348faddb763c435195d85852952c08",
+      "contract_hash": "7c94a09cf21b5d09969adab193bcfcba6e9fb95e72c6dfc500010cbc371ee599",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3642,7 +3642,7 @@
       ]
     },
     "staff_get": {
-      "contract_hash": "d95661f11e8e4c18d81e26b02861629477b490de21028458dc7287a81f14a6b1",
+      "contract_hash": "0830e2c42d4e61c23821dd4e9dbff105944eb8bd79625316f815f5707bdc6d34",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3650,7 +3650,7 @@
       ]
     },
     "staff_list": {
-      "contract_hash": "f95f8dbbf4473c065767be74c90b6fee6dc1cde10df4e8e0ac72fb09af9a91e2",
+      "contract_hash": "11b407d590149445ef97cbe3d9b906f081b6fe4dcd6a71367875698bf9410b54",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3658,7 +3658,7 @@
       ]
     },
     "staff_reorder": {
-      "contract_hash": "aaa0d908c3a2f8fd17e710d589bda9d59ba0066f2ac517ab0aaac0fe21e6d333",
+      "contract_hash": "e3bd3b4e6726c6600f372efd774214a84101223fcacfe25ec455a4df010465ae",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3666,7 +3666,7 @@
       ]
     },
     "staff_set_active": {
-      "contract_hash": "8815597095ebbf2f5ac6b9b5e39ed27e199f3bb75181c525eab47db756fe7b10",
+      "contract_hash": "f2bccdb2027227c9934e0c779757fcb05084679e1249b1a4b9e5d3fc1c4b728e",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
@@ -3674,7 +3674,7 @@
       ]
     },
     "staff_update": {
-      "contract_hash": "dee9b69059a4a596b961b98e0cad7bc5fc49f9221fba87cf5134d64e610d0038",
+      "contract_hash": "7923f2533100aaa61244d452e45e4e3368575ae17244eac6629bd1377ae29ca6",
       "tests": [
         "tests/Integration/CatalogOperationsTest.php",
         "tests/Integration/OperationContractCoverageTest.php",
